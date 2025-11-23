@@ -1,0 +1,1032 @@
+// coverage:ignore-file
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'goods_model.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+T _$identity<T>(T value) => value;
+
+final _privateConstructorUsedError = UnsupportedError(
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+
+GoodsModel _$GoodsModelFromJson(Map<String, dynamic> json) {
+  return _GoodsModel.fromJson(json);
+}
+
+/// @nodoc
+mixin _$GoodsModel {
+  @JsonKey(name: 'id')
+  dynamic get goodsId =>
+      throw _privateConstructorUsedError; // API可能返回String或int,使用dynamic避免溢出
+  @JsonKey(name: 'name')
+  String? get goodsName => throw _privateConstructorUsedError; // API返回字段是name
+  @JsonKey(name: 'material_cover_path')
+  String? get coverImg => throw _privateConstructorUsedError;
+  @JsonKey(name: 'type')
+  dynamic get type => throw _privateConstructorUsedError; // 可能是String或int
+  @JsonKey(name: 'type_name')
+  String? get typeName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'details_type')
+  String? get detailsType => throw _privateConstructorUsedError;
+  @JsonKey(name: 'sale_price')
+  dynamic get price => throw _privateConstructorUsedError; // 可能是String或num
+  @JsonKey(name: 'original_price')
+  dynamic get originalPrice =>
+      throw _privateConstructorUsedError; // 可能是String或num
+  @JsonKey(name: 'permission_status')
+  String? get permissionStatus =>
+      throw _privateConstructorUsedError; // 权限状态 1:未购买 2:已购买
+  @JsonKey(name: 'is_homepage_recommend')
+  dynamic get isHomepageRecommend =>
+      throw _privateConstructorUsedError; // 可能是String或int
+  @JsonKey(name: 'teaching_type')
+  dynamic get teachingType =>
+      throw _privateConstructorUsedError; // 可能是String或int
+  @JsonKey(name: 'teaching_type_name')
+  String? get teachingTypeName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'business_type')
+  dynamic get businessType =>
+      throw _privateConstructorUsedError; // 可能是String或int
+  @JsonKey(name: 'is_recommend')
+  dynamic get isRecommend =>
+      throw _privateConstructorUsedError; // 可能是String或int
+  @JsonKey(name: 'teacher_data')
+  List<TeacherModel>? get teacherData => throw _privateConstructorUsedError;
+  @JsonKey(name: 'question_number')
+  String? get questionNumber => throw _privateConstructorUsedError; // 题目数量
+  @JsonKey(name: 'total_class_hour')
+  String? get totalClassHour => throw _privateConstructorUsedError; // 总课时
+  @JsonKey(name: 'validity_type')
+  String? get validityType => throw _privateConstructorUsedError; // 有效期类型
+  @JsonKey(name: 'validity_day')
+  String? get validityDay => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $GoodsModelCopyWith<GoodsModel> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $GoodsModelCopyWith<$Res> {
+  factory $GoodsModelCopyWith(
+          GoodsModel value, $Res Function(GoodsModel) then) =
+      _$GoodsModelCopyWithImpl<$Res, GoodsModel>;
+  @useResult
+  $Res call(
+      {@JsonKey(name: 'id') dynamic goodsId,
+      @JsonKey(name: 'name') String? goodsName,
+      @JsonKey(name: 'material_cover_path') String? coverImg,
+      @JsonKey(name: 'type') dynamic type,
+      @JsonKey(name: 'type_name') String? typeName,
+      @JsonKey(name: 'details_type') String? detailsType,
+      @JsonKey(name: 'sale_price') dynamic price,
+      @JsonKey(name: 'original_price') dynamic originalPrice,
+      @JsonKey(name: 'permission_status') String? permissionStatus,
+      @JsonKey(name: 'is_homepage_recommend') dynamic isHomepageRecommend,
+      @JsonKey(name: 'teaching_type') dynamic teachingType,
+      @JsonKey(name: 'teaching_type_name') String? teachingTypeName,
+      @JsonKey(name: 'business_type') dynamic businessType,
+      @JsonKey(name: 'is_recommend') dynamic isRecommend,
+      @JsonKey(name: 'teacher_data') List<TeacherModel>? teacherData,
+      @JsonKey(name: 'question_number') String? questionNumber,
+      @JsonKey(name: 'total_class_hour') String? totalClassHour,
+      @JsonKey(name: 'validity_type') String? validityType,
+      @JsonKey(name: 'validity_day') String? validityDay});
+}
+
+/// @nodoc
+class _$GoodsModelCopyWithImpl<$Res, $Val extends GoodsModel>
+    implements $GoodsModelCopyWith<$Res> {
+  _$GoodsModelCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? goodsId = freezed,
+    Object? goodsName = freezed,
+    Object? coverImg = freezed,
+    Object? type = freezed,
+    Object? typeName = freezed,
+    Object? detailsType = freezed,
+    Object? price = freezed,
+    Object? originalPrice = freezed,
+    Object? permissionStatus = freezed,
+    Object? isHomepageRecommend = freezed,
+    Object? teachingType = freezed,
+    Object? teachingTypeName = freezed,
+    Object? businessType = freezed,
+    Object? isRecommend = freezed,
+    Object? teacherData = freezed,
+    Object? questionNumber = freezed,
+    Object? totalClassHour = freezed,
+    Object? validityType = freezed,
+    Object? validityDay = freezed,
+  }) {
+    return _then(_value.copyWith(
+      goodsId: freezed == goodsId
+          ? _value.goodsId
+          : goodsId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      goodsName: freezed == goodsName
+          ? _value.goodsName
+          : goodsName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      coverImg: freezed == coverImg
+          ? _value.coverImg
+          : coverImg // ignore: cast_nullable_to_non_nullable
+              as String?,
+      type: freezed == type
+          ? _value.type
+          : type // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      typeName: freezed == typeName
+          ? _value.typeName
+          : typeName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      detailsType: freezed == detailsType
+          ? _value.detailsType
+          : detailsType // ignore: cast_nullable_to_non_nullable
+              as String?,
+      price: freezed == price
+          ? _value.price
+          : price // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      originalPrice: freezed == originalPrice
+          ? _value.originalPrice
+          : originalPrice // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      permissionStatus: freezed == permissionStatus
+          ? _value.permissionStatus
+          : permissionStatus // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isHomepageRecommend: freezed == isHomepageRecommend
+          ? _value.isHomepageRecommend
+          : isHomepageRecommend // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      teachingType: freezed == teachingType
+          ? _value.teachingType
+          : teachingType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      teachingTypeName: freezed == teachingTypeName
+          ? _value.teachingTypeName
+          : teachingTypeName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      businessType: freezed == businessType
+          ? _value.businessType
+          : businessType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      isRecommend: freezed == isRecommend
+          ? _value.isRecommend
+          : isRecommend // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      teacherData: freezed == teacherData
+          ? _value.teacherData
+          : teacherData // ignore: cast_nullable_to_non_nullable
+              as List<TeacherModel>?,
+      questionNumber: freezed == questionNumber
+          ? _value.questionNumber
+          : questionNumber // ignore: cast_nullable_to_non_nullable
+              as String?,
+      totalClassHour: freezed == totalClassHour
+          ? _value.totalClassHour
+          : totalClassHour // ignore: cast_nullable_to_non_nullable
+              as String?,
+      validityType: freezed == validityType
+          ? _value.validityType
+          : validityType // ignore: cast_nullable_to_non_nullable
+              as String?,
+      validityDay: freezed == validityDay
+          ? _value.validityDay
+          : validityDay // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$GoodsModelImplCopyWith<$Res>
+    implements $GoodsModelCopyWith<$Res> {
+  factory _$$GoodsModelImplCopyWith(
+          _$GoodsModelImpl value, $Res Function(_$GoodsModelImpl) then) =
+      __$$GoodsModelImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {@JsonKey(name: 'id') dynamic goodsId,
+      @JsonKey(name: 'name') String? goodsName,
+      @JsonKey(name: 'material_cover_path') String? coverImg,
+      @JsonKey(name: 'type') dynamic type,
+      @JsonKey(name: 'type_name') String? typeName,
+      @JsonKey(name: 'details_type') String? detailsType,
+      @JsonKey(name: 'sale_price') dynamic price,
+      @JsonKey(name: 'original_price') dynamic originalPrice,
+      @JsonKey(name: 'permission_status') String? permissionStatus,
+      @JsonKey(name: 'is_homepage_recommend') dynamic isHomepageRecommend,
+      @JsonKey(name: 'teaching_type') dynamic teachingType,
+      @JsonKey(name: 'teaching_type_name') String? teachingTypeName,
+      @JsonKey(name: 'business_type') dynamic businessType,
+      @JsonKey(name: 'is_recommend') dynamic isRecommend,
+      @JsonKey(name: 'teacher_data') List<TeacherModel>? teacherData,
+      @JsonKey(name: 'question_number') String? questionNumber,
+      @JsonKey(name: 'total_class_hour') String? totalClassHour,
+      @JsonKey(name: 'validity_type') String? validityType,
+      @JsonKey(name: 'validity_day') String? validityDay});
+}
+
+/// @nodoc
+class __$$GoodsModelImplCopyWithImpl<$Res>
+    extends _$GoodsModelCopyWithImpl<$Res, _$GoodsModelImpl>
+    implements _$$GoodsModelImplCopyWith<$Res> {
+  __$$GoodsModelImplCopyWithImpl(
+      _$GoodsModelImpl _value, $Res Function(_$GoodsModelImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? goodsId = freezed,
+    Object? goodsName = freezed,
+    Object? coverImg = freezed,
+    Object? type = freezed,
+    Object? typeName = freezed,
+    Object? detailsType = freezed,
+    Object? price = freezed,
+    Object? originalPrice = freezed,
+    Object? permissionStatus = freezed,
+    Object? isHomepageRecommend = freezed,
+    Object? teachingType = freezed,
+    Object? teachingTypeName = freezed,
+    Object? businessType = freezed,
+    Object? isRecommend = freezed,
+    Object? teacherData = freezed,
+    Object? questionNumber = freezed,
+    Object? totalClassHour = freezed,
+    Object? validityType = freezed,
+    Object? validityDay = freezed,
+  }) {
+    return _then(_$GoodsModelImpl(
+      goodsId: freezed == goodsId
+          ? _value.goodsId
+          : goodsId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      goodsName: freezed == goodsName
+          ? _value.goodsName
+          : goodsName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      coverImg: freezed == coverImg
+          ? _value.coverImg
+          : coverImg // ignore: cast_nullable_to_non_nullable
+              as String?,
+      type: freezed == type
+          ? _value.type
+          : type // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      typeName: freezed == typeName
+          ? _value.typeName
+          : typeName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      detailsType: freezed == detailsType
+          ? _value.detailsType
+          : detailsType // ignore: cast_nullable_to_non_nullable
+              as String?,
+      price: freezed == price
+          ? _value.price
+          : price // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      originalPrice: freezed == originalPrice
+          ? _value.originalPrice
+          : originalPrice // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      permissionStatus: freezed == permissionStatus
+          ? _value.permissionStatus
+          : permissionStatus // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isHomepageRecommend: freezed == isHomepageRecommend
+          ? _value.isHomepageRecommend
+          : isHomepageRecommend // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      teachingType: freezed == teachingType
+          ? _value.teachingType
+          : teachingType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      teachingTypeName: freezed == teachingTypeName
+          ? _value.teachingTypeName
+          : teachingTypeName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      businessType: freezed == businessType
+          ? _value.businessType
+          : businessType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      isRecommend: freezed == isRecommend
+          ? _value.isRecommend
+          : isRecommend // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      teacherData: freezed == teacherData
+          ? _value._teacherData
+          : teacherData // ignore: cast_nullable_to_non_nullable
+              as List<TeacherModel>?,
+      questionNumber: freezed == questionNumber
+          ? _value.questionNumber
+          : questionNumber // ignore: cast_nullable_to_non_nullable
+              as String?,
+      totalClassHour: freezed == totalClassHour
+          ? _value.totalClassHour
+          : totalClassHour // ignore: cast_nullable_to_non_nullable
+              as String?,
+      validityType: freezed == validityType
+          ? _value.validityType
+          : validityType // ignore: cast_nullable_to_non_nullable
+              as String?,
+      validityDay: freezed == validityDay
+          ? _value.validityDay
+          : validityDay // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$GoodsModelImpl implements _GoodsModel {
+  const _$GoodsModelImpl(
+      {@JsonKey(name: 'id') this.goodsId,
+      @JsonKey(name: 'name') this.goodsName,
+      @JsonKey(name: 'material_cover_path') this.coverImg,
+      @JsonKey(name: 'type') this.type,
+      @JsonKey(name: 'type_name') this.typeName,
+      @JsonKey(name: 'details_type') this.detailsType,
+      @JsonKey(name: 'sale_price') this.price,
+      @JsonKey(name: 'original_price') this.originalPrice,
+      @JsonKey(name: 'permission_status') this.permissionStatus,
+      @JsonKey(name: 'is_homepage_recommend') this.isHomepageRecommend,
+      @JsonKey(name: 'teaching_type') this.teachingType,
+      @JsonKey(name: 'teaching_type_name') this.teachingTypeName,
+      @JsonKey(name: 'business_type') this.businessType,
+      @JsonKey(name: 'is_recommend') this.isRecommend,
+      @JsonKey(name: 'teacher_data') final List<TeacherModel>? teacherData,
+      @JsonKey(name: 'question_number') this.questionNumber,
+      @JsonKey(name: 'total_class_hour') this.totalClassHour,
+      @JsonKey(name: 'validity_type') this.validityType,
+      @JsonKey(name: 'validity_day') this.validityDay})
+      : _teacherData = teacherData;
+
+  factory _$GoodsModelImpl.fromJson(Map<String, dynamic> json) =>
+      _$$GoodsModelImplFromJson(json);
+
+  @override
+  @JsonKey(name: 'id')
+  final dynamic goodsId;
+// API可能返回String或int,使用dynamic避免溢出
+  @override
+  @JsonKey(name: 'name')
+  final String? goodsName;
+// API返回字段是name
+  @override
+  @JsonKey(name: 'material_cover_path')
+  final String? coverImg;
+  @override
+  @JsonKey(name: 'type')
+  final dynamic type;
+// 可能是String或int
+  @override
+  @JsonKey(name: 'type_name')
+  final String? typeName;
+  @override
+  @JsonKey(name: 'details_type')
+  final String? detailsType;
+  @override
+  @JsonKey(name: 'sale_price')
+  final dynamic price;
+// 可能是String或num
+  @override
+  @JsonKey(name: 'original_price')
+  final dynamic originalPrice;
+// 可能是String或num
+  @override
+  @JsonKey(name: 'permission_status')
+  final String? permissionStatus;
+// 权限状态 1:未购买 2:已购买
+  @override
+  @JsonKey(name: 'is_homepage_recommend')
+  final dynamic isHomepageRecommend;
+// 可能是String或int
+  @override
+  @JsonKey(name: 'teaching_type')
+  final dynamic teachingType;
+// 可能是String或int
+  @override
+  @JsonKey(name: 'teaching_type_name')
+  final String? teachingTypeName;
+  @override
+  @JsonKey(name: 'business_type')
+  final dynamic businessType;
+// 可能是String或int
+  @override
+  @JsonKey(name: 'is_recommend')
+  final dynamic isRecommend;
+// 可能是String或int
+  final List<TeacherModel>? _teacherData;
+// 可能是String或int
+  @override
+  @JsonKey(name: 'teacher_data')
+  List<TeacherModel>? get teacherData {
+    final value = _teacherData;
+    if (value == null) return null;
+    if (_teacherData is EqualUnmodifiableListView) return _teacherData;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  @override
+  @JsonKey(name: 'question_number')
+  final String? questionNumber;
+// 题目数量
+  @override
+  @JsonKey(name: 'total_class_hour')
+  final String? totalClassHour;
+// 总课时
+  @override
+  @JsonKey(name: 'validity_type')
+  final String? validityType;
+// 有效期类型
+  @override
+  @JsonKey(name: 'validity_day')
+  final String? validityDay;
+
+  @override
+  String toString() {
+    return 'GoodsModel(goodsId: $goodsId, goodsName: $goodsName, coverImg: $coverImg, type: $type, typeName: $typeName, detailsType: $detailsType, price: $price, originalPrice: $originalPrice, permissionStatus: $permissionStatus, isHomepageRecommend: $isHomepageRecommend, teachingType: $teachingType, teachingTypeName: $teachingTypeName, businessType: $businessType, isRecommend: $isRecommend, teacherData: $teacherData, questionNumber: $questionNumber, totalClassHour: $totalClassHour, validityType: $validityType, validityDay: $validityDay)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$GoodsModelImpl &&
+            const DeepCollectionEquality().equals(other.goodsId, goodsId) &&
+            (identical(other.goodsName, goodsName) ||
+                other.goodsName == goodsName) &&
+            (identical(other.coverImg, coverImg) ||
+                other.coverImg == coverImg) &&
+            const DeepCollectionEquality().equals(other.type, type) &&
+            (identical(other.typeName, typeName) ||
+                other.typeName == typeName) &&
+            (identical(other.detailsType, detailsType) ||
+                other.detailsType == detailsType) &&
+            const DeepCollectionEquality().equals(other.price, price) &&
+            const DeepCollectionEquality()
+                .equals(other.originalPrice, originalPrice) &&
+            (identical(other.permissionStatus, permissionStatus) ||
+                other.permissionStatus == permissionStatus) &&
+            const DeepCollectionEquality()
+                .equals(other.isHomepageRecommend, isHomepageRecommend) &&
+            const DeepCollectionEquality()
+                .equals(other.teachingType, teachingType) &&
+            (identical(other.teachingTypeName, teachingTypeName) ||
+                other.teachingTypeName == teachingTypeName) &&
+            const DeepCollectionEquality()
+                .equals(other.businessType, businessType) &&
+            const DeepCollectionEquality()
+                .equals(other.isRecommend, isRecommend) &&
+            const DeepCollectionEquality()
+                .equals(other._teacherData, _teacherData) &&
+            (identical(other.questionNumber, questionNumber) ||
+                other.questionNumber == questionNumber) &&
+            (identical(other.totalClassHour, totalClassHour) ||
+                other.totalClassHour == totalClassHour) &&
+            (identical(other.validityType, validityType) ||
+                other.validityType == validityType) &&
+            (identical(other.validityDay, validityDay) ||
+                other.validityDay == validityDay));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        const DeepCollectionEquality().hash(goodsId),
+        goodsName,
+        coverImg,
+        const DeepCollectionEquality().hash(type),
+        typeName,
+        detailsType,
+        const DeepCollectionEquality().hash(price),
+        const DeepCollectionEquality().hash(originalPrice),
+        permissionStatus,
+        const DeepCollectionEquality().hash(isHomepageRecommend),
+        const DeepCollectionEquality().hash(teachingType),
+        teachingTypeName,
+        const DeepCollectionEquality().hash(businessType),
+        const DeepCollectionEquality().hash(isRecommend),
+        const DeepCollectionEquality().hash(_teacherData),
+        questionNumber,
+        totalClassHour,
+        validityType,
+        validityDay
+      ]);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$GoodsModelImplCopyWith<_$GoodsModelImpl> get copyWith =>
+      __$$GoodsModelImplCopyWithImpl<_$GoodsModelImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$GoodsModelImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _GoodsModel implements GoodsModel {
+  const factory _GoodsModel(
+      {@JsonKey(name: 'id') final dynamic goodsId,
+      @JsonKey(name: 'name') final String? goodsName,
+      @JsonKey(name: 'material_cover_path') final String? coverImg,
+      @JsonKey(name: 'type') final dynamic type,
+      @JsonKey(name: 'type_name') final String? typeName,
+      @JsonKey(name: 'details_type') final String? detailsType,
+      @JsonKey(name: 'sale_price') final dynamic price,
+      @JsonKey(name: 'original_price') final dynamic originalPrice,
+      @JsonKey(name: 'permission_status') final String? permissionStatus,
+      @JsonKey(name: 'is_homepage_recommend') final dynamic isHomepageRecommend,
+      @JsonKey(name: 'teaching_type') final dynamic teachingType,
+      @JsonKey(name: 'teaching_type_name') final String? teachingTypeName,
+      @JsonKey(name: 'business_type') final dynamic businessType,
+      @JsonKey(name: 'is_recommend') final dynamic isRecommend,
+      @JsonKey(name: 'teacher_data') final List<TeacherModel>? teacherData,
+      @JsonKey(name: 'question_number') final String? questionNumber,
+      @JsonKey(name: 'total_class_hour') final String? totalClassHour,
+      @JsonKey(name: 'validity_type') final String? validityType,
+      @JsonKey(name: 'validity_day')
+      final String? validityDay}) = _$GoodsModelImpl;
+
+  factory _GoodsModel.fromJson(Map<String, dynamic> json) =
+      _$GoodsModelImpl.fromJson;
+
+  @override
+  @JsonKey(name: 'id')
+  dynamic get goodsId;
+  @override // API可能返回String或int,使用dynamic避免溢出
+  @JsonKey(name: 'name')
+  String? get goodsName;
+  @override // API返回字段是name
+  @JsonKey(name: 'material_cover_path')
+  String? get coverImg;
+  @override
+  @JsonKey(name: 'type')
+  dynamic get type;
+  @override // 可能是String或int
+  @JsonKey(name: 'type_name')
+  String? get typeName;
+  @override
+  @JsonKey(name: 'details_type')
+  String? get detailsType;
+  @override
+  @JsonKey(name: 'sale_price')
+  dynamic get price;
+  @override // 可能是String或num
+  @JsonKey(name: 'original_price')
+  dynamic get originalPrice;
+  @override // 可能是String或num
+  @JsonKey(name: 'permission_status')
+  String? get permissionStatus;
+  @override // 权限状态 1:未购买 2:已购买
+  @JsonKey(name: 'is_homepage_recommend')
+  dynamic get isHomepageRecommend;
+  @override // 可能是String或int
+  @JsonKey(name: 'teaching_type')
+  dynamic get teachingType;
+  @override // 可能是String或int
+  @JsonKey(name: 'teaching_type_name')
+  String? get teachingTypeName;
+  @override
+  @JsonKey(name: 'business_type')
+  dynamic get businessType;
+  @override // 可能是String或int
+  @JsonKey(name: 'is_recommend')
+  dynamic get isRecommend;
+  @override // 可能是String或int
+  @JsonKey(name: 'teacher_data')
+  List<TeacherModel>? get teacherData;
+  @override
+  @JsonKey(name: 'question_number')
+  String? get questionNumber;
+  @override // 题目数量
+  @JsonKey(name: 'total_class_hour')
+  String? get totalClassHour;
+  @override // 总课时
+  @JsonKey(name: 'validity_type')
+  String? get validityType;
+  @override // 有效期类型
+  @JsonKey(name: 'validity_day')
+  String? get validityDay;
+  @override
+  @JsonKey(ignore: true)
+  _$$GoodsModelImplCopyWith<_$GoodsModelImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+TeacherModel _$TeacherModelFromJson(Map<String, dynamic> json) {
+  return _TeacherModel.fromJson(json);
+}
+
+/// @nodoc
+mixin _$TeacherModel {
+  @JsonKey(name: 'teacher_id')
+  String? get teacherId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'teacher_name')
+  String? get teacherName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'avatar')
+  String? get avatar => throw _privateConstructorUsedError;
+  @JsonKey(name: 'introduction')
+  String? get introduction => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $TeacherModelCopyWith<TeacherModel> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $TeacherModelCopyWith<$Res> {
+  factory $TeacherModelCopyWith(
+          TeacherModel value, $Res Function(TeacherModel) then) =
+      _$TeacherModelCopyWithImpl<$Res, TeacherModel>;
+  @useResult
+  $Res call(
+      {@JsonKey(name: 'teacher_id') String? teacherId,
+      @JsonKey(name: 'teacher_name') String? teacherName,
+      @JsonKey(name: 'avatar') String? avatar,
+      @JsonKey(name: 'introduction') String? introduction});
+}
+
+/// @nodoc
+class _$TeacherModelCopyWithImpl<$Res, $Val extends TeacherModel>
+    implements $TeacherModelCopyWith<$Res> {
+  _$TeacherModelCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? teacherId = freezed,
+    Object? teacherName = freezed,
+    Object? avatar = freezed,
+    Object? introduction = freezed,
+  }) {
+    return _then(_value.copyWith(
+      teacherId: freezed == teacherId
+          ? _value.teacherId
+          : teacherId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      teacherName: freezed == teacherName
+          ? _value.teacherName
+          : teacherName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      avatar: freezed == avatar
+          ? _value.avatar
+          : avatar // ignore: cast_nullable_to_non_nullable
+              as String?,
+      introduction: freezed == introduction
+          ? _value.introduction
+          : introduction // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$TeacherModelImplCopyWith<$Res>
+    implements $TeacherModelCopyWith<$Res> {
+  factory _$$TeacherModelImplCopyWith(
+          _$TeacherModelImpl value, $Res Function(_$TeacherModelImpl) then) =
+      __$$TeacherModelImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {@JsonKey(name: 'teacher_id') String? teacherId,
+      @JsonKey(name: 'teacher_name') String? teacherName,
+      @JsonKey(name: 'avatar') String? avatar,
+      @JsonKey(name: 'introduction') String? introduction});
+}
+
+/// @nodoc
+class __$$TeacherModelImplCopyWithImpl<$Res>
+    extends _$TeacherModelCopyWithImpl<$Res, _$TeacherModelImpl>
+    implements _$$TeacherModelImplCopyWith<$Res> {
+  __$$TeacherModelImplCopyWithImpl(
+      _$TeacherModelImpl _value, $Res Function(_$TeacherModelImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? teacherId = freezed,
+    Object? teacherName = freezed,
+    Object? avatar = freezed,
+    Object? introduction = freezed,
+  }) {
+    return _then(_$TeacherModelImpl(
+      teacherId: freezed == teacherId
+          ? _value.teacherId
+          : teacherId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      teacherName: freezed == teacherName
+          ? _value.teacherName
+          : teacherName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      avatar: freezed == avatar
+          ? _value.avatar
+          : avatar // ignore: cast_nullable_to_non_nullable
+              as String?,
+      introduction: freezed == introduction
+          ? _value.introduction
+          : introduction // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$TeacherModelImpl implements _TeacherModel {
+  const _$TeacherModelImpl(
+      {@JsonKey(name: 'teacher_id') this.teacherId,
+      @JsonKey(name: 'teacher_name') this.teacherName,
+      @JsonKey(name: 'avatar') this.avatar,
+      @JsonKey(name: 'introduction') this.introduction});
+
+  factory _$TeacherModelImpl.fromJson(Map<String, dynamic> json) =>
+      _$$TeacherModelImplFromJson(json);
+
+  @override
+  @JsonKey(name: 'teacher_id')
+  final String? teacherId;
+  @override
+  @JsonKey(name: 'teacher_name')
+  final String? teacherName;
+  @override
+  @JsonKey(name: 'avatar')
+  final String? avatar;
+  @override
+  @JsonKey(name: 'introduction')
+  final String? introduction;
+
+  @override
+  String toString() {
+    return 'TeacherModel(teacherId: $teacherId, teacherName: $teacherName, avatar: $avatar, introduction: $introduction)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$TeacherModelImpl &&
+            (identical(other.teacherId, teacherId) ||
+                other.teacherId == teacherId) &&
+            (identical(other.teacherName, teacherName) ||
+                other.teacherName == teacherName) &&
+            (identical(other.avatar, avatar) || other.avatar == avatar) &&
+            (identical(other.introduction, introduction) ||
+                other.introduction == introduction));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, teacherId, teacherName, avatar, introduction);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$TeacherModelImplCopyWith<_$TeacherModelImpl> get copyWith =>
+      __$$TeacherModelImplCopyWithImpl<_$TeacherModelImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$TeacherModelImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _TeacherModel implements TeacherModel {
+  const factory _TeacherModel(
+          {@JsonKey(name: 'teacher_id') final String? teacherId,
+          @JsonKey(name: 'teacher_name') final String? teacherName,
+          @JsonKey(name: 'avatar') final String? avatar,
+          @JsonKey(name: 'introduction') final String? introduction}) =
+      _$TeacherModelImpl;
+
+  factory _TeacherModel.fromJson(Map<String, dynamic> json) =
+      _$TeacherModelImpl.fromJson;
+
+  @override
+  @JsonKey(name: 'teacher_id')
+  String? get teacherId;
+  @override
+  @JsonKey(name: 'teacher_name')
+  String? get teacherName;
+  @override
+  @JsonKey(name: 'avatar')
+  String? get avatar;
+  @override
+  @JsonKey(name: 'introduction')
+  String? get introduction;
+  @override
+  @JsonKey(ignore: true)
+  _$$TeacherModelImplCopyWith<_$TeacherModelImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+GoodsListResponse _$GoodsListResponseFromJson(Map<String, dynamic> json) {
+  return _GoodsListResponse.fromJson(json);
+}
+
+/// @nodoc
+mixin _$GoodsListResponse {
+  @JsonKey(name: 'list')
+  List<GoodsModel> get list => throw _privateConstructorUsedError;
+  @JsonKey(name: 'total')
+  int? get total => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $GoodsListResponseCopyWith<GoodsListResponse> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $GoodsListResponseCopyWith<$Res> {
+  factory $GoodsListResponseCopyWith(
+          GoodsListResponse value, $Res Function(GoodsListResponse) then) =
+      _$GoodsListResponseCopyWithImpl<$Res, GoodsListResponse>;
+  @useResult
+  $Res call(
+      {@JsonKey(name: 'list') List<GoodsModel> list,
+      @JsonKey(name: 'total') int? total});
+}
+
+/// @nodoc
+class _$GoodsListResponseCopyWithImpl<$Res, $Val extends GoodsListResponse>
+    implements $GoodsListResponseCopyWith<$Res> {
+  _$GoodsListResponseCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? list = null,
+    Object? total = freezed,
+  }) {
+    return _then(_value.copyWith(
+      list: null == list
+          ? _value.list
+          : list // ignore: cast_nullable_to_non_nullable
+              as List<GoodsModel>,
+      total: freezed == total
+          ? _value.total
+          : total // ignore: cast_nullable_to_non_nullable
+              as int?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$GoodsListResponseImplCopyWith<$Res>
+    implements $GoodsListResponseCopyWith<$Res> {
+  factory _$$GoodsListResponseImplCopyWith(_$GoodsListResponseImpl value,
+          $Res Function(_$GoodsListResponseImpl) then) =
+      __$$GoodsListResponseImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {@JsonKey(name: 'list') List<GoodsModel> list,
+      @JsonKey(name: 'total') int? total});
+}
+
+/// @nodoc
+class __$$GoodsListResponseImplCopyWithImpl<$Res>
+    extends _$GoodsListResponseCopyWithImpl<$Res, _$GoodsListResponseImpl>
+    implements _$$GoodsListResponseImplCopyWith<$Res> {
+  __$$GoodsListResponseImplCopyWithImpl(_$GoodsListResponseImpl _value,
+      $Res Function(_$GoodsListResponseImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? list = null,
+    Object? total = freezed,
+  }) {
+    return _then(_$GoodsListResponseImpl(
+      list: null == list
+          ? _value._list
+          : list // ignore: cast_nullable_to_non_nullable
+              as List<GoodsModel>,
+      total: freezed == total
+          ? _value.total
+          : total // ignore: cast_nullable_to_non_nullable
+              as int?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$GoodsListResponseImpl implements _GoodsListResponse {
+  const _$GoodsListResponseImpl(
+      {@JsonKey(name: 'list') required final List<GoodsModel> list,
+      @JsonKey(name: 'total') this.total})
+      : _list = list;
+
+  factory _$GoodsListResponseImpl.fromJson(Map<String, dynamic> json) =>
+      _$$GoodsListResponseImplFromJson(json);
+
+  final List<GoodsModel> _list;
+  @override
+  @JsonKey(name: 'list')
+  List<GoodsModel> get list {
+    if (_list is EqualUnmodifiableListView) return _list;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_list);
+  }
+
+  @override
+  @JsonKey(name: 'total')
+  final int? total;
+
+  @override
+  String toString() {
+    return 'GoodsListResponse(list: $list, total: $total)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$GoodsListResponseImpl &&
+            const DeepCollectionEquality().equals(other._list, _list) &&
+            (identical(other.total, total) || other.total == total));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType, const DeepCollectionEquality().hash(_list), total);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$GoodsListResponseImplCopyWith<_$GoodsListResponseImpl> get copyWith =>
+      __$$GoodsListResponseImplCopyWithImpl<_$GoodsListResponseImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$GoodsListResponseImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _GoodsListResponse implements GoodsListResponse {
+  const factory _GoodsListResponse(
+      {@JsonKey(name: 'list') required final List<GoodsModel> list,
+      @JsonKey(name: 'total') final int? total}) = _$GoodsListResponseImpl;
+
+  factory _GoodsListResponse.fromJson(Map<String, dynamic> json) =
+      _$GoodsListResponseImpl.fromJson;
+
+  @override
+  @JsonKey(name: 'list')
+  List<GoodsModel> get list;
+  @override
+  @JsonKey(name: 'total')
+  int? get total;
+  @override
+  @JsonKey(ignore: true)
+  _$$GoodsListResponseImplCopyWith<_$GoodsListResponseImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
