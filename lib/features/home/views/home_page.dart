@@ -57,7 +57,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   // 顶部占位（为固定头部留空间）
                   SliverToBoxAdapter(
                     child: SizedBox(
-                      height: 96.h,
+                      height: 48.h, // 小程序96rpx ÷ 2 = 48.h
                     ),
                   ),
                   // 内容区域
@@ -91,9 +91,9 @@ class _HomePageState extends ConsumerState<HomePage> {
       left: 0,
       right: 0,
       child: Container(
-        height: 96.h,
+        height: 48.h, // 小程序96rpx ÷ 2 = 48.h
         color: Colors.white,
-        padding: EdgeInsets.only(left: 24.w),
+        padding: EdgeInsets.only(left: 12.w), // 小程序24rpx ÷ 2 = 12.w
         alignment: Alignment.centerLeft,
         child: GestureDetector(
           onTap: () {
@@ -105,16 +105,16 @@ class _HomePageState extends ConsumerState<HomePage> {
               Text(
                 majorName,
                 style: TextStyle(
-                  fontSize: 20.sp, // 小程序: 40rpx
-                  fontWeight: FontWeight.w500, // 小程序: 500
+                  fontSize: 20.sp, // 小程序40rpx ÷ 2 = 20.sp
+                  fontWeight: FontWeight.w500,
                   color: Colors.black,
                 ),
               ),
-              SizedBox(width: 20.w), // 小程序: margin-left: 20rpx
+              SizedBox(width: 10.w), // 小程序20rpx ÷ 2 = 10.w
               CachedNetworkImage(
                 imageUrl: 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/down.png',
-                width: 20.w,
-                height: 20.w,
+                width: 10.w, // 小程序20rpx ÷ 2 = 10.w
+                height: 10.w,
                 errorWidget: (context, error, stackTrace) => const SizedBox.shrink(),
               ),
             ],
@@ -203,7 +203,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildSeckillBanner(List<GoodsModel> recommendList) {
     return SizedBox(
       width: double.infinity,
-      height: 300.h, // 增加高度避免溢出,小程序是270rpx但内容较多
+      height: 150.h, // 小程序270rpx ÷ 2 + 额外空间 = 150.h
       child: PageView.builder(
         controller: _pageController,
         padEnds: false,
@@ -212,9 +212,9 @@ class _HomePageState extends ConsumerState<HomePage> {
           if (recommendList.isEmpty) {
             // 空状态图片 (对应小程序 .empty-item: padding: 24rpx 24rpx 0rpx 24rpx)
             return Padding(
-              padding: EdgeInsets.only(left: 8.w, right: 8.w),
+              padding: EdgeInsets.only(left: 4.w, right: 4.w), // viewportFraction效果的间距
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(32.r),
+                borderRadius: BorderRadius.circular(16.r), // 32rpx ÷ 2 = 16.r
                 child: CachedNetworkImage(
                   imageUrl: 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/36byshkvk6.jpg',
                   fit: BoxFit.cover,
@@ -232,7 +232,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           final goods = recommendList[index];
           // swiper-item 的 padding: 24rpx 24rpx 0rpx 24rpx
           return Padding(
-            padding: EdgeInsets.only(left: 8.w, right: 8.w),
+            padding: EdgeInsets.only(left: 4.w, right: 4.w),
             child: _buildSeckillCard(goods),
           );
         },
@@ -262,23 +262,23 @@ class _HomePageState extends ConsumerState<HomePage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r),
-            topRight: Radius.circular(20.r),
+            topLeft: Radius.circular(10.r), // 20rpx ÷ 2 = 10.r
+            topRight: Radius.circular(10.r),
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 秒杀标题区域(有左右padding)
-            // 小程序: .title margin-bottom: 20rpx
+            // 小程序: .title margin-bottom: 20rpx, padding: 32rpx 24rpx
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              padding: EdgeInsets.symmetric(horizontal: 12.w), // 24rpx ÷ 2 = 12.w
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: 0.h), // 移除顶部间距,紧贴content顶部
+                  SizedBox(height: 16.h), // 32rpx ÷ 2 = 16.h (小程序content的padding-top)
                   _buildSectionTitle('秒杀'),
-                  SizedBox(height: 20.h), // 小程序: margin-bottom: 20rpx
+                  SizedBox(height: 10.h), // 20rpx ÷ 2 = 10.h
                 ],
               ),
             ),
@@ -286,7 +286,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             _buildSeckillBanner(state.recommendList),
             // 其余内容（有左右padding）
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              padding: EdgeInsets.symmetric(horizontal: 12.w), // 24rpx ÷ 2 = 12.w
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -301,9 +301,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                       }
                     },
                   ),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 10.h), // 20rpx ÷ 2 = 10.h
                   _buildQuestionBankList(currentList),
-                  SizedBox(height: 60.h),
+                  SizedBox(height: 30.h), // 60rpx ÷ 2 = 30.h
                 ],
               ),
             ),
@@ -320,15 +320,15 @@ class _HomePageState extends ConsumerState<HomePage> {
       children: [
         CachedNetworkImage(
           imageUrl: 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/title-icon.png',
-          width: 30.w,
-          height: 30.w,
+          width: 15.w, // 30rpx ÷ 2 = 15.w
+          height: 15.w,
           errorWidget: (context, error, stackTrace) => const SizedBox.shrink(),
         ),
-        SizedBox(width: 10.w), // 小程序: margin-right: 10rpx
+        SizedBox(width: 5.w), // 10rpx ÷ 2 = 5.w
         Text(
           title,
           style: TextStyle(
-            fontSize: 32.sp, // 小程序: 32rpx
+            fontSize: 16.sp, // 32rpx ÷ 2 = 16.sp
             fontWeight: FontWeight.w600,
             color: Color(0xFF161f30),
           ),
@@ -345,14 +345,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     required ValueChanged<int> onTap,
   }) {
     return SizedBox(
-      height: 70.h,
+      height: 35.h, // 小程序70rpx ÷ 2 = 35.h
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: List.generate(tabs.length, (index) {
             final isActive = index == activeIndex;
             return Padding(
-              padding: EdgeInsets.only(right: index == tabs.length - 1 ? 0 : 40.w),
+              padding: EdgeInsets.only(right: index == tabs.length - 1 ? 0 : 20.w), // 小程序40rpx ÷ 2 = 20.w
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => onTap(index),
@@ -384,7 +384,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         if (isActive) ...[
           SizedBox(height: 4.h),
           Container(
-            width: 80.w,
+            width: 40.w, // 小程序80rpx ÷ 2 = 40.w
             height: 8.h,
             decoration: BoxDecoration(
               color: const Color(0xFF018BFF),
@@ -435,8 +435,8 @@ class _HomePageState extends ConsumerState<HomePage> {
       },
       child: Container(
         width: double.infinity,
-        constraints: BoxConstraints(minHeight: 213.h),
-        padding: EdgeInsets.fromLTRB(32.w, 24.h, 32.w, 0),
+        constraints: BoxConstraints(minHeight: 106.h), // 小程序213rpx ÷ 2 = 106.h
+        padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0), // 小程序32/24/32/0 ÷ 2
         decoration: BoxDecoration(
           // 渐变背景: linear-gradient(90deg, #FBF1FF 0%, #D8F0FF 100%)
           gradient: LinearGradient(
@@ -444,12 +444,12 @@ class _HomePageState extends ConsumerState<HomePage> {
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
-          borderRadius: BorderRadius.circular(32.r),
+          borderRadius: BorderRadius.circular(16.r), // 小程序32rpx ÷ 2 = 16.r
           // box-shadow: 0 0 30rpx rgba(27, 38, 55, 0.06)
           boxShadow: [
             BoxShadow(
               color: Color(0x0F1B2637), // rgba(27, 38, 55, 0.06)
-              blurRadius: 30.r,
+              blurRadius: 15.r, // 小程序30rpx ÷ 2 = 15.r
               offset: Offset(0, 0),
             ),
           ],
@@ -467,8 +467,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                   child: Text(
                     goods.goodsName ?? '未命名商品',
                     style: TextStyle(
-                      fontSize: 34.sp, // font-size: 34rpx
-                      fontWeight: FontWeight.w500, // font-weight: 500
+                      fontSize: 17.sp, // 小程序34rpx ÷ 2 = 17.sp
+                      fontWeight: FontWeight.w500,
                       color: Colors.black,
                       height: 1.4, // line-height: 1.4
                     ),
@@ -496,7 +496,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                               Text(
                                 '${goods.originalPrice}',
                                 style: TextStyle(
-                                  fontSize: 32.sp, // font-size: 32rpx
+                                  fontSize: 16.sp, // 小程序32rpx ÷ 2 = 16.sp
                                   fontWeight: FontWeight.w800, // font-weight: 800
                                   color: const Color(0xFFA3A3A3),
                                   decoration: TextDecoration.lineThrough,
@@ -506,8 +506,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                               // 秒杀价标签图标: 70rpx x 30rpx
                               CachedNetworkImage(
                                 imageUrl: 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/92ac17422896646546913_miaoshajia.png',
-                                width: 70.w,
-                                height: 30.h,
+                                width: 35.w, // 小程序70rpx ÷ 2 = 35.w
+                                height: 15.h, // 小程序30rpx ÷ 2 = 15.h
                                 errorWidget: (context, error, stackTrace) => const SizedBox.shrink(),
                               ),
                             ],
@@ -523,7 +523,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                               Text(
                                 '¥',
                                 style: TextStyle(
-                                  fontSize: 24.sp,
+                                  fontSize: 12.sp, // 小程序24rpx ÷ 2 = 12.sp
                                   fontWeight: FontWeight.w500,
                                   color: const Color(0xFFD845A6),
                                 ),
@@ -532,7 +532,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                               Text(
                                 '${goods.price}',
                                 style: TextStyle(
-                                  fontSize: 40.sp,
+                                  fontSize: 20.sp, // 小程序40rpx ÷ 2 = 20.sp
                                   fontWeight: FontWeight.w800,
                                   color: const Color(0xFFD845A6),
                                 ),
@@ -548,7 +548,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             // 标签区域 (.tags)
             // padding-top: 20rpx, padding-bottom: 24rpx
             Padding(
-              padding: EdgeInsets.only(top: 20.h, bottom: 24.h),
+              padding: EdgeInsets.only(top: 10.h, bottom: 12.h), // 小程序20rpx/24rpx ÷ 2
               child: Wrap(
                 spacing: 12.w, // margin-right: 12rpx
                 children: [
@@ -556,7 +556,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   // background: #FFD27C, font-weight: 600, color: black
                   if (goods.tikuGoodsDetails?.questionNum != null)
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h), // 小程序16rpx/4rpx ÷ 2
                       decoration: BoxDecoration(
                         color: Color(0xFFFFD27C),
                         borderRadius: BorderRadius.circular(8.r),
@@ -583,7 +583,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   // border: 3rpx solid #4981D7, color: #4981D7, background: transparent
                   if (goods.validityDay != null && goods.validityDay!.isNotEmpty)
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h), // 小程序16rpx/4rpx ÷ 2
                       decoration: BoxDecoration(
                         border: Border.all(color: Color(0xFF4981D7), width: 3.w),
                         borderRadius: BorderRadius.circular(8.r),
@@ -604,7 +604,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             // 倒计时区域 (.bottom-time)
             // height: 72rpx, position: relative, bottom: 0, right: 0
             SizedBox(
-              height: 94.h,
+              height: 47.h, // 小程序94rpx ÷ 2 = 47.h
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: LayoutBuilder(
@@ -617,7 +617,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         minWidth: minWidth,
                       ),
                       child: Container(
-                        height: 94.h,
+                        height: 47.h, // 小程序94rpx ÷ 2 = 47.h
                         decoration: BoxDecoration(
                           image: DecorationImage(
                             image: const NetworkImage(
@@ -640,7 +640,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                               Text(
                                 '秒杀倒计时',
                                 style: TextStyle(
-                                  fontSize: 28.sp,
+                                  fontSize: 14.sp, // 小程序28rpx ÷ 2 = 14.sp
                                   fontWeight: FontWeight.w400,
                                   color: const Color(0xFF082980),
                                   letterSpacing: 6.w,
@@ -651,7 +651,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                               Text(
                                 '07:08:48',
                                 style: TextStyle(
-                                  fontSize: 28.sp,
+                                  fontSize: 14.sp, // 小程序28rpx ÷ 2 = 14.sp
                                   fontWeight: FontWeight.w600,
                                   color: const Color(0xFF082980),
                                   letterSpacing: 2.w,
@@ -680,15 +680,15 @@ class _HomePageState extends ConsumerState<HomePage> {
       },
       child: Container(
         width: double.infinity,
-        margin: EdgeInsets.only(bottom: 24.h),
-        padding: EdgeInsets.fromLTRB(32.w, 20.h, 32.w, 12.h),
+        margin: EdgeInsets.only(bottom: 12.h), // 小程序24rpx ÷ 2 = 12.h
+        padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 6.h), // 小程序32/20/32/12 ÷ 2
         decoration: BoxDecoration(
           color: const Color(0xFFF4F9FF),
-          borderRadius: BorderRadius.circular(32.r),
+          borderRadius: BorderRadius.circular(16.r), // 小程序32rpx ÷ 2 = 16.r
           boxShadow: [
             BoxShadow(
               color: const Color(0x0F1B2637),
-              blurRadius: 30.r,
+              blurRadius: 15.r, // 小程序30rpx ÷ 2 = 15.r
               offset: const Offset(0, 0),
             ),
           ],
@@ -760,13 +760,13 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
             // 标签
             Padding(
-              padding: EdgeInsets.only(top: 20.h, bottom: 24.h),
+              padding: EdgeInsets.only(top: 10.h, bottom: 12.h), // 小程序20rpx/24rpx ÷ 2
               child: Wrap(
                 spacing: 12.w,
                 children: [
                   if (goods.tikuGoodsDetails?.questionNum != null)
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h), // 小程序16rpx/4rpx ÷ 2
                       decoration: BoxDecoration(
                         color: Color(0xFFEBF1FF),
                         borderRadius: BorderRadius.circular(8.r),
@@ -782,7 +782,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   if (goods.type.toString() == '8' && goods.tikuGoodsDetails?.questionNum != null)
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h), // 小程序16rpx/4rpx ÷ 2
                       decoration: BoxDecoration(
                         border: Border.all(color: Color(0xFF4981D7), width: 3.w),
                         borderRadius: BorderRadius.circular(8.r),
@@ -798,7 +798,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   if (goods.validityDay != null && goods.validityDay!.isNotEmpty && goods.permissionStatus == '1')
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h), // 小程序16rpx/4rpx ÷ 2
                       decoration: BoxDecoration(
                         border: Border.all(color: Color(0xFF4981D7), width: 3.w),
                         borderRadius: BorderRadius.circular(8.r),
@@ -828,12 +828,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Container(
-                      width: 160.w,
-                      height: 56.h,
+                      width: 80.w, // 小程序160rpx ÷ 2 = 80.w
+                      height: 28.h, // 小程序56rpx ÷ 2 = 28.h
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: Color(0xFF2E68FF),
-                        borderRadius: BorderRadius.circular(64.r),
+                        borderRadius: BorderRadius.circular(32.r), // 小程序64rpx ÷ 2 = 32.r
                       ),
                       child: Text(
                         goods.type.toString() == '18' ? '立即刷题' : '立即测试',
