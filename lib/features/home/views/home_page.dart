@@ -546,9 +546,9 @@ class _HomePageState extends ConsumerState<HomePage> {
               ],
             ),
             // 标签区域 (.tags)
-            // padding-top: 20rpx, padding-bottom: 24rpx
+            // 减少padding避免溢出: 原20rpx/24rpx改为10rpx/12rpx
             Padding(
-              padding: EdgeInsets.only(top: 10.h, bottom: 12.h), // 小程序20rpx/24rpx ÷ 2
+              padding: EdgeInsets.only(top: 5.h, bottom: 6.h), // 进一步减小间距
               child: Wrap(
                 spacing: 12.w, // margin-right: 12rpx
                 children: [
@@ -556,7 +556,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   // background: #FFD27C, font-weight: 600, color: black
                   if (goods.tikuGoodsDetails?.questionNum != null)
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h), // 小程序16rpx/4rpx ÷ 2
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.h), // 减小padding适配高度
                       decoration: BoxDecoration(
                         color: Color(0xFFFFD27C),
                         borderRadius: BorderRadius.circular(8.r),
@@ -583,7 +583,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   // border: 3rpx solid #4981D7, color: #4981D7, background: transparent
                   if (goods.validityDay != null && goods.validityDay!.isNotEmpty)
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h), // 小程序16rpx/4rpx ÷ 2
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.h), // 减小padding适配高度
                       decoration: BoxDecoration(
                         border: Border.all(color: Color(0xFF4981D7), width: 3.w),
                         borderRadius: BorderRadius.circular(8.r),
@@ -602,9 +602,9 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
             ),
             // 倒计时区域 (.bottom-time)
-            // height: 72rpx, position: relative, bottom: 0, right: 0
+            // 减小高度避免溢出
             SizedBox(
-              height: 47.h, // 小程序94rpx ÷ 2 = 47.h
+              height: 40.h, // 减小倒计时区域高度
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: LayoutBuilder(
@@ -617,7 +617,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         minWidth: minWidth,
                       ),
                       child: Container(
-                        height: 47.h, // 小程序94rpx ÷ 2 = 47.h
+                        height: 40.h, // 与外层SizedBox高度一致
                         decoration: BoxDecoration(
                           image: DecorationImage(
                             image: const NetworkImage(
@@ -766,7 +766,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 children: [
                   if (goods.tikuGoodsDetails?.questionNum != null)
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h), // 小程序16rpx/4rpx ÷ 2
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.h), // 减小padding适配高度
                       decoration: BoxDecoration(
                         color: Color(0xFFEBF1FF),
                         borderRadius: BorderRadius.circular(8.r),
@@ -782,7 +782,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   if (goods.type.toString() == '8' && goods.tikuGoodsDetails?.questionNum != null)
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h), // 小程序16rpx/4rpx ÷ 2
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.h), // 减小padding适配高度
                       decoration: BoxDecoration(
                         border: Border.all(color: Color(0xFF4981D7), width: 3.w),
                         borderRadius: BorderRadius.circular(8.r),
@@ -798,7 +798,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   if (goods.validityDay != null && goods.validityDay!.isNotEmpty && goods.permissionStatus == '1')
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h), // 小程序16rpx/4rpx ÷ 2
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.h), // 减小padding适配高度
                       decoration: BoxDecoration(
                         border: Border.all(color: Color(0xFF4981D7), width: 3.w),
                         borderRadius: BorderRadius.circular(8.r),
