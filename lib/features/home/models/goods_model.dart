@@ -29,9 +29,23 @@ class GoodsModel with _$GoodsModel {
     @JsonKey(name: 'total_class_hour') String? totalClassHour, // 总课时
     @JsonKey(name: 'validity_type') String? validityType, // 有效期类型
     @JsonKey(name: 'validity_day') String? validityDay, // 有效天数
+    @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails, // 题库商品详情
   }) = _GoodsModel;
 
   factory GoodsModel.fromJson(Map<String, dynamic> json) => _$GoodsModelFromJson(json);
+}
+
+/// 题库商品详情
+@freezed
+class TikuGoodsDetails with _$TikuGoodsDetails {
+  const factory TikuGoodsDetails({
+    @JsonKey(name: 'question_num') dynamic questionNum, // 题目数量
+    @JsonKey(name: 'paper_num') dynamic paperNum, // 试卷数量
+    @JsonKey(name: 'exam_round_num') dynamic examRoundNum, // 考试轮次
+    @JsonKey(name: 'exam_time') String? examTime, // 考试时间
+  }) = _TikuGoodsDetails;
+
+  factory TikuGoodsDetails.fromJson(Map<String, dynamic> json) => _$TikuGoodsDetailsFromJson(json);
 }
 
 /// 教师模型

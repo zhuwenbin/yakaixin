@@ -29,6 +29,10 @@ _$GoodsModelImpl _$$GoodsModelImplFromJson(Map<String, dynamic> json) =>
       totalClassHour: json['total_class_hour'] as String?,
       validityType: json['validity_type'] as String?,
       validityDay: json['validity_day'] as String?,
+      tikuGoodsDetails: json['tiku_goods_details'] == null
+          ? null
+          : TikuGoodsDetails.fromJson(
+              json['tiku_goods_details'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$$GoodsModelImplToJson(_$GoodsModelImpl instance) =>
@@ -52,6 +56,25 @@ Map<String, dynamic> _$$GoodsModelImplToJson(_$GoodsModelImpl instance) =>
       'total_class_hour': instance.totalClassHour,
       'validity_type': instance.validityType,
       'validity_day': instance.validityDay,
+      'tiku_goods_details': instance.tikuGoodsDetails,
+    };
+
+_$TikuGoodsDetailsImpl _$$TikuGoodsDetailsImplFromJson(
+        Map<String, dynamic> json) =>
+    _$TikuGoodsDetailsImpl(
+      questionNum: json['question_num'],
+      paperNum: json['paper_num'],
+      examRoundNum: json['exam_round_num'],
+      examTime: json['exam_time'] as String?,
+    );
+
+Map<String, dynamic> _$$TikuGoodsDetailsImplToJson(
+        _$TikuGoodsDetailsImpl instance) =>
+    <String, dynamic>{
+      'question_num': instance.questionNum,
+      'paper_num': instance.paperNum,
+      'exam_round_num': instance.examRoundNum,
+      'exam_time': instance.examTime,
     };
 
 _$TeacherModelImpl _$$TeacherModelImplFromJson(Map<String, dynamic> json) =>

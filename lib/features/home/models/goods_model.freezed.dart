@@ -64,7 +64,9 @@ mixin _$GoodsModel {
   @JsonKey(name: 'validity_type')
   String? get validityType => throw _privateConstructorUsedError; // 有效期类型
   @JsonKey(name: 'validity_day')
-  String? get validityDay => throw _privateConstructorUsedError;
+  String? get validityDay => throw _privateConstructorUsedError; // 有效天数
+  @JsonKey(name: 'tiku_goods_details')
+  TikuGoodsDetails? get tikuGoodsDetails => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -97,7 +99,10 @@ abstract class $GoodsModelCopyWith<$Res> {
       @JsonKey(name: 'question_number') String? questionNumber,
       @JsonKey(name: 'total_class_hour') String? totalClassHour,
       @JsonKey(name: 'validity_type') String? validityType,
-      @JsonKey(name: 'validity_day') String? validityDay});
+      @JsonKey(name: 'validity_day') String? validityDay,
+      @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails});
+
+  $TikuGoodsDetailsCopyWith<$Res>? get tikuGoodsDetails;
 }
 
 /// @nodoc
@@ -132,6 +137,7 @@ class _$GoodsModelCopyWithImpl<$Res, $Val extends GoodsModel>
     Object? totalClassHour = freezed,
     Object? validityType = freezed,
     Object? validityDay = freezed,
+    Object? tikuGoodsDetails = freezed,
   }) {
     return _then(_value.copyWith(
       goodsId: freezed == goodsId
@@ -210,7 +216,23 @@ class _$GoodsModelCopyWithImpl<$Res, $Val extends GoodsModel>
           ? _value.validityDay
           : validityDay // ignore: cast_nullable_to_non_nullable
               as String?,
+      tikuGoodsDetails: freezed == tikuGoodsDetails
+          ? _value.tikuGoodsDetails
+          : tikuGoodsDetails // ignore: cast_nullable_to_non_nullable
+              as TikuGoodsDetails?,
     ) as $Val);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $TikuGoodsDetailsCopyWith<$Res>? get tikuGoodsDetails {
+    if (_value.tikuGoodsDetails == null) {
+      return null;
+    }
+
+    return $TikuGoodsDetailsCopyWith<$Res>(_value.tikuGoodsDetails!, (value) {
+      return _then(_value.copyWith(tikuGoodsDetails: value) as $Val);
+    });
   }
 }
 
@@ -241,7 +263,11 @@ abstract class _$$GoodsModelImplCopyWith<$Res>
       @JsonKey(name: 'question_number') String? questionNumber,
       @JsonKey(name: 'total_class_hour') String? totalClassHour,
       @JsonKey(name: 'validity_type') String? validityType,
-      @JsonKey(name: 'validity_day') String? validityDay});
+      @JsonKey(name: 'validity_day') String? validityDay,
+      @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails});
+
+  @override
+  $TikuGoodsDetailsCopyWith<$Res>? get tikuGoodsDetails;
 }
 
 /// @nodoc
@@ -274,6 +300,7 @@ class __$$GoodsModelImplCopyWithImpl<$Res>
     Object? totalClassHour = freezed,
     Object? validityType = freezed,
     Object? validityDay = freezed,
+    Object? tikuGoodsDetails = freezed,
   }) {
     return _then(_$GoodsModelImpl(
       goodsId: freezed == goodsId
@@ -352,6 +379,10 @@ class __$$GoodsModelImplCopyWithImpl<$Res>
           ? _value.validityDay
           : validityDay // ignore: cast_nullable_to_non_nullable
               as String?,
+      tikuGoodsDetails: freezed == tikuGoodsDetails
+          ? _value.tikuGoodsDetails
+          : tikuGoodsDetails // ignore: cast_nullable_to_non_nullable
+              as TikuGoodsDetails?,
     ));
   }
 }
@@ -378,7 +409,8 @@ class _$GoodsModelImpl implements _GoodsModel {
       @JsonKey(name: 'question_number') this.questionNumber,
       @JsonKey(name: 'total_class_hour') this.totalClassHour,
       @JsonKey(name: 'validity_type') this.validityType,
-      @JsonKey(name: 'validity_day') this.validityDay})
+      @JsonKey(name: 'validity_day') this.validityDay,
+      @JsonKey(name: 'tiku_goods_details') this.tikuGoodsDetails})
       : _teacherData = teacherData;
 
   factory _$GoodsModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -463,10 +495,14 @@ class _$GoodsModelImpl implements _GoodsModel {
   @override
   @JsonKey(name: 'validity_day')
   final String? validityDay;
+// 有效天数
+  @override
+  @JsonKey(name: 'tiku_goods_details')
+  final TikuGoodsDetails? tikuGoodsDetails;
 
   @override
   String toString() {
-    return 'GoodsModel(goodsId: $goodsId, goodsName: $goodsName, coverImg: $coverImg, type: $type, typeName: $typeName, detailsType: $detailsType, price: $price, originalPrice: $originalPrice, permissionStatus: $permissionStatus, isHomepageRecommend: $isHomepageRecommend, teachingType: $teachingType, teachingTypeName: $teachingTypeName, businessType: $businessType, isRecommend: $isRecommend, teacherData: $teacherData, questionNumber: $questionNumber, totalClassHour: $totalClassHour, validityType: $validityType, validityDay: $validityDay)';
+    return 'GoodsModel(goodsId: $goodsId, goodsName: $goodsName, coverImg: $coverImg, type: $type, typeName: $typeName, detailsType: $detailsType, price: $price, originalPrice: $originalPrice, permissionStatus: $permissionStatus, isHomepageRecommend: $isHomepageRecommend, teachingType: $teachingType, teachingTypeName: $teachingTypeName, businessType: $businessType, isRecommend: $isRecommend, teacherData: $teacherData, questionNumber: $questionNumber, totalClassHour: $totalClassHour, validityType: $validityType, validityDay: $validityDay, tikuGoodsDetails: $tikuGoodsDetails)';
   }
 
   @override
@@ -508,7 +544,9 @@ class _$GoodsModelImpl implements _GoodsModel {
             (identical(other.validityType, validityType) ||
                 other.validityType == validityType) &&
             (identical(other.validityDay, validityDay) ||
-                other.validityDay == validityDay));
+                other.validityDay == validityDay) &&
+            (identical(other.tikuGoodsDetails, tikuGoodsDetails) ||
+                other.tikuGoodsDetails == tikuGoodsDetails));
   }
 
   @JsonKey(ignore: true)
@@ -533,7 +571,8 @@ class _$GoodsModelImpl implements _GoodsModel {
         questionNumber,
         totalClassHour,
         validityType,
-        validityDay
+        validityDay,
+        tikuGoodsDetails
       ]);
 
   @JsonKey(ignore: true)
@@ -570,8 +609,9 @@ abstract class _GoodsModel implements GoodsModel {
       @JsonKey(name: 'question_number') final String? questionNumber,
       @JsonKey(name: 'total_class_hour') final String? totalClassHour,
       @JsonKey(name: 'validity_type') final String? validityType,
-      @JsonKey(name: 'validity_day')
-      final String? validityDay}) = _$GoodsModelImpl;
+      @JsonKey(name: 'validity_day') final String? validityDay,
+      @JsonKey(name: 'tiku_goods_details')
+      final TikuGoodsDetails? tikuGoodsDetails}) = _$GoodsModelImpl;
 
   factory _GoodsModel.fromJson(Map<String, dynamic> json) =
       _$GoodsModelImpl.fromJson;
@@ -633,9 +673,237 @@ abstract class _GoodsModel implements GoodsModel {
   @override // 有效期类型
   @JsonKey(name: 'validity_day')
   String? get validityDay;
+  @override // 有效天数
+  @JsonKey(name: 'tiku_goods_details')
+  TikuGoodsDetails? get tikuGoodsDetails;
   @override
   @JsonKey(ignore: true)
   _$$GoodsModelImplCopyWith<_$GoodsModelImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+TikuGoodsDetails _$TikuGoodsDetailsFromJson(Map<String, dynamic> json) {
+  return _TikuGoodsDetails.fromJson(json);
+}
+
+/// @nodoc
+mixin _$TikuGoodsDetails {
+  @JsonKey(name: 'question_num')
+  dynamic get questionNum => throw _privateConstructorUsedError; // 题目数量
+  @JsonKey(name: 'paper_num')
+  dynamic get paperNum => throw _privateConstructorUsedError; // 试卷数量
+  @JsonKey(name: 'exam_round_num')
+  dynamic get examRoundNum => throw _privateConstructorUsedError; // 考试轮次
+  @JsonKey(name: 'exam_time')
+  String? get examTime => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $TikuGoodsDetailsCopyWith<TikuGoodsDetails> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $TikuGoodsDetailsCopyWith<$Res> {
+  factory $TikuGoodsDetailsCopyWith(
+          TikuGoodsDetails value, $Res Function(TikuGoodsDetails) then) =
+      _$TikuGoodsDetailsCopyWithImpl<$Res, TikuGoodsDetails>;
+  @useResult
+  $Res call(
+      {@JsonKey(name: 'question_num') dynamic questionNum,
+      @JsonKey(name: 'paper_num') dynamic paperNum,
+      @JsonKey(name: 'exam_round_num') dynamic examRoundNum,
+      @JsonKey(name: 'exam_time') String? examTime});
+}
+
+/// @nodoc
+class _$TikuGoodsDetailsCopyWithImpl<$Res, $Val extends TikuGoodsDetails>
+    implements $TikuGoodsDetailsCopyWith<$Res> {
+  _$TikuGoodsDetailsCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? questionNum = freezed,
+    Object? paperNum = freezed,
+    Object? examRoundNum = freezed,
+    Object? examTime = freezed,
+  }) {
+    return _then(_value.copyWith(
+      questionNum: freezed == questionNum
+          ? _value.questionNum
+          : questionNum // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      paperNum: freezed == paperNum
+          ? _value.paperNum
+          : paperNum // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      examRoundNum: freezed == examRoundNum
+          ? _value.examRoundNum
+          : examRoundNum // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      examTime: freezed == examTime
+          ? _value.examTime
+          : examTime // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$TikuGoodsDetailsImplCopyWith<$Res>
+    implements $TikuGoodsDetailsCopyWith<$Res> {
+  factory _$$TikuGoodsDetailsImplCopyWith(_$TikuGoodsDetailsImpl value,
+          $Res Function(_$TikuGoodsDetailsImpl) then) =
+      __$$TikuGoodsDetailsImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {@JsonKey(name: 'question_num') dynamic questionNum,
+      @JsonKey(name: 'paper_num') dynamic paperNum,
+      @JsonKey(name: 'exam_round_num') dynamic examRoundNum,
+      @JsonKey(name: 'exam_time') String? examTime});
+}
+
+/// @nodoc
+class __$$TikuGoodsDetailsImplCopyWithImpl<$Res>
+    extends _$TikuGoodsDetailsCopyWithImpl<$Res, _$TikuGoodsDetailsImpl>
+    implements _$$TikuGoodsDetailsImplCopyWith<$Res> {
+  __$$TikuGoodsDetailsImplCopyWithImpl(_$TikuGoodsDetailsImpl _value,
+      $Res Function(_$TikuGoodsDetailsImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? questionNum = freezed,
+    Object? paperNum = freezed,
+    Object? examRoundNum = freezed,
+    Object? examTime = freezed,
+  }) {
+    return _then(_$TikuGoodsDetailsImpl(
+      questionNum: freezed == questionNum
+          ? _value.questionNum
+          : questionNum // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      paperNum: freezed == paperNum
+          ? _value.paperNum
+          : paperNum // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      examRoundNum: freezed == examRoundNum
+          ? _value.examRoundNum
+          : examRoundNum // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      examTime: freezed == examTime
+          ? _value.examTime
+          : examTime // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$TikuGoodsDetailsImpl implements _TikuGoodsDetails {
+  const _$TikuGoodsDetailsImpl(
+      {@JsonKey(name: 'question_num') this.questionNum,
+      @JsonKey(name: 'paper_num') this.paperNum,
+      @JsonKey(name: 'exam_round_num') this.examRoundNum,
+      @JsonKey(name: 'exam_time') this.examTime});
+
+  factory _$TikuGoodsDetailsImpl.fromJson(Map<String, dynamic> json) =>
+      _$$TikuGoodsDetailsImplFromJson(json);
+
+  @override
+  @JsonKey(name: 'question_num')
+  final dynamic questionNum;
+// 题目数量
+  @override
+  @JsonKey(name: 'paper_num')
+  final dynamic paperNum;
+// 试卷数量
+  @override
+  @JsonKey(name: 'exam_round_num')
+  final dynamic examRoundNum;
+// 考试轮次
+  @override
+  @JsonKey(name: 'exam_time')
+  final String? examTime;
+
+  @override
+  String toString() {
+    return 'TikuGoodsDetails(questionNum: $questionNum, paperNum: $paperNum, examRoundNum: $examRoundNum, examTime: $examTime)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$TikuGoodsDetailsImpl &&
+            const DeepCollectionEquality()
+                .equals(other.questionNum, questionNum) &&
+            const DeepCollectionEquality().equals(other.paperNum, paperNum) &&
+            const DeepCollectionEquality()
+                .equals(other.examRoundNum, examRoundNum) &&
+            (identical(other.examTime, examTime) ||
+                other.examTime == examTime));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType,
+      const DeepCollectionEquality().hash(questionNum),
+      const DeepCollectionEquality().hash(paperNum),
+      const DeepCollectionEquality().hash(examRoundNum),
+      examTime);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$TikuGoodsDetailsImplCopyWith<_$TikuGoodsDetailsImpl> get copyWith =>
+      __$$TikuGoodsDetailsImplCopyWithImpl<_$TikuGoodsDetailsImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$TikuGoodsDetailsImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _TikuGoodsDetails implements TikuGoodsDetails {
+  const factory _TikuGoodsDetails(
+          {@JsonKey(name: 'question_num') final dynamic questionNum,
+          @JsonKey(name: 'paper_num') final dynamic paperNum,
+          @JsonKey(name: 'exam_round_num') final dynamic examRoundNum,
+          @JsonKey(name: 'exam_time') final String? examTime}) =
+      _$TikuGoodsDetailsImpl;
+
+  factory _TikuGoodsDetails.fromJson(Map<String, dynamic> json) =
+      _$TikuGoodsDetailsImpl.fromJson;
+
+  @override
+  @JsonKey(name: 'question_num')
+  dynamic get questionNum;
+  @override // 题目数量
+  @JsonKey(name: 'paper_num')
+  dynamic get paperNum;
+  @override // 试卷数量
+  @JsonKey(name: 'exam_round_num')
+  dynamic get examRoundNum;
+  @override // 考试轮次
+  @JsonKey(name: 'exam_time')
+  String? get examTime;
+  @override
+  @JsonKey(ignore: true)
+  _$$TikuGoodsDetailsImplCopyWith<_$TikuGoodsDetailsImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
