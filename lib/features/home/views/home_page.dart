@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -15,13 +18,23 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  late final PageController _pageController;
+  int _tabIndex = 0;
+
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(viewportFraction: 0.92);
     // 页面加载时获取数据
     Future.microtask(() {
       ref.read(homeProvider.notifier).loadHomeData();
     });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -31,37 +44,40 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // 主内容区域
-          RefreshIndicator(
-            onRefresh: () => ref.read(homeProvider.notifier).refresh(),
-            child: CustomScrollView(
-              slivers: [
-                // 顶部占位（为固定头部留空间）
-                // 175rpx = 87.5.h (小程序中 margin-top: 175rpx)
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: MediaQuery.of(context).padding.top + 96.h + 79.h,
+      body: SafeArea(
+        top: true,
+        bottom: false,
+        child: Stack(
+          children: [
+            // 主内容区域
+            RefreshIndicator(
+              onRefresh: () => ref.read(homeProvider.notifier).refresh(),
+              child: CustomScrollView(
+                slivers: [
+                  // 顶部占位（为固定头部留空间）
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 96.h,
+                    ),
                   ),
-                ),
-                // 内容区域
-                if (homeState.isLoading)
-                  SliverToBoxAdapter(
-                    child: _buildLoading(),
-                  )
-                else if (homeState.error != null)
-                  SliverToBoxAdapter(
-                    child: _buildError(homeState.error!),
-                  )
-                else
-                  _buildContent(homeState),
-              ],
+                  // 内容区域
+                  if (homeState.isLoading)
+                    SliverToBoxAdapter(
+                      child: _buildLoading(),
+                    )
+                  else if (homeState.error != null)
+                    SliverToBoxAdapter(
+                      child: _buildError(homeState.error!),
+                    )
+                  else
+                    _buildContent(homeState),
+                ],
+              ),
             ),
-          ),
-          // 固定头部
-          _buildFixedHeader(major?.majorName ?? '选择专业'),
-        ],
+            // 固定头部
+            _buildFixedHeader(major?.majorName ?? '选择专业'),
+          ],
+        ),
       ),
     );
   }
@@ -74,37 +90,33 @@ class _HomePageState extends ConsumerState<HomePage> {
       left: 0,
       right: 0,
       child: Container(
+        height: 96.h,
         color: Colors.white,
-        padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top,
-        ),
-        child: Container(
-          height: 96.h,
-          padding: EdgeInsets.only(left: 24.w),
-          alignment: Alignment.centerLeft,
-          child: GestureDetector(
-            onTap: () {
-              // TODO: 打开专业选择弹窗
-            },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  majorName,
-                  style: TextStyle(
-                    fontSize: 40.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black,
-                  ),
+        padding: EdgeInsets.symmetric(horizontal: 24.w),
+        alignment: Alignment.centerLeft,
+        child: GestureDetector(
+          onTap: () {
+            // TODO: 打开专业选择弹窗
+          },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                majorName,
+                style: TextStyle(
+                  fontSize: 32.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
                 ),
-                SizedBox(width: 20.w),
-                Image.network(
-                  'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/down.png',
-                  width: 20.w,
-                  height: 20.w,
-                ),
-              ],
-            ),
+              ),
+              SizedBox(width: 12.w),
+              CachedNetworkImage(
+                imageUrl: 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/down.png',
+                width: 20.w,
+                height: 20.w,
+                errorWidget: (context, error, stackTrace) => const SizedBox.shrink(),
+              ),
+            ],
           ),
         ),
       ),
@@ -192,27 +204,26 @@ class _HomePageState extends ConsumerState<HomePage> {
       width: double.infinity,
       height: 270.h,
       child: PageView.builder(
+        controller: _pageController,
+        padEnds: false,
         itemCount: recommendList.isEmpty ? 1 : recommendList.length,
         itemBuilder: (context, index) {
           if (recommendList.isEmpty) {
             // 空状态图片 (对应小程序 .empty-item)
             return Padding(
-              padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 0),
-              child: Container(
-                height: 232.4.h,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(32.r),
-                  child: Image.network(
-                    'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/36byshkvk6.jpg',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Color(0xFFF4F9FF),
-                        alignment: Alignment.center,
-                        child: Icon(Icons.image, size: 50.sp, color: Colors.grey.shade300),
-                      );
-                    },
-                  ),
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32.r),
+                child: CachedNetworkImage(
+                  imageUrl: 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/36byshkvk6.jpg',
+                  fit: BoxFit.cover,
+                  errorWidget: (context, error, stackTrace) {
+                    return Container(
+                      color: const Color(0xFFF4F9FF),
+                      alignment: Alignment.center,
+                      child: Icon(Icons.image, size: 50.sp, color: Colors.grey.shade300),
+                    );
+                  },
                 ),
               ),
             );
@@ -220,7 +231,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           final goods = recommendList[index];
           // swiper-item 的 padding: 24rpx 24rpx 0rpx 24rpx
           return Padding(
-            padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 0),
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
             child: _buildSeckillCard(goods),
           );
         },
@@ -231,6 +242,19 @@ class _HomePageState extends ConsumerState<HomePage> {
   /// 构建内容区域
   /// 对应小程序: .content
   Widget _buildContent(HomeState state) {
+    final tabs = ['题库', '网课', '直播'];
+    final List<GoodsModel> currentList;
+    switch (_tabIndex) {
+      case 1:
+        currentList = state.onlineCourseList;
+        break;
+      case 2:
+        currentList = state.liveList;
+        break;
+      default:
+        currentList = state.questionBankList;
+    }
+
     return SliverToBoxAdapter(
       child: Container(
         width: double.infinity,
@@ -264,9 +288,19 @@ class _HomePageState extends ConsumerState<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildTabBar(),
+                  _buildTabBar(
+                    tabs: tabs,
+                    activeIndex: _tabIndex,
+                    onTap: (idx) {
+                      if (_tabIndex != idx) {
+                        setState(() {
+                          _tabIndex = idx;
+                        });
+                      }
+                    },
+                  ),
                   SizedBox(height: 20.h),
-                  _buildQuestionBankList(state.questionBankList),
+                  _buildQuestionBankList(currentList),
                   SizedBox(height: 60.h),
                 ],
               ),
@@ -301,47 +335,60 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   /// 构建Tab切换栏
   /// 对应小程序: .tabs
-  Widget _buildTabBar() {
+  Widget _buildTabBar({
+    required List<String> tabs,
+    required int activeIndex,
+    required ValueChanged<int> onTap,
+  }) {
     return SizedBox(
       height: 70.h,
-      child: Row(
-        children: [
-          _buildTabItem('题库', isActive: true),
-          SizedBox(width: 40.w),
-          // 其他Tab可以后续添加
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: List.generate(tabs.length, (index) {
+            final isActive = index == activeIndex;
+            return Padding(
+              padding: EdgeInsets.only(right: index == tabs.length - 1 ? 0 : 40.w),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => onTap(index),
+                child: _buildTabItem(
+                  tabs[index],
+                  isActive: isActive,
+                ),
+              ),
+            );
+          }),
+        ),
       ),
     );
   }
 
   /// 构建单个Tab项
   Widget _buildTabItem(String label, {bool isActive = false}) {
-    return SizedBox(
-      width: 112.w,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: isActive ? 36.sp : 32.sp,
-              fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-              color: isActive ? Colors.black : Color(0xFF666666),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: isActive ? 36.sp : 32.sp,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+            color: isActive ? Colors.black : const Color(0xFF666666),
+          ),
+        ),
+        if (isActive) ...[
+          SizedBox(height: 4.h),
+          Container(
+            width: 80.w,
+            height: 8.h,
+            decoration: BoxDecoration(
+              color: const Color(0xFF018BFF),
+              borderRadius: BorderRadius.circular(4.r),
             ),
           ),
-          if (isActive) ...[
-            SizedBox(height: 4.h),
-            Container(
-              width: 112.w * 0.8,
-              height: 8.h,
-              decoration: BoxDecoration(
-                color: Color(0xFF018BFF),
-                borderRadius: BorderRadius.circular(4.r),
-              ),
-            ),
-          ],
         ],
-      ),
+      ],
     );
   }
 
@@ -426,69 +473,71 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 ),
                 SizedBox(width: 12.w),
-                // 价格区域 (.price2) - 水平排列！
-                // 小程序：display: flex; align-items: baseline;
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // 原价 (.original_price)
-                    if (goods.originalPrice != null && 
-                        goods.originalPrice.toString().isNotEmpty)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            '${goods.originalPrice}',
-                            style: TextStyle(
-                              fontSize: 32.sp, // font-size: 32rpx
-                              fontWeight: FontWeight.w800, // font-weight: 800
-                              color: Color(0xFFA3A3A3),
-                              decoration: TextDecoration.lineThrough,
-                            ),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.topRight,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // 原价 (.original_price)
+                        if (goods.originalPrice != null && 
+                            goods.originalPrice.toString().isNotEmpty)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                '${goods.originalPrice}',
+                                style: TextStyle(
+                                  fontSize: 32.sp, // font-size: 32rpx
+                                  fontWeight: FontWeight.w800, // font-weight: 800
+                                  color: const Color(0xFFA3A3A3),
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                              SizedBox(width: 8.w), // margin-left: 8rpx
+                              // 秒杀价标签图标: 70rpx x 30rpx
+                              CachedNetworkImage(
+                                imageUrl: 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/92ac17422896646546913_miaoshajia.png',
+                                width: 70.w,
+                                height: 30.h,
+                                errorWidget: (context, error, stackTrace) => const SizedBox.shrink(),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 8.w), // margin-left: 8rpx
-                          // 秒杀价标签图标: 70rpx x 30rpx
-                          Image.network(
-                            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/92ac17422896646546913_miaoshajia.png',
-                            width: 70.w,
-                            height: 30.h,
-                            errorBuilder: (context, error, stackTrace) {
-                              return SizedBox.shrink();
-                            },
+                        // 现价 (.sale_price) - 与原价同行!
+                        if (goods.price != null && goods.price.toString().isNotEmpty)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // 符号: 24rpx, font-weight: 500, color: #D845A6
+                              Text(
+                                '¥',
+                                style: TextStyle(
+                                  fontSize: 24.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFFD845A6),
+                                ),
+                              ),
+                              // 金额: 40rpx, font-weight: 800, color: #D845A6
+                              Text(
+                                '${goods.price}',
+                                style: TextStyle(
+                                  fontSize: 40.sp,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFFD845A6),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    // 现价 (.sale_price) - 与原价同行！
-                    if (goods.price != null && goods.price.toString().isNotEmpty)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // 符号: 24rpx, font-weight: 500, color: #D845A6
-                          Text(
-                            '¥',
-                            style: TextStyle(
-                              fontSize: 24.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFFD845A6),
-                            ),
-                          ),
-                          // 金额: 40rpx, font-weight: 800, color: #D845A6
-                          Text(
-                            '${goods.price}',
-                            style: TextStyle(
-                              fontSize: 40.sp,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFFD845A6),
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -552,55 +601,65 @@ class _HomePageState extends ConsumerState<HomePage> {
             // 倒计时区域 (.bottom-time)
             // height: 72rpx, position: relative, bottom: 0, right: 0
             SizedBox(
-              height: 72.h,
+              height: 94.h,
               child: Align(
                 alignment: Alignment.bottomRight,
-                child: Container(
-                  // width: 70%, height: 94rpx
-                  // 背景图: background-image: url(...), background-size: cover
-                  width: 400.w,
-                  height: 94.h,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage(
-                        'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/5e91174186068572265789_daojishiback.png',
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final maxWidth = math.min(constraints.maxWidth * 0.9, 400.w);
+                    final minWidth = math.min(constraints.maxWidth * 0.7, maxWidth);
+                    return ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: maxWidth,
+                        minWidth: minWidth,
                       ),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  // padding-top: 22rpx
-                  padding: EdgeInsets.only(top: 22.h),
-                  alignment: Alignment.center,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // 标签文字: 28rpx, font-weight: 400, color: #082980
-                        // letter-spacing: 6rpx
-                        Text(
-                          '秒杀倒计时',
-                          style: TextStyle(
-                            fontSize: 28.sp,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF082980),
-                            letterSpacing: 6.w,
+                      child: Container(
+                        height: 94.h,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: const NetworkImage(
+                              'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/5e91174186068572265789_daojishiback.png',
+                            ),
+                            fit: BoxFit.cover,
+                            onError: (_, __) {},
                           ),
                         ),
-                        SizedBox(width: 10.w), // margin-right: 10rpx
-                        // TODO: 接入真实倒计时组件 <countDown>
-                        Text(
-                          '07:08:48',
-                          style: TextStyle(
-                            fontSize: 28.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF082980),
+                        padding: EdgeInsets.only(top: 22.h),
+                        alignment: Alignment.center,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // 标签文字: 28rpx, font-weight: 400, color: #082980
+                              // letter-spacing: 6rpx
+                              Text(
+                                '秒杀倒计时',
+                                style: TextStyle(
+                                  fontSize: 28.sp,
+                                  fontWeight: FontWeight.w400,
+                                  color: const Color(0xFF082980),
+                                  letterSpacing: 6.w,
+                                ),
+                              ),
+                              SizedBox(width: 10.w), // margin-right: 10rpx
+                              // TODO: 接入真实倒计时组件 <countDown>
+                              Text(
+                                '07:08:48',
+                                style: TextStyle(
+                                  fontSize: 28.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF082980),
+                                  letterSpacing: 2.w,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -619,15 +678,15 @@ class _HomePageState extends ConsumerState<HomePage> {
       child: Container(
         width: double.infinity,
         margin: EdgeInsets.only(bottom: 24.h),
-        padding: EdgeInsets.fromLTRB(32.w, 24.h, 32.w, 0),
+        padding: EdgeInsets.fromLTRB(32.w, 20.h, 32.w, 12.h),
         decoration: BoxDecoration(
-          color: Color(0xFFF4F9FF),
+          color: const Color(0xFFF4F9FF),
           borderRadius: BorderRadius.circular(32.r),
           boxShadow: [
             BoxShadow(
-              color: Color(0x0F1B2637),
+              color: const Color(0x0F1B2637),
               blurRadius: 30.r,
-              offset: Offset(0, 0),
+              offset: const Offset(0, 0),
             ),
           ],
         ),
@@ -653,39 +712,45 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
                 if (goods.price != null && goods.price.toString().isNotEmpty) ...[
                   SizedBox(width: 12.w),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      if (goods.originalPrice != null && goods.originalPrice.toString().isNotEmpty) ...[
-                        Text(
-                          '${goods.originalPrice}',
-                          style: TextStyle(
-                            fontSize: 28.sp,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFFA3A3A3),
-                            decoration: TextDecoration.lineThrough,
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.topRight,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          if (goods.originalPrice != null && goods.originalPrice.toString().isNotEmpty) ...[
+                            Text(
+                              '${goods.originalPrice}',
+                              style: TextStyle(
+                                fontSize: 28.sp,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFFA3A3A3),
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                          ],
+                          Text(
+                            '¥',
+                            style: TextStyle(
+                              fontSize: 24.sp,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFFFF5E00),
+                            ),
                           ),
-                        ),
-                        SizedBox(width: 12.w),
-                      ],
-                      Text(
-                        '¥',
-                        style: TextStyle(
-                          fontSize: 24.sp,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFFFF5E00),
-                        ),
+                          Text(
+                            '${goods.price}',
+                            style: TextStyle(
+                              fontSize: 32.sp,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFFF5E00),
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '${goods.price}',
-                        style: TextStyle(
-                          fontSize: 32.sp,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFFFF5E00),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ],
