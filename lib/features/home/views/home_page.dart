@@ -369,6 +369,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   /// 构建单个Tab项
+  /// 小程序: font-size: 36rpx(active)/32rpx(normal)
   Widget _buildTabItem(String label, {bool isActive = false}) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -376,7 +377,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         Text(
           label,
           style: TextStyle(
-            fontSize: isActive ? 36.sp : 32.sp,
+            fontSize: isActive ? 18.sp : 16.sp, // 小程序36rpx/32rpx ÷ 2
             fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
             color: isActive ? Colors.black : const Color(0xFF666666),
           ),
@@ -746,7 +747,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           Text(
                             '${goods.price}',
                             style: TextStyle(
-                              fontSize: 32.sp,
+                              fontSize: 16.sp, // 小程序32rpx ÷ 2 = 16.sp
                               fontWeight: FontWeight.w800,
                               color: const Color(0xFFFF5E00),
                             ),
@@ -818,7 +819,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             // 底部按钮
             if (goods.permissionStatus == '1') ...[
               Container(
-                height: 100.h,
+                height: 50.h, // 小程序100rpx ÷ 2 = 50.h
                 decoration: BoxDecoration(
                   border: Border(
                     top: BorderSide(color: Color(0xFFE8E9EA), width: 1),
@@ -838,7 +839,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       child: Text(
                         goods.type.toString() == '18' ? '立即刷题' : '立即测试',
                         style: TextStyle(
-                          fontSize: 28.sp,
+                          fontSize: 14.sp, // 小程序28rpx ÷ 2 = 14.sp
                           fontWeight: FontWeight.w400,
                           color: Colors.white,
                         ),
