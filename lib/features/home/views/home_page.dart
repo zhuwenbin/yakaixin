@@ -203,7 +203,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildSeckillBanner(List<GoodsModel> recommendList) {
     return SizedBox(
       width: double.infinity,
-      height: 160.h, // 调整高度避免溢出(小程序270rpx ÷ 2 = 135.h,但内容较多)
+      height: 170.h, // 增加高度确保内容不溢出(小程序270rpx ÷ 2 = 135.h,实际需要更多)
       child: PageView.builder(
         controller: _pageController,
         padEnds: false,
