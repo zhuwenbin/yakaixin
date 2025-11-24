@@ -3,21 +3,339 @@
 > 基于小程序源码提取 + Swagger API文档 (https://yakaixin.yunsop.com/swagger/doc.json)
 > 
 > 生成时间: 2025-11-23
+> 
+> **系统架构**: uni-app + Vue2 + Vuex
 
 ---
 
-## 📋 目录
+## 📋 功能清单
 
-- [1. 用户认证模块](#1-用户认证模块)
-- [2. 首页模块](#2-首页模块)
-- [3. 学习中心模块](#3-学习中心模块)
-- [4. 题库模块](#4-题库模块)
-- [5. 章节练习模块](#5-章节练习模块)
-- [6. 模考模块](#6-模考模块)
-- [7. 商品订单模块](#7-商品订单模块)
-- [8. 支付模块](#8-支付模块)
-- [9. 考点词条模块](#9-考点词条模块)
-- [10. 我的模块](#10-我的模块)
+### ① 核心功能模块 (4个)
+- **F1. 用户认证** - 登录/注册/选专业
+- **F2. 题库练习** - 章节练习/真题闯关/智能测评/考点词条
+- **F3. 模拟考试** - 模考大赛/科目模考/试卷练习
+- **F4. 学习中心** - 直播/录播/课程/资料
+
+### ② 辅助功能模块 (5个)
+- **F5. 商品订单** - 商品列表/详情/订单/支付
+- **F6. 我的中心** - 个人信息/设置/报告
+- **F7. 错题本** - 错题列表/错题详情
+- **F8. 收藏管理** - 试题收藏/考点收藏
+- **F9. H5活动** - 兑换码/APP下载
+
+---
+
+## 📝 功能与页面对应表
+
+### F1. 用户认证模块
+
+| 编号 | 页面名称 | 路径 | 功能说明 |
+|------|----------|------|----------|
+| P1-1 | 登录中心 | `/loginCenter/index` | 微信授权登录 |
+| P1-2 | H5登录 | `/loginCenter/h5` | 手机号验证码登录 |
+| P1-3 | 选择专业 | `/major/index` | 选择学习专业 |
+
+### F2. 题库练习模块
+
+| 编号 | 页面名称 | 路径 | 功能说明 |
+|------|----------|------|----------|
+| P2-1 | 首页(题库) | `/index/index` | 题库首页,章节练习入口 |
+| P2-2 | 章节练习 | `/chapterExercise/index` | 章节列表 |
+| P2-3 | 章节详情 | `/chapterExercise/detail` | 章节题目列表 |
+| P2-4 | 做题页 | `/makeQuestion/makeQuestion` | 做题界面 |
+| P2-5 | 查看解析 | `/makeQuestion/lookAnalysisQuestion` | 题目解析 |
+| P2-6 | 成绩报告 | `/statistics/scoreReporting` | 练习成绩 |
+| P2-7 | 真题闯关 | `/questionChallenge/index` | 闯关入口 |
+| P2-8 | 关卡列表 | `/questionChallenge/levelList` | 关卡选择 |
+| P2-9 | 闯关练习 | `/questionChallenge/practise` | 闯关做题 |
+| P2-10 | 闯关报告 | `/questionChallenge/report` | 闯关成绩 |
+| P2-11 | 智能测评 | `/intelligentEvaluation/index` | 测评入口 |
+| P2-12 | 测评练习 | `/intelligentEvaluation/practise` | 测评做题 |
+| P2-13 | 测评报告 | `/intelligentEvaluation/report` | 测评成绩 |
+| P2-14 | 考点词条 | `/examEntry/index` | 考点列表 |
+| P2-15 | 词条详情 | `/examEntry/entry` | 考点内容 |
+| P2-16 | 考点口诀 | `/examEntry/examKnack` | 口诀列表 |
+
+### F3. 模拟考试模块
+
+| 编号 | 页面名称 | 路径 | 功能说明 |
+|------|----------|------|----------|
+| P3-1 | 全部模考 | `/modelExaminationCompetition/index` | 模考列表 |
+| P3-2 | 模考详情 | `/modelExaminationCompetition/examInfo` | 模考信息 |
+| P3-3 | 考试须知 | `/examination/notice` | 考前须知 |
+| P3-4 | 考试中 | `/examination/examinationing` | 考试答题 |
+| P3-5 | 交卷成功 | `/examination/submitSuccess` | 交卷页 |
+| P3-6 | 试卷详情 | `/test/exam` | 历史试卷 |
+| P3-7 | 成绩报告 | `/test/examScoreReporting` | 考试成绩 |
+| P3-8 | 排行榜 | `/test/rankList` | 成绩排名 |
+
+### F4. 学习中心模块
+
+| 编号 | 页面名称 | 路径 | 功能说明 |
+|------|----------|------|----------|
+| P4-1 | 课程首页 | `/study/index` | 学习日历/课程列表 |
+| P4-2 | 我的课程 | `/study/myCourse/index` | 已购课程 |
+| P4-3 | 课程详情 | `/study/detail/index` | 课程信息 |
+| P4-4 | 直播课程 | `/study/live/index` | 直播观看 |
+| P4-5 | 视频播放 | `/study/video/index` | 录播观看 |
+| P4-6 | 资料下载 | `/study/dataDownload/index` | 讲义下载 |
+| P4-7 | PDF查看 | `/study/pdf/index` | PDF预览 |
+
+### F5. 商品订单模块
+
+| 编号 | 页面名称 | 路径 | 功能说明 |
+|------|----------|------|----------|
+| P5-1 | 商品详情 | `/test/detail` | 题库/试卷商品详情 |
+| P5-2 | 我的订单 | `/test/order` | 订单列表 |
+| P5-3 | 支付成功 | `/order/paySuccess` | 支付结果 |
+
+### F6. 我的中心模块
+
+| 编号 | 页面名称 | 路径 | 功能说明 |
+|------|----------|------|----------|
+| P6-1 | 个人中心 | `/my/index` | 用户信息/菜单 |
+| P6-2 | 修改资料 | `/my/person` | 编辑个人信息 |
+| P6-3 | 报告中心 | `/userInfo/report` | 历史报告 |
+| P6-4 | 设置 | `/userInfo/set` | 系统设置 |
+
+### F7. 错题本模块
+
+| 编号 | 页面名称 | 路径 | 功能说明 |
+|------|----------|------|----------|
+| P7-1 | 错题本 | `/wrongQuestionBook/index` | 错题列表 |
+| P7-2 | 错题详情 | `/wrongQuestionBook/wrongQuestionDetails` | 错题解析 |
+
+### F8. 收藏管理模块
+
+| 编号 | 页面名称 | 路径 | 功能说明 |
+|------|----------|------|----------|
+| P8-1 | 试题收藏 | `/collect/index` | 收藏题目列表 |
+| P8-2 | 试题详情 | `/collect/detail` | 收藏题目详情 |
+| P8-3 | 考点收藏 | `/examEntry/examEntryCollect` | 收藏考点列表 |
+
+### F9. H5活动模块
+
+| 编号 | 页面名称 | 路径 | 功能说明 |
+|------|----------|------|----------|
+| P9-1 | 兑换码领取 | `/h5Active/code-receive` | 兑换码兑换 |
+| P9-2 | APP下载 | `/h5Active/app-upload` | APP下载页 |
+| P9-3 | 打开APP | `/h5Active/open-app` | 跳转APP |
+
+---
+
+## 🔍 页面接口速查表
+
+### P1. 用户认证模块接口
+
+#### P1-1 登录中心 (`/loginCenter/index`)
+**调用接口**:
+- `POST /c/student/openid` - 获取OpenID
+- `POST /c/student/login` - 微信登录
+- `GET /c/student/mobile` - 获取手机号
+
+#### P1-2 H5登录 (`/loginCenter/h5`)
+**调用接口**:
+- `POST /b/base/sms/sendcode` - 发送验证码
+- `POST /c/student/smslogin` - 验证码登录
+
+**数据Model**:
+```javascript
+// login-h5.vue:155-161
+sendCode({
+  phone: this.form.phone,
+  scene: 2  // 2=登录
+})
+```
+
+#### P1-3 选择专业 (`/major/index`)
+**调用接口**:
+- `GET /c/teaching/mapping/tree` - 获取专业列表
+- `PUT /c/student` - 选择专业
+
+---
+
+### P2. 题库练习模块接口
+
+#### P2-1 首页(题库) (`/index/index`)
+**调用接口**:
+- `GET /c/tiku/bistatistic/indexdata` - 首页统计
+- `GET /c/goods/v2` - 获取商品列表 (type=8,10,18)
+- `GET /c/tiku/homepage/recommend/chapterpackage` - 推荐章节
+- `GET /c/tiku/last/study/progress` - 上次练习信息
+- `GET /c/tiku/exam/learning/data` - 打卡学习数据
+- `POST /c/tiku/exam/checkin/data` - 学习打卡
+
+**数据Model** (index.vue:200-286):
+```javascript
+// 商品列表处理
+getGoods({ 
+  shelf_platform_id,
+  professional_id: major_id,
+  type: 18  // 8=试卷, 10=模考, 18=题库
+}).then(res => {
+  this.goodsList18 = res.data.list
+  // 筛选首页推荐且未购买
+  this.recommendList = this.recommendList.concat(
+    res.data.list.filter(
+      e => e.is_homepage_recommend == 1 && e.permission_status == '2'
+    )
+  )
+})
+```
+
+#### P2-2 章节练习 (`/chapterExercise/index`)
+**调用接口**:
+- `GET /c/tiku/homepage/chapterpackage/tree` - 获取章节树
+- `GET /c/tiku/chapter/list` - 获取章节列表
+
+**数据Model** (chapterExercise/index.vue:68-93):
+```javascript
+// 章节树处理
+chapterpackageTree({
+  professional_id: this.query.professional_id,
+  goods_id: this.query.goods_id
+}).then(data => {
+  let section_info = this.filter(data?.data?.section_info || [])
+  // 过滤零题目
+  section_info = section_info.filter(e => e.question_number != '0')
+  // 计算正确率
+  this.addCorrectRate(section_info)
+  this.lists = section_info
+})
+
+// 正确率计算
+addCorrectRate(tree) {
+  tree.forEach(item => {
+    const doNum = parseInt(item.do_question_num || '0')
+    const correctNum = parseInt(item.correct_question_num || '0')
+    item.correctRate = doNum > 0 
+      ? (correctNum / doNum * 100).toFixed(1) 
+      : '0.0'
+  })
+}
+```
+
+#### P2-4 做题页 (`/makeQuestion/makeQuestion`)
+**调用接口**:
+- `GET /c/tiku/question/getquestionlist` - 获取题目列表
+- `GET /c/tiku/chapter/getquestionlist` - 章节出题
+- `POST /c/tiku/question/answer` - 交卷
+
+#### P2-6 成绩报告 (`/statistics/scoreReporting`)
+**调用接口**:
+- `GET /c/tiku/servicehall/scorereporting` - 获取成绩报告
+- `GET /c/tiku/paper/ranking` - 获取排名
+
+---
+
+### P3. 模拟考试模块接口
+
+#### P3-1 全部模考 (`/modelExaminationCompetition/index`)
+**调用接口**:
+- `GET /c/tiku/mockexam/allexam` - 获取所有模考
+- `GET /c/tiku/mockexam/getstudentexaminfo` - 学员考试信息
+
+#### P3-2 模考详情 (`/modelExaminationCompetition/examInfo`)
+**调用接口**:
+- `GET /c/tiku/mockexam/examinfo` - 模考详情
+- `POST /c/tiku/mockexam/signup` - 模考报名
+- `POST /c/tiku/mockexam/makeup` - 模考补考
+
+#### P3-4 考试中 (`/examination/examinationing`)
+**调用接口**:
+- `GET /c/tiku/mockexam/info` - 考试信息
+- `POST /c/tiku/question/answer` - 考试交卷
+- `GET /c/tiku/session/delayeeventlogs` - 查询延时操作
+- `GET /c/tiku/session/lockscreeneventlogs` - 查询锁屏操作
+- `GET /c/tiku/session/pauseeventlogs` - 查询暂停操作
+- `GET /c/tiku/session/smseventlogs` - 获取消息
+- `GET /c/tiku/session/submiteventlogs` - 查询强制交卷
+- `POST /c/tiku/session/lastid` - 设置最后题目ID
+
+---
+
+### P4. 学习中心模块接口
+
+#### P4-1 课程首页 (`/study/index`)
+**调用接口**:
+- `GET /c/study/learning/calendar` - 获取学习日历
+- `GET /c/study/learning/lesson` - 获取日期课节
+- `GET /c/study/learning/plan` - 获取日期课程
+
+#### P4-3 课程详情 (`/study/detail/index`)
+**调用接口**:
+- `GET /c/study/learning/series` - 获取课程详情
+- `GET /c/study/learning/series/goods` - 获取课程详情课节
+- `GET /c/study/learning/series/recent` - 最近学习记录
+
+#### P4-4 直播课程 (`/study/live/index`)
+**调用接口**:
+- `GET /c/study/learning/live` - 获取直播地址
+- `POST /c/live/data/add` - 添加学习数据
+
+#### P4-5 视频播放 (`/study/video/index`)
+**调用接口**:
+- `GET /c/study/learning/playback` - 获取录播路径
+- `POST /c/live/data/add` - 添加学习数据
+
+#### P4-6 资料下载 (`/study/dataDownload/index`)
+**调用接口**:
+- `GET /c/study/learning/resource/handout` - 获取讲义
+
+---
+
+### P5. 商品订单模块接口
+
+#### P5-1 商品详情 (`/test/detail`)
+**调用接口**:
+- `GET /c/goods/v2/detail` - 获取商品详情
+- `GET /c/tiku/homepage/chapterpackage/tree` - 章节树 (type=18)
+- `POST /c/order/v2` - 创建订单
+- `GET /c/config/finance/account` - 支付方式列表
+- `GET /c/config/finance/account/detail` - 支付方式详情
+- `POST /c/pay/wechatpay/jsapi` - 微信支付
+
+**已完成Model定义** (见前面章节)
+
+#### P5-2 我的订单 (`/test/order`)
+**调用接口**:
+- `GET /c/order/my/list` - 订单列表
+
+---
+
+### P6. 我的中心模块接口
+
+#### P6-1 个人中心 (`/my/index`)
+**调用接口**:
+- `GET /c/student/platform/menu` - 获取平台菜单
+
+---
+
+### P7. 错题本模块接口
+
+#### P7-1 错题本 (`/wrongQuestionBook/index`)
+**调用接口**:
+- `GET /c/tiku/question/practice/collect/list` - 错题列表
+
+---
+
+### P8. 收藏管理模块接口
+
+#### P8-1 试题收藏 (`/collect/index`)
+**调用接口**:
+- `GET /c/tiku/question/practice/collect/list` - 收藏列表
+
+---
+
+### P9. H5活动模块接口
+
+#### P9-1 兑换码领取 (`/h5Active/code-receive`)
+**调用接口**:
+- `GET /c/tiku/exchange/code/active` - 获取兑换码详情
+- `POST /c/tiku/exchange/code/receive` - 兑换码兑换
+- `POST /c/tiku/exchange/code/share` - 分享
+- `GET /c/tiku/exchange/code/active/codelist` - 获取code段
+- `POST /c/base/sms/sendcode` - 发送验证码 (H5版)
 
 ---
 
@@ -44,9 +362,36 @@ export const Login = function (data = {}) {
 **请求参数**:
 ```json
 {
-  "code": "微信登录code",
-  "encryptedData": "加密数据",
-  "iv": "初始向量"
+  "wxopenid": "微信openid",
+  "account": "手机号(可选)",
+  "password": "密码(可选)",
+  "merchant_id": "436047240159563069",
+  "brand_id": "508925829265162766",
+  "channel_id": "436047240159563069",
+  "major_id": "专业ID(可选)"
+}
+```
+
+**Model定义**: `WechatLoginResponse`
+```dart
+class WechatLoginResponse {
+  final String token;
+  final String studentId;
+  final String nickname;
+  final String? avatar;
+  final String? mobile;
+  final List<MerchantInfo> merchant;
+  final EmployeeInfo? employee;
+}
+
+class MerchantInfo {
+  final String merchantId;
+  final String brandId;
+}
+
+class EmployeeInfo {
+  final String id;
+  final String name;
 }
 ```
 
@@ -107,14 +452,27 @@ export const smslogin = function (data = {}) {
 **请求参数**:
 ```json
 {
-  "mobile": "13800138000",
+  "phone": "13800138000",
   "code": "123456",
   "merchant_id": "436047240159563069",
   "brand_id": "508925829265162766",
   "channel_id": "436047240159563069",
   "extendu_id": "508948528815416786",
-  "app_id": "wx1234567890abcdef"
+  "need_employee_info": 1
 }
+```
+
+**使用场景** (login-h5.vue:166-175):
+```javascript
+this.$store.dispatch('jintiku/CODELOGIN', {
+  phone: this.form.phone,
+  code: this.form.code,
+  brand_id,
+  merchant_id,
+  channel_id: process.env.VUE_APP_CHANNELID,
+  extendu_id: process.env.VUE_APP_EXTENDUID,
+  need_employee_info: 1
+})
 ```
 
 **响应示例**:
@@ -184,7 +542,7 @@ export const getToken = function (data = {}) {
 
 **接口地址**: `POST /b/base/sms/sendcode`
 
-**功能说明**: 发送手机验证码
+**功能说明**: 发送手机验证码(登录/注册场景)
 
 **小程序调用**:
 ```javascript
@@ -201,10 +559,29 @@ export const getSendcode = function (data = {}) {
 **请求参数**:
 ```json
 {
-  "mobile": "13800138000",
-  "type": "1"  // 1:登录 2:注册 3:找回密码
+  "account": "13800138000",
+  "app_id": "wxf787cf63760d80a0",
+  "merchant_id": "436047240159563069",
+  "brand_id": "508925829265162766",
+  "channel_id": "436047240159563069",
+  "extendu_id": "508948528815416786",
+  "scene": "login"
 }
 ```
+
+**参数说明**:
+- `account`: 手机号(注意不是phone字段)
+- `scene`: 验证码场景 - `"login"` 登录, `"register"` 注册, `"forget"` 找回密码
+
+**响应示例**:
+```json
+{
+  "code": 100000,
+  "msg": ["发送成功"]
+}
+```
+
+**备注**: H5活动页面使用 `/c/base/sms/sendcode` 接口,参数为 `{phone, scene: 2}`
 
 ---
 
@@ -1348,6 +1725,106 @@ export const getGoodsDetail = (data = {}) => {
 }
 ```
 
+**Model转换逻辑** (detail.vue:408-503):
+```javascript
+// 1. 处理价格数组：按月份排序，0(永久)在最后
+if (!Array.isArray(res.data.prices)) {
+  res.data.prices = []
+}
+this.prices = res.data.prices
+  .sort((a, b) => {
+    if (a.month == 0) return 1  // 永久套餐排在最后
+    return Number(a.month) - Number(b.month)
+  })
+  .map(item => ({
+    ...item,
+    discount_price: Math.floor(
+      (Number(item.original_price) - Number(item.sale_price)) * 100
+    ) / 100  // 计算优惠金额
+  }))
+
+// 2. 处理商品信息
+let info = res.data
+let num_text = `共${info.tiku_goods_details.question_num}题`
+if (info.type == 8) {
+  num_text = `共${info.tiku_goods_details.paper_num}份`
+}
+if (info.type == 10) {
+  num_text = `共${info.tiku_goods_details.exam_round_num}轮`
+}
+
+// 3. 处理系统信息
+let system_id_name = info?.teaching_system?.system_id_name || ''
+if (info.type == 10) {
+  system_id_name = `开考时间:${info.tiku_goods_details.exam_time}`
+}
+
+// 4. 构建商品Model
+this.info = {
+  ...res.data,
+  num_text: num_text,  // 数量文本：共XX题/份/轮
+  tips: system_id_name, // 提示信息
+  system_id_name: info?.teaching_system?.system_id_name || ''
+}
+
+// 5. 处理图片路径(非题库类型需要交换)
+if (res.data.type != 18) {
+  let material_intro_path = this.info.material_intro_path
+  let material_cover_path = this.info.material_cover_path
+  this.info.material_cover_path = material_intro_path  // 封面
+  this.info.material_intro_path = material_cover_path   // 介绍
+}
+```
+
+**Dart Model定义**:
+```dart
+class GoodsDetail {
+  final String id;
+  final String name;
+  final String type;  // "8"=试卷, "10"=模考, "18"=题库
+  final String permissionStatus;  // "1"=已购买, "2"=未购买
+  final String professionalId;
+  final String professionalIdName;
+  final TikuGoodsDetails tikuGoodsDetails;
+  final TeachingSystem? teachingSystem;
+  final String? materialIntroPath;
+  final String? materialCoverPath;
+  final List<GoodsPrice> prices;
+  
+  // 计算字段
+  final String numText;  // 根据type计算：共XX题/份/轮
+  final String? tips;    // 系统名或开考时间
+}
+
+class TikuGoodsDetails {
+  final String questionNum;   // 题目数量(type=18)
+  final String paperNum;      // 试卷数量(type=8)
+  final String examRoundNum;  // 考试轮次(type=10)
+  final String examTime;      // 开考时间(type=10)
+}
+
+class GoodsPrice {
+  final String goodsMonthsPriceId;
+  final String month;  // "0"=永久
+  final String days;
+  final String salePrice;
+  final String originalPrice;
+  final double discountPrice;  // 计算得出
+}
+
+class TeachingSystem {
+  final String systemIdName;
+}
+```,
+        "days": "0",
+        "sale_price": "999.00",
+        "original_price": "1999.00"
+      }
+    ]
+  }
+}
+```
+
 **字段说明**:
 - `month`: 月数 0=永久
 - `days`: 天数 0=永久
@@ -1376,7 +1853,7 @@ export const getOrderV2 = (data = {}) => {
 }
 ```
 
-**请求参数**:
+**请求参数** (detail.vue:529-560):
 ```json
 {
   "business_scene": 1,
@@ -1398,7 +1875,7 @@ export const getOrderV2 = (data = {}) => {
   "remark": "",
   "student_adddatas_id": "",
   "student_id": "555343665594113147",
-  "app_id": "wx1234567890abcdef",
+  "app_id": "wxf787cf63760d80a0",
   "pay_method": "",
   "order_type": 10,
   "coupons_ids": [],
@@ -1407,7 +1884,39 @@ export const getOrderV2 = (data = {}) => {
 }
 ```
 
-**响应示例**:
+**参数构造逻辑**:
+```javascript
+let payable_amount = this.prices[this.active].sale_price
+let student_id = uni.getStorageSync('__xingyun_userinfo__').student_id
+let goods_id = this.id
+let data = {
+  business_scene: 1,  // 业务场景
+  goods: [{
+    goods_id: goods_id,
+    goods_months_price_id: this.prices[this.active].goods_months_price_id,
+    months: this.prices[this.active].month,
+    class_campus_id: '',
+    class_city_id: '',
+    goods_num: '1'
+  }],
+  deposit_amount: Number(payable_amount),
+  payable_amount: Number(payable_amount),
+  real_amount: Number(payable_amount),
+  total_amount: Number(payable_amount),
+  remark: '',
+  student_adddatas_id: '',
+  student_id: student_id,
+  app_id: app_id,
+  pay_method: '',
+  order_type: 10,
+  discount_amount: 0,
+  coupons_ids: [],
+  employee_id: this.$store.state.jintiku.employee_id || '508948528815416786',
+  delivery_type: 1  // 默认总部邮寄
+}
+```
+
+**响应示例** (detail.vue:561-583):
 ```json
 {
   "code": 100000,
@@ -1419,6 +1928,27 @@ export const getOrderV2 = (data = {}) => {
     "pay_amount": 299.00
   }
 }
+```
+
+**数据处理逻辑**:
+```javascript
+getOrderV2({...data}).then(res => {
+  // res.data.order_id - 订单ID
+  // res.data.flow_id - 流水ID(用于支付)
+  // res.data.pay_amount - 实际支付金额
+  
+  if (Number(payable_amount) > 0) {
+    // 需要支付，获取支付方式
+    this.getPayModeListNew({
+      goods_id: goods_id,
+      order_id: res.data.order_id,
+      flow_id: res.data.flow_id
+    })
+  } else {
+    // 0元订单，直接跳转成功页
+    this.$xh.push('jintiku', `pages/order/paySuccess?goods_id=${this.id}`)
+  }
+})
 ```
 
 **字段说明**:
@@ -1508,11 +2038,36 @@ export const wechatapplet = (data = {}) => {
 }
 ```
 
-**请求参数**:
+**请求参数** (detail.vue:618-624):
 ```json
 {
-  "order_id": "订单ID"
+  "flow_id": "555343665594113147",
+  "wechat_app_id": "wxf787cf63760d80a0",
+  "open_id": "oXxXx1234567890",
+  "finance_body_id": "12345678"
 }
+```
+
+**请求构造**:
+```javascript
+let openid = uni.getStorageSync('__xingyun_weixinInfo__').openid
+wechatapplet({
+  flow_id: flow_id,  // 从创建订单接口返回
+  wechat_app_id: app_id,
+  open_id: openid,
+  finance_body_id: finance_body_id  // 从支付方式接口获取
+}).then(res => {
+  const payParams = {
+    appId: app_id,
+    timeStamp: res.data.time_stamp,
+    nonceStr: res.data.nonce_str,
+    signType: res.data.sign_type,
+    paySign: res.data.pay_sign,
+    package: res.data.package
+  }
+  // 调起微信支付
+  wx.requestPayment(payParams)
+})
 ```
 
 **响应示例**:
@@ -1521,12 +2076,23 @@ export const wechatapplet = (data = {}) => {
   "code": 100000,
   "msg": ["success"],
   "data": {
-    "timeStamp": "1700728800",
-    "nonceStr": "5K8264ILTKCH16CQ2502SI8ZNMTM67VS",
+    "time_stamp": "1700728800",
+    "nonce_str": "5K8264ILTKCH16CQ2502SI8ZNMTM67VS",
     "package": "prepay_id=wx23112319004583abc123def456",
-    "signType": "RSA",
-    "paySign": "oR9d8PuhnIc+YZ8cBHFCwfgpaK9gd7vaRvkYD7rthRAZ/"
+    "sign_type": "RSA",
+    "pay_sign": "oR9d8PuhnIc+YZ8cBHFCwfgpaK9gd7vaRvkYD7rthRAZ/"
   }
+}
+```
+
+**Dart Model**:
+```dart
+class WechatPayParams {
+  final String timeStamp;
+  final String nonceStr;
+  final String package;
+  final String signType;
+  final String paySign;
 }
 ```
 
