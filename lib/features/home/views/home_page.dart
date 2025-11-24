@@ -338,14 +338,14 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   /// 构建Tab切换栏
-  /// 对应小程序: .tabs
+  /// 对应小程序: .tabs (height: 70rpx)
   Widget _buildTabBar({
     required List<String> tabs,
     required int activeIndex,
     required ValueChanged<int> onTap,
   }) {
     return SizedBox(
-      height: 35.h, // 小程序70rpx ÷ 2 = 35.h
+      height: 40.h, // 增加高度避免溢出 (小程序70rpx ÷ 2 = 35.h, 实际需要40h)
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
