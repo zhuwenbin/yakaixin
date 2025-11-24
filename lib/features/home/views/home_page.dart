@@ -435,7 +435,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       },
       child: Container(
         width: double.infinity,
-        constraints: BoxConstraints(minHeight: 106.h), // 小程序213rpx ÷ 2 = 106.h
+        // 移除minHeight约束,让Column自适应高度避免溢出
         padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0), // 小程序32/24/32/0 ÷ 2
         decoration: BoxDecoration(
           // 渐变背景: linear-gradient(90deg, #FBF1FF 0%, #D8F0FF 100%)
