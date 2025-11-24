@@ -105,7 +105,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               Text(
                 majorName,
                 style: TextStyle(
-                  fontSize: 40.sp, // 小程序: 40rpx
+                  fontSize: 20.sp, // 小程序: 40rpx
                   fontWeight: FontWeight.w500, // 小程序: 500
                   color: Colors.black,
                 ),

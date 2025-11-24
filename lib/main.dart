@@ -32,7 +32,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(375, 812), // iPhone X 设计稿尺寸
+      // 小程序rpx基准宽度750,为了1:1转换rpx到Flutter,使用750作为设计稿宽度
+      // 小程序32rpx = Flutter 32.w (而不是16.w)
+      designSize: const Size(750, 1624), // 基于iPhone X的2倍尺寸,与小程序rpx 1:1对应
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
