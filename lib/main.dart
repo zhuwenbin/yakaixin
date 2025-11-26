@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/storage/storage_service.dart';
 import 'core/widgets/loading_hud.dart';
-import 'core/widgets/network_debug_overlay.dart'; // 网络调试悬浮窗
-import 'core/network/dio_client.dart'; // Dio客户端
-import 'features/splash/splash_page.dart'; // 启动页
+import 'core/widgets/network_debug_overlay.dart';
+import 'core/network/dio_client.dart';
+import 'app/routes/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,14 +40,24 @@ class MyApp extends StatelessWidget {
         // 初始化HUD
         LoadingHUD.init();
         
-        return MaterialApp(
+        return MaterialApp.router(
           title: '牙开心题库',
           debugShowCheckedModeBanner: false,
+          // 添加本地化支持
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('zh', 'CN'), // 中文
+          ],
+          locale: const Locale('zh', 'CN'),
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
             useMaterial3: true,
           ),
-          home: SplashPage(),
+          routerConfig: appRouter,
           // EasyLoading builder + 网络调试悬浮窗
           builder: (context, widget) {
             // 先应用 EasyLoading

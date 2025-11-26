@@ -81,7 +81,7 @@ class AuthService {
     required String phone,
   }) async {
     await _dioClient.post(
-      '/c/base/sms/sendcode',
+      '/b/base/sms/sendcode',
       data: {
         'phone': phone,
         'scene': 2, // 2=登录验证码 (对应小程序login-h5.vue)

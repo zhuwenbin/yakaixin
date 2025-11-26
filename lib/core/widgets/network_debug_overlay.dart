@@ -6,6 +6,7 @@ import 'dart:convert';
 import '../network/network_log_model.dart';
 import '../network/network_logger_interceptor.dart';
 import '../network/dio_client.dart';
+import '../network/mock_interceptor.dart';
 import '../../app/config/api_config.dart';
 
 /// 网络调试悬浮窗
@@ -36,6 +37,9 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
   
   // 是否显示环境选择器
   bool _showingEnvSelector = false;
+  
+  // Mock 开关状态
+  bool _isMockEnabled = false;
   
   // 当前显示详情的日志
   NetworkLogModel? _selectedLog;
@@ -177,6 +181,15 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                     ),
                   ),
                   const Spacer(),
+                  // Mock 开关
+                  IconButton(
+                    icon: Icon(
+                      _isMockEnabled ? Icons.science : Icons.science_outlined,
+                      color: _isMockEnabled ? Colors.amber : Colors.white,
+                      size: 20.sp,
+                    ),
+                    onPressed: _toggleMock,
+                  ),
                   // 环境切换按钮
                   IconButton(
                     icon: Icon(Icons.settings, color: Colors.white, size: 20.sp),
@@ -234,6 +247,35 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
               ),
             ),
             
+            // Mock 状态栏
+            if (_isMockEnabled)
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                color: Colors.amber.shade900.withOpacity(0.3),
+                child: Row(
+                  children: [
+                    Icon(Icons.science, color: Colors.amber.shade300, size: 14.sp),
+                    SizedBox(width: 8.w),
+                    Text(
+                      'Mock 模式已启用',
+                      style: TextStyle(
+                        color: Colors.amber.shade300,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '所有请求将返回模拟数据',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 11.sp,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            
             // 请求列表
             Expanded(
               child: logs.isEmpty
@@ -261,6 +303,25 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
             ),
           ],
         ),
+      ),
+    );
+  }
+  
+  /// 切换 Mock 开关
+  void _toggleMock() {
+    setState(() {
+      _isMockEnabled = !_isMockEnabled;
+    });
+    
+    // 更新全局 Mock 状态
+    ref.read(mockEnabledProvider.notifier).state = _isMockEnabled;
+    
+    // 显示提示
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_isMockEnabled ? 'Mock 模式已开启' : 'Mock 模式已关闭'),
+        duration: Duration(seconds: 1),
+        backgroundColor: _isMockEnabled ? Colors.amber : Colors.grey,
       ),
     );
   }

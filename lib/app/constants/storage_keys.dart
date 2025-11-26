@@ -17,4 +17,7 @@ class StorageKeys {
   
   // 缓存
   static const String cacheVersion = 'cache_version';
+  
+  // 答题缓存 (对应小程序: __anwers_list__)
+  static const String answersList = 'answers_list';
 }

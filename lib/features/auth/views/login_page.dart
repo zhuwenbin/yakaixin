@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/utils/toast_util.dart';
 import '../providers/auth_provider.dart';
 import '../../main/main_tab_page.dart';
+import '../../../app/routes/app_routes.dart';
 
 /// 登录页面
 /// 对应小程序: src/modules/jintiku/pages/loginCenter/index.vue
@@ -85,11 +87,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         );
       }
 
-      // 登录成功后跳转到TabBar首页
+      // 登录成功后跳转到TabBar首页 - 使用go_router统一路由
       if (ref.read(authProvider).isLoggedIn && mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainTabPage()),
-        );
+        context.go(AppRoutes.mainTab);
       }
     }
   }

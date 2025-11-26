@@ -29,6 +29,12 @@ _$GoodsModelImpl _$$GoodsModelImplFromJson(Map<String, dynamic> json) =>
       totalClassHour: json['total_class_hour'] as String?,
       validityType: json['validity_type'] as String?,
       validityDay: json['validity_day'] as String?,
+      validityStartDate: json['validity_start_date'] as String?,
+      validityEndDate: json['validity_end_date'] as String?,
+      serviceTypeName: json['service_type_name'] as String?,
+      newTypeName: json['new_type_name'] as String?,
+      studentNum: json['student_num'],
+      shopType: json['shop_type'] as String?,
       tikuGoodsDetails: json['tiku_goods_details'] == null
           ? null
           : TikuGoodsDetails.fromJson(
@@ -56,6 +62,12 @@ Map<String, dynamic> _$$GoodsModelImplToJson(_$GoodsModelImpl instance) =>
       'total_class_hour': instance.totalClassHour,
       'validity_type': instance.validityType,
       'validity_day': instance.validityDay,
+      'validity_start_date': instance.validityStartDate,
+      'validity_end_date': instance.validityEndDate,
+      'service_type_name': instance.serviceTypeName,
+      'new_type_name': instance.newTypeName,
+      'student_num': instance.studentNum,
+      'shop_type': instance.shopType,
       'tiku_goods_details': instance.tikuGoodsDetails,
     };
 
@@ -96,9 +108,10 @@ Map<String, dynamic> _$$TeacherModelImplToJson(_$TeacherModelImpl instance) =>
 _$GoodsListResponseImpl _$$GoodsListResponseImplFromJson(
         Map<String, dynamic> json) =>
     _$GoodsListResponseImpl(
-      list: (json['list'] as List<dynamic>)
-          .map((e) => GoodsModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      list: (json['list'] as List<dynamic>?)
+              ?.map((e) => GoodsModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
       total: (json['total'] as num?)?.toInt(),
     );
 

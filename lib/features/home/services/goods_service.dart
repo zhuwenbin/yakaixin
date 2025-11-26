@@ -50,4 +50,22 @@ class GoodsService {
 
     return GoodsModel.fromJson(response.data['data']);
   }
+
+  /// 根据position_identify获取商品列表
+  /// 对应小程序: getGoods({ position_identify: 'linianzhenti' })
+  /// 用于学习卡片跳转: 绝密押题、科目模考、模拟考试
+  Future<GoodsListResponse> getGoodsByPosition({
+    required String positionIdentify,
+    String? professionalId,
+  }) async {
+    final response = await _dioClient.get(
+      '/c/goods',
+      queryParameters: {
+        'position_identify': positionIdentify,
+        if (professionalId != null) 'professional_id': professionalId,
+      },
+    );
+
+    return GoodsListResponse.fromJson(response.data['data']);
+  }
 }

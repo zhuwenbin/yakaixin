@@ -65,6 +65,19 @@ mixin _$GoodsModel {
   String? get validityType => throw _privateConstructorUsedError; // 有效期类型
   @JsonKey(name: 'validity_day')
   String? get validityDay => throw _privateConstructorUsedError; // 有效天数
+  @JsonKey(name: 'validity_start_date')
+  String? get validityStartDate =>
+      throw _privateConstructorUsedError; // 有效期开始日期
+  @JsonKey(name: 'validity_end_date')
+  String? get validityEndDate => throw _privateConstructorUsedError; // 有效期结束日期
+  @JsonKey(name: 'service_type_name')
+  String? get serviceTypeName => throw _privateConstructorUsedError; // 服务类型名称
+  @JsonKey(name: 'new_type_name')
+  String? get newTypeName => throw _privateConstructorUsedError; // 新类型名称
+  @JsonKey(name: 'student_num')
+  dynamic get studentNum => throw _privateConstructorUsedError; // 购买人数
+  @JsonKey(name: 'shop_type')
+  String? get shopType => throw _privateConstructorUsedError; // 商店类型
   @JsonKey(name: 'tiku_goods_details')
   TikuGoodsDetails? get tikuGoodsDetails => throw _privateConstructorUsedError;
 
@@ -100,6 +113,12 @@ abstract class $GoodsModelCopyWith<$Res> {
       @JsonKey(name: 'total_class_hour') String? totalClassHour,
       @JsonKey(name: 'validity_type') String? validityType,
       @JsonKey(name: 'validity_day') String? validityDay,
+      @JsonKey(name: 'validity_start_date') String? validityStartDate,
+      @JsonKey(name: 'validity_end_date') String? validityEndDate,
+      @JsonKey(name: 'service_type_name') String? serviceTypeName,
+      @JsonKey(name: 'new_type_name') String? newTypeName,
+      @JsonKey(name: 'student_num') dynamic studentNum,
+      @JsonKey(name: 'shop_type') String? shopType,
       @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails});
 
   $TikuGoodsDetailsCopyWith<$Res>? get tikuGoodsDetails;
@@ -137,6 +156,12 @@ class _$GoodsModelCopyWithImpl<$Res, $Val extends GoodsModel>
     Object? totalClassHour = freezed,
     Object? validityType = freezed,
     Object? validityDay = freezed,
+    Object? validityStartDate = freezed,
+    Object? validityEndDate = freezed,
+    Object? serviceTypeName = freezed,
+    Object? newTypeName = freezed,
+    Object? studentNum = freezed,
+    Object? shopType = freezed,
     Object? tikuGoodsDetails = freezed,
   }) {
     return _then(_value.copyWith(
@@ -216,6 +241,30 @@ class _$GoodsModelCopyWithImpl<$Res, $Val extends GoodsModel>
           ? _value.validityDay
           : validityDay // ignore: cast_nullable_to_non_nullable
               as String?,
+      validityStartDate: freezed == validityStartDate
+          ? _value.validityStartDate
+          : validityStartDate // ignore: cast_nullable_to_non_nullable
+              as String?,
+      validityEndDate: freezed == validityEndDate
+          ? _value.validityEndDate
+          : validityEndDate // ignore: cast_nullable_to_non_nullable
+              as String?,
+      serviceTypeName: freezed == serviceTypeName
+          ? _value.serviceTypeName
+          : serviceTypeName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      newTypeName: freezed == newTypeName
+          ? _value.newTypeName
+          : newTypeName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      studentNum: freezed == studentNum
+          ? _value.studentNum
+          : studentNum // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      shopType: freezed == shopType
+          ? _value.shopType
+          : shopType // ignore: cast_nullable_to_non_nullable
+              as String?,
       tikuGoodsDetails: freezed == tikuGoodsDetails
           ? _value.tikuGoodsDetails
           : tikuGoodsDetails // ignore: cast_nullable_to_non_nullable
@@ -264,6 +313,12 @@ abstract class _$$GoodsModelImplCopyWith<$Res>
       @JsonKey(name: 'total_class_hour') String? totalClassHour,
       @JsonKey(name: 'validity_type') String? validityType,
       @JsonKey(name: 'validity_day') String? validityDay,
+      @JsonKey(name: 'validity_start_date') String? validityStartDate,
+      @JsonKey(name: 'validity_end_date') String? validityEndDate,
+      @JsonKey(name: 'service_type_name') String? serviceTypeName,
+      @JsonKey(name: 'new_type_name') String? newTypeName,
+      @JsonKey(name: 'student_num') dynamic studentNum,
+      @JsonKey(name: 'shop_type') String? shopType,
       @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails});
 
   @override
@@ -300,6 +355,12 @@ class __$$GoodsModelImplCopyWithImpl<$Res>
     Object? totalClassHour = freezed,
     Object? validityType = freezed,
     Object? validityDay = freezed,
+    Object? validityStartDate = freezed,
+    Object? validityEndDate = freezed,
+    Object? serviceTypeName = freezed,
+    Object? newTypeName = freezed,
+    Object? studentNum = freezed,
+    Object? shopType = freezed,
     Object? tikuGoodsDetails = freezed,
   }) {
     return _then(_$GoodsModelImpl(
@@ -379,6 +440,30 @@ class __$$GoodsModelImplCopyWithImpl<$Res>
           ? _value.validityDay
           : validityDay // ignore: cast_nullable_to_non_nullable
               as String?,
+      validityStartDate: freezed == validityStartDate
+          ? _value.validityStartDate
+          : validityStartDate // ignore: cast_nullable_to_non_nullable
+              as String?,
+      validityEndDate: freezed == validityEndDate
+          ? _value.validityEndDate
+          : validityEndDate // ignore: cast_nullable_to_non_nullable
+              as String?,
+      serviceTypeName: freezed == serviceTypeName
+          ? _value.serviceTypeName
+          : serviceTypeName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      newTypeName: freezed == newTypeName
+          ? _value.newTypeName
+          : newTypeName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      studentNum: freezed == studentNum
+          ? _value.studentNum
+          : studentNum // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      shopType: freezed == shopType
+          ? _value.shopType
+          : shopType // ignore: cast_nullable_to_non_nullable
+              as String?,
       tikuGoodsDetails: freezed == tikuGoodsDetails
           ? _value.tikuGoodsDetails
           : tikuGoodsDetails // ignore: cast_nullable_to_non_nullable
@@ -410,6 +495,12 @@ class _$GoodsModelImpl implements _GoodsModel {
       @JsonKey(name: 'total_class_hour') this.totalClassHour,
       @JsonKey(name: 'validity_type') this.validityType,
       @JsonKey(name: 'validity_day') this.validityDay,
+      @JsonKey(name: 'validity_start_date') this.validityStartDate,
+      @JsonKey(name: 'validity_end_date') this.validityEndDate,
+      @JsonKey(name: 'service_type_name') this.serviceTypeName,
+      @JsonKey(name: 'new_type_name') this.newTypeName,
+      @JsonKey(name: 'student_num') this.studentNum,
+      @JsonKey(name: 'shop_type') this.shopType,
       @JsonKey(name: 'tiku_goods_details') this.tikuGoodsDetails})
       : _teacherData = teacherData;
 
@@ -497,12 +588,36 @@ class _$GoodsModelImpl implements _GoodsModel {
   final String? validityDay;
 // 有效天数
   @override
+  @JsonKey(name: 'validity_start_date')
+  final String? validityStartDate;
+// 有效期开始日期
+  @override
+  @JsonKey(name: 'validity_end_date')
+  final String? validityEndDate;
+// 有效期结束日期
+  @override
+  @JsonKey(name: 'service_type_name')
+  final String? serviceTypeName;
+// 服务类型名称
+  @override
+  @JsonKey(name: 'new_type_name')
+  final String? newTypeName;
+// 新类型名称
+  @override
+  @JsonKey(name: 'student_num')
+  final dynamic studentNum;
+// 购买人数
+  @override
+  @JsonKey(name: 'shop_type')
+  final String? shopType;
+// 商店类型
+  @override
   @JsonKey(name: 'tiku_goods_details')
   final TikuGoodsDetails? tikuGoodsDetails;
 
   @override
   String toString() {
-    return 'GoodsModel(goodsId: $goodsId, goodsName: $goodsName, coverImg: $coverImg, type: $type, typeName: $typeName, detailsType: $detailsType, price: $price, originalPrice: $originalPrice, permissionStatus: $permissionStatus, isHomepageRecommend: $isHomepageRecommend, teachingType: $teachingType, teachingTypeName: $teachingTypeName, businessType: $businessType, isRecommend: $isRecommend, teacherData: $teacherData, questionNumber: $questionNumber, totalClassHour: $totalClassHour, validityType: $validityType, validityDay: $validityDay, tikuGoodsDetails: $tikuGoodsDetails)';
+    return 'GoodsModel(goodsId: $goodsId, goodsName: $goodsName, coverImg: $coverImg, type: $type, typeName: $typeName, detailsType: $detailsType, price: $price, originalPrice: $originalPrice, permissionStatus: $permissionStatus, isHomepageRecommend: $isHomepageRecommend, teachingType: $teachingType, teachingTypeName: $teachingTypeName, businessType: $businessType, isRecommend: $isRecommend, teacherData: $teacherData, questionNumber: $questionNumber, totalClassHour: $totalClassHour, validityType: $validityType, validityDay: $validityDay, validityStartDate: $validityStartDate, validityEndDate: $validityEndDate, serviceTypeName: $serviceTypeName, newTypeName: $newTypeName, studentNum: $studentNum, shopType: $shopType, tikuGoodsDetails: $tikuGoodsDetails)';
   }
 
   @override
@@ -545,6 +660,18 @@ class _$GoodsModelImpl implements _GoodsModel {
                 other.validityType == validityType) &&
             (identical(other.validityDay, validityDay) ||
                 other.validityDay == validityDay) &&
+            (identical(other.validityStartDate, validityStartDate) ||
+                other.validityStartDate == validityStartDate) &&
+            (identical(other.validityEndDate, validityEndDate) ||
+                other.validityEndDate == validityEndDate) &&
+            (identical(other.serviceTypeName, serviceTypeName) ||
+                other.serviceTypeName == serviceTypeName) &&
+            (identical(other.newTypeName, newTypeName) ||
+                other.newTypeName == newTypeName) &&
+            const DeepCollectionEquality()
+                .equals(other.studentNum, studentNum) &&
+            (identical(other.shopType, shopType) ||
+                other.shopType == shopType) &&
             (identical(other.tikuGoodsDetails, tikuGoodsDetails) ||
                 other.tikuGoodsDetails == tikuGoodsDetails));
   }
@@ -572,6 +699,12 @@ class _$GoodsModelImpl implements _GoodsModel {
         totalClassHour,
         validityType,
         validityDay,
+        validityStartDate,
+        validityEndDate,
+        serviceTypeName,
+        newTypeName,
+        const DeepCollectionEquality().hash(studentNum),
+        shopType,
         tikuGoodsDetails
       ]);
 
@@ -610,6 +743,12 @@ abstract class _GoodsModel implements GoodsModel {
       @JsonKey(name: 'total_class_hour') final String? totalClassHour,
       @JsonKey(name: 'validity_type') final String? validityType,
       @JsonKey(name: 'validity_day') final String? validityDay,
+      @JsonKey(name: 'validity_start_date') final String? validityStartDate,
+      @JsonKey(name: 'validity_end_date') final String? validityEndDate,
+      @JsonKey(name: 'service_type_name') final String? serviceTypeName,
+      @JsonKey(name: 'new_type_name') final String? newTypeName,
+      @JsonKey(name: 'student_num') final dynamic studentNum,
+      @JsonKey(name: 'shop_type') final String? shopType,
       @JsonKey(name: 'tiku_goods_details')
       final TikuGoodsDetails? tikuGoodsDetails}) = _$GoodsModelImpl;
 
@@ -674,6 +813,24 @@ abstract class _GoodsModel implements GoodsModel {
   @JsonKey(name: 'validity_day')
   String? get validityDay;
   @override // 有效天数
+  @JsonKey(name: 'validity_start_date')
+  String? get validityStartDate;
+  @override // 有效期开始日期
+  @JsonKey(name: 'validity_end_date')
+  String? get validityEndDate;
+  @override // 有效期结束日期
+  @JsonKey(name: 'service_type_name')
+  String? get serviceTypeName;
+  @override // 服务类型名称
+  @JsonKey(name: 'new_type_name')
+  String? get newTypeName;
+  @override // 新类型名称
+  @JsonKey(name: 'student_num')
+  dynamic get studentNum;
+  @override // 购买人数
+  @JsonKey(name: 'shop_type')
+  String? get shopType;
+  @override // 商店类型
   @JsonKey(name: 'tiku_goods_details')
   TikuGoodsDetails? get tikuGoodsDetails;
   @override
@@ -1131,7 +1288,8 @@ GoodsListResponse _$GoodsListResponseFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$GoodsListResponse {
   @JsonKey(name: 'list')
-  List<GoodsModel> get list => throw _privateConstructorUsedError;
+  List<GoodsModel> get list =>
+      throw _privateConstructorUsedError; // 使用默认空数组,避免null导致的类型转换错误
   @JsonKey(name: 'total')
   int? get total => throw _privateConstructorUsedError;
 
@@ -1225,7 +1383,7 @@ class __$$GoodsListResponseImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$GoodsListResponseImpl implements _GoodsListResponse {
   const _$GoodsListResponseImpl(
-      {@JsonKey(name: 'list') required final List<GoodsModel> list,
+      {@JsonKey(name: 'list') final List<GoodsModel> list = const [],
       @JsonKey(name: 'total') this.total})
       : _list = list;
 
@@ -1241,6 +1399,7 @@ class _$GoodsListResponseImpl implements _GoodsListResponse {
     return EqualUnmodifiableListView(_list);
   }
 
+// 使用默认空数组,避免null导致的类型转换错误
   @override
   @JsonKey(name: 'total')
   final int? total;
@@ -1281,7 +1440,7 @@ class _$GoodsListResponseImpl implements _GoodsListResponse {
 
 abstract class _GoodsListResponse implements GoodsListResponse {
   const factory _GoodsListResponse(
-      {@JsonKey(name: 'list') required final List<GoodsModel> list,
+      {@JsonKey(name: 'list') final List<GoodsModel> list,
       @JsonKey(name: 'total') final int? total}) = _$GoodsListResponseImpl;
 
   factory _GoodsListResponse.fromJson(Map<String, dynamic> json) =
@@ -1290,7 +1449,7 @@ abstract class _GoodsListResponse implements GoodsListResponse {
   @override
   @JsonKey(name: 'list')
   List<GoodsModel> get list;
-  @override
+  @override // 使用默认空数组,避免null导致的类型转换错误
   @JsonKey(name: 'total')
   int? get total;
   @override

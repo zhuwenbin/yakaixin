@@ -7,6 +7,7 @@ import '../storage/storage_service.dart';
 import '../utils/logger.dart';
 import 'api_interceptor.dart';
 import 'network_logger_interceptor.dart';
+import 'mock_interceptor.dart';
 
 /// Dio客户端封装
 /// 对应小程序: src/api/request.js, src/modules/jintiku/utils/request.js
@@ -35,10 +36,16 @@ class DioClient {
       ),
     );
 
-    // 添加拦截器
+    // 添加拦截器（顺序很重要！）
+    // 1. Mock拦截器（最优先，Mock开启时直接返回）
+    if (_ref != null && ApiConfig.isDebug) {
+      _dio.interceptors.add(MockInterceptor(_ref));
+    }
+    
+    // 2. API拦截器（添加token、签名等）
     _dio.interceptors.add(ApiInterceptor(_storage));
     
-    // 添加网络日志拦截器 (在 Debug 模式下始终启用)
+    // 3. 网络日志拦截器（记录所有请求）
     if (_ref != null && ApiConfig.isDebug) {
       _dio.interceptors.add(NetworkLoggerInterceptor(_ref));
     }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import '../auth/views/login_page.dart';
 import '../auth/providers/auth_provider.dart';
 import '../main/main_tab_page.dart';
+import '../../app/routes/app_routes.dart';
 
 /// 启动页 - 检查登录状态
 class SplashPage extends ConsumerStatefulWidget {
@@ -28,17 +30,13 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
     final isLoggedIn = ref.read(authProvider).isLoggedIn;
 
-    // 根据登录状态跳转
+    // 根据登录状态跳转 - 使用go_router统一路由
     if (isLoggedIn) {
       // 跳转到TabBar首页
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const MainTabPage()),
-      );
+      context.go(AppRoutes.mainTab);
     } else {
       // 跳转到登录页
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-      );
+      context.go(AppRoutes.loginCenter);
     }
   }
 
@@ -163,9 +161,7 @@ class TempHomePage extends ConsumerWidget {
                 onPressed: () async {
                   await ref.read(authProvider.notifier).logout();
                   if (context.mounted) {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const LoginPage()),
-                    );
+                    context.go(AppRoutes.loginCenter);
                   }
                 },
                 style: ElevatedButton.styleFrom(

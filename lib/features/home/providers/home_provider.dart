@@ -75,6 +75,8 @@ class HomeNotifier extends StateNotifier<HomeState> {
       // 1. getGoods({ type: 18 }) - 章节练习
       // 2. getGoods({ type: '8,10' }) - 试卷和模考
       // 3. getGoods({ type: '10,8', is_buyed: 1 }) - 已购试题
+      // 4. getGoods({ teaching_type: '3' }) - 网课列表
+      // 5. getGoods({ teaching_type: '1' }) - 直播列表
       final results = await Future.wait([
         // 1. 获取章节练习 (type: 18)
         _goodsService.getGoodsList(
@@ -95,6 +97,18 @@ class HomeNotifier extends StateNotifier<HomeState> {
           type: '10,8',
           isBuyed: 1,
         ),
+        // 4. 获取网课列表 (teaching_type: '3')
+        _goodsService.getGoodsList(
+          shelfPlatformId: ApiConfig.shelfPlatformId,
+          teachingType: '3',
+          type: '2,3', // 小程序: type: '2,3'
+        ),
+        // 5. 获取直播列表 (teaching_type: '1')
+        _goodsService.getGoodsList(
+          shelfPlatformId: ApiConfig.shelfPlatformId,
+          teachingType: '1',
+          type: '2,3',
+        ),
       ]);
 
       // 合并所有题库数据
@@ -103,6 +117,12 @@ class HomeNotifier extends StateNotifier<HomeState> {
         ...results[1].list,
         ...results[2].list,
       ];
+      
+      // 网课列表
+      final onlineCourseList = results[3].list;
+      
+      // 直播列表
+      final liveList = results[4].list;
 
       // 筛选秒杀推荐商品 (首页推荐 且 已购买)
       // 参考小程序: is_homepage_recommend == 1 && permission_status == '2'
@@ -115,6 +135,8 @@ class HomeNotifier extends StateNotifier<HomeState> {
       state = state.copyWith(
         questionBankList: allQuestionBank,
         recommendList: recommendList,
+        onlineCourseList: onlineCourseList,
+        liveList: liveList,
         isLoading: false,
       );
     } catch (e) {
