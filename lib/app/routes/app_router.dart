@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/splash/splash_page.dart';
 import '../../features/main/main_tab_page.dart';
 import '../../features/auth/views/login_center_page.dart';
+import '../../features/auth/providers/auth_provider.dart';
+import '../../core/storage/storage_service.dart';
+import '../constants/storage_keys.dart';
 import '../../features/auth/views/h5_login_page.dart';
 import '../../features/auth/views/select_major_page.dart';
 import '../../features/home/views/home_page.dart';
@@ -45,18 +49,49 @@ import '../../features/order/views/pay_success_page.dart';
 import '../../features/profile/views/my_index_page.dart';
 import '../../features/profile/views/person_edit_page.dart';
 import '../../features/profile/views/settings_page.dart';
-import '../../features/user/views/report_center_page.dart';
-import '../../features/question_bank/views/wrong_book_page.dart';
-import '../../features/question_bank/views/collect_page.dart';
+import '../../features/profile/views/report_center_page.dart';
+import '../../features/profile/views/privacy_policy_page.dart';
+import '../../features/profile/views/user_service_agreement_page.dart';
 import '../../features/activity/views/code_receive_page.dart';
 import '../../features/activity/views/app_upload_page.dart';
 import '../../features/activity/views/open_app_page.dart';
 import 'app_routes.dart';
 
 /// 应用路由配置
-final GoRouter appRouter = GoRouter(
-  initialLocation: AppRoutes.splash,
-  routes: [
+/// 使用 Provider 创建，支持登录状态检查
+final appRouterProvider = Provider<GoRouter>((ref) {
+  // 监听登录状态
+  final isLoggedIn = ref.watch(isLoggedInProvider);
+  
+  return GoRouter(
+    initialLocation: AppRoutes.splash,
+    redirect: (context, state) {
+      final storage = ref.read(storageServiceProvider);
+      final token = storage.getString(StorageKeys.token);
+      final hasToken = token != null && token.isNotEmpty;
+      
+      final isOnLoginPage = state.matchedLocation == AppRoutes.loginCenter || 
+                           state.matchedLocation == AppRoutes.h5Login;
+      final isOnSplash = state.matchedLocation == AppRoutes.splash;
+      
+      // 如果在启动页，不拦截
+      if (isOnSplash) {
+        return null;
+      }
+      
+      // 如果未登录且不在登录页，跳转到登录页
+      if (!hasToken && !isOnLoginPage) {
+        return AppRoutes.loginCenter;
+      }
+      
+      // 如果已登录且在登录页，跳转到主页
+      if (hasToken && isOnLoginPage) {
+        return AppRoutes.mainTab;
+      }
+      
+      return null;
+    },
+    routes: [
     // 启动页
     GoRoute(
       path: AppRoutes.splash,
@@ -428,6 +463,14 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.settings,
       builder: (context, state) => const SettingsPage(),
     ),
+    GoRoute(
+      path: AppRoutes.privacyPolicy,
+      builder: (context, state) => const PrivacyPolicyPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.userServiceAgreement,
+      builder: (context, state) => const UserServiceAgreementPage(),
+    ),
     
     // ===== F7. 错题本模块 =====
     GoRoute(
@@ -483,4 +526,5 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const OpenAppPage(),
     ),
   ],
-);
+  );
+});

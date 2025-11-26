@@ -8,13 +8,21 @@ import 'core/storage/storage_service.dart';
 import 'core/widgets/loading_hud.dart';
 import 'core/widgets/network_debug_overlay.dart';
 import 'core/network/dio_client.dart';
+import 'core/payment/payment_service.dart';
 import 'app/routes/app_router.dart';
+import 'app/constants/app_constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // 初始化SharedPreferences
   final prefs = await SharedPreferences.getInstance();
+  
+  // 初始化微信SDK
+  await PaymentService.initWechat();
+  print('🚀 应用初始化完成');
+  print('🚀 应用名称: ${AppConstants.appName}');
+  print('🚀 应用版本: ${AppConstants.appVersion}');
   
   runApp(
     ProviderScope(
@@ -27,11 +35,14 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 监听路由 Provider
+    final router = ref.watch(appRouterProvider);
+    
     return ScreenUtilInit(
       designSize: const Size(375, 812), // iPhone X 设计稿尺寸(正确配置)
       minTextAdapt: true,
@@ -41,7 +52,7 @@ class MyApp extends StatelessWidget {
         LoadingHUD.init();
         
         return MaterialApp.router(
-          title: '牙开心题库',
+          title: AppConstants.appName,
           debugShowCheckedModeBanner: false,
           // 添加本地化支持
           localizationsDelegates: const [
@@ -57,7 +68,7 @@ class MyApp extends StatelessWidget {
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
             useMaterial3: true,
           ),
-          routerConfig: appRouter,
+          routerConfig: router,
           // EasyLoading builder + 网络调试悬浮窗
           builder: (context, widget) {
             // 先应用 EasyLoading

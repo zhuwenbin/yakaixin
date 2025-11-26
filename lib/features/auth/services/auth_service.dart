@@ -46,7 +46,7 @@ class AuthService {
     final response = await _dioClient.post(
       '/wechat/getCode',
       data: {
-        'app_id': ApiConfig.wechatAppId,
+        'app_id': ApiConfig.wechatMiniProgramAppId,
         'code': code,
         if (majorId != null) 'major_id': majorId,
       },
@@ -65,7 +65,7 @@ class AuthService {
     final response = await _dioClient.post(
       '/wechat/getPhone',
       data: {
-        'app_id': ApiConfig.wechatAppId,
+        'app_id': ApiConfig.wechatMiniProgramAppId,
         'code': code,
       },
     );
@@ -81,7 +81,7 @@ class AuthService {
     required String phone,
   }) async {
     await _dioClient.post(
-      '/b/base/sms/sendcode',
+      '/c/base/sms/sendcode',
       data: {
         'phone': phone,
         'scene': 2, // 2=登录验证码 (对应小程序login-h5.vue)
@@ -103,12 +103,12 @@ class AuthService {
       data: {
         'phone': phone,
         'code': code,
-        'merchant_id': ApiConfig.merchantId,
-        'brand_id': ApiConfig.brandId,
-        'channel_id': ApiConfig.channelId,
-        'extendu_id': ApiConfig.extendUid,
-        'need_employee_info': 1, // 需要员工信息
-        if (majorId != null) 'major_id': majorId,
+        // 'merchant_id': ApiConfig.merchantId,
+        // 'brand_id': ApiConfig.brandId,
+        // 'channel_id': ApiConfig.channelId,
+        // 'extendu_id': ApiConfig.extendUid,
+        // 'need_employee_info': 1, // 需要员工信息
+        // if (majorId != null) 'major_id': majorId,
       },
     );
 

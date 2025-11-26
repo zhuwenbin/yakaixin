@@ -41,7 +41,17 @@ class MockInterceptor extends Interceptor {
 
   /// 根据请求获取Mock响应
   Future<Response?> _getMockResponse(RequestOptions options) async {
-    final path = options.path;
+    // 构建完整的请求路径(包含查询参数)
+    String path = options.path;
+    
+    // 如果有queryParameters,添加到path中
+    if (options.queryParameters.isNotEmpty) {
+      final queryString = options.queryParameters.entries
+          .map((e) => '${e.key}=${e.value}')
+          .join('&');
+      path = '$path?$queryString';
+    }
+    
     final method = options.method;
     
     print('🧪 Mock拦截: $method $path');

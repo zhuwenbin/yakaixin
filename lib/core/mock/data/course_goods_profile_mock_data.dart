@@ -117,7 +117,7 @@ class CourseMockData {
 
 /// F5. 商品订单模块 Mock数据
 class GoodsOrderMockData {
-  /// P5-1 商品详情Mock数据
+  /// P5-1 商品详情Mock数据 - 题库类型
   static final Map<String, dynamic> goodsDetail = {
     'code': 100000,
     'msg': ['success'],
@@ -126,12 +126,21 @@ class GoodsOrderMockData {
       'goods_name': '2024口腔执业医师题库',
       'name': '2024口腔执业医师题库',
       'price': '299.00',
+      'sale_price': '299.00', // 销售价格
       'original_price': '599.00',
       'type': '18', // 18=题库, 8=试卷, 10=模考
       'permission_status': '2', // 1=已购买, 2=未购买
       'professional_id': '524033912737962623',
       'professional_id_name': '医学-口腔执业医师',
       'cover_img': 'https://picsum.photos/600/300?random=20',
+      'student_num': 1580, // 购买人数
+      'shop_type': '1', // 商品类型标签
+      'teaching_type_name': '录播课', // 教学类型
+      'service_type_name': '永久有效', // 服务类型
+      'validity_start_date_val': '2024-01-01', // 有效期开始
+      'validity_end_date_val': '2099-12-31', // 有效期结束
+      'goods_months_price_id': '555343665594178683', // 默认月价格ID
+      'month': 6, // 默认月数
       'tiku_goods_details': {
         'question_num': '5000',
         'paper_num': '0',
@@ -165,6 +174,60 @@ class GoodsOrderMockData {
           'days': '0',
           'sale_price': '999.00',
           'original_price': '1999.00'
+        },
+      ],
+    }
+  };
+  
+  /// P5-1 商品详情Mock数据 - 课程类型 (对应首页网课)
+  static final Map<String, dynamic> courseGoodsDetail = {
+    'code': 100000,
+    'msg': ['success'],
+    'data': {
+      'id': '589039979154376128',
+      'goods_name': '2026精品医师考试高清网课',
+      'name': '2026精品医师考试高清网课',
+      'price': '999.00',
+      'sale_price': '999.00', // 销售价格
+      'original_price': '1999.00',
+      'type': '2', // 2=套餐, 3=课程
+      'permission_status': '2', // 1=已购买, 2=未购买
+      'professional_id': '524033912737962623',
+      'professional_id_name': '医学-口腔执业医师',
+      'teaching_type': '3', // 3=录播网课
+      'teaching_type_name': '录播',
+      'service_type': '1',
+      'service_type_name': '一年制',
+      'business_type': '2', // 2=高端
+      'business_type_name': '高端',
+      'is_recommend': '2',
+      'student_num': 831, // 购买人数
+      'shop_type': '2', // 根据business_type计算得出
+      'validity_day': '12',
+      'validity_start_date_val': '2025-10-22', // 有效期开始
+      'validity_end_date_val': '2026-11-22', // 有效期结束
+      'goods_months_price_id': '589039979154376129', // 默认月价格ID
+      'month': 12, // 默认月数
+      'material_intro_path': 'https://picsum.photos/750/1500?random=30',
+      'material_cover_path': 'https://picsum.photos/600/400?random=31',
+      'total_class_hour': '120',
+      'class_hour': '0',
+      'chapter_count': '15',
+      'description': '<h3>课程介绍</h3><p>高清网课,名师授课</p><ul><li>120课时</li><li>15个章节</li><li>一年有效期</li></ul>',
+      'prices': [
+        {
+          'goods_months_price_id': '589039979154376129',
+          'month': '12',
+          'days': '365',
+          'sale_price': '999.00',
+          'original_price': '1999.00'
+        },
+        {
+          'goods_months_price_id': '589039979154376130',
+          'month': '24',
+          'days': '730',
+          'sale_price': '1599.00',
+          'original_price': '3999.00'
         },
       ],
     }
@@ -281,14 +344,48 @@ class CourseGoodsProfileMockData {
   
   // F5. 商品订单
   static final Map<String, dynamic> goodsDetail = GoodsOrderMockData.goodsDetail;
+  static final Map<String, dynamic> courseGoodsDetail = GoodsOrderMockData.courseGoodsDetail; // 课程商品详情
   static final Map<String, dynamic> orderList = GoodsOrderMockData.orderList;
+  
+  // 创建订单Mock响应
   static final Map<String, dynamic> createOrder = {
     'code': 100000,
     'msg': ['创建成功'],
     'data': {
       'order_id': '555343665594178686',
-      'order_no': 'YKX202411231234567891',
-      'pay_url': 'https://example.com/pay',
+      'flow_id': '123456789012345678', // 支付流水ID
+      'order_no': 'YKX202411251234567891',
+    }
+  };
+  
+  // 获取支付账户列表Mock响应
+  static final Map<String, dynamic> paymentAccountList = {
+    'code': 100000,
+    'msg': ['success'],
+    'data': {
+      'list': [
+        {
+          'id': '408559632588540699', // 财务主体ID
+          'pay_method': '6', // 6=微信支付
+          'wechat_pay_app_id': 'wx832d03ed24df9a75',
+          'account_name': '微信支付',
+        }
+      ]
+    }
+  };
+  
+  // 获取微信支付参数Mock响应 (APP支付参数)
+  static final Map<String, dynamic> wechatPayParams = {
+    'code': 100000,
+    'msg': ['success'],
+    'data': {
+      'app_id': 'wx832d03ed24df9a75',
+      'partner_id': '1234567890', // 商户号 (APP支付必需)
+      'prepay_id': 'wx20241125123456789012345678901234', // 预支付ID (APP支付必需)
+      'package': 'Sign=WXPay', // APP支付固定值
+      'nonce_str': 'abcdef1234567890',
+      'time_stamp': '1732502400',
+      'sign': 'ABCDEF1234567890ABCDEF1234567890', // APP支付签名
     }
   };
   

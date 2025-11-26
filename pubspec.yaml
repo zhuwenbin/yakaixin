@@ -74,8 +74,8 @@ dependencies:
   # 二维码
   qr_flutter: ^4.1.0
   
-  # 微信支付(暂时注释,后续需要时添加)
-  # fluwx: ^4.1.0
+  # 微信支付SDK
+  fluwx: ^5.7.5
   
   # 工具
   json_annotation: ^4.8.1

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../../app/routes/app_routes.dart';
+import '../../auth/providers/auth_provider.dart';
 
 /// 设置页面 - 对应小程序 userInfo/set.vue
 /// 功能：章节练习设置、隐私协议、用户协议、退出登录
@@ -85,13 +87,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           _buildSettingItem(
             title: '隐私协议',
             onTap: () {
-              // TODO: 跳转隐私协议页面
+              context.push(AppRoutes.privacyPolicy);
             },
           ),
           _buildSettingItem(
             title: '用户协议',
             onTap: () {
-              // TODO: 跳转用户协议页面
+              context.push(AppRoutes.userServiceAgreement);
             },
           ),
           _buildSettingItem(
@@ -193,10 +195,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           child: const Text('取消'),
         ),
         TextButton(
-          onPressed: () {
+          onPressed: () async {
             Navigator.pop(context);
-            // TODO: 清除登录状态
-            // context.go(AppRoutes.home);
+            // 执行退出登录
+            await ref.read(authProvider.notifier).logout();
+            // 跳转到登录页
+            if (mounted) {
+              context.go(AppRoutes.loginCenter);
+            }
           },
           child: const Text('确定'),
         ),

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../../core/mock/data/course_goods_profile_mock_data.dart';
+import '../../order/providers/payment_provider.dart';
 
 /// 课程商品详情页 - 对应小程序 course/courseDetail.vue
 /// 功能:展示课程介绍、课程大纲、购买入口
@@ -56,7 +57,19 @@ class _CourseGoodsDetailPageState
       // 临时使用Mock数据（通过拦截器会自动返回）
       await Future.delayed(const Duration(milliseconds: 300));
       setState(() {
-        _goodsDetail = CourseGoodsProfileMockData.goodsDetail;
+        // 根据type参数选择不同的Mock数据
+        // type=2或23是课程/套餐, type=18是题库
+        if (widget.type == 2 || widget.type == 3) {
+          // 课程类型 - 使用courseGoodsDetail
+          _goodsDetail = CourseGoodsProfileMockData.courseGoodsDetail['data'];
+          print('📚 加载课程商品详情: ${_goodsDetail['name']}');
+          print('📚 permission_status: ${_goodsDetail['permission_status']}');
+        } else {
+          // 题库类型 - 使用goodsDetail
+          _goodsDetail = CourseGoodsProfileMockData.goodsDetail['data'];
+          print('📚 加载题库商品详情: ${_goodsDetail['name']}');
+          print('📚 permission_status: ${_goodsDetail['permission_status']}');
+        }
         _isLoading = false;
       });
     } catch (e) {
@@ -715,17 +728,55 @@ class _CourseGoodsDetailPageState
     }
   }
 
-  void _onPurchase() {
-    // TODO: 创建订单+支付
-    print('立即报名');
-    // 暂时跳转支付成功页演示
-    context.push(
-      AppRoutes.paySuccess,
-      extra: {
-        'goods_id': _goodsDetail['id'],
-        'isLearnButton': true,
-      },
-    );
+  /// 支付流程 - 对应小程序 getOrder 方法
+  Future<void> _onPurchase() async {
+    try {
+      EasyLoading.show(status: '创建订单中...');
+      
+      // 1. 获取商品信息
+      final goodsId = _goodsDetail['id']?.toString() ?? '';
+      final salePrice = double.tryParse(_goodsDetail['sale_price']?.toString() ?? '0') ?? 0.0;
+      final goodsMonthsPriceId = _goodsDetail['goods_months_price_id']?.toString() ?? '';
+      final months = _goodsDetail['month'] ?? 0;
+      
+      print('💳 开始支付流程:');
+      print('💳 商品ID: $goodsId');
+      print('💳 价格: $salePrice');
+      print('💳 月价格ID: $goodsMonthsPriceId');
+      print('💳 月数: $months');
+      
+      // 2. 调用支付流程
+      final success = await ref.read(paymentProvider.notifier).processPayment(
+        goodsId: goodsId,
+        goodsMonthsPriceId: goodsMonthsPriceId,
+        months: months,
+        payableAmount: salePrice,
+      );
+      
+      EasyLoading.dismiss();
+      
+      // 3. 支付结果处理
+      if (success) {
+        print('💳 支付成功,跳转支付成功页');
+        if (mounted) {
+          context.push(
+            AppRoutes.paySuccess,
+            extra: {
+              'goods_id': goodsId,
+              'professional_id_name': _goodsDetail['professional_id_name'],
+              'isLearnButton': true,
+            },
+          );
+        }
+      } else {
+        print('💳 支付失败或取消');
+        EasyLoading.showError('支付失败');
+      }
+    } catch (e) {
+      EasyLoading.dismiss();
+      print('💳 支付异常: $e');
+      EasyLoading.showError('支付失败: $e');
+    }
   }
 
   void _onGoCourse() {

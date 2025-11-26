@@ -6,38 +6,34 @@ import '../home/views/question_bank_page.dart';
 import '../course/views/course_page.dart';
 import '../profile/views/profile_page.dart';
 
+/// Tab索引Provider - 用于全局控制Tab切换
+final mainTabIndexProvider = StateProvider<int>((ref) => 0);
+
 /// 主页面 - TabBar导航
 /// 对应小程序: 4个Tab - 首页/题库/课程/我的
-class MainTabPage extends ConsumerStatefulWidget {
+class MainTabPage extends ConsumerWidget {
   const MainTabPage({super.key});
 
   @override
-  ConsumerState<MainTabPage> createState() => _MainTabPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentIndex = ref.watch(mainTabIndexProvider);
 
-class _MainTabPageState extends ConsumerState<MainTabPage> {
-  int _currentIndex = 0;
+    final List<Widget> pages = const [
+      HomePage(),           // 首页-刷题
+      QuestionBankPage(),   // 题库首页
+      CoursePage(),         // 课程首页
+      ProfilePage(),        // 我的
+    ];
 
-  final List<Widget> _pages = const [
-    HomePage(),           // 首页-刷题
-    QuestionBankPage(),   // 题库首页
-    CoursePage(),         // 课程首页
-    ProfilePage(),        // 我的
-  ];
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
+        index: currentIndex,
+        children: pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
+        currentIndex: currentIndex,
         onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          ref.read(mainTabIndexProvider.notifier).state = index;
         },
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Colors.blue,

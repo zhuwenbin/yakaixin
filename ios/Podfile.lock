@@ -6,6 +6,12 @@ PODS:
     - Flutter
   - fluttertoast (0.0.2):
     - Flutter
+  - fluwx (0.0.1):
+    - Flutter
+    - fluwx/pay (= 0.0.1)
+  - fluwx/pay (0.0.1):
+    - Flutter
+    - WechatOpenSDK-XCFramework (~> 2.0.5)
   - objective_c (0.0.1):
     - Flutter
   - package_info_plus (0.4.5):
@@ -23,12 +29,14 @@ PODS:
     - FlutterMacOS
   - wakelock_plus (0.0.1):
     - Flutter
+  - WechatOpenSDK-XCFramework (2.0.5)
 
 DEPENDENCIES:
   - audioplayers_darwin (from `.symlinks/plugins/audioplayers_darwin/ios`)
   - Flutter (from `Flutter`)
   - flutter_pdfview (from `.symlinks/plugins/flutter_pdfview/ios`)
   - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
+  - fluwx (from `.symlinks/plugins/fluwx/ios`)
   - objective_c (from `.symlinks/plugins/objective_c/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
@@ -36,6 +44,10 @@ DEPENDENCIES:
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
   - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
   - wakelock_plus (from `.symlinks/plugins/wakelock_plus/ios`)
+
+SPEC REPOS:
+  trunk:
+    - WechatOpenSDK-XCFramework
 
 EXTERNAL SOURCES:
   audioplayers_darwin:
@@ -46,6 +58,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_pdfview/ios"
   fluttertoast:
     :path: ".symlinks/plugins/fluttertoast/ios"
+  fluwx:
+    :path: ".symlinks/plugins/fluwx/ios"
   objective_c:
     :path: ".symlinks/plugins/objective_c/ios"
   package_info_plus:
@@ -66,6 +80,7 @@ SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_pdfview: 32bf27bda6fd85b9dd2c09628a824df5081246cf
   fluttertoast: 2c67e14dce98bbdb200df9e1acf610d7a6264ea1
+  fluwx: 2ef787502fccb3f3596b380509001a8ea71cbbff
   objective_c: 89e720c30d716b036faf9c9684022048eee1eee2
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
@@ -73,6 +88,7 @@ SPEC CHECKSUMS:
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   video_player_avfoundation: dd410b52df6d2466a42d28550e33e4146928280a
   wakelock_plus: e29112ab3ef0b318e58cfa5c32326458be66b556
+  WechatOpenSDK-XCFramework: ff342ae616bb86df3d236aca38059dfd4bc4a949
 
 PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
 

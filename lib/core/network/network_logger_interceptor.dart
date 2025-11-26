@@ -7,16 +7,21 @@ import 'network_log_model.dart';
 class NetworkLoggerInterceptor extends Interceptor {
   final Ref ref;
   final Map<String, DateTime> _requestStartTimes = {};
+  final Map<String, String> _requestLogIds = {}; // 保存请求hashCode到logId的映射
 
   NetworkLoggerInterceptor(this.ref);
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     // 记录请求开始时间
-    _requestStartTimes[options.hashCode.toString()] = DateTime.now();
+    final requestKey = options.hashCode.toString();
+    _requestStartTimes[requestKey] = DateTime.now();
 
     // 创建日志记录
     final log = NetworkLogModel.fromRequest(options);
+    
+    // 保存 requestKey 到 logId 的映射
+    _requestLogIds[requestKey] = log.id;
     
     // 添加到日志列表
     ref.read(networkLogsProvider.notifier).addLog(log);
@@ -27,15 +32,21 @@ class NetworkLoggerInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     // 计算耗时
-    final startTime = _requestStartTimes.remove(response.requestOptions.hashCode.toString());
+    final requestKey = response.requestOptions.hashCode.toString();
+    final startTime = _requestStartTimes.remove(requestKey);
     final duration = startTime != null ? DateTime.now().difference(startTime) : null;
+    
+    // 获取对应的 logId
+    final logId = _requestLogIds.remove(requestKey);
 
     // 更新日志
-    ref.read(networkLogsProvider.notifier).updateLogWithResponse(
-      response.requestOptions.uri.toString(),
-      response,
-      duration ?? Duration.zero,
-    );
+    if (logId != null) {
+      ref.read(networkLogsProvider.notifier).updateLogWithResponse(
+        logId,
+        response,
+        duration ?? Duration.zero,
+      );
+    }
 
     super.onResponse(response, handler);
   }
@@ -43,15 +54,21 @@ class NetworkLoggerInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     // 计算耗时
-    final startTime = _requestStartTimes.remove(err.requestOptions.hashCode.toString());
+    final requestKey = err.requestOptions.hashCode.toString();
+    final startTime = _requestStartTimes.remove(requestKey);
     final duration = startTime != null ? DateTime.now().difference(startTime) : null;
+    
+    // 获取对应的 logId
+    final logId = _requestLogIds.remove(requestKey);
 
     // 更新日志
-    ref.read(networkLogsProvider.notifier).updateLogWithError(
-      err.requestOptions.uri.toString(),
-      err,
-      duration ?? Duration.zero,
-    );
+    if (logId != null) {
+      ref.read(networkLogsProvider.notifier).updateLogWithError(
+        logId,
+        err,
+        duration ?? Duration.zero,
+      );
+    }
 
     super.onError(err, handler);
   }
@@ -70,20 +87,20 @@ class NetworkLogsNotifier extends StateNotifier<List<NetworkLogModel>> {
     }
   }
 
-  /// 更新日志(响应)
-  void updateLogWithResponse(String url, Response response, Duration duration) {
+  /// 更新日志(响应) - 使用 logId 匹配
+  void updateLogWithResponse(String logId, Response response, Duration duration) {
     state = state.map((log) {
-      if (log.url == url && log.statusCode == null) {
+      if (log.id == logId) {
         return log.updateWithResponse(response, duration);
       }
       return log;
     }).toList();
   }
 
-  /// 更新日志(错误)
-  void updateLogWithError(String url, DioException error, Duration duration) {
+  /// 更新日志(错误) - 使用 logId 匹配
+  void updateLogWithError(String logId, DioException error, Duration duration) {
     state = state.map((log) {
-      if (log.url == url && log.statusCode == null) {
+      if (log.id == logId) {
         return log.updateWithError(error, duration);
       }
       return log;

@@ -35,33 +35,46 @@ class ApiInterceptor extends Interceptor {
 
     // 3. 添加默认参数到请求体(POST)或查询参数(GET)
     // 对应小程序中每个接口都会带的参数
-    final defaultParams = {
-      'platform_id': ApiConfig.platformId,
-      'merchant_id': ApiConfig.merchantId,
-      'brand_id': ApiConfig.brandId,
-      'channel_id': ApiConfig.channelId,
-      'extend_uid': ApiConfig.extendUid,
-    };
+    // 但是某些接口不需要这些参数，例如 /b/base/sms/sendcode
+    final skipDefaultParams = [
+      '/b/base/sms/sendcode',  // 发送验证码接口只需要 phone 和 scene
+    ];
+    
+    // 使用 uri.path 获取完整路径（包含baseUrl后的路径）
+    final fullPath = options.uri.path;
+    final shouldSkipDefaultParams = skipDefaultParams.any(
+      (path) => fullPath.endsWith(path) || fullPath.contains(path)
+    );
+    
+    if (!shouldSkipDefaultParams) {
+      final defaultParams = {
+        'platform_id': ApiConfig.platformId,
+        'merchant_id': ApiConfig.merchantId,
+        'brand_id': ApiConfig.brandId,
+        'channel_id': ApiConfig.channelId,
+        'extend_uid': ApiConfig.extendUid,
+      };
 
-    if (options.method == 'GET') {
-      // GET请求: 添加到queryParameters
-      options.queryParameters.addAll(defaultParams);
-    } else if (options.method == 'POST' || options.method == 'PUT') {
-      // POST/PUT请求: 添加到data
-      if (options.data is Map) {
-        (options.data as Map).addAll(defaultParams);
-      } else if (options.data is FormData) {
-        // FormData类型,添加到fields
-        final formData = options.data as FormData;
-        defaultParams.forEach((key, value) {
-          formData.fields.add(MapEntry(key, value));
-        });
-      } else {
-        // 其他情况,转换为Map
-        options.data = {
-          ...defaultParams,
-          if (options.data != null) 'data': options.data,
-        };
+      if (options.method == 'GET') {
+        // GET请求: 添加到queryParameters
+        options.queryParameters.addAll(defaultParams);
+      } else if (options.method == 'POST' || options.method == 'PUT') {
+        // POST/PUT请求: 添加到data
+        if (options.data is Map) {
+          (options.data as Map).addAll(defaultParams);
+        } else if (options.data is FormData) {
+          // FormData类型,添加到fields
+          final formData = options.data as FormData;
+          defaultParams.forEach((key, value) {
+            formData.fields.add(MapEntry(key, value));
+          });
+        } else {
+          // 其他情况,转换为Map
+          options.data = {
+            ...defaultParams,
+            if (options.data != null) 'data': options.data,
+          };
+        }
       }
     }
 

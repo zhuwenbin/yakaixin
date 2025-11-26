@@ -315,11 +315,42 @@ class MockDataRouter {
     }
     
     // P5-2 我的订单
-    if (cleanPath.contains('/order/list')) {
+    if (cleanPath.contains('/order/my/list')) {
+      // 根据status参数过滤订单
+      print('📋 订单列表请求路径: $path');
+      
+      // 解析查询参数
+      String status = '0';
+      if (path.contains('?')) {
+        final queryString = path.split('?')[1];
+        print('📋 查询字符串: $queryString');
+        
+        final params = Uri.splitQueryString(queryString);
+        status = params['status'] ?? '0';
+      }
+      
+      print('📋 订单状态过滤: status=$status');
+      
+      List<Map<String, dynamic>> filteredList;
+      if (status == '0') {
+        // 0=全部
+        filteredList = MockOrderData.orderList;
+      } else {
+        // 按照status过滤 (1=待支付, 2=已支付, 4=已取消)
+        filteredList = MockOrderData.orderList
+            .where((order) => order['status'] == status)
+            .toList();
+      }
+      
+      print('📋 过滤后订单数量: ${filteredList.length}');
+      
       return {
         'code': 100000,
         'msg': ['操作成功'],
-        'data': {'list': MockOrderData.orderList},
+        'data': {
+          'list': filteredList,
+          'total': filteredList.length,
+        },
       };
     }
     
@@ -332,9 +363,19 @@ class MockDataRouter {
       };
     }
     
-    // P5-3 创建订单
-    if (cleanPath.contains('/order/create')) {
+    // P5-3 创建订单 (/c/order/v2 POST)
+    if (method == 'POST' && cleanPath.contains('/order/v2')) {
       return CourseGoodsProfileMockData.createOrder;
+    }
+    
+    // P5-4 获取支付账户列表 (/c/config/finance/account GET)
+    if (method == 'GET' && cleanPath.contains('/config/finance/account')) {
+      return CourseGoodsProfileMockData.paymentAccountList;
+    }
+    
+    // P5-5 获取微信支付参数 (/c/pay/wechatpay/jsapi POST)
+    if (method == 'POST' && cleanPath.contains('/pay/wechatpay/jsapi')) {
+      return CourseGoodsProfileMockData.wechatPayParams;
     }
     
     // ============ F6. 我的中心模块 ============

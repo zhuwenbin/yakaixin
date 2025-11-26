@@ -55,7 +55,8 @@ class ApiConfig {
   static const String extendUid = '508948528815416786';
   
   // 微信配置 (对应小程序 app_id)
-  static const String wechatAppId = 'wxf787cf63760d80a0';
+  // 注意: 这是微信小程序的AppId,微信开放平台AppId在AppConstants中
+  static const String wechatMiniProgramAppId = 'wxf787cf63760d80a0';
   
   // 货架平台ID (对应小程序 shelf_platform_id)
   static const String shelfPlatformId = '480130129201204499';

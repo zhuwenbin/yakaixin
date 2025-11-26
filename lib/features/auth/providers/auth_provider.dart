@@ -243,6 +243,80 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // 对应小程序: store/index.js:169-188 (activateuserRecord, shareRecord)
   }
 
+  /// ✅ Mock 数据登录 - 调试模式，直接使用 Mock 数据
+  /// 按照用户要求: 登录调试使用Mock数据直转Model
+  Future<void> loginWithMockData(Map<String, dynamic> mockData) async {
+    try {
+      state = state.copyWith(isLoading: true);
+      LoadingHUD.show('登录中...');
+
+      // 1. 保存token
+      final token = mockData['token'] as String;
+      await _storage.setString(StorageKeys.token, token);
+
+      // 2. 处理昵称
+      final nickname = mockData['nickname'] as String? ?? '牙开心用户';
+
+      // 3. 保存用户信息
+      final userJson = {
+        'student_id': mockData['student_id'],
+        'student_name': mockData['student_name'],
+        'nickname': nickname,
+        'avatar': mockData['avatar'],
+        'phone': mockData['phone'],
+      };
+      await _storage.setJson(StorageKeys.userInfo, userJson);
+
+      // 4. 处理专业信息
+      final majorId = mockData['major_id']?.toString() ?? '524033912737962623';
+      final majorName = mockData['major_name'] as String? ?? '医学-口腔执业医师';
+      
+      final majorJson = {
+        'major_id': majorId,
+        'major_name': majorName,
+      };
+      await _storage.setJson(StorageKeys.majorInfo, majorJson);
+      await _storage.setString(StorageKeys.currentMajorId, majorId);
+      
+      final currentMajor = MajorModel(
+        majorId: majorId,
+        majorName: majorName,
+      );
+
+      // 5. 清除旧的答题缓存
+      await _storage.remove(StorageKeys.answersList);
+
+      // 6. 创建 UserModel
+      final user = UserModel(
+        token: token,
+        studentId: mockData['student_id'] as String,
+        studentName: mockData['student_name'] as String,
+        nickname: nickname,
+        avatar: mockData['avatar'] as String?,
+        phone: mockData['phone'] as String?,
+        merchants: null,
+        employeeInfo: null,
+        majors: null,
+      );
+
+      // 7. 更新状态
+      state = state.copyWith(
+        user: user,
+        currentMajor: currentMajor,
+        isLoggedIn: true,
+        isLoading: false,
+      );
+
+      LoadingHUD.dismiss();
+      ToastUtil.success('登录成功');
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+      LoadingHUD.dismiss();
+      ToastUtil.error('登录失败: $e');
+      rethrow;
+    }
+  }
+
   /// 微信登录
   /// 对应小程序: store/index.js - LOGIN
   Future<void> loginWithWechat({

@@ -37,18 +37,18 @@ class DioClient {
     );
 
     // 添加拦截器（顺序很重要！）
-    // 1. Mock拦截器（最优先，Mock开启时直接返回）
+    // 1. 网络日志拦截器（最优先，记录所有请求）
+    if (_ref != null && ApiConfig.isDebug) {
+      _dio.interceptors.add(NetworkLoggerInterceptor(_ref));
+    }
+    
+    // 2. Mock拦截器（Mock开启时直接返回）
     if (_ref != null && ApiConfig.isDebug) {
       _dio.interceptors.add(MockInterceptor(_ref));
     }
     
-    // 2. API拦截器（添加token、签名等）
+    // 3. API拦截器（添加token、签名等）
     _dio.interceptors.add(ApiInterceptor(_storage));
-    
-    // 3. 网络日志拦截器（记录所有请求）
-    if (_ref != null && ApiConfig.isDebug) {
-      _dio.interceptors.add(NetworkLoggerInterceptor(_ref));
-    }
     
     // 注意：已移除 LogInterceptor，避免终端输出过多日志
     // 网络请求详情请在调试面板中查看

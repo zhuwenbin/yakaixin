@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
+import '../../../app/routes/app_routes.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/models/user_model.dart';
+import '../../main/main_tab_page.dart'; // 导入mainTabIndexProvider
 
 /// 我的页面
 /// 对应小程序: src/modules/jintiku/pages/my/index.vue
@@ -27,11 +30,11 @@ class ProfilePage extends ConsumerWidget {
             ),
             // 功能Tab
             SliverToBoxAdapter(
-              child: _buildTabs(context),
+              child: _buildTabs(context, ref),
             ),
             // 功能列表
             SliverToBoxAdapter(
-              child: _buildMenuList(context),
+              child: _buildMenuList(context, ref),
             ),
           ],
         ),
@@ -45,10 +48,11 @@ class ProfilePage extends ConsumerWidget {
     return Container(
       padding: EdgeInsets.fromLTRB(16.w, 38.h, 16.w, 24.h),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF4A90E2), Color(0xFF357ABD)],
+        image: DecorationImage(
+          image: NetworkImage(
+            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/my-background-img.png',
+          ),
+          fit: BoxFit.cover,
         ),
       ),
       child: Row(
@@ -57,17 +61,19 @@ class ProfilePage extends ConsumerWidget {
           GestureDetector(
             onTap: () {
               if (isLoggedIn) {
-                // TODO: 跳转到个人信息页面
+                // 跳转到个人信息编辑页
+                context.push(AppRoutes.personEdit);
               } else {
-                // TODO: 跳转到登录页面
+                // 跳转到登录页面
+                context.push(AppRoutes.loginCenter);
               }
             },
             child: Container(
-              width: 60.w,
-              height: 60.w,
+              width: 64.w, // 对应小程序 128rpx
+              height: 64.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
+                border: Border.all(color: Colors.white, width: 4.w), // 对应小程序 8rpx
               ),
               child: ClipOval(
                 child: isLoggedIn && user?.avatar != null
@@ -102,8 +108,8 @@ class ProfilePage extends ConsumerWidget {
                       : '请登录',
                   style: TextStyle(
                     fontSize: 18.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF03203D), // 对应小程序 #03203d
                   ),
                 ),
                 if (isLoggedIn && user?.phone != null) ...[
@@ -111,8 +117,9 @@ class ProfilePage extends ConsumerWidget {
                   Text(
                     _formatPhone(user!.phone!),
                     style: TextStyle(
-                      fontSize: 13.sp,
-                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF03203D).withOpacity(0.85), // 对应小程序 rgba(3, 32, 61, 0.85)
                     ),
                   ),
                 ],
@@ -121,10 +128,18 @@ class ProfilePage extends ConsumerWidget {
           ),
           // 编辑图标
           if (isLoggedIn)
-            Icon(
-              Icons.chevron_right,
-              color: Colors.white,
-              size: 24.sp,
+            GestureDetector(
+              onTap: () => context.push(AppRoutes.personEdit),
+              child: Image.network(
+                'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/34e7174539261545097316_%E7%BC%96%E7%BB%84%204%E5%A4%87%E4%BB%BD%203%402x.png',
+                width: 20.w,
+                height: 20.w,
+                errorBuilder: (context, error, stackTrace) => Icon(
+                  Icons.chevron_right,
+                  color: Color(0xFF03203D),
+                  size: 24.sp,
+                ),
+              ),
             ),
         ],
       ),
@@ -133,34 +148,38 @@ class ProfilePage extends ConsumerWidget {
 
   /// 构建功能Tab
   /// 对应小程序: .tab
-  Widget _buildTabs(BuildContext context) {
+  Widget _buildTabs(BuildContext context, WidgetRef ref) {
     final tabs = [
       {
         'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/order.png',
         'text': '我的课程',
         'onTap': () {
-          // TODO: 跳转到我的课程页面
+          // 切换到课程 Tab
+          ref.read(mainTabIndexProvider.notifier).state = 2;
         },
       },
       {
         'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/flower.png',
         'text': '我的报告',
         'onTap': () {
-          // TODO: 跳转到我的报告页面
+          // 跳转到报告中心页面
+          context.push(AppRoutes.reportCenter);
         },
       },
       {
         'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/error.png',
         'text': '错题本',
         'onTap': () {
-          // TODO: 跳转到错题本页面
+          // 跳转到错题本页面
+          context.push(AppRoutes.wrongBookIndex);
         },
       },
       {
         'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/mail.png',
         'text': '试题收藏',
         'onTap': () {
-          // TODO: 跳转到试题收藏页面
+          // 跳转到试题收藏页面
+          context.push(AppRoutes.collectIndex);
         },
       },
     ];
@@ -176,7 +195,7 @@ class ProfilePage extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: tabs.map((tab) {
           return GestureDetector(
-            onTap: () => tab['onTap'] as VoidCallback,
+            onTap: tab['onTap'] as VoidCallback,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -212,60 +231,50 @@ class ProfilePage extends ConsumerWidget {
   }
 
   /// 构建功能列表
-  Widget _buildMenuList(BuildContext context) {
+  Widget _buildMenuList(BuildContext context, WidgetRef ref) {
     final menuItems = [
       {
         'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/file.png',
         'title': '我的订单',
         'onTap': () {
-          // TODO: 跳转到订单页面
+          // 跳转到订单页面
+          context.push(AppRoutes.myOrder);
         },
       },
       {
         'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/pen.png',
         'title': '我的练习',
         'onTap': () {
-          // TODO: 跳转到练习页面
+          // 切换到首页 Tab
+          ref.read(mainTabIndexProvider.notifier).state = 0;
         },
       },
       {
         'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/meme.png',
         'title': '设置',
         'onTap': () {
-          // TODO: 跳转到设置页面
+          // 跳转到设置页面
+          context.push(AppRoutes.settings);
         },
       },
     ];
 
-    return Container(
-      margin: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Column(
-        children: menuItems.asMap().entries.map((entry) {
-          final index = entry.key;
-          final item = entry.value;
-          final isLast = index == menuItems.length - 1;
-
-          return Column(
-            children: [
-              _buildMenuItem(
-                icon: item['icon'] as String,
-                title: item['title'] as String,
-                onTap: item['onTap'] as VoidCallback,
-              ),
-              if (!isLast)
-                Divider(
-                  height: 1,
-                  indent: 56.w,
-                  color: Color(0xFFE5E5E5),
-                ),
-            ],
-          );
-        }).toList(),
-      ),
+    // 每个菜单项都是独立的圆角卡片（对应小程序的单独.list）
+    return Column(
+      children: menuItems.map((item) {
+        return Container(
+          margin: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r), // 对应小程序 32rpx
+          ),
+          child: _buildMenuItem(
+            icon: item['icon'] as String,
+            title: item['title'] as String,
+            onTap: item['onTap'] as VoidCallback,
+          ),
+        );
+      }).toList(),
     );
   }
 
