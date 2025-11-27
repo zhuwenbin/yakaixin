@@ -15,6 +15,7 @@ class DioClient {
   late Dio _dio;
   final StorageService _storage;
   final Ref? _ref; // 用于网络日志
+  MockInterceptor? _mockInterceptor; // ✅ 保存 Mock 拦截器引用
 
   DioClient(this._storage, [this._ref]) {
     _initDio();
@@ -42,9 +43,16 @@ class DioClient {
       _dio.interceptors.add(NetworkLoggerInterceptor(_ref));
     }
     
-    // 2. Mock拦截器（Mock开启时直接返回）
+    // 2. Mock拦截器（只在 Debug 模式下初始化，根据开关动态添加）
+    // ✅ 修复：不自动添加，由 enableMock/disableMock 控制
     if (_ref != null && ApiConfig.isDebug) {
-      _dio.interceptors.add(MockInterceptor(_ref));
+      _mockInterceptor = MockInterceptor(_ref);
+      // 检查初始 Mock 状态
+      final isMockEnabled = _ref.read(mockEnabledProvider);
+      if (isMockEnabled) {
+        _dio.interceptors.add(_mockInterceptor!);
+        print('✅ Mock拦截器已启用');
+      }
     }
     
     // 3. API拦截器（添加token、签名等）
@@ -58,6 +66,27 @@ class DioClient {
   void updateBaseUrl() {
     _dio.options.baseUrl = ApiConfig.baseUrl;
     print('🔄 Dio baseUrl 已更新: ${_dio.options.baseUrl}');
+  }
+  
+  /// ✅ 启用 Mock 模式
+  void enableMock() {
+    if (!ApiConfig.isDebug) {
+      print('⚠️ Mock模式仅在Debug模式下可用');
+      return;
+    }
+    
+    if (_mockInterceptor != null && !_dio.interceptors.contains(_mockInterceptor)) {
+      _dio.interceptors.add(_mockInterceptor!);
+      print('✅ Mock拦截器已启用');
+    }
+  }
+  
+  /// ✅ 禁用 Mock 模式
+  void disableMock() {
+    if (_mockInterceptor != null && _dio.interceptors.contains(_mockInterceptor)) {
+      _dio.interceptors.remove(_mockInterceptor);
+      print('🔴 Mock拦截器已禁用');
+    }
   }
 
   Dio get dio => _dio;

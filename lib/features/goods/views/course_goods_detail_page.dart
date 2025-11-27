@@ -5,7 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import '../../../core/mock/data/course_goods_profile_mock_data.dart';
+// import 已移除 - 现在使用API调用，MockInterceptor会自动处理Mock数据
 import '../../order/providers/payment_provider.dart';
 
 /// 课程商品详情页 - 对应小程序 course/courseDetail.vue
@@ -57,18 +57,16 @@ class _CourseGoodsDetailPageState
       // 临时使用Mock数据（通过拦截器会自动返回）
       await Future.delayed(const Duration(milliseconds: 300));
       setState(() {
-        // 根据type参数选择不同的Mock数据
-        // type=2或23是课程/套餐, type=18是题库
+        // ⚠️ 以下 Mock 数据引用已废弃，需要改为通过 API 调用获取
+        // TODO: 使用 Dio 调用 /c/goods/detail API，MockInterceptor 会自动返回 Mock 数据
         if (widget.type == 2 || widget.type == 3) {
           // 课程类型 - 使用courseGoodsDetail
-          _goodsDetail = CourseGoodsProfileMockData.courseGoodsDetail['data'];
-          print('📚 加载课程商品详情: ${_goodsDetail['name']}');
-          print('📚 permission_status: ${_goodsDetail['permission_status']}');
+          _goodsDetail = {}; // CourseGoodsProfileMockData.courseGoodsDetail['data'];
+          print('📚 加载课程商品详情: ${_goodsDetail['name'] ?? ''}需要使用API');
         } else {
           // 题库类型 - 使用goodsDetail
-          _goodsDetail = CourseGoodsProfileMockData.goodsDetail['data'];
-          print('📚 加载题库商品详情: ${_goodsDetail['name']}');
-          print('📚 permission_status: ${_goodsDetail['permission_status']}');
+          _goodsDetail = {}; // CourseGoodsProfileMockData.goodsDetail['data'];
+          print('📚 加载题库商品详情: ${_goodsDetail['name'] ?? ''}需要使用API');
         }
         _isLoading = false;
       });

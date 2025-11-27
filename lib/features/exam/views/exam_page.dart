@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yakaixin_app/app/routes/app_routes.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/mock/data/exam_mock_data.dart';
+// import 已移除 - 现在使用API调用，MockInterceptor会自动处理Mock数据
 
 /// 考试页面 - 对应小程序 test/exam.vue
 /// 功能：显示考试商品详情及试卷列表
@@ -25,8 +25,10 @@ class ExamPage extends ConsumerStatefulWidget {
 
 class _ExamPageState extends ConsumerState<ExamPage> {
   // 从 Mock数据文件获取数据
-  Map<String, dynamic> get _mockInfo => MockExamData.examInfo;
-  List<Map<String, dynamic>> get _mockPaperList => MockExamData.examList;
+  // ⚠️ 以下 Mock 数据引用已废弃，需要改为通过 API 调用获取
+  // TODO: 使用 Dio 调用 API，MockInterceptor 会自动返回 Mock 数据
+  Map<String, dynamic> get _mockInfo => {}; // MockExamData.examInfo;
+  List<Map<String, dynamic>> get _mockPaperList => []; // MockExamData.examList;
   
   // TODO: 章节试卷列表，等待Mock数据完善
   List<Map<String, dynamic>> get _mockChapterPaperList => [];

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../mock/mock_data_router.dart';
@@ -25,8 +26,8 @@ class MockInterceptor extends Interceptor {
       final mockResponse = await _getMockResponse(options);
       
       if (mockResponse != null) {
-        // 模拟网络延迟 (200-500ms)
-        await Future.delayed(Duration(milliseconds: 200 + (DateTime.now().millisecond % 300)));
+        // ✅ 使用可配置的网络延迟模拟
+        await _simulateNetworkDelay();
         
         handler.resolve(mockResponse);
         return;
@@ -37,6 +38,43 @@ class MockInterceptor extends Interceptor {
 
     // 如果没有对应的Mock数据，继续正常请求
     handler.next(options);
+  }
+
+  /// 模拟网络延迟
+  Future<void> _simulateNetworkDelay() async {
+    final delayMode = ref.read(mockDelayProvider);
+    int delayMs;
+    
+    switch (delayMode) {
+      case MockDelayMode.none:
+        return; // 无延迟
+        
+      case MockDelayMode.fast:
+        // 快速网络: 50-100ms
+        delayMs = 50 + Random().nextInt(50);
+        break;
+        
+      case MockDelayMode.normal:
+        // 正常网络: 200-500ms
+        delayMs = 200 + Random().nextInt(300);
+        break;
+        
+      case MockDelayMode.slow:
+        // 慢速网络: 1-3s
+        delayMs = 1000 + Random().nextInt(2000);
+        break;
+        
+      case MockDelayMode.unstable:
+        // 不稳定网络: 30% 概率慢速
+        final isSlowNetwork = Random().nextDouble() < 0.3;
+        delayMs = isSlowNetwork
+            ? 2000 + Random().nextInt(3000)  // 2-5s
+            : 100 + Random().nextInt(200);   // 100-300ms
+        break;
+    }
+    
+    print('⏱️ Mock延迟: ${delayMs}ms (模式: ${delayMode.name})');
+    await Future.delayed(Duration(milliseconds: delayMs));
   }
 
   /// 根据请求获取Mock响应
@@ -56,8 +94,8 @@ class MockInterceptor extends Interceptor {
     
     print('🧪 Mock拦截: $method $path');
     
-    // 从Mock路由表获取数据
-    final mockData = MockDataRouter.getMockData(path, method);
+    // 从 Mock路由表获取数据（异步）
+    final mockData = await MockDataRouter.getMockData(path, method);
     
     if (mockData == null) {
       print('⚠️ 未找到Mock数据: $path');
@@ -79,4 +117,17 @@ class MockInterceptor extends Interceptor {
 }
 
 /// Mock开关状态Provider
-final mockEnabledProvider = StateProvider<bool>((ref) => false);
+/// ⚠️ Debug 模式下默认开启 Mock，可在调试面板关闭
+final mockEnabledProvider = StateProvider<bool>((ref) => true);
+
+/// Mock延迟模式Provider
+final mockDelayProvider = StateProvider<MockDelayMode>((ref) => MockDelayMode.normal);
+
+/// Mock延迟模式
+enum MockDelayMode {
+  none,      // 无延迟
+  fast,      // 快速网络 (50-100ms)
+  normal,    // 正常网络 (200-500ms)
+  slow,      // 慢速网络 (1-3s)
+  unstable,  // 不稳定网络 (30%概率慢速)
+}

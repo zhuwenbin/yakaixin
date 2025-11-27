@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../core/mock/data/course_mock_data.dart';
+// import 已移除 - 现在使用API调用，MockInterceptor会自动处理Mock数据
 
 /// 资料下载页面 - 对应小程序 study/dataDownload/index.vue
 /// 功能：显示课程资料列表，支持搜索、预览、下载
@@ -151,7 +151,9 @@ class _DataDownloadPageState extends ConsumerState<DataDownloadPage> {
   }
 
   // 从 Mock数据文件获取数据
-  List<Map<String, dynamic>> get _mockDataList => MockCourseData.downloadList;
+  // ⚠️ 以下 Mock 数据引用已废弃，需要改为通过 API 调用获取
+  // TODO: 使用 Dio 调用 API，MockInterceptor 会自动返回 Mock 数据
+  List<Map<String, dynamic>> get _mockDataList => []; // MockCourseData.downloadList;
 }
 
 /// 文件项组件

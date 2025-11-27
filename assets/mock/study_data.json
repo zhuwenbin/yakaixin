@@ -1,0 +1,317 @@
+{
+  "version": "1.0.0",
+  "api": "GET /c/study/learning/*",
+  "update_time": "2025-11-25",
+  "description": "学习中心Mock数据：学习日历、课节列表、学习计划",
+  "notes": {
+    "calendar": "日历数据，显示有学习记录的日期",
+    "lessons": "今日课节列表，包含直播、录播、面授课程",
+    "plan": "学习计划课程列表，支持授课形式筛选"
+  },
+  "data": {
+    "calendar": [
+      {
+        "date": "2025-11-20",
+        "status": "1"
+      },
+      {
+        "date": "2025-11-21",
+        "status": "1"
+      },
+      {
+        "date": "2025-11-22",
+        "status": "1"
+      },
+      {
+        "date": "2025-11-23",
+        "status": "1"
+      },
+      {
+        "date": "2025-11-25",
+        "status": "1"
+      }
+    ],
+    "lessons": [
+      {
+        "lesson_id": "101",
+        "lesson_num": "1",
+        "lesson_name": "第一节：护理学基础概论",
+        "lesson_name_other": "护理理论知识体系",
+        "teaching_type": "3",
+        "teaching_type_name": "录播",
+        "start_time": "2025-11-25 09:00:00",
+        "end_time": "2025-11-25 11:00:00",
+        "lesson_status": "2",
+        "goods_id": "593505082385898224",
+        "goods_pid": "0",
+        "paper_goods_id": "593505082385898224",
+        "order_id": "12345",
+        "order_goods_detail_id": "67890",
+        "system_id": "1",
+        "resource_document": [
+          {
+            "path": "https://example.com/homework.pdf"
+          }
+        ],
+        "evaluation_type": [
+          {
+            "id": "1",
+            "name": "课前测评",
+            "paper_version_id": "1001",
+            "professional_id": "524033912737962623",
+            "is_separate": "2"
+          },
+          {
+            "id": "2",
+            "name": "课后练习",
+            "paper_version_id": "1002",
+            "professional_id": "524033912737962623",
+            "is_separate": "1"
+          }
+        ]
+      },
+      {
+        "lesson_id": "102",
+        "lesson_num": "2",
+        "lesson_name": "第二节：基础护理操作",
+        "lesson_name_other": "临床基础技能实践",
+        "teaching_type": "1",
+        "teaching_type_name": "直播",
+        "start_time": "2025-11-25 14:00:00",
+        "end_time": "2025-11-25 16:00:00",
+        "lesson_status": "1",
+        "goods_id": "593505082385898225",
+        "goods_pid": "0",
+        "paper_goods_id": "593505082385898225",
+        "order_id": "12346",
+        "order_goods_detail_id": "67891",
+        "system_id": "1",
+        "resource_document": [],
+        "evaluation_type": [
+          {
+            "id": "3",
+            "name": "直播互动测验",
+            "paper_version_id": "1003",
+            "professional_id": "524033912737962623",
+            "is_separate": "2"
+          }
+        ]
+      },
+      {
+        "lesson_id": "103",
+        "lesson_num": "3",
+        "lesson_name": "第三节：临床案例分析",
+        "lesson_name_other": "综合护理思维训练",
+        "teaching_type": "2",
+        "teaching_type_name": "面授",
+        "start_time": "2025-11-25 19:00:00",
+        "end_time": "2025-11-25 21:00:00",
+        "lesson_status": "1",
+        "goods_id": "593505082385898226",
+        "goods_pid": "0",
+        "paper_goods_id": "593505082385898226",
+        "order_id": "12347",
+        "order_goods_detail_id": "67892",
+        "system_id": "1",
+        "resource_document": [],
+        "evaluation_type": []
+      }
+    ],
+    "lesson_response": {
+      "lesson_num": "3",
+      "lesson_attendance_num": "1",
+      "lesson_attendance": [
+        {
+          "lesson_id": "101",
+          "lesson_num": "1",
+          "lesson_name": "第一节：护理学基础概论",
+          "lesson_name_other": "护理理论知识体系",
+          "teaching_type": "3",
+          "teaching_type_name": "录播",
+          "start_time": "2025-11-25 09:00:00",
+          "end_time": "2025-11-25 11:00:00",
+          "lesson_status": "2",
+          "goods_id": "593505082385898224",
+          "goods_pid": "0",
+          "paper_goods_id": "593505082385898224",
+          "order_id": "12345",
+          "order_goods_detail_id": "67890",
+          "system_id": "1",
+          "resource_document": [
+            {
+              "path": "https://example.com/homework.pdf"
+            }
+          ],
+          "evaluation_type": [
+            {
+              "id": "1",
+              "name": "课前测评",
+              "paper_version_id": "1001",
+              "professional_id": "524033912737962623",
+              "is_separate": "2"
+            },
+            {
+              "id": "2",
+              "name": "课后练习",
+              "paper_version_id": "1002",
+              "professional_id": "524033912737962623",
+              "is_separate": "1"
+            }
+          ],
+          "evaluation_type_top": [
+            {
+              "id": "1",
+              "name": "课前测评",
+              "paper_version_id": "1001",
+              "professional_id": "524033912737962623",
+              "is_separate": "2"
+            }
+          ],
+          "evaluation_type_bottom": [
+            {
+              "id": "2",
+              "name": "课后练习",
+              "paper_version_id": "1002",
+              "professional_id": "524033912737962623",
+              "is_separate": "1"
+            }
+          ]
+        },
+        {
+          "lesson_id": "102",
+          "lesson_num": "2",
+          "lesson_name": "第二节：基础护理操作",
+          "lesson_name_other": "临床基础技能实践",
+          "teaching_type": "1",
+          "teaching_type_name": "直播",
+          "start_time": "2025-11-25 14:00:00",
+          "end_time": "2025-11-25 16:00:00",
+          "lesson_status": "1",
+          "goods_id": "593505082385898225",
+          "goods_pid": "0",
+          "paper_goods_id": "593505082385898225",
+          "order_id": "12346",
+          "order_goods_detail_id": "67891",
+          "system_id": "1",
+          "resource_document": [],
+          "evaluation_type": [
+            {
+              "id": "3",
+              "name": "直播互动测验",
+              "paper_version_id": "1003",
+              "professional_id": "524033912737962623",
+              "is_separate": "2"
+            }
+          ],
+          "evaluation_type_top": [
+            {
+              "id": "3",
+              "name": "直播互动测验",
+              "paper_version_id": "1003",
+              "professional_id": "524033912737962623",
+              "is_separate": "2"
+            }
+          ],
+          "evaluation_type_bottom": []
+        },
+        {
+          "lesson_id": "103",
+          "lesson_num": "3",
+          "lesson_name": "第三节:临床案例分析",
+          "lesson_name_other": "综合护理思维训练",
+          "teaching_type": "2",
+          "teaching_type_name": "面授",
+          "start_time": "2025-11-25 19:00:00",
+          "end_time": "2025-11-25 21:00:00",
+          "lesson_status": "1",
+          "goods_id": "593505082385898226",
+          "goods_pid": "0",
+          "paper_goods_id": "593505082385898226",
+          "order_id": "12347",
+          "order_goods_detail_id": "67892",
+          "system_id": "1",
+          "resource_document": [],
+          "evaluation_type": [],
+          "evaluation_type_top": [],
+          "evaluation_type_bottom": []
+        }
+      ]
+    },
+    "plan_courses": [
+      {
+        "goods_id": "593505082385898301",
+        "goods_name": "2025护士资格考试全程班（录播）",
+        "goods_pid": "0",
+        "goods_pid_name": "",
+        "teaching_type": "3",
+        "teaching_type_name": "录播",
+        "business_type": "1",
+        "class": {
+          "id": "class_001",
+          "name": "A班",
+          "date": "2025-11-25 至 2026-05-30",
+          "teacher": [
+            {
+              "id": "1",
+              "name": "张老师",
+              "avatar": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/teacher1.jpg"
+            },
+            {
+              "id": "2",
+              "name": "李老师",
+              "avatar": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/teacher2.jpg"
+            }
+          ]
+        }
+      },
+      {
+        "goods_id": "593505082385898302",
+        "goods_name": "护理综合能力提升班（直播）",
+        "goods_pid": "0",
+        "goods_pid_name": "",
+        "teaching_type": "1",
+        "teaching_type_name": "直播",
+        "business_type": "2",
+        "class": {
+          "id": "class_002",
+          "name": "VIP班",
+          "date": "2025-11-25 至 2026-03-30",
+          "teacher": [
+            {
+              "id": "3",
+              "name": "王老师",
+              "avatar": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/teacher3.jpg"
+            }
+          ]
+        }
+      },
+      {
+        "goods_id": "593505082385898303",
+        "goods_name": "临床实操强化训练（面授）",
+        "goods_pid": "593505082385898304",
+        "goods_pid_name": "2025护考全程套餐",
+        "teaching_type": "2",
+        "teaching_type_name": "面授",
+        "business_type": "3",
+        "class": {
+          "id": "class_003",
+          "name": "面授精品班",
+          "date": "2025-12-01 至 2025-12-15",
+          "address": "北京市朝阳区XXX培训中心",
+          "teacher": [
+            {
+              "id": "4",
+              "name": "赵老师",
+              "avatar": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/teacher4.jpg"
+            },
+            {
+              "id": "5",
+              "name": "钱老师",
+              "avatar": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/teacher5.jpg"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

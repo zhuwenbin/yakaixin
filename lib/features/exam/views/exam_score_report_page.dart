@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yakaixin_app/app/routes/app_routes.dart';
-import '../../../core/mock/data/exam_mock_data.dart';
+// import 已移除 - 现在使用API调用，MockInterceptor会自动处理Mock数据
 
 /// 考试成绩报告页面 - 对应小程序 test/examScoreReporting.vue
 /// 功能：显示考试成绩、答题详情、失分题目
@@ -31,7 +31,9 @@ class ExamScoreReportPage extends ConsumerStatefulWidget {
 
 class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
   // 从 Mock数据文件获取数据
-  Map<String, dynamic> get _mockData => MockExamData.examReport;
+  // ⚠️ 以下 Mock 数据引用已废弃，需要改为通过 API 调用获取
+  // TODO: 使用 Dio 调用 API，MockInterceptor 会自动返回 Mock 数据
+  Map<String, dynamic> get _mockData => {}; // MockExamData.examReport;
 
   String _studentName = '张三';
   int _allRank = 500;

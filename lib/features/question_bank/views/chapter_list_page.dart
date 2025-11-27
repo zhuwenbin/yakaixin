@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
-import '../../../core/mock/data/question_bank_mock_data.dart';
+// import 已移除 - 现在使用API调用，MockInterceptor会自动处理Mock数据
 
 /// 章节练习列表页面
 /// 对应小程序: src/modules/jintiku/pages/chapterExercise/index.vue
@@ -40,7 +40,9 @@ class _ChapterListPageState extends ConsumerState<ChapterListPage> {
       // 临时使用Mock数据（通过拦截器会自动返回）
       await Future.delayed(const Duration(milliseconds: 300));
       setState(() {
-        _chapters = QuestionBankMockData.chapterTree['data']['list'] as List<Map<String, dynamic>>;
+        // ⚠️ 以下 Mock 数据引用已废弃，需要改为通过 API 调用获取
+        // TODO: 使用 Dio 调用 /c/exam/chapter API，MockInterceptor 会自动返回 Mock 数据
+        _chapters = []; // QuestionBankMockData.chapterTree['data']['list'] as List<Map<String, dynamic>>;
         _isLoading = false;
       });
     } catch (e) {

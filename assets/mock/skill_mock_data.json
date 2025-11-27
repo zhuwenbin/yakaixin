@@ -1,0 +1,80 @@
+{
+  "version": "1.0.0",
+  "api": "GET /c/exam/chapterpackage",
+  "update_time": "2025-11-25",
+  "description": "技能模拟数据 - position_identify=jinengmoni",
+  "data": [
+    {
+      "id": "skill_mock_001",
+      "name": "2026口腔执业医师实践技能模拟",
+      "position_identify": "jinengmoni",
+      "professional_id": "524033912737962623",
+      "description": "全真模拟实践技能考试，含病史采集、体格检查、辅助检查",
+      "total_stations": 3,
+      "done_stations": 1,
+      "station_list": [
+        {
+          "id": "station_1",
+          "name": "第一站：病史采集",
+          "description": "模拟真实病史采集场景",
+          "question_num": 10,
+          "done_num": 10,
+          "status": "completed"
+        },
+        {
+          "id": "station_2",
+          "name": "第二站：体格检查",
+          "description": "口腔检查及全身检查",
+          "question_num": 15,
+          "done_num": 0,
+          "status": "locked"
+        },
+        {
+          "id": "station_3",
+          "name": "第三站：辅助检查",
+          "description": "影像学判读及诊断",
+          "question_num": 12,
+          "done_num": 0,
+          "status": "locked"
+        }
+      ],
+      "status": "1"
+    },
+    {
+      "id": "skill_mock_002",
+      "name": "口腔助理医师实践技能模拟",
+      "position_identify": "jinengmoni",
+      "professional_id": "524033614019566207",
+      "description": "助理医师实践技能全真模拟",
+      "total_stations": 3,
+      "done_stations": 0,
+      "station_list": [
+        {
+          "id": "station_1",
+          "name": "第一站：病史采集",
+          "description": "模拟真实病史采集场景",
+          "question_num": 8,
+          "done_num": 0,
+          "status": "active"
+        },
+        {
+          "id": "station_2",
+          "name": "第二站：体格检查",
+          "description": "口腔检查及全身检查",
+          "question_num": 12,
+          "done_num": 0,
+          "status": "locked"
+        },
+        {
+          "id": "station_3",
+          "name": "第三站：辅助检查",
+          "description": "影像学判读及诊断",
+          "question_num": 10,
+          "done_num": 0,
+          "status": "locked"
+        }
+      ],
+      "status": "1"
+    }
+  ]
+}

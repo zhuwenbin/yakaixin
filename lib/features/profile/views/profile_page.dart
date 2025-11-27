@@ -18,26 +18,57 @@ class ProfilePage extends ConsumerWidget {
     final authState = ref.watch(authProvider);
     final isLoggedIn = authState.isLoggedIn;
     final user = authState.user;
+    // 获取状态栏高度
+    final statusBarHeight = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // 头部用户信息
-            SliverToBoxAdapter(
-              child: _buildHeader(context, isLoggedIn, user),
+      backgroundColor: const Color(0xFFF5F6F8),
+      // ✅ 不使用 SafeArea,让背景图片充满状态栏
+      body: Stack(
+        children: [
+          // ✅ 背景图片 - 充满状态栏
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: CachedNetworkImage(
+              imageUrl: 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/my-background-img.png',
+              height: statusBarHeight + 220.h, // 状态栏 + 头部区域高度
+              fit: BoxFit.cover,
+              errorWidget: (context, error, stackTrace) {
+                return Container(
+                  height: statusBarHeight + 220.h,
+                  color: Colors.white,
+                );
+              },
             ),
-            // 功能Tab
-            SliverToBoxAdapter(
-              child: _buildTabs(context, ref),
-            ),
-            // 功能列表
-            SliverToBoxAdapter(
-              child: _buildMenuList(context, ref),
-            ),
-          ],
-        ),
+          ),
+          // 主内容区域
+          CustomScrollView(
+            slivers: [
+              // 顶部占位(状态栏高度)
+              SliverToBoxAdapter(
+                child: SizedBox(height: statusBarHeight + 38.h),
+              ),
+              // 头部用户信息
+              SliverToBoxAdapter(
+                child: _buildHeader(context, isLoggedIn, user),
+              ),
+              // 功能Tab
+              SliverToBoxAdapter(
+                child: _buildTabs(context, ref),
+              ),
+              // 功能列表
+              SliverToBoxAdapter(
+                child: _buildMenuList(context, ref),
+              ),
+              // 底部间距
+              SliverToBoxAdapter(
+                child: SizedBox(height: 20.h),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -45,103 +76,101 @@ class ProfilePage extends ConsumerWidget {
   /// 构建头部用户信息
   /// 对应小程序: .header-box
   Widget _buildHeader(BuildContext context, bool isLoggedIn, UserModel? user) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(16.w, 38.h, 16.w, 24.h),
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: NetworkImage(
-            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/my-background-img.png',
-          ),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Row(
-        children: [
-          // 头像
-          GestureDetector(
-            onTap: () {
-              if (isLoggedIn) {
-                // 跳转到个人信息编辑页
-                context.push(AppRoutes.personEdit);
-              } else {
-                // 跳转到登录页面
-                context.push(AppRoutes.loginCenter);
-              }
-            },
-            child: Container(
-              width: 64.w, // 对应小程序 128rpx
-              height: 64.w,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 4.w), // 对应小程序 8rpx
-              ),
-              child: ClipOval(
-                child: isLoggedIn && user?.avatar != null
-                    ? CachedNetworkImage(
-                        imageUrl: user!.avatar!,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: Colors.grey[300],
-                          child: Icon(Icons.person, size: 30.w, color: Colors.white),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: Colors.grey[300],
-                          child: Icon(Icons.person, size: 30.w, color: Colors.white),
-                        ),
-                      )
-                    : Image.network(
-                        'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixindf.png',
-                        fit: BoxFit.cover,
-                      ),
-              ),
-            ),
-          ),
-          SizedBox(width: 12.w),
-          // 用户信息
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isLoggedIn
-                      ? (user?.nickname ?? user?.studentName ?? '用户')
-                      : '请登录',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF03203D), // 对应小程序 #03203d
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w), // 32rpx ÷ 2 = 16.w
+      child: Container(
+        padding: EdgeInsets.only(bottom: 15.h), // 30rpx ÷ 2 = 15.h
+        child: Row(
+          children: [
+            // 头像
+            GestureDetector(
+              onTap: () {
+                if (isLoggedIn) {
+                  // 跳转到个人信息编辑页
+                  context.push(AppRoutes.personEdit);
+                } else {
+                  // 跳转到登录页面
+                  context.push(AppRoutes.loginCenter);
+                }
+              },
+              child: Container(
+                width: 64.w, // 128rpx ÷ 2 = 64.w
+                height: 64.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 4.w, // 8rpx ÷ 2 = 4.w
                   ),
                 ),
-                if (isLoggedIn && user?.phone != null) ...[
-                  SizedBox(height: 4.h),
+                child: ClipOval(
+                  child: isLoggedIn && user?.avatar != null && user!.avatar!.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: user.avatar!,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: Colors.grey[300],
+                            child: Icon(Icons.person, size: 30.w, color: Colors.white),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: Colors.grey[300],
+                            child: Icon(Icons.person, size: 30.w, color: Colors.white),
+                          ),
+                        )
+                      : Image.network(
+                          'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixindf.png',
+                          fit: BoxFit.cover,
+                        ),
+                ),
+              ),
+            ),
+            SizedBox(width: 12.w), // 24rpx ÷ 2 = 12.w
+            // 用户信息
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    _formatPhone(user!.phone!),
+                    isLoggedIn
+                        ? (user?.nickname ?? user?.studentName ?? '用户')
+                        : '请登录',
                     style: TextStyle(
-                      fontSize: 14.sp,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF03203D).withOpacity(0.85), // 对应小程序 rgba(3, 32, 61, 0.85)
+                      color: const Color(0xFF03203D),
                     ),
                   ),
+                  if (isLoggedIn && user?.phone != null) ...[
+                    SizedBox(height: 4.h),
+                    Text(
+                      _formatPhone(user!.phone!),
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF03203D).withOpacity(0.85),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
-            ),
-          ),
-          // 编辑图标
-          if (isLoggedIn)
-            GestureDetector(
-              onTap: () => context.push(AppRoutes.personEdit),
-              child: Image.network(
-                'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/34e7174539261545097316_%E7%BC%96%E7%BB%84%204%E5%A4%87%E4%BB%BD%203%402x.png',
-                width: 20.w,
-                height: 20.w,
-                errorBuilder: (context, error, stackTrace) => Icon(
-                  Icons.chevron_right,
-                  color: Color(0xFF03203D),
-                  size: 24.sp,
-                ),
               ),
             ),
-        ],
+            // 编辑图标
+            if (isLoggedIn)
+              GestureDetector(
+                onTap: () => context.push(AppRoutes.personEdit),
+                child: Image.network(
+                  'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/34e7174539261545097316_%E7%BC%96%E7%BB%84%204%E5%A4%87%E4%BB%BD%203%402x.png',
+                  width: 20.w,
+                  height: 20.w,
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    Icons.chevron_right,
+                    color: const Color(0xFF03203D),
+                    size: 24.sp,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

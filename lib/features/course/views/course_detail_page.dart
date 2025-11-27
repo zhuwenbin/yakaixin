@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yakaixin_app/app/routes/app_routes.dart';
-import '../../../core/mock/data/course_mock_data.dart';
+// import 已移除 - 现在使用API调用，MockInterceptor会自动处理Mock数据
 
 /// 课程详情页面 - 对应小程序 study/detail/index.vue
 /// 功能：显示课程信息、学习进度、课程列表
@@ -25,9 +25,11 @@ class CourseDetailPage extends ConsumerStatefulWidget {
 
 class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
   // 从 Mock数据文件获取数据
-  Map<String, dynamic> get _mockCourseInfo => MockCourseData.courseDetail;
-  Map<String, dynamic> get _mockRecentlyData => MockCourseData.recentlyData;
-  List<Map<String, dynamic>> get _mockLessonList => MockCourseData.lessonList;
+  // ⚠️ 以下 Mock 数据引用已废弃，需要改为通过 API 调用获取
+  // TODO: 使用 Dio 调用 API，MockInterceptor 会自动返回 Mock 数据
+  Map<String, dynamic> get _mockCourseInfo => {}; // MockCourseData.courseDetail;
+  Map<String, dynamic> get _mockRecentlyData => {}; // MockCourseData.recentlyData;
+  List<Map<String, dynamic>> get _mockLessonList => []; // MockCourseData.lessonList;
 
   @override
   Widget build(BuildContext context) {

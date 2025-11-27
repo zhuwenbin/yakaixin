@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "api": "GET /c/common/configcommon/getbycode",
+  "update_time": "2025-11-25",
+  "description": "配置接口 - 控制首页Tab显示",
+  "data": {
+    "PUBLISH": {
+      "code": "PUBLISH",
+      "value": "2",
+      "description": "发布状态：1=仅显示题库，2=显示题库+网课+直播"
+    }
+  }
+}

@@ -63,7 +63,10 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
       // 获取当前专业ID
       final majorId = _ref.read(currentMajorProvider)?.majorId;
+      print('🏠 首页加载数据 - 专业ID: $majorId');
+      
       if (majorId == null || majorId.isEmpty) {
+        print('⚠️ 专业ID为空，停止加载');
         state = state.copyWith(
           isLoading: false,
           error: '请先选择专业',
@@ -124,13 +127,20 @@ class HomeNotifier extends StateNotifier<HomeState> {
       // 直播列表
       final liveList = results[4].list;
 
-      // 筛选秒杀推荐商品 (首页推荐 且 已购买)
+      // 筛选秒杀推荐商品 (首页推荐 且 **未购买**)
       // 参考小程序: is_homepage_recommend == 1 && permission_status == '2'
+      // ⚠️ 注意: permission_status='2' 表示未购买，'1'表示已购买
       final recommendList = allQuestionBank.where((e) {
         final isRecommend = e.isHomepageRecommend?.toString() == '1' || e.isHomepageRecommend == 1;
-        final isBought = e.permissionStatus == '2';
-        return isRecommend && isBought;
+        final isNotBought = e.permissionStatus == '2'; // ⚠️ 未购买
+        return isRecommend && isNotBought;
       }).toList();
+      
+      print('📊 数据加载完成:');
+      print('   题库商品: ${allQuestionBank.length} 条');
+      print('   秒杀推荐: ${recommendList.length} 条');
+      print('   网课列表: ${onlineCourseList.length} 条');
+      print('   直播列表: ${liveList.length} 条');
 
       state = state.copyWith(
         questionBankList: allQuestionBank,
@@ -140,6 +150,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
         isLoading: false,
       );
     } catch (e) {
+      print('❌ 首页数据加载失败: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -149,7 +160,8 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
   /// 刷新数据
   Future<void> refresh() async {
-    state = const HomeState(); // 清空数据
+    print('🔄 开始刷新首页数据...');
+    // ⚠️ 不清空数据，直接重新加载，保持 loading 状态
     await loadHomeData();
   }
 }

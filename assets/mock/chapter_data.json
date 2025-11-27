@@ -1,0 +1,263 @@
+{
+  "version": "1.0.0",
+  "api": "GET /c/exam/chapter/list",
+  "update_time": "2025-11-25",
+  "description": "章节练习数据 - 章节列表、做题进度、正确率",
+  "data": [
+    {
+      "id": "chapter_001",
+      "sectionname": "口腔解剖生理学",
+      "question_number": 500,
+      "do_question_num": 120,
+      "correct_rate": "82.5",
+      "is_extend": false,
+      "professional_id": "524033912737962623",
+      "child": [
+        {
+          "id": "chapter_001_001",
+          "sectionname": "牙体解剖学",
+          "question_number": 150,
+          "do_question_num": 50,
+          "correct_rate": "85.0",
+          "chapter_id": "chapter_001",
+          "child": []
+        },
+        {
+          "id": "chapter_001_002",
+          "sectionname": "口腔颌面部解剖",
+          "question_number": 180,
+          "do_question_num": 40,
+          "correct_rate": "78.0",
+          "chapter_id": "chapter_001",
+          "child": []
+        },
+        {
+          "id": "chapter_001_003",
+          "sectionname": "口腔生理功能",
+          "question_number": 170,
+          "do_question_num": 30,
+          "correct_rate": "80.0",
+          "chapter_id": "chapter_001",
+          "child": []
+        }
+      ]
+    },
+    {
+      "id": "chapter_002",
+      "sectionname": "口腔组织病理学",
+      "question_number": 450,
+      "do_question_num": 80,
+      "correct_rate": "75.0",
+      "is_extend": false,
+      "professional_id": "524033912737962623",
+      "child": [
+        {
+          "id": "chapter_002_001",
+          "sectionname": "牙体组织",
+          "question_number": 120,
+          "do_question_num": 30,
+          "correct_rate": "77.0",
+          "chapter_id": "chapter_002",
+          "child": []
+        },
+        {
+          "id": "chapter_002_002",
+          "sectionname": "牙周组织",
+          "question_number": 130,
+          "do_question_num": 25,
+          "correct_rate": "72.0",
+          "chapter_id": "chapter_002",
+          "child": []
+        },
+        {
+          "id": "chapter_002_003",
+          "sectionname": "口腔黏膜",
+          "question_number": 110,
+          "do_question_num": 15,
+          "correct_rate": "76.0",
+          "chapter_id": "chapter_002",
+          "child": []
+        },
+        {
+          "id": "chapter_002_004",
+          "sectionname": "病理学基础",
+          "question_number": 90,
+          "do_question_num": 10,
+          "correct_rate": "74.0",
+          "chapter_id": "chapter_002",
+          "child": []
+        }
+      ]
+    },
+    {
+      "id": "chapter_003",
+      "sectionname": "口腔预防医学",
+      "question_number": 380,
+      "do_question_num": 60,
+      "correct_rate": "88.0",
+      "is_extend": false,
+      "professional_id": "524033912737962623",
+      "child": [
+        {
+          "id": "chapter_003_001",
+          "sectionname": "龋病预防",
+          "question_number": 150,
+          "do_question_num": 35,
+          "correct_rate": "90.0",
+          "chapter_id": "chapter_003",
+          "child": []
+        },
+        {
+          "id": "chapter_003_002",
+          "sectionname": "牙周病预防",
+          "question_number": 120,
+          "do_question_num": 15,
+          "correct_rate": "85.0",
+          "chapter_id": "chapter_003",
+          "child": []
+        },
+        {
+          "id": "chapter_003_003",
+          "sectionname": "口腔健康教育",
+          "question_number": 110,
+          "do_question_num": 10,
+          "correct_rate": "89.0",
+          "chapter_id": "chapter_003",
+          "child": []
+        }
+      ]
+    },
+    {
+      "id": "chapter_004",
+      "sectionname": "口腔内科学",
+      "question_number": 600,
+      "do_question_num": 150,
+      "correct_rate": "80.0",
+      "is_extend": false,
+      "professional_id": "524033912737962623",
+      "child": [
+        {
+          "id": "chapter_004_001",
+          "sectionname": "牙体牙髓病学",
+          "question_number": 200,
+          "do_question_num": 60,
+          "correct_rate": "82.0",
+          "chapter_id": "chapter_004",
+          "child": []
+        },
+        {
+          "id": "chapter_004_002",
+          "sectionname": "牙周病学",
+          "question_number": 180,
+          "do_question_num": 45,
+          "correct_rate": "78.0",
+          "chapter_id": "chapter_004",
+          "child": []
+        },
+        {
+          "id": "chapter_004_003",
+          "sectionname": "儿童口腔医学",
+          "question_number": 120,
+          "do_question_num": 25,
+          "correct_rate": "79.0",
+          "chapter_id": "chapter_004",
+          "child": []
+        },
+        {
+          "id": "chapter_004_004",
+          "sectionname": "口腔黏膜病学",
+          "question_number": 100,
+          "do_question_num": 20,
+          "correct_rate": "81.0",
+          "chapter_id": "chapter_004",
+          "child": []
+        }
+      ]
+    },
+    {
+      "id": "chapter_005",
+      "sectionname": "口腔颌面外科学",
+      "question_number": 550,
+      "do_question_num": 100,
+      "correct_rate": "76.0",
+      "is_extend": false,
+      "professional_id": "524033912737962623",
+      "child": [
+        {
+          "id": "chapter_005_001",
+          "sectionname": "牙及牙槽外科",
+          "question_number": 150,
+          "do_question_num": 35,
+          "correct_rate": "78.0",
+          "chapter_id": "chapter_005",
+          "child": []
+        },
+        {
+          "id": "chapter_005_002",
+          "sectionname": "口腔颌面部感染",
+          "question_number": 130,
+          "do_question_num": 30,
+          "correct_rate": "75.0",
+          "chapter_id": "chapter_005",
+          "child": []
+        },
+        {
+          "id": "chapter_005_003",
+          "sectionname": "口腔颌面部肿瘤",
+          "question_number": 140,
+          "do_question_num": 20,
+          "correct_rate": "74.0",
+          "chapter_id": "chapter_005",
+          "child": []
+        },
+        {
+          "id": "chapter_005_004",
+          "sectionname": "口腔颌面部创伤",
+          "question_number": 130,
+          "do_question_num": 15,
+          "correct_rate": "77.0",
+          "chapter_id": "chapter_005",
+          "child": []
+        }
+      ]
+    },
+    {
+      "id": "chapter_006",
+      "sectionname": "口腔修复学",
+      "question_number": 480,
+      "do_question_num": 90,
+      "correct_rate": "83.0",
+      "is_extend": false,
+      "professional_id": "524033912737962623",
+      "child": [
+        {
+          "id": "chapter_006_001",
+          "sectionname": "牙体缺损修复",
+          "question_number": 150,
+          "do_question_num": 35,
+          "correct_rate": "85.0",
+          "chapter_id": "chapter_006",
+          "child": []
+        },
+        {
+          "id": "chapter_006_002",
+          "sectionname": "牙列缺损修复",
+          "question_number": 160,
+          "do_question_num": 30,
+          "correct_rate": "82.0",
+          "chapter_id": "chapter_006",
+          "child": []
+        },
+        {
+          "id": "chapter_006_003",
+          "sectionname": "全口义齿修复",
+          "question_number": 170,
+          "do_question_num": 25,
+          "correct_rate": "81.0",
+          "chapter_id": "chapter_006",
+          "child": []
+        }
+      ]
+    }
+  ]
+}

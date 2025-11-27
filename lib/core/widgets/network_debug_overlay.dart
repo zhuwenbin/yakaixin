@@ -316,6 +316,14 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
     // 更新全局 Mock 状态
     ref.read(mockEnabledProvider.notifier).state = _isMockEnabled;
     
+    // ✅ 动态添加/移除 Mock 拦截器
+    final dioClient = ref.read(dioClientProvider);
+    if (_isMockEnabled) {
+      dioClient.enableMock();
+    } else {
+      dioClient.disableMock();
+    }
+    
     // 显示提示
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

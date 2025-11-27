@@ -32,7 +32,11 @@ mixin _$GoodsModel {
   @JsonKey(name: 'type_name')
   String? get typeName => throw _privateConstructorUsedError;
   @JsonKey(name: 'details_type')
-  String? get detailsType => throw _privateConstructorUsedError;
+  dynamic get detailsType =>
+      throw _privateConstructorUsedError; // 可能是String或int: 1=经典 2=真题 3=科目 4=模拟
+  @JsonKey(name: 'data_type')
+  dynamic get dataType =>
+      throw _privateConstructorUsedError; // 可能是String或int: 1=普通 2=模考 3=其他
   @JsonKey(name: 'sale_price')
   dynamic get price => throw _privateConstructorUsedError; // 可能是String或num
   @JsonKey(name: 'original_price')
@@ -40,10 +44,13 @@ mixin _$GoodsModel {
       throw _privateConstructorUsedError; // 可能是String或num
   @JsonKey(name: 'permission_status')
   String? get permissionStatus =>
-      throw _privateConstructorUsedError; // 权限状态 1:未购买 2:已购买
+      throw _privateConstructorUsedError; // 权限状态 1:已购买 2:未购买
   @JsonKey(name: 'is_homepage_recommend')
   dynamic get isHomepageRecommend =>
       throw _privateConstructorUsedError; // 可能是String或int
+  @JsonKey(name: 'seckill_countdown')
+  dynamic get seckillCountdown =>
+      throw _privateConstructorUsedError; // ✅ 秒杀倒计时(秒)
   @JsonKey(name: 'teaching_type')
   dynamic get teachingType =>
       throw _privateConstructorUsedError; // 可能是String或int
@@ -99,11 +106,13 @@ abstract class $GoodsModelCopyWith<$Res> {
       @JsonKey(name: 'material_cover_path') String? coverImg,
       @JsonKey(name: 'type') dynamic type,
       @JsonKey(name: 'type_name') String? typeName,
-      @JsonKey(name: 'details_type') String? detailsType,
+      @JsonKey(name: 'details_type') dynamic detailsType,
+      @JsonKey(name: 'data_type') dynamic dataType,
       @JsonKey(name: 'sale_price') dynamic price,
       @JsonKey(name: 'original_price') dynamic originalPrice,
       @JsonKey(name: 'permission_status') String? permissionStatus,
       @JsonKey(name: 'is_homepage_recommend') dynamic isHomepageRecommend,
+      @JsonKey(name: 'seckill_countdown') dynamic seckillCountdown,
       @JsonKey(name: 'teaching_type') dynamic teachingType,
       @JsonKey(name: 'teaching_type_name') String? teachingTypeName,
       @JsonKey(name: 'business_type') dynamic businessType,
@@ -143,10 +152,12 @@ class _$GoodsModelCopyWithImpl<$Res, $Val extends GoodsModel>
     Object? type = freezed,
     Object? typeName = freezed,
     Object? detailsType = freezed,
+    Object? dataType = freezed,
     Object? price = freezed,
     Object? originalPrice = freezed,
     Object? permissionStatus = freezed,
     Object? isHomepageRecommend = freezed,
+    Object? seckillCountdown = freezed,
     Object? teachingType = freezed,
     Object? teachingTypeName = freezed,
     Object? businessType = freezed,
@@ -188,7 +199,11 @@ class _$GoodsModelCopyWithImpl<$Res, $Val extends GoodsModel>
       detailsType: freezed == detailsType
           ? _value.detailsType
           : detailsType // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as dynamic,
+      dataType: freezed == dataType
+          ? _value.dataType
+          : dataType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       price: freezed == price
           ? _value.price
           : price // ignore: cast_nullable_to_non_nullable
@@ -204,6 +219,10 @@ class _$GoodsModelCopyWithImpl<$Res, $Val extends GoodsModel>
       isHomepageRecommend: freezed == isHomepageRecommend
           ? _value.isHomepageRecommend
           : isHomepageRecommend // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      seckillCountdown: freezed == seckillCountdown
+          ? _value.seckillCountdown
+          : seckillCountdown // ignore: cast_nullable_to_non_nullable
               as dynamic,
       teachingType: freezed == teachingType
           ? _value.teachingType
@@ -299,11 +318,13 @@ abstract class _$$GoodsModelImplCopyWith<$Res>
       @JsonKey(name: 'material_cover_path') String? coverImg,
       @JsonKey(name: 'type') dynamic type,
       @JsonKey(name: 'type_name') String? typeName,
-      @JsonKey(name: 'details_type') String? detailsType,
+      @JsonKey(name: 'details_type') dynamic detailsType,
+      @JsonKey(name: 'data_type') dynamic dataType,
       @JsonKey(name: 'sale_price') dynamic price,
       @JsonKey(name: 'original_price') dynamic originalPrice,
       @JsonKey(name: 'permission_status') String? permissionStatus,
       @JsonKey(name: 'is_homepage_recommend') dynamic isHomepageRecommend,
+      @JsonKey(name: 'seckill_countdown') dynamic seckillCountdown,
       @JsonKey(name: 'teaching_type') dynamic teachingType,
       @JsonKey(name: 'teaching_type_name') String? teachingTypeName,
       @JsonKey(name: 'business_type') dynamic businessType,
@@ -342,10 +363,12 @@ class __$$GoodsModelImplCopyWithImpl<$Res>
     Object? type = freezed,
     Object? typeName = freezed,
     Object? detailsType = freezed,
+    Object? dataType = freezed,
     Object? price = freezed,
     Object? originalPrice = freezed,
     Object? permissionStatus = freezed,
     Object? isHomepageRecommend = freezed,
+    Object? seckillCountdown = freezed,
     Object? teachingType = freezed,
     Object? teachingTypeName = freezed,
     Object? businessType = freezed,
@@ -387,7 +410,11 @@ class __$$GoodsModelImplCopyWithImpl<$Res>
       detailsType: freezed == detailsType
           ? _value.detailsType
           : detailsType // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as dynamic,
+      dataType: freezed == dataType
+          ? _value.dataType
+          : dataType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       price: freezed == price
           ? _value.price
           : price // ignore: cast_nullable_to_non_nullable
@@ -403,6 +430,10 @@ class __$$GoodsModelImplCopyWithImpl<$Res>
       isHomepageRecommend: freezed == isHomepageRecommend
           ? _value.isHomepageRecommend
           : isHomepageRecommend // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      seckillCountdown: freezed == seckillCountdown
+          ? _value.seckillCountdown
+          : seckillCountdown // ignore: cast_nullable_to_non_nullable
               as dynamic,
       teachingType: freezed == teachingType
           ? _value.teachingType
@@ -482,10 +513,12 @@ class _$GoodsModelImpl implements _GoodsModel {
       @JsonKey(name: 'type') this.type,
       @JsonKey(name: 'type_name') this.typeName,
       @JsonKey(name: 'details_type') this.detailsType,
+      @JsonKey(name: 'data_type') this.dataType,
       @JsonKey(name: 'sale_price') this.price,
       @JsonKey(name: 'original_price') this.originalPrice,
       @JsonKey(name: 'permission_status') this.permissionStatus,
       @JsonKey(name: 'is_homepage_recommend') this.isHomepageRecommend,
+      @JsonKey(name: 'seckill_countdown') this.seckillCountdown,
       @JsonKey(name: 'teaching_type') this.teachingType,
       @JsonKey(name: 'teaching_type_name') this.teachingTypeName,
       @JsonKey(name: 'business_type') this.businessType,
@@ -527,7 +560,12 @@ class _$GoodsModelImpl implements _GoodsModel {
   final String? typeName;
   @override
   @JsonKey(name: 'details_type')
-  final String? detailsType;
+  final dynamic detailsType;
+// 可能是String或int: 1=经典 2=真题 3=科目 4=模拟
+  @override
+  @JsonKey(name: 'data_type')
+  final dynamic dataType;
+// 可能是String或int: 1=普通 2=模考 3=其他
   @override
   @JsonKey(name: 'sale_price')
   final dynamic price;
@@ -539,11 +577,15 @@ class _$GoodsModelImpl implements _GoodsModel {
   @override
   @JsonKey(name: 'permission_status')
   final String? permissionStatus;
-// 权限状态 1:未购买 2:已购买
+// 权限状态 1:已购买 2:未购买
   @override
   @JsonKey(name: 'is_homepage_recommend')
   final dynamic isHomepageRecommend;
 // 可能是String或int
+  @override
+  @JsonKey(name: 'seckill_countdown')
+  final dynamic seckillCountdown;
+// ✅ 秒杀倒计时(秒)
   @override
   @JsonKey(name: 'teaching_type')
   final dynamic teachingType;
@@ -617,7 +659,7 @@ class _$GoodsModelImpl implements _GoodsModel {
 
   @override
   String toString() {
-    return 'GoodsModel(goodsId: $goodsId, goodsName: $goodsName, coverImg: $coverImg, type: $type, typeName: $typeName, detailsType: $detailsType, price: $price, originalPrice: $originalPrice, permissionStatus: $permissionStatus, isHomepageRecommend: $isHomepageRecommend, teachingType: $teachingType, teachingTypeName: $teachingTypeName, businessType: $businessType, isRecommend: $isRecommend, teacherData: $teacherData, questionNumber: $questionNumber, totalClassHour: $totalClassHour, validityType: $validityType, validityDay: $validityDay, validityStartDate: $validityStartDate, validityEndDate: $validityEndDate, serviceTypeName: $serviceTypeName, newTypeName: $newTypeName, studentNum: $studentNum, shopType: $shopType, tikuGoodsDetails: $tikuGoodsDetails)';
+    return 'GoodsModel(goodsId: $goodsId, goodsName: $goodsName, coverImg: $coverImg, type: $type, typeName: $typeName, detailsType: $detailsType, dataType: $dataType, price: $price, originalPrice: $originalPrice, permissionStatus: $permissionStatus, isHomepageRecommend: $isHomepageRecommend, seckillCountdown: $seckillCountdown, teachingType: $teachingType, teachingTypeName: $teachingTypeName, businessType: $businessType, isRecommend: $isRecommend, teacherData: $teacherData, questionNumber: $questionNumber, totalClassHour: $totalClassHour, validityType: $validityType, validityDay: $validityDay, validityStartDate: $validityStartDate, validityEndDate: $validityEndDate, serviceTypeName: $serviceTypeName, newTypeName: $newTypeName, studentNum: $studentNum, shopType: $shopType, tikuGoodsDetails: $tikuGoodsDetails)';
   }
 
   @override
@@ -633,8 +675,9 @@ class _$GoodsModelImpl implements _GoodsModel {
             const DeepCollectionEquality().equals(other.type, type) &&
             (identical(other.typeName, typeName) ||
                 other.typeName == typeName) &&
-            (identical(other.detailsType, detailsType) ||
-                other.detailsType == detailsType) &&
+            const DeepCollectionEquality()
+                .equals(other.detailsType, detailsType) &&
+            const DeepCollectionEquality().equals(other.dataType, dataType) &&
             const DeepCollectionEquality().equals(other.price, price) &&
             const DeepCollectionEquality()
                 .equals(other.originalPrice, originalPrice) &&
@@ -642,6 +685,8 @@ class _$GoodsModelImpl implements _GoodsModel {
                 other.permissionStatus == permissionStatus) &&
             const DeepCollectionEquality()
                 .equals(other.isHomepageRecommend, isHomepageRecommend) &&
+            const DeepCollectionEquality()
+                .equals(other.seckillCountdown, seckillCountdown) &&
             const DeepCollectionEquality()
                 .equals(other.teachingType, teachingType) &&
             (identical(other.teachingTypeName, teachingTypeName) ||
@@ -685,11 +730,13 @@ class _$GoodsModelImpl implements _GoodsModel {
         coverImg,
         const DeepCollectionEquality().hash(type),
         typeName,
-        detailsType,
+        const DeepCollectionEquality().hash(detailsType),
+        const DeepCollectionEquality().hash(dataType),
         const DeepCollectionEquality().hash(price),
         const DeepCollectionEquality().hash(originalPrice),
         permissionStatus,
         const DeepCollectionEquality().hash(isHomepageRecommend),
+        const DeepCollectionEquality().hash(seckillCountdown),
         const DeepCollectionEquality().hash(teachingType),
         teachingTypeName,
         const DeepCollectionEquality().hash(businessType),
@@ -729,11 +776,13 @@ abstract class _GoodsModel implements GoodsModel {
       @JsonKey(name: 'material_cover_path') final String? coverImg,
       @JsonKey(name: 'type') final dynamic type,
       @JsonKey(name: 'type_name') final String? typeName,
-      @JsonKey(name: 'details_type') final String? detailsType,
+      @JsonKey(name: 'details_type') final dynamic detailsType,
+      @JsonKey(name: 'data_type') final dynamic dataType,
       @JsonKey(name: 'sale_price') final dynamic price,
       @JsonKey(name: 'original_price') final dynamic originalPrice,
       @JsonKey(name: 'permission_status') final String? permissionStatus,
       @JsonKey(name: 'is_homepage_recommend') final dynamic isHomepageRecommend,
+      @JsonKey(name: 'seckill_countdown') final dynamic seckillCountdown,
       @JsonKey(name: 'teaching_type') final dynamic teachingType,
       @JsonKey(name: 'teaching_type_name') final String? teachingTypeName,
       @JsonKey(name: 'business_type') final dynamic businessType,
@@ -772,8 +821,11 @@ abstract class _GoodsModel implements GoodsModel {
   String? get typeName;
   @override
   @JsonKey(name: 'details_type')
-  String? get detailsType;
-  @override
+  dynamic get detailsType;
+  @override // 可能是String或int: 1=经典 2=真题 3=科目 4=模拟
+  @JsonKey(name: 'data_type')
+  dynamic get dataType;
+  @override // 可能是String或int: 1=普通 2=模考 3=其他
   @JsonKey(name: 'sale_price')
   dynamic get price;
   @override // 可能是String或num
@@ -782,10 +834,13 @@ abstract class _GoodsModel implements GoodsModel {
   @override // 可能是String或num
   @JsonKey(name: 'permission_status')
   String? get permissionStatus;
-  @override // 权限状态 1:未购买 2:已购买
+  @override // 权限状态 1:已购买 2:未购买
   @JsonKey(name: 'is_homepage_recommend')
   dynamic get isHomepageRecommend;
   @override // 可能是String或int
+  @JsonKey(name: 'seckill_countdown')
+  dynamic get seckillCountdown;
+  @override // ✅ 秒杀倒计时(秒)
   @JsonKey(name: 'teaching_type')
   dynamic get teachingType;
   @override // 可能是String或int

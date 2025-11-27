@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "api": "GET /c/goods/v2",
+  "update_time": "2025-11-25",
+  "description": "每日一测数据 - position_identify=daily30",
+  "data": [
+    {
+      "id": "daily_practice_001",
+      "name": "每日30题",
+      "position_identify": "daily30",
+      "professional_id": "524033912737962623",
+      "total_questions": 30,
+      "done_questions": 12,
+      "correct_rate": "88.0",
+      "today_date": "2025-11-25",
+      "description": "每天精选30题，轻松巩固知识点",
+      "icon_url": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/daily-icon.png",
+      "status": "1"
+    }
+  ]
+}

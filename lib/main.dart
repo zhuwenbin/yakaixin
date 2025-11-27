@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'core/storage/storage_service.dart';
 import 'core/widgets/loading_hud.dart';
 import 'core/widgets/network_debug_overlay.dart';
@@ -17,6 +18,9 @@ void main() async {
   
   // 初始化SharedPreferences
   final prefs = await SharedPreferences.getInstance();
+  
+  // 初始化中文日期格式化
+  await initializeDateFormatting('zh_CN', null);
   
   // 初始化微信SDK
   await PaymentService.initWechat();

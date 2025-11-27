@@ -32,7 +32,7 @@ import '../../features/exam/views/submit_success_page.dart';
 import '../../features/exam/views/test_exam_page.dart';
 import '../../features/exam/views/exam_score_report_page.dart';
 import '../../features/exam/views/rank_list_page.dart';
-import '../../features/course/views/study_index_page.dart';
+import '../../features/course/views/course_page.dart';
 import '../../features/course/views/my_course_page.dart';
 import '../../features/course/views/course_detail_page.dart';
 import '../../features/course/views/live_index_page.dart';
@@ -46,7 +46,7 @@ import '../../features/goods/views/simulated_exam_room_page.dart';
 import '../../features/goods/views/course_goods_detail_page.dart';
 import '../../features/order/views/my_order_page.dart';
 import '../../features/order/views/pay_success_page.dart';
-import '../../features/profile/views/my_index_page.dart';
+import '../../features/profile/views/profile_page.dart';
 import '../../features/profile/views/person_edit_page.dart';
 import '../../features/profile/views/settings_page.dart';
 import '../../features/profile/views/report_center_page.dart';
@@ -314,7 +314,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     // ===== F4. 学习中心模块 =====
     GoRoute(
       path: AppRoutes.studyIndex,
-      builder: (context, state) => const StudyIndexPage(),
+      builder: (context, state) => CoursePage(),
     ),
     GoRoute(
       path: AppRoutes.myCourse,
@@ -325,9 +325,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
         return CourseDetailPage(
-          goodsId: extra?['goods_id'] ?? '',
-          orderId: extra?['order_id'] ?? '',
-          goodsPid: extra?['goods_pid'],
+          goodsId: extra?['goodsId'] ?? '',
+          orderId: extra?['orderId'] ?? '',
+          goodsPid: extra?['goodsPid'],
         );
       },
     ),
@@ -449,7 +449,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     // ===== F6. 我的中心模块 =====
     GoRoute(
       path: AppRoutes.myIndex,
-      builder: (context, state) => const MyIndexPage(),
+      builder: (context, state) => const ProfilePage(),
     ),
     GoRoute(
       path: AppRoutes.personEdit,

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
-import '../../../core/mock/data/question_bank_mock_data.dart';
+// import 已移除 - 现在使用API调用，MockInterceptor会自动处理Mock数据
 
 /// 收藏页面
 /// 对应小程序: src/modules/jintiku/pages/collect/index.vue
@@ -20,7 +20,9 @@ class _CollectPageState extends ConsumerState<CollectPage> {
 
   // 从 Mock数据文件获取数据
   List<Map<String, dynamic>> get _collectQuestions => [];
-  // TODO: 从 QuestionBankMockData.collectIndex 中解析数据
+  // ⚠️ 以下 Mock 数据引用已废弃，需要改为通过 API 调用获取
+  // TODO: 使用 Dio 调用 API，MockInterceptor 会自动返回 Mock 数据
+  // TODO: 从收藏题目 API 中解析数据
 
   @override
   Widget build(BuildContext context) {

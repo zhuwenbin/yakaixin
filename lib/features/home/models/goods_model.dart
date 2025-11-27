@@ -15,11 +15,13 @@ class GoodsModel with _$GoodsModel {
     @JsonKey(name: 'material_cover_path') String? coverImg,
     @JsonKey(name: 'type') dynamic type, // 可能是String或int
     @JsonKey(name: 'type_name') String? typeName,
-    @JsonKey(name: 'details_type') String? detailsType,
+    @JsonKey(name: 'details_type') dynamic detailsType, // 可能是String或int: 1=经典 2=真题 3=科目 4=模拟
+    @JsonKey(name: 'data_type') dynamic dataType, // 可能是String或int: 1=普通 2=模考 3=其他
     @JsonKey(name: 'sale_price') dynamic price, // 可能是String或num
     @JsonKey(name: 'original_price') dynamic originalPrice, // 可能是String或num
-    @JsonKey(name: 'permission_status') String? permissionStatus, // 权限状态 1:未购买 2:已购买
+    @JsonKey(name: 'permission_status') String? permissionStatus, // 权限状态 1:已购买 2:未购买
     @JsonKey(name: 'is_homepage_recommend') dynamic isHomepageRecommend, // 可能是String或int
+    @JsonKey(name: 'seckill_countdown') dynamic seckillCountdown, // ✅ 秒杀倒计时(秒)
     @JsonKey(name: 'teaching_type') dynamic teachingType, // 可能是String或int
     @JsonKey(name: 'teaching_type_name') String? teachingTypeName,
     @JsonKey(name: 'business_type') dynamic businessType, // 可能是String或int

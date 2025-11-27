@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "api": "GET /c/exam/learningData",
+  "update_time": "2025-11-25",
+  "description": "学习数据接口 - 打卡信息、做题统计、正确率",
+  "data": [
+    {
+      "professional_id": "524033912737962623",
+      "checkin_num": 15,
+      "total_num": 1250,
+      "correct_rate": "85.5",
+      "is_checkin": 0,
+      "user_id": "508948528815416786",
+      "student_id": "508948528815416786",
+      "continuous_days": 7,
+      "wrong_num": 181,
+      "collect_num": 35,
+      "last_study_time": "2025-11-24 18:30:00",
+      "update_time": "2025-11-25 08:00:00"
+    },
+    {
+      "professional_id": "524033614019566207",
+      "checkin_num": 8,
+      "total_num": 620,
+      "correct_rate": "78.2",
+      "is_checkin": 1,
+      "user_id": "508948528815416786",
+      "student_id": "508948528815416786",
+      "continuous_days": 3,
+      "wrong_num": 135,
+      "collect_num": 22,
+      "last_study_time": "2025-11-25 09:15:00",
+      "update_time": "2025-11-25 09:20:00"
+    }
+  ]
+}

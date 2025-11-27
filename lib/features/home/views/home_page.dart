@@ -41,23 +41,41 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final homeState = ref.watch(homeProvider);
     final major = ref.watch(currentMajorProvider);
+    // 获取状态栏高度
+    final statusBarHeight = MediaQuery.of(context).padding.top;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        top: true,
-        bottom: false,
-        child: Stack(
-          children: [
-            // 主内容区域
-            RefreshIndicator(
+      // ✅ 不使用 SafeArea,让背景图片充满状态栏
+      body: Stack(
+        children: [
+          // ✅ 背景图片 - 充满状态栏
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: CachedNetworkImage(
+              imageUrl: 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/my-background-img.png',
+              height: (statusBarHeight + 48.h), // 状态栏高度 + 固定头部高度
+              fit: BoxFit.cover,
+              errorWidget: (context, error, stackTrace) {
+                return Container(
+                  height: (statusBarHeight + 48.h),
+                  color: Colors.white,
+                );
+              },
+            ),
+          ),
+          // 主内容区域
+          Positioned.fill(
+            child: RefreshIndicator(
               onRefresh: () => ref.read(homeProvider.notifier).refresh(),
               child: CustomScrollView(
                 slivers: [
-                  // 顶部占位（为固定头部留空间）
+                  // 顶部占位（状态栏 + 固定头部）
                   SliverToBoxAdapter(
                     child: SizedBox(
-                      height: 48.h, // 小程序96rpx ÷ 2 = 48.h
+                      height: statusBarHeight + 48.h, // 状态栏高度 + 固定头部高度
                     ),
                   ),
                   // 内容区域
@@ -74,10 +92,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ],
               ),
             ),
-            // 固定头部
-            _buildFixedHeader(major?.majorName ?? '选择专业'),
-          ],
-        ),
+          ),
+          // 固定头部
+          _buildFixedHeader(
+            major?.majorName ?? '选择专业',
+            statusBarHeight,
+          ),
+        ],
       ),
     );
   }
@@ -85,15 +106,21 @@ class _HomePageState extends ConsumerState<HomePage> {
   /// 构建固定头部 - 专业选择
   /// 对应小程序: .header-box (height: 100rpx + padding-top: 80rpx)
   /// 小程序 .major text: font-size: 40rpx, font-weight: 500
-  Widget _buildFixedHeader(String majorName) {
+  Widget _buildFixedHeader(String majorName, double statusBarHeight) {
     return Positioned(
       top: 0,
       left: 0,
       right: 0,
       child: Container(
-        height: 48.h, // 小程序96rpx ÷ 2 = 48.h
-        color: Colors.white,
-        padding: EdgeInsets.only(left: 12.w), // 小程序24rpx ÷ 2 = 12.w
+        // ✅ 总高度 = 状态栏高度 + 固定头部高度
+        height: statusBarHeight + 48.h,
+        // ✅ 透明背景,让背景图片显示
+        color: Colors.transparent,
+        // ✅ 内容从状态栏下方开始
+        padding: EdgeInsets.only(
+          top: statusBarHeight,
+          left: 12.w,
+        ),
         alignment: Alignment.centerLeft,
         child: GestureDetector(
           onTap: () {
@@ -219,9 +246,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 final goods = recommendList[index];
                 return SeckillCard(
                   goods: goods,
-                  onTap: () {
-                    // TODO: 跳转到商品详情页
-                  },
+                  onTap: () => _handleSeckillCardTap(goods),
                 );
               },
               options: CarouselOptions(
@@ -237,6 +262,19 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
             ),
     );
+  }
+
+  /// 处理秒杀卡片点击
+  /// 秒杀商品都是未购买状态(permission_status == '2'),直接跳转商品详情页
+  void _handleSeckillCardTap(GoodsModel goods) {
+    print('⚡ 点击秒杀卡片: ${goods.goodsName}, type: ${goods.type}');
+    
+    final major = ref.read(currentMajorProvider);
+    final goodsId = goods.goodsId?.toString();
+    final professionalId = major?.majorId?.toString();
+    
+    // 秒杀商品跳转到商品详情页（未购买）
+    _navigateToGoodsDetail(goods, goodsId, professionalId);
   }
 
   /// 构建空状态秒杀卡片
@@ -388,11 +426,214 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Column(
       children: list.map((goods) => GoodsCard(
         goods: goods,
-        onTap: () {
-          // TODO: 跳转到详情页
-        },
+        onTap: () => _handleGoodsCardTap(goods),
       )).toList(),
     );
+  }
+
+  /// 处理题库卡片点击
+  /// 对应小程序: examination-test-item.vue goDetail()
+  void _handleGoodsCardTap(GoodsModel goods) {
+    print('👆 点击题库卡片: ${goods.goodsName}, type: ${goods.type}, permission: ${goods.permissionStatus}');
+    
+    final major = ref.read(currentMajorProvider);
+    final goodsId = goods.goodsId?.toString();
+    final professionalId = major?.majorId?.toString();
+    
+    // 根据购买状态和商品类型跳转不同页面
+    if (goods.permissionStatus == '2') {
+      // 未购买 - 跳转商品详情页
+      _navigateToGoodsDetail(goods, goodsId, professionalId);
+    } else if (goods.permissionStatus == '1') {
+      // 已购买 - 跳转练习页面
+      _navigateToChapterPractice(goods, goodsId, professionalId);
+    }
+  }
+
+  /// 跳转到商品详情页（未购买）
+  void _navigateToGoodsDetail(GoodsModel goods, String? goodsId, String? professionalId) {
+    final type = goods.type;
+    final detailsType = goods.detailsType;
+    final dataType = goods.dataType;
+    
+    print('📦 跳转商品详情 - type: $type, detailsType: $detailsType, dataType: $dataType');
+    
+    // type == 2: 课程
+    if (type == 2) {
+      context.push(
+        AppRoutes.goodsDetail,
+        extra: {
+          'goods_id': goodsId,
+          'professional_id': professionalId,
+          'type': type,
+        },
+      );
+      return;
+    }
+    
+    // 模考 (dataType == 2)
+    if (dataType == 2) {
+      if (detailsType == 1) {
+        // 模考+经典版+没有购买
+        context.push(
+          AppRoutes.goodsDetail,
+          extra: {
+            'goods_id': goodsId,
+            'professional_id': professionalId,
+          },
+        );
+        return;
+      } else if (detailsType == 4) {
+        // 模考+模考版+没有购买
+        context.push(
+          AppRoutes.simulatedExamRoom,
+          extra: {
+            'product_id': goodsId,
+            'professional_id': professionalId,
+          },
+        );
+        return;
+      }
+    }
+    
+    // 根据detailsType跳转不同商品详情页
+    switch (detailsType) {
+      case 1:
+        // 经典商品详情
+        context.push(
+          AppRoutes.goodsDetail,
+          extra: {
+            'goods_id': goodsId,
+            'professional_id': professionalId,
+          },
+        );
+        break;
+      case 2:
+        // 真题商品详情
+        context.push(
+          AppRoutes.secretRealDetail,
+          extra: {
+            'product_id': goodsId,
+            'professional_id': professionalId,
+          },
+        );
+        break;
+      case 3:
+        // 科目商品详情
+        context.push(
+          AppRoutes.subjectMockDetail,
+          extra: {
+            'product_id': goodsId,
+            'professional_id': professionalId,
+          },
+        );
+        break;
+      case 4:
+        // 模拟商品详情
+        context.push(
+          AppRoutes.simulatedExamRoom,
+          extra: {
+            'product_id': goodsId,
+            'professional_id': professionalId,
+          },
+        );
+        break;
+      default:
+        // 默认跳转经典商品详情
+        context.push(
+          AppRoutes.goodsDetail,
+          extra: {
+            'goods_id': goodsId,
+            'professional_id': professionalId,
+          },
+        );
+    }
+  }
+
+  /// 跳转到章节练习（已购买）
+  void _navigateToChapterPractice(GoodsModel goods, String? goodsId, String? professionalId) {
+    final type = goods.type;
+    final detailsType = goods.detailsType;
+    final dataType = goods.dataType;
+    final questionNum = goods.tikuGoodsDetails?.questionNum;
+    
+    print('📝 跳转章节练习 - type: $type, detailsType: $detailsType');
+    
+    // type == 2: 课程
+    if (type == 2) {
+      context.push(
+        AppRoutes.goodsDetail,
+        extra: {
+          'goods_id': goodsId,
+          'professional_id': professionalId,
+          'type': type,
+        },
+      );
+      return;
+    }
+    
+    // type == 18: 章节练习
+    if (type == 18) {
+      context.push(
+        AppRoutes.chapterList,
+        extra: {
+          'goods_id': goodsId,
+          'professional_id': professionalId,
+          'total': questionNum,
+        },
+      );
+      return;
+    }
+    
+    // 模考 (dataType == 2)
+    if (dataType == 2) {
+      if (detailsType == 1) {
+        // 模考+经典版+已购买
+        // TODO: 实现ExamInfoPage
+        print('⚠️ 模考详情页待实现');
+        return;
+      } else if (detailsType == 4) {
+        // 模考+模考版+已购买
+        context.push(
+          AppRoutes.simulatedExamRoom,
+          extra: {
+            'product_id': goodsId,
+            'professional_id': professionalId,
+          },
+        );
+        return;
+      }
+    }
+    
+    // 根据detailsType跳转不同页面
+    switch (detailsType) {
+      case 1:
+      case 3:
+        // 经典详情/科目详情 - 跳转考试页
+        // TODO: 实现TestExamPage
+        print('⚠️ 考试页待实现');
+        break;
+      case 2:
+        // 真题详情
+        context.push(
+          AppRoutes.secretRealDetail,
+          extra: {
+            'product_id': goodsId,
+            'professional_id': professionalId,
+          },
+        );
+        break;
+      case 4:
+        // 模拟详情
+        context.push(
+          AppRoutes.simulatedExamRoom,
+          extra: {
+            'product_id': goodsId,
+            'professional_id': professionalId,
+          },
+        );
+        break;
+    }
   }
   
   /// 构建课程列表（网课/直播）

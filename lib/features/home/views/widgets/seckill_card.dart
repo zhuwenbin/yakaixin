@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/goods_model.dart';
+import 'countdown_timer.dart';
 
 /// 秒杀卡片组件
 /// 对应小程序: examination-test-item (seckill模式)
@@ -193,7 +194,17 @@ class SeckillCard extends StatelessWidget {
   }
 
   /// 倒计时区域
+  /// 对应小程序: .bottom-time (L71-76)
   Widget _buildCountdown() {
+    // ✅ 从 Mock 数据读取倒计时秒数 (seckill_countdown 字段)
+    // 如果没有设置,默认 8小时 = 28800秒
+    final dynamic countdownValue = goods.seckillCountdown;
+    final int countdownSeconds = countdownValue != null 
+        ? int.tryParse(countdownValue.toString()) ?? 28800
+        : 28800;
+
+    // print('🕒 秒杀倒计时: $countdownSeconds 秒 (商品ID: ${goods.goodsId})');
+
     return SizedBox(
       height: 40.h,
       child: Align(
@@ -207,48 +218,59 @@ class SeckillCard extends StatelessWidget {
                 maxWidth: maxWidth,
                 minWidth: minWidth,
               ),
-              child: Container(
-                height: 40.h,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const NetworkImage(
-                      'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/5e91174186068572265789_daojishiback.png',
+              child: Stack(
+                children: [
+                  // 背景图片
+                  Container(
+                    height: 40.h,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const NetworkImage(
+                          'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/5e91174186068572265789_daojishiback.png',
+                        ),
+                        fit: BoxFit.cover,
+                        onError: (_, __) {},
+                      ),
                     ),
-                    fit: BoxFit.cover,
-                    onError: (_, __) {},
                   ),
-                ),
-                padding: EdgeInsets.only(top: 22.h),
-                alignment: Alignment.center,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '秒杀倒计时',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w400,
-                          color: const Color(0xFF082980),
-                          letterSpacing: 6.w,
+                  // ✅ 倒计时内容 - 固定在 bottom: 20.h
+                  Positioned(
+                    bottom: 2.h, // ✅ 固定距离底部 2px
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      alignment: Alignment.center,
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '秒杀倒计时',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w400,
+                                color: const Color(0xFF082980),
+                                letterSpacing: 6.w,
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            // ✅ 接入真实倒计时组件
+                            CountdownTimer(
+                              durationSeconds: countdownSeconds,
+                              onFinish: () {
+                                // print('⏰ 秒杀倒计时结束 - 商品ID: ${goods.goodsId}');
+                                // TODO: 倒计时结束后的处理逻辑
+                              },
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(width: 10.w),
-                      // TODO: 接入真实倒计时组件
-                      Text(
-                        '07:08:48',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF082980),
-                          letterSpacing: 2.w,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             );
           },

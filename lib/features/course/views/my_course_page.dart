@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yakaixin_app/app/routes/app_routes.dart';
-import '../../../core/mock/data/course_mock_data.dart';
+// import 已移除 - 现在使用API调用，MockInterceptor会自动处理Mock数据
 
 /// 我的课程页面 - 对应小程序 study/myCourse/index.vue
 /// 功能：显示已购买的课程列表，支持按授课方式筛选
@@ -188,7 +188,9 @@ class _MyCoursePageState extends ConsumerState<MyCoursePage> {
   }
 
   // 从 Mock数据文件获取数据
-  List<Map<String, dynamic>> get _mockCourses => MockCourseData.myCourseList;
+  // ⚠️ 以下 Mock 数据引用已废弃，需要改为通过 API 调用获取
+  // TODO: 使用 Dio 调用 API，MockInterceptor 会自动返回 Mock 数据
+  List<Map<String, dynamic>> get _mockCourses => []; // MockCourseData.myCourseList;
 }
 
 /// 课程项组件
@@ -330,9 +332,14 @@ class _CourseItem extends StatelessWidget {
           child: OutlinedButton(
             onPressed: () {
               // 查看课程详情
+              // ✅ 修复：添加缺少的 orderId 参数
               context.push(
                 AppRoutes.courseDetail,
-                extra: {'goodsId': course['goods_id']},
+                extra: {
+                  'goodsId': course['goods_id'],
+                  'orderId': course['order_id'] ?? '',
+                  'goodsPid': course['goods_pid'],
+                },
               );
             },
             style: OutlinedButton.styleFrom(
