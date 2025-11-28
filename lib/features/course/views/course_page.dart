@@ -4,8 +4,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../core/network/dio_client.dart';
 import '../../../app/routes/app_routes.dart';
+import '../providers/course_provider.dart';
+import '../models/lesson_model.dart';
+import '../models/course_model.dart';
 
 /// 上课主页 - 对应小程序: src/modules/jintiku/pages/study/index.vue
 /// 
@@ -25,14 +27,6 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   DateTime _selectedDate = DateTime.now();
   String _teachingType = ''; // "": 全部, "1": 直播, "2": 面授, "3": 录播
   bool _showCalendar = false;
-  bool _showPlan = true; // 是否显示学习计划
-  
-  // 数据
-  List<String> _dotDates = []; // 打卡日期
-  Map<String, dynamic>? _lessonsData; // 课节数据
-  List<Map<String, dynamic>> _courseList = []; // 课程列表
-  bool _loading = true;
-  bool _courseListLoading = false;
   
   // ✅ Overlay 相关
   OverlayEntry? _calendarOverlay;
@@ -48,7 +42,10 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // ✅ 使用 Provider 加载数据
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(courseNotifierProvider.notifier).loadInitialData(_selectedDate, _teachingType);
+    });
   }
 
   @override
@@ -61,6 +58,9 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   void _showCalendarOverlay() {
     _removeCalendarOverlay();
     
+    // ✅ 获取当前 dotDates
+    final dotDates = ref.read(courseNotifierProvider).dotDates;
+    
     _calendarOverlay = OverlayEntry(
       builder: (context) => Stack(
         children: [
@@ -69,7 +69,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
             child: GestureDetector(
               onTap: _removeCalendarOverlay,
               child: Container(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -86,7 +86,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                   height: 500.h,
                   color: Colors.white,
                   child: SingleChildScrollView(
-                    child: _buildFullCalendar(),
+                    child: _buildFullCalendar(dotDates),
                   ),
                 ),
               ),
@@ -111,145 +111,6 @@ class _CoursePageState extends ConsumerState<CoursePage> {
     });
   }
 
-  /// 加载所有数据
-  Future<void> _loadData() async {
-    setState(() {
-      _loading = true;
-    });
-    
-    await Future.wait([
-      _getCalendar(),
-      _getDateLessons(),
-      _getDateCourse(),
-      _getConfigCommon(),
-    ]);
-    
-    setState(() {
-      _loading = false;
-    });
-  }
-
-  /// 获取学习日历(打卡日期) - 获取前后3个月的数据
-  Future<void> _getCalendar() async {
-    try {
-      final dio = ref.read(dioClientProvider);
-      
-      // ✅ 获取前一个月第一天到后一个月最后一天的日历数据
-      final now = DateTime.now();
-      final prevMonthFirstDay = DateTime(now.year, now.month - 1, 1);
-      final nextMonthLastDay = DateTime(now.year, now.month + 2, 0);
-      
-      final response = await dio.get(
-        '/c/study/learning/calendar',
-        queryParameters: {
-          'start_date': _formatDate(prevMonthFirstDay),
-          'end_date': _formatDate(nextMonthLastDay),
-        },
-      );
-      
-      if (response.data['code'] == 100000) {
-        final List<dynamic> data = response.data['data'] as List;
-        setState(() {
-          // ✅ 只保留 status == '1' 的日期用于显示圆点
-          _dotDates = data
-              .where((item) => item['status'] == '1')
-              .map<String>((item) => item['date'] as String)
-              .toList();
-        });
-      }
-    } catch (e) {
-      print('获取日历失败: $e');
-    }
-  }
-
-  /// 获取指定日期的课节
-  Future<void> _getDateLessons() async {
-    try {
-      final dio = ref.read(dioClientProvider);
-      final response = await dio.get(
-        '/c/study/learning/lesson',
-        queryParameters: {
-          'date': _formatDate(_selectedDate),
-        },
-      );
-      
-      if (response.data['code'] == 100000) {
-        setState(() {
-          _lessonsData = response.data['data'] as Map<String, dynamic>?;
-        });
-      } else {
-        setState(() {
-          _lessonsData = null;
-        });
-      }
-    } catch (e) {
-      print('获取课节失败: $e');
-      setState(() {
-        _lessonsData = null;
-      });
-    }
-  }
-
-  /// 获取学习计划课程
-  Future<void> _getDateCourse() async {
-    setState(() {
-      _courseListLoading = true;
-    });
-    
-    try {
-      final dio = ref.read(dioClientProvider);
-      final response = await dio.get(
-        '/c/study/learning/plan',
-        queryParameters: {
-          'teaching_type': _teachingType,
-          'date': _formatDate(_selectedDate),
-        },
-      );
-      
-      if (response.data['code'] == 100000) {
-        final List<dynamic> data = response.data['data'] as List;
-        setState(() {
-          _courseList = data.cast<Map<String, dynamic>>();
-        });
-      } else {
-        setState(() {
-          _courseList = [];
-        });
-      }
-    } catch (e) {
-      print('获取课程失败: $e');
-      setState(() {
-        _courseList = [];
-      });
-    } finally {
-      setState(() {
-        _courseListLoading = false;
-      });
-    }
-  }
-
-  /// 获取配置(showPlan开关)
-  Future<void> _getConfigCommon() async {
-    try {
-      final dio = ref.read(dioClientProvider);
-      final response = await dio.get(
-        '/c/config/common',
-        queryParameters: {
-          'code': 'PUBLISH',
-        },
-      );
-      
-      if (response.data['code'] == 100000) {
-        final int value = int.tryParse(response.data['data']?.toString() ?? '2') ?? 2;
-        setState(() {
-          _showPlan = value == 2; // 2: 显示, 1: 隐藏
-        });
-      }
-    } catch (e) {
-      print('获取配置失败: $e');
-    }
-  }
-
   String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
@@ -258,6 +119,15 @@ class _CoursePageState extends ConsumerState<CoursePage> {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ 从 Provider 读取状态
+    final courseState = ref.watch(courseNotifierProvider);
+    final dotDates = courseState.dotDates;
+    final lessonsData = courseState.lessonsData;
+    final courseList = courseState.courseList;
+    final isLoading = courseState.isLoading;
+    final isCourseListLoading = courseState.isCourseListLoading;
+    final showPlan = courseState.showPlan;
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: Stack(
@@ -268,25 +138,25 @@ class _CoursePageState extends ConsumerState<CoursePage> {
               // 导航栏
               _buildAppBar(),
               // 周历选择
-              _buildWeekCalendar(),
+              _buildWeekCalendar(dotDates),
               // 内容区
               Expanded(
-                child: _loading
+                child: isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : ListView(
                         padding: EdgeInsets.zero,
                         children: [
                           // ✅ 今日课程列表 - 只有当 lesson_num != '0' 时才显示
-                          if (_lessonsData != null &&
-                              (_lessonsData!['lesson_num']?.toString() ?? '0') != '0')
-                            _buildLessonsList(),
+                          if (lessonsData != null &&
+                              (lessonsData.lessonNum ?? '0') != '0')
+                            _buildLessonsList(lessonsData),
                           // 学习计划区域
-                          if (_showPlan) _buildStudyPlan(),
+                          if (showPlan) _buildStudyPlan(courseList, isCourseListLoading),
                           // ✅ 无学习内容提示 - 没有课程且没有学习计划时显示
-                          if ((_lessonsData == null ||
-                                  (_lessonsData!['lesson_num']?.toString() ?? '0') == '0') &&
-                              _courseList.isEmpty &&
-                              !_loading)
+                          if ((lessonsData == null ||
+                                  (lessonsData.lessonNum ?? '0') == '0') &&
+                              courseList.isEmpty &&
+                              !isLoading)
                             _buildNotLearn(),
                         ],
                       ),
@@ -324,7 +194,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
     );
   }
 
-  Widget _buildWeekCalendar() {
+  Widget _buildWeekCalendar(List<String> dotDates) {
     final weekDays = _getCurrentWeek(_selectedDate);
     
     return CompositedTransformTarget(
@@ -339,7 +209,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                 height: 42.h,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: weekDays.map((day) => _buildWeekDayItem(day)).toList(),
+                  children: weekDays.map((day) => _buildWeekDayItem(day, dotDates)).toList(),
                 ),
               ),
             ),
@@ -350,27 +220,22 @@ class _CoursePageState extends ConsumerState<CoursePage> {
     );
   }
 
-  Widget _buildWeekDayItem(DateTime day) {
+  Widget _buildWeekDayItem(DateTime day, List<String> dotDates) {
     final isSelected = isSameDay(day, _selectedDate);
     final isToday = isSameDay(day, DateTime.now());
-    final hasDot = _dotDates.contains(_formatDate(day));
+    final hasDot = dotDates.contains(_formatDate(day));
     
     return GestureDetector(
       onTap: () async {
         setState(() {
           _selectedDate = day;
-          _loading = true;
-          _lessonsData = null; // ✅ 清空旧数据
-          _courseList = [];
         });
-        // ✅ 等待数据加载完成
+        // ✅ 使用 Provider 加载数据
+        final notifier = ref.read(courseNotifierProvider.notifier);
         await Future.wait([
-          _getDateLessons(),
-          _getDateCourse(),
+          notifier.loadDateLessons(day),
+          notifier.loadDateCourse(day, _teachingType),
         ]);
-        setState(() {
-          _loading = false;
-        });
       },
       child: Container(
         width: 40.w,
@@ -477,10 +342,10 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   }
 
   /// 今日课节列表
-  Widget _buildLessonsList() {
-    final lessonNum = _lessonsData!['lesson_num']?.toString() ?? '0';
-    final attendanceNum = _lessonsData!['lesson_attendance_num']?.toString() ?? '0';
-    final lessons = (_lessonsData!['lesson_attendance'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+  Widget _buildLessonsList(LessonsData lessonsData) {
+    final lessonNum = lessonsData.lessonNum ?? '0';
+    final attendanceNum = lessonsData.lessonAttendanceNum ?? '0';
+    final lessons = lessonsData.lessonAttendance;
     
     if (lessonNum == '0' || lessons.isEmpty) {
       return const SizedBox.shrink();
@@ -556,19 +421,19 @@ class _CoursePageState extends ConsumerState<CoursePage> {
           ),
           SizedBox(height: 16.h),
           // 课节列表
-          ...lessons.map((lesson) => _buildLessonItem(lesson)).toList(),
+          ...lessons.map((lesson) => _buildLessonItem(lesson)),
         ],
       ),
     );
   }
 
   /// 构建单个课节项
-  Widget _buildLessonItem(Map<String, dynamic> lesson) {
+  Widget _buildLessonItem(LessonModel lesson) {
     return _LessonItemWidget(lesson: lesson);
   }
 
   /// 学习计划
-  Widget _buildStudyPlan() {
+  Widget _buildStudyPlan(List<CourseModel> courseList, bool isCourseListLoading) {
     return Container(
       margin: EdgeInsets.only(top: 10.h),
       color: Colors.white,
@@ -607,7 +472,8 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                   setState(() {
                     _teachingType = value;
                   });
-                  _getDateCourse();
+                  // ✅ 使用 Provider 加载数据
+                  ref.read(courseNotifierProvider.notifier).loadDateCourse(_selectedDate, value);
                 },
                 offset: Offset(0, 35.h),
                 shape: RoundedRectangleBorder(
@@ -682,20 +548,20 @@ class _CoursePageState extends ConsumerState<CoursePage> {
             ],
           ),
           // 课程列表
-          if (_courseListLoading)
+          if (isCourseListLoading)
             Center(
               child: Padding(
                 padding: EdgeInsets.all(25.h),
                 child: const CircularProgressIndicator(),
               ),
             )
-          else if (_courseList.isEmpty)
+          else if (courseList.isEmpty)
             _buildEmptyCourseList()
           else
             Padding(
               padding: EdgeInsets.only(top: 10.h),
               child: Column(
-                children: _courseList.map((course) => _buildCourseCard(course)).toList(),
+                children: courseList.map((course) => _buildCourseCard(course)).toList(),
               ),
             ),
         ],
@@ -726,7 +592,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   }
 
   /// 构建课程卡片
-  Widget _buildCourseCard(Map<String, dynamic> course) {
+  Widget _buildCourseCard(CourseModel course) {
     return _CourseCardWidget(course: course);
   }
 
@@ -755,28 +621,25 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   }
 
   /// 完整日历选择器
-  Widget _buildFullCalendar() {
+  Widget _buildFullCalendar(List<String> dotDates) {
     return _FullCalendarWidget(
       selectedDate: _selectedDate,
-      dotDates: _dotDates,
+      dotDates: dotDates,
       onDaySelected: (selectedDay) async {
         setState(() {
           _selectedDate = selectedDay;
-          _loading = true;
-          _lessonsData = null;
-          _courseList = [];
         });
         _removeCalendarOverlay();
+        // ✅ 使用 Provider 加载数据
+        final notifier = ref.read(courseNotifierProvider.notifier);
         await Future.wait([
-          _getDateLessons(),
-          _getDateCourse(),
+          notifier.loadDateLessons(selectedDay),
+          notifier.loadDateCourse(selectedDay, _teachingType),
         ]);
-        setState(() {
-          _loading = false;
-        });
       },
       onPageChanged: (focusedDay) {
-        _getCalendar();
+        // ✅ 刷新日历数据
+        ref.read(courseNotifierProvider.notifier).refreshCalendar();
       },
     );
   }
@@ -805,20 +668,20 @@ class _CoursePageState extends ConsumerState<CoursePage> {
 
 /// 课节列表项组件
 class _LessonItemWidget extends StatelessWidget {
-  final Map<String, dynamic> lesson;
+  final LessonModel lesson;
 
   const _LessonItemWidget({required this.lesson});
 
   @override
   Widget build(BuildContext context) {
-    // ✅ 使用小程序实际的字段名
-    final startTime = lesson['start_time']?.toString().split(' ').last.substring(0, 5) ?? '';
-    final teachingTypeName = lesson['teaching_type_name']?.toString() ?? '';
-    final lessonNum = lesson['lesson_num']?.toString() ?? '';
-    final lessonName = lesson['lesson_name']?.toString() ?? '';
-    final lessonId = lesson['lesson_id']?.toString() ?? '';
-    final hasDocument = (lesson['resource_document'] as List?)?.isNotEmpty ?? false;
-    final evaluationTypes = (lesson['evaluation_type'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    // ✅ 使用 Model 的字段
+    final startTime = lesson.startTime?.split(' ').last.substring(0, 5) ?? '';
+    final teachingTypeName = lesson.teachingTypeName ?? '';
+    final lessonNum = lesson.lessonNum ?? '';
+    final lessonName = lesson.lessonName ?? '';
+    final lessonId = lesson.lessonId ?? '';
+    final hasDocument = lesson.resourceDocument.isNotEmpty;
+    final evaluationTypes = lesson.evaluationType;
 
     return Container(
       margin: EdgeInsets.only(bottom: 10.h),
@@ -937,7 +800,7 @@ class _LessonItemWidget extends StatelessWidget {
                           SizedBox(width: 8.w),
                       ],
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),
@@ -1042,7 +905,7 @@ class _FullCalendarWidget extends StatelessWidget {
   CalendarStyle _buildCalendarStyle() {
     return CalendarStyle(
       todayDecoration: BoxDecoration(
-        color: const Color(0xFF018CFF).withOpacity(0.3),
+        color: const Color(0xFF018CFF).withValues(alpha: 0.3),
         shape: BoxShape.circle,
       ),
       selectedDecoration: const BoxDecoration(
@@ -1125,20 +988,20 @@ class _FullCalendarWidget extends StatelessWidget {
 
 /// 课程卡片组件
 class _CourseCardWidget extends StatelessWidget {
-  final Map<String, dynamic> course;
+  final CourseModel course;
 
   const _CourseCardWidget({required this.course});
 
   @override
   Widget build(BuildContext context) {
-    final goodsName = course['goods_name']?.toString() ?? '';
-    final teachingTypeName = course['teaching_type_name']?.toString() ?? '';
-    final classInfo = course['class'] as Map<String, dynamic>?;
+    final goodsName = course.goodsName ?? '';
+    final teachingTypeName = course.teachingTypeName ?? '';
+    final classInfo = course.classInfo;
     final classDate = classInfo?['date']?.toString() ?? '';
-    final goodsPid = course['goods_pid']?.toString() ?? '0';
-    final goodsPidName = course['goods_pid_name']?.toString() ?? '';
-    final goodsId = course['goods_id']?.toString() ?? '';
-    final orderId = course['order_id']?.toString() ?? '';
+    final goodsPid = course.goodsPid ?? '0';
+    final goodsPidName = course.goodsPidName ?? '';
+    final goodsId = course.goodsId ?? '';
+    final orderId = course.orderId ?? '';
 
     return GestureDetector(
       onTap: () {

@@ -1,9 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../app/config/api_config.dart';
 import '../../../core/network/dio_client.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../models/goods_model.dart';
 import '../services/goods_service.dart';
+
+part 'home_provider.freezed.dart';
 
 /// GoodsService Provider
 final goodsServiceProvider = Provider<GoodsService>((ref) {
@@ -11,41 +14,16 @@ final goodsServiceProvider = Provider<GoodsService>((ref) {
 });
 
 /// 首页状态
-/// ✅ 符合数据安全规则: 使用不可变状态类,所有字段都有默认值
-class HomeState {
-  final List<GoodsModel> recommendList; // 秒杀推荐列表
-  final List<GoodsModel> questionBankList; // 题库列表
-  final List<GoodsModel> onlineCourseList; // 网课列表
-  final List<GoodsModel> liveList; // 直播列表
-  final bool isLoading;
-  final String? error;
-
-  const HomeState({
-    this.recommendList = const [],
-    this.questionBankList = const [],
-    this.onlineCourseList = const [],
-    this.liveList = const [],
-    this.isLoading = false,
-    this.error,
-  });
-
-  HomeState copyWith({
-    List<GoodsModel>? recommendList,
-    List<GoodsModel>? questionBankList,
-    List<GoodsModel>? onlineCourseList,
-    List<GoodsModel>? liveList,
-    bool? isLoading,
+@freezed
+class HomeState with _$HomeState {
+  const factory HomeState({
+    @Default([]) List<GoodsModel> recommendList,
+    @Default([]) List<GoodsModel> questionBankList,
+    @Default([]) List<GoodsModel> onlineCourseList,
+    @Default([]) List<GoodsModel> liveList,
+    @Default(false) bool isLoading,
     String? error,
-  }) {
-    return HomeState(
-      recommendList: recommendList ?? this.recommendList,
-      questionBankList: questionBankList ?? this.questionBankList,
-      onlineCourseList: onlineCourseList ?? this.onlineCourseList,
-      liveList: liveList ?? this.liveList,
-      isLoading: isLoading ?? this.isLoading,
-      error: error,
-    );
-  }
+  }) = _HomeState;
 }
 
 /// 首页Provider
@@ -53,7 +31,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
   final GoodsService _goodsService;
   final Ref _ref;
 
-  HomeNotifier(this._goodsService, this._ref) : super(HomeState());
+  HomeNotifier(this._goodsService, this._ref) : super(const HomeState());
 
   /// 加载首页数据
   /// 参考小程序: src/modules/jintiku/pages/index/index.vue getGoods()
@@ -63,10 +41,8 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
       // 获取当前专业ID
       final majorId = _ref.read(currentMajorProvider)?.majorId;
-      print('🏠 首页加载数据 - 专业ID: $majorId');
       
       if (majorId == null || majorId.isEmpty) {
-        print('⚠️ 专业ID为空，停止加载');
         state = state.copyWith(
           isLoading: false,
           error: '请先选择专业',
@@ -136,12 +112,6 @@ class HomeNotifier extends StateNotifier<HomeState> {
         return isRecommend && isNotBought;
       }).toList();
       
-      print('📊 数据加载完成:');
-      print('   题库商品: ${allQuestionBank.length} 条');
-      print('   秒杀推荐: ${recommendList.length} 条');
-      print('   网课列表: ${onlineCourseList.length} 条');
-      print('   直播列表: ${liveList.length} 条');
-
       state = state.copyWith(
         questionBankList: allQuestionBank,
         recommendList: recommendList,
@@ -150,7 +120,6 @@ class HomeNotifier extends StateNotifier<HomeState> {
         isLoading: false,
       );
     } catch (e) {
-      print('❌ 首页数据加载失败: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -160,7 +129,6 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
   /// 刷新数据
   Future<void> refresh() async {
-    print('🔄 开始刷新首页数据...');
     // ⚠️ 不清空数据，直接重新加载，保持 loading 状态
     await loadHomeData();
   }

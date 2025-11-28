@@ -265,15 +265,12 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   /// 处理秒杀卡片点击
-  /// 秒杀商品都是未购买状态(permission_status == '2'),直接跳转商品详情页
   void _handleSeckillCardTap(GoodsModel goods) {
-    print('⚡ 点击秒杀卡片: ${goods.goodsName}, type: ${goods.type}');
-    
     final major = ref.read(currentMajorProvider);
     final goodsId = goods.goodsId?.toString();
-    final professionalId = major?.majorId?.toString();
+    final professionalId = major?.majorId.toString();
     
-    // 秒杀商品跳转到商品详情页（未购买）
+    // 秒杀商品跳转到商品详情页
     _navigateToGoodsDetail(goods, goodsId, professionalId);
   }
 
@@ -432,13 +429,10 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   /// 处理题库卡片点击
-  /// 对应小程序: examination-test-item.vue goDetail()
   void _handleGoodsCardTap(GoodsModel goods) {
-    print('👆 点击题库卡片: ${goods.goodsName}, type: ${goods.type}, permission: ${goods.permissionStatus}');
-    
     final major = ref.read(currentMajorProvider);
     final goodsId = goods.goodsId?.toString();
-    final professionalId = major?.majorId?.toString();
+    final professionalId = major?.majorId.toString();
     
     // 根据购买状态和商品类型跳转不同页面
     if (goods.permissionStatus == '2') {
@@ -450,13 +444,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  /// 跳转到商品详情页（未购买）
+  /// 跳转到商品详情页
   void _navigateToGoodsDetail(GoodsModel goods, String? goodsId, String? professionalId) {
     final type = goods.type;
     final detailsType = goods.detailsType;
     final dataType = goods.dataType;
-    
-    print('📦 跳转商品详情 - type: $type, detailsType: $detailsType, dataType: $dataType');
     
     // type == 2: 课程
     if (type == 2) {
@@ -550,14 +542,12 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  /// 跳转到章节练习（已购买）
+  /// 跳转到章节练习
   void _navigateToChapterPractice(GoodsModel goods, String? goodsId, String? professionalId) {
     final type = goods.type;
     final detailsType = goods.detailsType;
     final dataType = goods.dataType;
     final questionNum = goods.tikuGoodsDetails?.questionNum;
-    
-    print('📝 跳转章节练习 - type: $type, detailsType: $detailsType');
     
     // type == 2: 课程
     if (type == 2) {
@@ -590,7 +580,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       if (detailsType == 1) {
         // 模考+经典版+已购买
         // TODO: 实现ExamInfoPage
-        print('⚠️ 模考详情页待实现');
         return;
       } else if (detailsType == 4) {
         // 模考+模考版+已购买
@@ -611,7 +600,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       case 3:
         // 经典详情/科目详情 - 跳转考试页
         // TODO: 实现TestExamPage
-        print('⚠️ 考试页待实现');
         break;
       case 2:
         // 真题详情
@@ -664,19 +652,15 @@ class _HomePageState extends ConsumerState<HomePage> {
       children: list.map((goods) => CourseCard(
         goods: goods,
         onTap: () {
-          print('👆 点击课程卡片: ${goods.goodsName}, type: ${goods.type}');
-          // 跳转到课程商品详情页
           final major = ref.read(currentMajorProvider);
-          print('📦 准备跳转 - goodsId: ${goods.goodsId}, type: ${goods.type}, majorId: ${major?.majorId}');
           context.push(
             AppRoutes.goodsDetail,
             extra: {
               'goods_id': goods.goodsId?.toString(),
-              'professional_id': major?.majorId?.toString(),
+              'professional_id': major?.majorId.toString(),
               'type': goods.type, // 2/3=课程
             },
           );
-          print('✅ context.push 已执行');
         },
       )).toList(),
     );

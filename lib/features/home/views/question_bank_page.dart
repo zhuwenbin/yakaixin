@@ -4,14 +4,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../../app/routes/app_routes.dart';
-import '../../../core/network/dio_client.dart';
-import '../../auth/providers/auth_provider.dart';
-import '../providers/home_provider.dart';
-import '../../major/providers/major_provider.dart';
+import '../providers/question_bank_provider.dart';
+import '../models/question_bank_model.dart';
 import '../../major/widgets/major_selector_dialog.dart';
+import '../providers/home_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 
 /// 题库首页
 /// 对应小程序: src/modules/jintiku/pages/index/index.vue
+/// ✅ 使用 ConsumerStatefulWidget，支持页面初始化时加载数据
 class QuestionBankPage extends ConsumerStatefulWidget {
   const QuestionBankPage({super.key});
 
@@ -20,261 +21,52 @@ class QuestionBankPage extends ConsumerStatefulWidget {
 }
 
 class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
-  // ✅ 遵守Mock规则: 通过API获取学习数据
-  Map<String, dynamic> _learningData = {};
-  bool _isLoadingLearningData = true;
-  
-  // 章节数据
-  List<Map<String, dynamic>> _chapterList = [];
-  bool _isLoadingChapters = false;
-  
-  // 已购商品
-  List<Map<String, dynamic>> _purchasedGoods = [];
-  bool _isLoadingPurchased = false;
-  
-  // 每日一测
-  Map<String, dynamic>? _dailyPractice;
-  bool _hasDaily = false;
-  
-  // 技能模拟
-  Map<String, dynamic>? _skillMock;
-  bool _hasSkillMock = false;
-  
-  // 下拉刷新状态
-  final GlobalKey<RefreshIndicatorState> _refreshKey = GlobalKey<RefreshIndicatorState>();
-
   @override
   void initState() {
     super.initState();
-    _loadAllData();
-  }
-  
-  /// 加载所有数据
-  /// 对应小程序: updata() 方法
-  Future<void> _loadAllData() async {
-    print('🔄 题库页面 - 开始加载所有数据');
-    
-    await Future.wait([
-      _loadLearningData(),
-      _loadChapters(),
-      _loadPurchasedGoods(),
-      _loadDailyPractice(),
-      _loadSkillMock(),
-    ]);
-    
-    print('✅ 题库页面 - 所有数据加载完成');
-  }
-
-  /// 加载学习数据
-  /// 对应小程序: apiExamLearningData()
-  Future<void> _loadLearningData() async {
-    try {
-      final majorInfo = ref.read(currentMajorProvider);
-      final professionalId = majorInfo?.majorId ?? '524033912737962623';
-      
-      print('📋 请求学习数据 - 专业ID: $professionalId');
-      
-      // ✅ 通过API调用（Mock拦截器会自动返回Mock数据）
-      final dio = ref.read(dioClientProvider);
-      final response = await dio.get(
-        '/c/exam/learningData',
-        queryParameters: {
-          'professional_id': professionalId,
-        },
-      );
-      
-      if (response.statusCode == 200 && response.data['code'] == 100000) {
-        setState(() {
-          _learningData = response.data['data'] as Map<String, dynamic>;
-          _isLoadingLearningData = false;
-        });
-        print('✅ 学习数据加载成功');
-      }
-    } catch (e) {
-      setState(() {
-        _isLoadingLearningData = false;
-      });
-      print('❌ 加载学习数据失败: $e');
-    }
-  }
-  
-  /// 加载章节数据
-  Future<void> _loadChapters() async {
-    try {
-      setState(() {
-        _isLoadingChapters = true;
-      });
-      
-      final majorInfo = ref.read(currentMajorProvider);
-      final professionalId = majorInfo?.majorId ?? '524033912737962623';
-      
-      print('📋 请求章节数据 - 专业ID: $professionalId');
-      
-      final dio = ref.read(dioClientProvider);
-      final response = await dio.get(
-        '/c/exam/chapter/list',
-        queryParameters: {
-          'professional_id': professionalId,
-        },
-      );
-      
-      if (response.statusCode == 200 && response.data['code'] == 100000) {
-        setState(() {
-          _chapterList = (response.data['data'] as List).cast<Map<String, dynamic>>();
-          _isLoadingChapters = false;
-        });
-        print('✅ 章节数据加载成功: ${_chapterList.length} 条');
-      }
-    } catch (e) {
-      setState(() {
-        _isLoadingChapters = false;
-      });
-      print('❌ 加载章节数据失败: $e');
-    }
-  }
-  
-  /// 加载已购商品
-  /// 对应小程序: getGoods({is_buyed: 1})
-  Future<void> _loadPurchasedGoods() async {
-    try {
-      setState(() {
-        _isLoadingPurchased = true;
-      });
-      
-      final majorInfo = ref.read(currentMajorProvider);
-      final professionalId = majorInfo?.majorId ?? '524033912737962623';
-      
-      print('📋 请求已购商品 - 专业ID: $professionalId');
-      
-      final dio = ref.read(dioClientProvider);
-      final response = await dio.get(
-        '/c/goods/v2',
-        queryParameters: {
-          'professional_id': professionalId,
-          'type': '10,8',
-          'is_buyed': '1',
-        },
-      );
-      
-      if (response.statusCode == 200 && response.data['code'] == 200) {
-        setState(() {
-          _purchasedGoods = (response.data['data']['list'] as List).cast<Map<String, dynamic>>();
-          _isLoadingPurchased = false;
-        });
-        print('✅ 已购商品加载成功: ${_purchasedGoods.length} 条');
-      }
-    } catch (e) {
-      setState(() {
-        _isLoadingPurchased = false;
-      });
-      print('❌ 加载已购商品失败: $e');
-    }
-  }
-  
-  /// 加载每日一测
-  /// 对应小程序: getDaily30()
-  Future<void> _loadDailyPractice() async {
-    try {
-      final majorInfo = ref.read(currentMajorProvider);
-      final professionalId = majorInfo?.majorId ?? '524033912737962623';
-      
-      print('📋 请求每日一测 - 专业ID: $professionalId');
-      
-      final dio = ref.read(dioClientProvider);
-      final response = await dio.get(
-        '/c/goods/v2',
-        queryParameters: {
-          'professional_id': professionalId,
-          'position_identify': 'daily30',
-        },
-      );
-      
-      if (response.statusCode == 200 && response.data['code'] == 100000) {
-        final list = response.data['data']['list'] as List;
-        setState(() {
-          _hasDaily = list.isNotEmpty;
-          _dailyPractice = list.isNotEmpty ? list[0] as Map<String, dynamic> : null;
-        });
-        print('✅ 每日一测加载成功: $_hasDaily');
-      }
-    } catch (e) {
-      setState(() {
-        _hasDaily = false;
-      });
-      print('❌ 加载每日一测失败: $e');
-    }
-  }
-  
-  /// 加载技能模拟
-  /// 对应小程序: getSkillMock()
-  Future<void> _loadSkillMock() async {
-    try {
-      final majorInfo = ref.read(currentMajorProvider);
-      final professionalId = majorInfo?.majorId ?? '524033912737962623';
-      
-      // 只有特定专业显示技能模拟
-      final showSkillMock = professionalId == '524033912737962623' || professionalId == '524033614019566207';
-      
-      if (!showSkillMock) {
-        setState(() {
-          _hasSkillMock = false;
-        });
-        return;
-      }
-      
-      print('📋 请求技能模拟 - 专业ID: $professionalId');
-      
-      final dio = ref.read(dioClientProvider);
-      final response = await dio.get(
-        '/c/exam/chapterpackage',
-        queryParameters: {
-          'professional_id': professionalId,
-          'position_identify': 'jinengmoni',
-        },
-      );
-      
-      if (response.statusCode == 200 && response.data['code'] == 100000) {
-        final data = response.data['data'] as Map<String, dynamic>;
-        final hasData = data['id'] != null && data['id'] != 0;
-        setState(() {
-          _hasSkillMock = hasData;
-          _skillMock = hasData ? data : null;
-        });
-        print('✅ 技能模拟加载成功: $_hasSkillMock');
-      }
-    } catch (e) {
-      setState(() {
-        _hasSkillMock = false;
-      });
-      print('❌ 加载技能模拟失败: $e');
-    }
+    // 页面加载时自动加载数据
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(questionBankProvider.notifier).loadAllData();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    // ✅ 通过 ref.watch 监听 ViewModel 状态
+    final state = ref.watch(questionBankProvider);
+    
+    // ✅ 使用 ref.listen 处理副作用（Toast、导航等）
+    ref.listen<QuestionBankState>(
+      questionBankProvider,
+      (previous, next) {
+        // 打卡成功提示
+        if (next.checkInSuccess && !(previous?.checkInSuccess ?? false)) {
+          EasyLoading.showSuccess(next.successMessage ?? '打卡成功');
+          ref.read(questionBankProvider.notifier).clearSuccessFlag();
+        }
+        
+        // 错误提示
+        if (next.error != null && next.error != previous?.error) {
+          EasyLoading.showError(next.error!);
+        }
+      },
+    );
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: RefreshIndicator(
-        key: _refreshKey,
-        onRefresh: _handleRefresh,
+        onRefresh: () async {
+          // ✅ 通过 ViewModel 处理业务逻辑
+          await ref.read(questionBankProvider.notifier).refresh();
+        },
         child: Stack(
           children: [
-            // 渐变背景
             _buildGradientBackground(),
-            // 主内容
-            _buildContent(),
+            _buildContent(context, ref, state),
           ],
         ),
       ),
     );
-  }
-  
-  /// 下拉刷新
-  /// 对应小程序: onPullDownRefresh()
-  Future<void> _handleRefresh() async {
-    print('🔄 开始下拉刷新...');
-    await _loadAllData();
-    print('✅ 下拉刷新完成');
   }
 
   /// 渐变背景
@@ -301,36 +93,36 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   }
 
   /// 主内容
-  Widget _buildContent() {
+  Widget _buildContent(BuildContext context, WidgetRef ref, QuestionBankState state) {
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(child: _buildHeader()),
-        SliverToBoxAdapter(child: _buildStudyCalendar()),
+        SliverToBoxAdapter(child: _buildHeader(context, ref)),
+        SliverToBoxAdapter(child: _buildStudyCalendar(state, ref)),
         SliverToBoxAdapter(child: SizedBox(height: 16.h)),
-        SliverToBoxAdapter(child: _buildStudyCardGrid()),
+        SliverToBoxAdapter(child: _buildStudyCardGrid(context, ref)),
         SliverToBoxAdapter(child: SizedBox(height: 16.h)),
         // 每日一测
-        if (_hasDaily) ...[  
-          SliverToBoxAdapter(child: _buildDailyPractice()),
+        if (state.dailyPractice != null) ...[  
+          SliverToBoxAdapter(child: _buildDailyPractice(context, state.dailyPractice!)),
           SliverToBoxAdapter(child: SizedBox(height: 16.h)),
         ],
         // 章节练习
-        SliverToBoxAdapter(child: _buildChapterPractice()),
+        SliverToBoxAdapter(child: _buildChapterPractice(state)),
         SliverToBoxAdapter(child: SizedBox(height: 16.h)),
         // 技能模拟  
-        if (_hasSkillMock) ...[  
-          SliverToBoxAdapter(child: _buildSkillMockSection()),
+        if (state.skillMock != null) ...[  
+          SliverToBoxAdapter(child: _buildSkillMockSection(context, state.skillMock!)),
           SliverToBoxAdapter(child: SizedBox(height: 16.h)),
         ],
         // 已购试题
-        SliverToBoxAdapter(child: _buildPurchasedQuestions()),
+        SliverToBoxAdapter(child: _buildPurchasedQuestions(state)),
         SliverToBoxAdapter(child: SizedBox(height: 60.h)),
       ],
     );
   }
 
   /// 顶部专业选择栏
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context, WidgetRef ref) {
     // ✅ 从 majorProvider 读取当前专业信息
     final majorInfo = ref.watch(currentMajorProvider);
     final majorName = majorInfo?.majorName ?? '选择专业';
@@ -342,8 +134,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
           context,
           onChanged: () {
             // 专业变更后刷新题库数据
-            print('🔄 专业变更，重新加载数据...');
-            _loadAllData();
+            ref.read(questionBankProvider.notifier).loadAllData();
           },
         );
       },
@@ -372,40 +163,40 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   }
 
   /// 学习日历卡片
-  Widget _buildStudyCalendar() {
+  Widget _buildStudyCalendar(QuestionBankState state, WidgetRef ref) {
     return _StudyCalendarCard(
-      learningData: _learningData,
-      isLoadingLearningData: _isLoadingLearningData,
-      onCheckIn: _handleCheckIn,
+      learningData: state.learningData,
+      isLoadingLearningData: state.isLoadingLearning,
+      onCheckIn: () => ref.read(questionBankProvider.notifier).checkIn(),
     );
   }
 
   /// 学习卡片网格(绝密押题、科目模考、模拟考试、学习报告)
-  Widget _buildStudyCardGrid() {
+  Widget _buildStudyCardGrid(BuildContext context, WidgetRef ref) {
     final cards = [
       {
         'title': '绝密押题',
         'subtitle': '名师密押 考后即焚',
         'imageUrl': 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/predictIcon.png',
-        'action': () => _handleCardClick(0),
+        'action': () => _handleCardClick(context, ref, 0),
       },
       {
         'title': '科目模考',
         'subtitle': '查漏补缺 直击重点',
         'imageUrl': 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/test-icon.png',
-        'action': () => _handleCardClick(1),
+        'action': () => _handleCardClick(context, ref, 1),
       },
       {
         'title': '模拟考试',
         'subtitle': '全真模拟 还原考场',
         'imageUrl': 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/exam-icon.png',
-        'action': () => _handleCardClick(2),
+        'action': () => _handleCardClick(context, ref, 2),
       },
       {
         'title': '学习报告',
         'subtitle': '实时学习情况',
         'imageUrl': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/col-4.png',
-        'action': () => _handleCardClick(3),
+        'action': () => _handleCardClick(context, ref, 3),
       },
     ];
 
@@ -500,14 +291,10 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   }
 
   /// 每日一测
-  Widget _buildDailyPractice() {
-    if (_dailyPractice == null) {
-      return SizedBox.shrink();
-    }
-    
-    final totalQuestions = _dailyPractice!['total_questions'] ?? 30;
-    final doneQuestions = _dailyPractice!['done_questions'] ?? 0;
-    final name = _dailyPractice!['name'] as String? ?? '每日30题';
+  Widget _buildDailyPractice(BuildContext context, DailyPracticeModel dailyPractice) {
+    final totalQuestions = dailyPractice.totalQuestions;
+    final doneQuestions = dailyPractice.doneQuestions;
+    final name = dailyPractice.name;
     
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 12.w),
@@ -517,7 +304,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
           _buildSectionTitle('每日一测'),
           SizedBox(height: 12.h),
           GestureDetector(
-            onTap: _handleDailyPractice,
+            onTap: () => _handleDailyPractice(context),
             child: Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
@@ -561,8 +348,8 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   }
 
   /// 章节练习
-  Widget _buildChapterPractice() {
-    if (_isLoadingChapters) {
+  Widget _buildChapterPractice(QuestionBankState state) {
+    if (state.isLoadingChapters) {
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 12.w),
         child: Column(
@@ -586,27 +373,25 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
           _buildSectionTitle('章节练习'),
           SizedBox(height: 12.h),
           // 显示前3个章节
-          ...(_chapterList.take(3).map((chapter) => Padding(
+          ...(state.chapters.take(3).map((chapter) => Padding(
             padding: EdgeInsets.only(bottom: 12.h),
             child: _buildChapterItem(
-              chapter['sectionname'] as String? ?? '',
-              '${chapter['question_number']}题',
-              '已做${chapter['do_question_num']}题',
-              double.tryParse(chapter['correct_rate']?.toString() ?? '0') ?? 0.0,
+              chapter.sectionName,
+              '${chapter.questionNumber}题',
+              '已做${chapter.doQuestionNum}题',
+              chapter.correctRate,
               () {
                 // TODO: 跳转到章节详情
-                print('点击章节: ${chapter['sectionname']}');
-                EasyLoading.showToast('点击了章节: ${chapter['sectionname']}');
+                EasyLoading.showToast('点击了章节: ${chapter.sectionName}');
               },
             ),
           ))),
           // 查看更多按钮
-          if (_chapterList.length > 3)
+          if (state.chapters.length > 3)
             GestureDetector(
               onTap: () {
                 // TODO: 跳转到章节列表页
-                print('查看全部章节');
-                EasyLoading.showToast('查看全部 ${_chapterList.length} 个章节');
+                EasyLoading.showToast('查看全部 ${state.chapters.length} 个章节');
               },
               child: Container(
                 width: double.infinity,
@@ -620,7 +405,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '查看全部 ${_chapterList.length} 个章节',
+                      '查看全部 ${state.chapters.length} 个章节',
                       style: TextStyle(
                         fontSize: 14.sp,
                         color: Colors.blue,
@@ -705,10 +490,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   }
   
   /// 技能模拟区域
-  Widget _buildSkillMockSection() {
-    if (_skillMock == null) {
-      return SizedBox.shrink();
-    }
+  Widget _buildSkillMockSection(BuildContext context, SkillMockModel skillMock) {
     
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 12.w),
@@ -720,7 +502,6 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
           GestureDetector(
             onTap: () {
               // TODO: 跳转到技能模拟页面
-              print('点击技能模拟: ${_skillMock!['name']}');
               EasyLoading.showToast('点击了技能模拟');
             },
             child: Container(
@@ -760,7 +541,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _skillMock!['name'] as String? ?? '技能模拟',
+                          skillMock.name,
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
@@ -768,7 +549,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          _skillMock!['description'] as String? ?? '',
+                          skillMock.description,
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: const Color(0xFF999999),
@@ -790,8 +571,8 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   }
 
   /// 已购试题
-  Widget _buildPurchasedQuestions() {
-    if (_isLoadingPurchased) {
+  Widget _buildPurchasedQuestions(QuestionBankState state) {
+    if (state.isLoadingPurchased) {
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 12.w),
         child: Column(
@@ -805,7 +586,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       );
     }
     
-    if (_purchasedGoods.isEmpty) {
+    if (state.purchasedGoods.isEmpty) {
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 12.w),
         child: Column(
@@ -847,9 +628,9 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
         children: [
           _buildSectionTitle('已购试题'),
           SizedBox(height: 12.h),
-          ...(_purchasedGoods.map((goods) {
-            final name = goods['name'] as String? ?? '未知商品';
-            final coverPath = goods['material_cover_path'] as String? ?? '';
+          ...(state.purchasedGoods.map((goods) {
+            final name = goods.name;
+            final coverPath = goods.materialCoverPath;
             final imageUrl = coverPath.startsWith('http') 
                 ? coverPath 
                 : 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/$coverPath';
@@ -858,7 +639,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
               padding: EdgeInsets.only(bottom: 12.h),
               child: _buildPurchasedItem(
                 name,
-                '3580题', // TODO: 从商品数据获取
+                '${goods.questionCount}题',
                 imageUrl,
               ),
             );
@@ -877,7 +658,6 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
     return GestureDetector(
       onTap: () {
         // TODO: 跳转到试题详情
-        print('点击已购试题: $title');
       },
       child: Container(
         padding: EdgeInsets.all(16.w),
@@ -963,77 +743,20 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
 
   // ==================== 事件处理 ====================
 
-  /// 处理打卡
-  /// ✅ 遵守Mock规则: 通过API调用打卡接口
-  Future<void> _handleCheckIn() async {
-    // 如果已经打卡或正在加载，不处理
-    if (_learningData['is_checkin'] == 1 || _isLoadingLearningData) {
-      return;
-    }
-    
-    try {
-      final majorInfo = ref.read(currentMajorProvider);
-      final professionalId = majorInfo?.majorId ?? '524033912737962623';
-      
-      EasyLoading.show(status: '打卡中...');
-      
-      print('📋 请求打卡 - 专业ID: $professionalId');
-      
-      // ⚠️ 先设置加载状态
-      setState(() {
-        _isLoadingLearningData = true;
-      });
-      
-      // ✅ 通过API调用打卡（Mock拦截器会自动返回Mock数据）
-      final dio = ref.read(dioClientProvider);
-      final response = await dio.post(
-        '/c/exam/checkinData',
-        data: {
-          'professional_id': professionalId,
-        },
-      );
-      
-      EasyLoading.dismiss();
-      
-      if (response.statusCode == 200 && response.data['code'] == 100000) {
-        EasyLoading.showSuccess('打卡成功');
-        
-        // 重新加载学习数据，这会自动更新UI
-        await _loadLearningData();
-        
-        print('✅ 打卡成功，状态已更新');
-      } else {
-        setState(() {
-          _isLoadingLearningData = false;
-        });
-        final msg = response.data['msg'];
-        final message = msg is List && msg.isNotEmpty ? msg[0] : '打卡失败';
-        EasyLoading.showError(message);
-      }
-    } catch (e) {
-      setState(() {
-        _isLoadingLearningData = false;
-      });
-      EasyLoading.dismiss();
-      EasyLoading.showError('打卡失败');
-      print('❌ 打卡失败: $e');
-    }
-  }
-
   /// 处理卡片点击
-  void _handleCardClick(int type) {
+  void _handleCardClick(BuildContext context, WidgetRef ref, int type) {
     switch (type) {
       case 0:
         // 绝密押题 - 跳转到历年真题详情页
-        _navigateToGoodsDetail('linianzhenti', AppRoutes.secretRealDetail);
+        _navigateToGoodsDetail(context, ref, 'linianzhenti', AppRoutes.secretRealDetail);
         break;
       case 1:
         // 科目模考 - 跳转到科目模考详情页
-        _navigateToGoodsDetail('kemumokao', AppRoutes.subjectMockDetail);
+        _navigateToGoodsDetail(context, ref, 'kemumokao', AppRoutes.subjectMockDetail);
         break;
       case 2:
         // 模拟考试 - 跳转到模拟考场页
-        _navigateToGoodsDetail('monikaoshi', AppRoutes.simulatedExamRoom);
+        _navigateToGoodsDetail(context, ref, 'monikaoshi', AppRoutes.simulatedExamRoom);
         break;
       case 3:
         // 学习报告 - 跳转到报告中心
@@ -1043,8 +766,14 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   }
 
   /// 跳转到商品详情页
-  /// ✅ 遵守Mock规则: 通过API调用,由Mock拦截器返回Mock数据
-  Future<void> _navigateToGoodsDetail(String positionIdentify, String routePath) async {
+  Future<void> _navigateToGoodsDetail(
+    BuildContext context,
+    WidgetRef ref,
+    String positionIdentify,
+    String routePath,
+  ) async {
+    if (!mounted) return;
+    
     try {
       EasyLoading.show(status: '加载中...');
       
@@ -1059,6 +788,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
         professionalId: professionalId.isNotEmpty ? professionalId : null,
       );
       
+      if (!mounted) return;
       EasyLoading.dismiss();
       
       if (response.list.isEmpty) {
@@ -1069,6 +799,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       final firstGoods = response.list[0];
       
       // 跳转到对应的详情页
+      if (!mounted) return;
       context.push(
         routePath,
         extra: {
@@ -1077,19 +808,17 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
         },
       );
       
-      print('📦 跳转到: $routePath, productId: ${firstGoods.goodsId}');
     } catch (e) {
+      if (!mounted) return;
       EasyLoading.dismiss();
       EasyLoading.showError('加载失败: ${e.toString()}');
-      print('❌ 获取商品数据失败: $e');
     }
   }
 
   /// 处理每日一测点击
-  void _handleDailyPractice() {
+  void _handleDailyPractice(BuildContext context) {
     // TODO: 调用API获取每日30题数据，跳转到做题页面
     context.push(AppRoutes.makeQuestion);
-    print('点击了每日一测');
   }
 }
 
@@ -1097,7 +826,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
 
 /// 学习日历卡片
 class _StudyCalendarCard extends StatelessWidget {
-  final Map<String, dynamic> learningData;
+  final LearningDataModel? learningData;
   final bool isLoadingLearningData;
   final VoidCallback onCheckIn;
 
@@ -1109,10 +838,10 @@ class _StudyCalendarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final checkinNum = learningData['checkin_num'] ?? 0;
-    final totalNum = learningData['total_num'] ?? 0;
-    final correctRate = learningData['correct_rate'] ?? '0';
-    final isCheckin = learningData['is_checkin'] == 1;
+    final checkinNum = learningData?.checkinNum ?? 0;
+    final totalNum = learningData?.totalNum ?? 0;
+    final correctRate = learningData?.correctRate ?? '0';
+    final isCheckin = (learningData?.isCheckin ?? 0) == 1;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 12.w),
@@ -1121,7 +850,7 @@ class _StudyCalendarCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8.r,
             offset: const Offset(0, 2),
           ),
