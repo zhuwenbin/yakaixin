@@ -38,8 +38,8 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
   // 是否显示环境选择器
   bool _showingEnvSelector = false;
   
-  // Mock 开关状态
-  bool _isMockEnabled = false;
+  // ⚠️ Mock 开关状态 - 从全局 Provider 读取
+  // 注意：不要在这里初始化为固定值，而是在 build 方法中从 Provider 读取
   
   // 当前显示详情的日志
   NetworkLogModel? _selectedLog;
@@ -50,12 +50,19 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
     print('=== NetworkDebugOverlay 初始化 ===');
     print('kDebugMode: $kDebugMode');
     print('ApiConfig.isDebug: ${ApiConfig.isDebug}');
+    // ✅ 读取全局 Mock 状态
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final globalMockState = ref.read(mockEnabledProvider);
+      print('全局 Mock 状态: $globalMockState');
+    });
     print('================================');
   }
 
   @override
   Widget build(BuildContext context) {
     final logs = ref.watch(networkLogsProvider);
+    // ✅ 从全局 Provider 读取 Mock 状态
+    final isMockEnabled = ref.watch(mockEnabledProvider);
     
     // 在 Debug 模式下才显示悬浮按钮
     if (!kDebugMode) {
@@ -102,7 +109,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
         // 展开状态 - 请求列表
         if (_isExpanded)
           Positioned.fill(
-            child: _buildLogList(logs),
+            child: _buildLogList(logs, isMockEnabled),
           ),
         
         // 环境选择器弹窗
@@ -159,7 +166,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
   }
 
   /// 构建请求列表
-  Widget _buildLogList(List<NetworkLogModel> logs) {
+  Widget _buildLogList(List<NetworkLogModel> logs, bool isMockEnabled) {
     return Material(
       color: Colors.black.withOpacity(0.9),
       child: SafeArea(
@@ -184,8 +191,8 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                   // Mock 开关
                   IconButton(
                     icon: Icon(
-                      _isMockEnabled ? Icons.science : Icons.science_outlined,
-                      color: _isMockEnabled ? Colors.amber : Colors.white,
+                      isMockEnabled ? Icons.science : Icons.science_outlined,
+                      color: isMockEnabled ? Colors.amber : Colors.white,
                       size: 20.sp,
                     ),
                     onPressed: _toggleMock,
@@ -248,7 +255,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
             ),
             
             // Mock 状态栏
-            if (_isMockEnabled)
+            if (isMockEnabled)
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                 color: Colors.amber.shade900.withOpacity(0.3),
@@ -309,27 +316,29 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
   
   /// 切换 Mock 开关
   void _toggleMock() {
-    setState(() {
-      _isMockEnabled = !_isMockEnabled;
-    });
+    // ✅ 直接更新全局 Mock 状态，不再使用局部状态
+    final currentState = ref.read(mockEnabledProvider);
+    final newState = !currentState;
     
     // 更新全局 Mock 状态
-    ref.read(mockEnabledProvider.notifier).state = _isMockEnabled;
+    ref.read(mockEnabledProvider.notifier).state = newState;
     
     // ✅ 动态添加/移除 Mock 拦截器
     final dioClient = ref.read(dioClientProvider);
-    if (_isMockEnabled) {
+    if (newState) {
       dioClient.enableMock();
+      print('✅ Mock 模式已开启（全局状态: true）');
     } else {
       dioClient.disableMock();
+      print('🔴 Mock 模式已关闭（全局状态: false）');
     }
     
     // 显示提示
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(_isMockEnabled ? 'Mock 模式已开启' : 'Mock 模式已关闭'),
+        content: Text(newState ? 'Mock 模式已开启' : 'Mock 模式已关闭'),
         duration: Duration(seconds: 1),
-        backgroundColor: _isMockEnabled ? Colors.amber : Colors.grey,
+        backgroundColor: newState ? Colors.amber : Colors.grey,
       ),
     );
   }

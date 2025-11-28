@@ -98,22 +98,40 @@ class AuthService {
     required String code,
     String? majorId,
   }) async {
+    print('\n📡 [登录请求] 发起验证码登录...');
+    print('📞 [phone] $phone');
+    print('🔑 [code] $code');
+    print('🎯 [majorId] $majorId');
+    
     final response = await _dioClient.post(
       '/c/student/smslogin',
       data: {
         'phone': phone,
         'code': code,
-        // 'merchant_id': ApiConfig.merchantId,
-        // 'brand_id': ApiConfig.brandId,
-        // 'channel_id': ApiConfig.channelId,
-        // 'extendu_id': ApiConfig.extendUid,
-        // 'need_employee_info': 1, // 需要员工信息
-        // if (majorId != null) 'major_id': majorId,
+        // ✅ 必选参数 - 对照小程序
+        'merchant_id': ApiConfig.merchantId,
+        'brand_id': ApiConfig.brandId,
+        'channel_id': ApiConfig.channelId,
+        'extendu_id': ApiConfig.extendUid,
+        'need_employee_info': 1, // 需要员工信息
+        if (majorId != null) 'major_id': majorId,
       },
     );
 
+    print('✅ [登录响应] 接口返回成功');
+    print('📦 [response.data] ${response.data}');
+    
     // 响应格式已在拦截器中统一处理
-    return WechatLoginResponse.fromJson(response.data['data']);
+    final loginData = WechatLoginResponse.fromJson(response.data['data']);
+    
+    print('✅ [登录数据] 解析成功');
+    print('   - token: ${loginData.token.substring(0, 20)}...');
+    print('   - studentId: ${loginData.studentId}');
+    print('   - major_id: ${loginData.majorId} (类型: ${loginData.majorId.runtimeType})');
+    print('   - major_name: ${loginData.majorName}');
+    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    
+    return loginData;
   }
 }
 

@@ -239,7 +239,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
         return ExamInfoPage(
-          examId: extra?['exam_id'],
+          productId: extra?['product_id'],
+          title: extra?['title'],
+          page: extra?['page'],
         );
       },
     ),
@@ -283,7 +285,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
         return TestExamPage(
-          examId: extra?['exam_id'],
+          id: extra?['id'],
+          recitationQuestionModel: extra?['recitation_question_model'],
         );
       },
     ),
@@ -441,7 +444,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
         return PaySuccessPage(
-          orderId: extra?['order_id'],
+          goodsId: extra?['goods_id'],
+          professionalIdName: extra?['professional_id_name'],
+          isLearnButton: extra?['isLearnButton'],
         );
       },
     ),

@@ -15,6 +15,9 @@ class StorageKeys {
   static const String isFirstLaunch = 'is_first_launch';
   static const String lastLoginTime = 'last_login_time';
   
+  // Debug 模式 - 环境配置
+  static const String debugEnv = 'debug_env';  // ✅ 记录当前环境(prod/test/dev)
+  
   // 缓存
   static const String cacheVersion = 'cache_version';
   

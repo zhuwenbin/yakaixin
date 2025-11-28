@@ -70,7 +70,7 @@ class CourseCard extends StatelessWidget {
         SizedBox(width: 6.w),
         Expanded(
           child: Text(
-            goods.goodsName ?? '未命名课程',
+            goods.name ?? '未命名课程',
             style: TextStyle(
               fontSize: 17.sp,
               fontWeight: FontWeight.w500,
@@ -93,7 +93,7 @@ class CourseCard extends StatelessWidget {
     final String shopType = goods.computeShopType();
     
     // 调试日志
-    print('课程卡片 - 商品名称: ${goods.goodsName}, 计算后的 shop_type: $shopType');
+    print('课程卡片 - 商品名称: ${goods.name}, 计算后的 shop_type: $shopType');
     print('  is_recommend: ${goods.isRecommend}, teaching_type_name: ${goods.teachingTypeName}, business_type: ${goods.businessType}');
 
     // 根据 shop_type 返回对应的本地图片路径
@@ -191,8 +191,8 @@ class CourseCard extends StatelessWidget {
       children: [
         SizedBox(),
         if (goods.permissionStatus == '2' && 
-            goods.price != null && 
-            goods.price.toString().isNotEmpty)
+            goods.salePrice != null && 
+            goods.salePrice!.isNotEmpty)
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
@@ -206,7 +206,7 @@ class CourseCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '${goods.price}',
+                '${goods.salePrice}',
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w600,

@@ -1,5 +1,16 @@
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
 import '../../../core/network/dio_client.dart';
 import '../models/goods_model.dart';
+
+part 'goods_service.g.dart';
+
+/// 商品Service Provider
+@riverpod
+GoodsService goodsService(GoodsServiceRef ref) {
+  final dioClient = ref.watch(dioClientProvider);
+  return GoodsService(dioClient);
+}
 
 /// 商品Service
 /// 对应小程序: src/modules/jintiku/api/index.js getGoods
@@ -67,5 +78,30 @@ class GoodsService {
     );
 
     return GoodsListResponse.fromJson(response.data['data']);
+  }
+
+  /// 获取课程章节数据
+  /// 对应小程序: chapterpaper (api/index.js:994-1000)
+  /// 对应接口: GET /c/goods/v2/chapter
+  /// 参数:
+  ///   - goodsId: 商品ID
+  ///   - noProfessionalId: 不筛选专业ID (固定"1")
+  ///   - noUserId: 不筛选用户ID (固定"1")
+  Future<List<dynamic>> getChapterPaper({
+    required String goodsId,
+    String noProfessionalId = '1',
+    String noUserId = '1',
+  }) async {
+    final response = await _dioClient.get(
+      '/c/goods/v2/chapter',
+      queryParameters: {
+        'goods_id': goodsId,
+        'no_professional_id': noProfessionalId,
+        'no_user_id': noUserId,
+      },
+    );
+
+    // 返回章节列表数据
+    return response.data['data'] as List<dynamic>;
   }
 }

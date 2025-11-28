@@ -52,7 +52,8 @@ class NetworkLogModel {
       timestamp: timestamp,
       method: method,
       url: url,
-      headers: headers,
+      // ✅ 使用 response.requestOptions.headers 获取完整的 headers（包括拦截器添加的）
+      headers: response.requestOptions.headers.map((key, value) => MapEntry(key, value.toString())),
       requestData: requestData,
       queryParameters: queryParameters,
       statusCode: response.statusCode,
@@ -69,7 +70,8 @@ class NetworkLogModel {
       timestamp: timestamp,
       method: method,
       url: url,
-      headers: headers,
+      // ✅ 使用 error.requestOptions.headers 获取完整的 headers（包括拦截器添加的）
+      headers: error.requestOptions.headers.map((key, value) => MapEntry(key, value.toString())),
       requestData: requestData,
       queryParameters: queryParameters,
       statusCode: error.response?.statusCode,

@@ -62,7 +62,7 @@ class SeckillCard extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            goods.goodsName ?? '未命名商品',
+            goods.name ?? '未命名商品',
             style: TextStyle(
               fontSize: 17.sp,
               fontWeight: FontWeight.w500,
@@ -107,7 +107,7 @@ class SeckillCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                if (goods.price != null && goods.price.toString().isNotEmpty)
+                if (goods.salePrice != null && goods.salePrice!.isNotEmpty)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
@@ -122,7 +122,7 @@ class SeckillCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${goods.price}',
+                        '${goods.salePrice}',
                         style: TextStyle(
                           fontSize: 20.sp,
                           fontWeight: FontWeight.w800,

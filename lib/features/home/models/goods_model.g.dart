@@ -9,13 +9,14 @@ part of 'goods_model.dart';
 _$GoodsModelImpl _$$GoodsModelImplFromJson(Map<String, dynamic> json) =>
     _$GoodsModelImpl(
       goodsId: json['id'],
-      goodsName: json['name'] as String?,
-      coverImg: json['material_cover_path'] as String?,
+      name: json['name'] as String?,
+      materialCoverPath: json['material_cover_path'] as String?,
+      materialIntroPath: json['material_intro_path'] as String?,
       type: json['type'],
       typeName: json['type_name'] as String?,
       detailsType: json['details_type'],
       dataType: json['data_type'],
-      price: json['sale_price'],
+      salePrice: json['sale_price'] as String?,
       originalPrice: json['original_price'],
       permissionStatus: json['permission_status'] as String?,
       isHomepageRecommend: json['is_homepage_recommend'],
@@ -32,27 +33,37 @@ _$GoodsModelImpl _$$GoodsModelImplFromJson(Map<String, dynamic> json) =>
       validityType: json['validity_type'] as String?,
       validityDay: json['validity_day'] as String?,
       validityStartDate: json['validity_start_date'] as String?,
+      validityStartDateVal: json['validity_start_date_val'] as String?,
       validityEndDate: json['validity_end_date'] as String?,
+      validityEndDateVal: json['validity_end_date_val'] as String?,
       serviceTypeName: json['service_type_name'] as String?,
       newTypeName: json['new_type_name'] as String?,
       studentNum: json['student_num'],
       shopType: json['shop_type'] as String?,
+      recitationQuestionModel: json['recitation_question_model'],
+      goodsMonthsPriceId: json['goods_months_price_id'] as String?,
+      month: json['month'] as String?,
+      professionalIdName: json['professional_id_name'] as String?,
       tikuGoodsDetails: json['tiku_goods_details'] == null
           ? null
           : TikuGoodsDetails.fromJson(
               json['tiku_goods_details'] as Map<String, dynamic>),
+      detailPackageGoods: (json['detail_package_goods'] as List<dynamic>?)
+          ?.map((e) => e as Map<String, dynamic>)
+          .toList(),
     );
 
 Map<String, dynamic> _$$GoodsModelImplToJson(_$GoodsModelImpl instance) =>
     <String, dynamic>{
       'id': instance.goodsId,
-      'name': instance.goodsName,
-      'material_cover_path': instance.coverImg,
+      'name': instance.name,
+      'material_cover_path': instance.materialCoverPath,
+      'material_intro_path': instance.materialIntroPath,
       'type': instance.type,
       'type_name': instance.typeName,
       'details_type': instance.detailsType,
       'data_type': instance.dataType,
-      'sale_price': instance.price,
+      'sale_price': instance.salePrice,
       'original_price': instance.originalPrice,
       'permission_status': instance.permissionStatus,
       'is_homepage_recommend': instance.isHomepageRecommend,
@@ -67,12 +78,19 @@ Map<String, dynamic> _$$GoodsModelImplToJson(_$GoodsModelImpl instance) =>
       'validity_type': instance.validityType,
       'validity_day': instance.validityDay,
       'validity_start_date': instance.validityStartDate,
+      'validity_start_date_val': instance.validityStartDateVal,
       'validity_end_date': instance.validityEndDate,
+      'validity_end_date_val': instance.validityEndDateVal,
       'service_type_name': instance.serviceTypeName,
       'new_type_name': instance.newTypeName,
       'student_num': instance.studentNum,
       'shop_type': instance.shopType,
+      'recitation_question_model': instance.recitationQuestionModel,
+      'goods_months_price_id': instance.goodsMonthsPriceId,
+      'month': instance.month,
+      'professional_id_name': instance.professionalIdName,
       'tiku_goods_details': instance.tikuGoodsDetails,
+      'detail_package_goods': instance.detailPackageGoods,
     };
 
 _$TikuGoodsDetailsImpl _$$TikuGoodsDetailsImplFromJson(

@@ -34,7 +34,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
   HomeNotifier(this._goodsService, this._ref) : super(const HomeState());
 
   /// 加载首页数据
-  /// 参考小程序: src/modules/jintiku/pages/index/index.vue getGoods()
+  /// 参考小程序: src/modules/jintiku/pages/index/brushing.vue getGoods()
   Future<void> loadHomeData() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
@@ -42,7 +42,11 @@ class HomeNotifier extends StateNotifier<HomeState> {
       // 获取当前专业ID
       final majorId = _ref.read(currentMajorProvider)?.majorId;
       
+      print('🔍 [首页数据加载] 开始加载...');
+      print('📍 [专业ID] majorId: $majorId');
+      
       if (majorId == null || majorId.isEmpty) {
+        print('❌ [首页数据加载] 专业ID为空');
         state = state.copyWith(
           isLoading: false,
           error: '请先选择专业',
@@ -50,39 +54,25 @@ class HomeNotifier extends StateNotifier<HomeState> {
         return;
       }
 
-      // 参考小程序的实现:
-      // 1. getGoods({ type: 18 }) - 章节练习
-      // 2. getGoods({ type: '8,10' }) - 试卷和模考
-      // 3. getGoods({ type: '10,8', is_buyed: 1 }) - 已购试题
-      // 4. getGoods({ teaching_type: '3' }) - 网课列表
-      // 5. getGoods({ teaching_type: '1' }) - 直播列表
+      // ✅ 对照小程序逻辑:
+      // 1. getGoods({ type: '8,10,18' }) - 一次性获取题库数据(试卷+模考+章节练习)
+      // 2. getGoods({ teaching_type: '3', type: '2,3' }) - 网课列表
+      // 3. getGoods({ teaching_type: '1', type: '2,3' }) - 直播列表
+      print('🌐 [API请求] 开始并发请求3个接口...');
       final results = await Future.wait([
-        // 1. 获取章节练习 (type: 18)
+        // 1. ✅ 获取题库数据 (type: '8,10,18') - 与小程序一致
         _goodsService.getGoodsList(
           shelfPlatformId: ApiConfig.shelfPlatformId,
           professionalId: majorId,
-          type: '18',
+          type: '8,10,18', // ✅ 一次性获取: 试卷(8)+模考(10)+章节练习(18)
         ),
-        // 2. 获取试卷和模考 (type: 8,10)
-        _goodsService.getGoodsList(
-          shelfPlatformId: ApiConfig.shelfPlatformId,
-          professionalId: majorId,
-          type: '8,10',
-        ),
-        // 3. 获取已购试题 (type: 10,8, is_buyed: 1)
-        _goodsService.getGoodsList(
-          shelfPlatformId: ApiConfig.shelfPlatformId,
-          professionalId: majorId,
-          type: '10,8',
-          isBuyed: 1,
-        ),
-        // 4. 获取网课列表 (teaching_type: '3')
+        // 2. 获取网课列表 (teaching_type: '3', type: '2,3')
         _goodsService.getGoodsList(
           shelfPlatformId: ApiConfig.shelfPlatformId,
           teachingType: '3',
-          type: '2,3', // 小程序: type: '2,3'
+          type: '2,3',
         ),
-        // 5. 获取直播列表 (teaching_type: '1')
+        // 3. 获取直播列表 (teaching_type: '1', type: '2,3')
         _goodsService.getGoodsList(
           shelfPlatformId: ApiConfig.shelfPlatformId,
           teachingType: '1',
@@ -90,36 +80,66 @@ class HomeNotifier extends StateNotifier<HomeState> {
         ),
       ]);
 
-      // 合并所有题库数据
-      final allQuestionBank = [
-        ...results[0].list,
-        ...results[1].list,
-        ...results[2].list,
-      ];
+      // ✅ 题库数据 - 直接使用第一个结果
+      final questionBankList = results[0].list;
+      print('📚 [题库数据] 获取到 ${questionBankList.length} 条数据');
       
-      // 网课列表
-      final onlineCourseList = results[3].list;
+      // ✅ 网课列表
+      final onlineCourseList = results[1].list;
+      print('🎓 [网课数据] 获取到 ${onlineCourseList.length} 条数据');
       
-      // 直播列表
-      final liveList = results[4].list;
+      // ✅ 直播列表
+      final liveList = results[2].list;
+      print('📡 [直播数据] 获取到 ${liveList.length} 条数据');
 
-      // 筛选秒杀推荐商品 (首页推荐 且 **未购买**)
-      // 参考小程序: is_homepage_recommend == 1 && permission_status == '2'
+      // ✅ 筛选秒杀推荐商品 (首页推荐 且 **未购买**)
+      // 参考小程序 Line 258-262: 
+      // res.data.list.filter(e => e.is_homepage_recommend == 1 && e.permission_status == '2')
       // ⚠️ 注意: permission_status='2' 表示未购买，'1'表示已购买
-      final recommendList = allQuestionBank.where((e) {
+      print('\n🔍 [秒杀筛选] 开始筛选推荐商品...');
+      print('📋 [题库总数] ${questionBankList.length} 条');
+      
+      final recommendList = questionBankList.where((e) {
         final isRecommend = e.isHomepageRecommend?.toString() == '1' || e.isHomepageRecommend == 1;
-        final isNotBought = e.permissionStatus == '2'; // ⚠️ 未购买
+        final isNotBought = e.permissionStatus == '2'; // ✅ 未购买商品才显示在秒杀区
+        
+        // 打印每个商品的详细信息
+        if (isRecommend || isNotBought) {
+          print('  📦 商品: ${e.name}');
+          print('     - ID: ${e.goodsId}');
+          print('     - is_homepage_recommend: ${e.isHomepageRecommend}');
+          print('     - permission_status: ${e.permissionStatus}');
+          print('     - isRecommend: $isRecommend');
+          print('     - isNotBought: $isNotBought');
+          print('     - ✅ 满足条件: ${isRecommend && isNotBought}');
+        }
+        
         return isRecommend && isNotBought;
       }).toList();
       
+      print('\n🎯 [秒杀结果] 筛选到 ${recommendList.length} 个秒杀商品');
+      if (recommendList.isEmpty) {
+        print('⚠️ [秒杀为空] 将显示空状态图片');
+      } else {
+        print('✅ [秒杀商品列表]:');
+        for (var goods in recommendList) {
+          print('   - ${goods.name} (ID: ${goods.goodsId})');
+        }
+      }
+      
       state = state.copyWith(
-        questionBankList: allQuestionBank,
+        questionBankList: questionBankList,
         recommendList: recommendList,
         onlineCourseList: onlineCourseList,
         liveList: liveList,
         isLoading: false,
       );
-    } catch (e) {
+      
+      print('\n✅ [首页数据加载] 完成!');
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    } catch (e, stackTrace) {
+      print('❌ [首页数据加载] 失败: $e');
+      print('📍 堆栈信息: $stackTrace');
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),

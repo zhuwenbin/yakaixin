@@ -36,8 +36,27 @@ class MockDataRouter {
     String method,
     Map<String, String> params,
   ) async {
+    // ========== 认证相关接口 ==========
+    
+    // 验证码登录
+    if (method == 'POST' && path.contains('/student/smslogin')) {
+      return await _loginWithSms(params);
+    }
+    
+    // 发送验证码
+    if (method == 'POST' && path.contains('/sms/sendcode')) {
+      return successResponse();
+    }
+    
+    // ========== 商品相关接口 ==========
+    
     // 商品列表查询 (首页、题库、网课、直播)
     if (method == 'GET' && (path.contains('/goods/v2') || path.contains('/goods'))) {
+      // ✅ 课程章节查询 (课程详情页)
+      if (path.contains('/goods/v2/chapter')) {
+        return await MockDatabase.queryCourseChapters(params);
+      }
+      
       // 检查是否是特殊位置标识查询
       if (params.containsKey('position_identify')) {
         final positionIdentify = params['position_identify'];
@@ -99,6 +118,50 @@ class MockDataRouter {
     
     // 其他接口不使用动态查询
     return null;
+  }
+  
+  /// 验证码登录 Mock 数据
+  static Future<Map<String, dynamic>> _loginWithSms(Map<String, String> params) async {
+    // 从 login_mock_data.dart 导入数据
+    // 注意：这里需要导入 LoginMockData，但为了保持简洁，直接返回标准响应
+    // 实际数据可以从 LoginMockData.smsLoginSuccess1 获取
+    
+    print('📱 Mock登录: phone=${params['phone']}, code=${params['code']}');
+    
+    // 返回标准登录成功响应
+    return {
+      "msg": ["操作成功"],
+      "code": 100000,
+      "data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock_token_${DateTime.now().millisecondsSinceEpoch}",
+        "nickname": "Mock用户",
+        "avatar": "",
+        "phone": params['phone'] ?? "13800138000",
+        "student_id": "594244629616925424",
+        "student_name": "未填写",
+        "merchant": [
+          {
+            "merchant_id": "408559575579495187",
+            "merchant_name": "牙开心",
+            "brand_id": "408559632588540691",
+            "brand_name": "牙开心"
+          }
+        ],
+        "major_id": "524033912737962623",
+        "major_name": "口腔执业医师",
+        "employee_id": "0",
+        "is_real_name": "2",
+        "promoter_id": "594244629616925424",
+        "promoter_type": "2",
+        "post_type_level": null,
+        "employee_info": {
+          "employee_id": "0",
+          "post_name": "",
+          "org_name": ""
+        },
+        "is_new": "0"
+      }
+    };
   }
   
   /// 通用成功响应

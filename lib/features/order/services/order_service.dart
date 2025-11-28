@@ -1,95 +1,171 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/dio_client.dart';
-import '../models/order_model.dart';
+import '../models/create_order_request.dart';
 
 /// 订单服务
-/// 对应小程序: src/modules/jintiku/api/index.js orderList接口
+/// 对应小程序: getOrderV2, payModeListNew, wechatapplet
+/// 职责: 封装订单相关API调用
 class OrderService {
   final DioClient _dioClient;
 
   OrderService(this._dioClient);
 
-  /// 获取订单列表
-  /// GET /c/order/my/list
-  /// 参数:
-  ///   - page: 页码
-  ///   - size: 每页数量
-  ///   - status: 订单状态 (0:全部 1:待支付 2:已支付 4:已取消)
-  Future<OrderListResponse> getOrderList({
-    required int page,
-    required int size,
-    String status = '0',
-  }) async {
-    final response = await _dioClient.get(
-      '/c/order/my/list',
-      queryParameters: {
-        'page': page,
-        'size': size,
-        'status': status,
-      },
-    );
+  /// 创建订单
+  /// 对应小程序: getOrderV2 (api/index.js Line 898-907)
+  /// 接口: POST /c/order/v2
+  /// ✅ Content-Type: application/json (对应小程序Line 904)
+  Future<CreateOrderResponse> createOrder(CreateOrderRequest request) async {
+    try {
+      final response = await _dioClient.post(
+        '/c/order/v2',
+        data: request.toJson(),
+        // ✅ 对应小程序: header: { 'Content-Type': 'application/json' }
+        options: Options(
+          contentType: 'application/json',
+        ),
+      );
 
-    final data = response.data['data'] as Map<String, dynamic>;
-    final list = (data['list'] as List<dynamic>?)
-            ?.map((item) => _processOrderItem(item as Map<String, dynamic>))
-            .toList() ??
-        [];
+      // ✅ 统一处理响应码
+      // 对应记忆: 小程序使用 code: 100000 表示成功
+      if (response.data['code'] != 100000 && response.data['code'] != 0) {
+        // ✅ msg 可能是字符串或数组
+        final msg = response.data['msg'];
+        final errorMsg = msg is List ? msg.first : msg?.toString();
+        throw Exception(errorMsg ?? '创建订单失败');
+      }
 
-    return OrderListResponse(
-      list: list,
-      total: data['total'] as int? ?? 0,
-    );
+      final data = response.data['data'];
+      if (data == null) {
+        throw Exception('订单数据为空');
+      }
+
+      return CreateOrderResponse.fromJson(data as Map<String, dynamic>);
+    } catch (e) {
+      throw Exception('创建订单失败: $e');
+    }
   }
 
-  /// 处理订单项数据
-  /// 对应小程序: order-list.vue getList方法中的数据处理逻辑
-  OrderModel _processOrderItem(Map<String, dynamic> json) {
-    final order = OrderModel.fromJson(json);
-    final tikuGoodsDetails = order.tikuGoodsDetails ?? {};
-    final teachingSystem = order.teachingSystem ?? {};
-    final goodsType = order.goodsType;
+  /// 获取支付方式列表
+  /// 对应小程序: payModeListNew (courseDetail.vue Line 254-281)
+  /// 接口: GET /c/config/finance/account
+  Future<List<Map<String, dynamic>>> getPayModeList({
+    required int accountUse,
+    required int isMatch,
+    required int isUsable,
+    required int page,
+    required int size,
+    required int accountType,
+    required String orderId,
+    required String goodsIds,
+    required String merchantId,
+    required String brandId,
+    required int collectionScene,
+    required int collectionTerminal,
+  }) async {
+    try {
+      final response = await _dioClient.get(
+        '/c/config/finance/account',
+        queryParameters: {
+          'account_use': accountUse,
+          'is_match': isMatch,
+          'is_usable': isUsable,
+          'page': page,
+          'size': size,
+          'account_type': accountType,
+          'order_id': orderId,
+          'goods_ids': goodsIds,
+          'merchant_id': merchantId,
+          'brand_id': brandId,
+          'collection_scene': collectionScene,
+          'collection_terminal': collectionTerminal,
+        },
+      );
 
-    // 计算题数/份数/轮数文本
-    String numText = '';
-    if (goodsType == '8') {
-      final paperNum = tikuGoodsDetails['paper_num'];
-      numText = '共${paperNum ?? 0}份';
-    } else if (goodsType == '10') {
-      final examRoundNum = tikuGoodsDetails['exam_round_num'];
-      numText = '共${examRoundNum ?? 0}轮';
-    } else {
-      final questionNum = tikuGoodsDetails['question_num'];
-      numText = '共${questionNum ?? 0}题';
+      if (response.data['code'] != 100000) {
+        throw Exception(response.data['msg']?.first ?? '获取支付方式失败');
+      }
+
+      final list = response.data['data']?['list'] as List?;
+      if (list == null) {
+        return [];
+      }
+
+      return list.cast<Map<String, dynamic>>();
+    } catch (e) {
+      throw Exception('获取支付方式失败: $e');
     }
+  }
 
-    // 计算月数文本
-    String monthText = '';
-    if (order.months == 0) {
-      monthText = '永久';
-    } else {
-      monthText = '${order.months}个月';
+  /// 获取支付方式详情
+  /// 对应小程序: payModeListNewDetail (courseDetail.vue Line 274-278)
+  /// 接口: GET /c/config/finance/account/detail
+  Future<Map<String, dynamic>> getPayModeDetail(String id) async {
+    try {
+      final response = await _dioClient.get(
+        '/c/config/finance/account/detail',
+        queryParameters: {'id': id},
+      );
+
+      if (response.data['code'] != 100000) {
+        throw Exception(response.data['msg']?.first ?? '获取支付详情失败');
+      }
+
+      final data = response.data['data'];
+      if (data == null) {
+        throw Exception('支付详情数据为空');
+      }
+
+      return data as Map<String, dynamic>;
+    } catch (e) {
+      throw Exception('获取支付详情失败: $e');
     }
+  }
 
-    // 计算提示文本
-    String tips = '';
-    if (goodsType == '10') {
-      final examTime = tikuGoodsDetails['exam_time'];
-      tips = '开考时间:${examTime ?? ''}';
-    } else {
-      final systemIdName = teachingSystem['system_id_name'];
-      tips = systemIdName?.toString() ?? '';
+  /// 调用微信支付
+  /// 对应小程序: wechatapplet (api/index.js Line 916-926)
+  /// 接口: POST /c/pay/wechatpay/jsapi
+  /// ✅ Content-Type: application/json (对应小程序Line 923)
+  Future<Map<String, dynamic>> callWechatPay({
+    required String flowId,
+    required String wechatAppId,
+    required String openId,
+    required String financeBodyId,
+  }) async {
+    try {
+      final response = await _dioClient.post(
+        '/c/pay/wechatpay/jsapi',
+        data: {
+          'flow_id': flowId,
+          'wechat_app_id': wechatAppId,
+          'open_id': openId,
+          'finance_body_id': financeBodyId,
+        },
+        // ✅ 对应小程序: header: { 'Content-Type': 'application/json' }
+        options: Options(
+          contentType: 'application/json',
+        ),
+      );
+
+      if (response.data['code'] != 100000 && response.data['code'] != 0) {
+        final msg = response.data['msg'];
+        final errorMsg = msg is List ? msg.first : msg?.toString();
+        throw Exception(errorMsg ?? '调用支付失败');
+      }
+
+      final data = response.data['data'];
+      if (data == null) {
+        throw Exception('支付数据为空');
+      }
+
+      return data as Map<String, dynamic>;
+    } catch (e) {
+      throw Exception('调用支付失败: $e');
     }
-
-    return order.copyWith(
-      numText: numText,
-      monthText: monthText,
-      tips: tips,
-    );
   }
 }
 
 /// OrderService Provider
 final orderServiceProvider = Provider<OrderService>((ref) {
-  final dioClient = ref.read(dioClientProvider);
-  return OrderService(dioClient);
+  return OrderService(ref.read(dioClientProvider));
 });

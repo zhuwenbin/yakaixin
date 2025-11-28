@@ -11,6 +11,9 @@ class StudyCalendarCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (learningData == null) return const SizedBox.shrink();
+    
+    // ✅ 将 int 类型的 isCheckin (0/1) 转换为 bool
+    final isCheckin = (learningData!.isCheckin == 1);
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
@@ -37,19 +40,19 @@ class StudyCalendarCard extends StatelessWidget {
           Divider(height: 1.h),
           SizedBox(height: 12.h),
           GestureDetector(
-            onTap: learningData!.isCheckin ? null : onCheckIn,
+            onTap: isCheckin ? null : onCheckIn,
             child: Container(
               width: double.infinity,
               height: 44.h,
               decoration: BoxDecoration(
-                gradient: learningData!.isCheckin ? null : const LinearGradient(colors: [Color(0xFF5B9BFF), Color(0xFF8AB8FF)]),
-                color: learningData!.isCheckin ? const Color(0xFFEEEEEE) : null,
+                gradient: isCheckin ? null : const LinearGradient(colors: [Color(0xFF5B9BFF), Color(0xFF8AB8FF)]),
+                color: isCheckin ? const Color(0xFFEEEEEE) : null,
                 borderRadius: BorderRadius.circular(22.r),
               ),
               alignment: Alignment.center,
               child: Text(
-                learningData!.isCheckin ? '今日已签到' : '立即签到',
-                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w500, color: learningData!.isCheckin ? const Color(0xFF999999) : Colors.white),
+                isCheckin ? '今日已签到' : '立即签到',
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w500, color: isCheckin ? const Color(0xFF999999) : Colors.white),
               ),
             ),
           ),

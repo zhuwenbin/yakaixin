@@ -71,30 +71,33 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
-    // ✅ 按照用户要求: 使用 Mock 数据快速登录（调试模式）
-    // 直接使用 Mock 数据转换为 Model，不调用 API
+    // ✅ 表单验证
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    
     try {
-      // Mock 用户数据
-      final mockUserData = {
-        'token': 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
-        'student_id': '123456',
-        'student_name': '测试用户',
-        'nickname': '牙开心${_phoneController.text.isNotEmpty ? _phoneController.text.substring(_phoneController.text.length - 4) : '0000'}',
-        'avatar': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixindf.png',
-        'phone': _phoneController.text.isNotEmpty ? _phoneController.text : '13800138000',
-        'major_id': 524033912737962623,
-        'major_name': '医学-口腔执业医师',
-      };
-
-      // 直接使用 Provider 的内部方法处理登录成功逻辑
-      await ref.read(authProvider.notifier).loginWithMockData(mockUserData);
-
+      if (_isCodeLogin) {
+        // ✅ 验证码登录 - 调用真实API
+        await ref.read(authProvider.notifier).loginWithSms(
+          phone: _phoneController.text,
+          code: _codeController.text,
+        );
+      } else {
+        // ✅ 密码登录 - 调用真实API
+        await ref.read(authProvider.notifier).loginWithPhone(
+          account: _phoneController.text,
+          password: _passwordController.text,
+        );
+      }
+      
       // 登录成功后跳转到TabBar首页
       if (ref.read(authProvider).isLoggedIn && mounted) {
         context.go(AppRoutes.mainTab);
       }
     } catch (e) {
-      // 错误已在Provider中处理
+      // 错误已在Provider中处理，显示Toast提示
+      // 不需要额外处理
     }
   }
 

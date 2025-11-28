@@ -18,7 +18,7 @@ class DailyPracticeCard extends StatelessWidget {
           Icon(Icons.calendar_today, size: 24.sp, color: const Color(0xFF5B9BFF)),
           SizedBox(width: 12.w),
           Expanded(
-            child: Text(dailyPractice.goodsName, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
+            child: Text(dailyPractice.name, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
           ),
           Icon(Icons.chevron_right, size: 20.sp, color: const Color(0xFF999999)),
         ],

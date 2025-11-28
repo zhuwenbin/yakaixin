@@ -26,7 +26,8 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  int _tabIndex = 0;
+  // ✅ Tab索引: 1=题库, 2=网课, 3=直播 (与小程序保持一致)
+  int _tabIndex = 1;
 
   @override
   void initState() {
@@ -235,6 +236,20 @@ class _HomePageState extends ConsumerState<HomePage> {
   /// 对应小程序: .seckill swiper
   /// 宽度: 100vw, 高度: 270rpx, left: -24rpx (突破父容器padding)
   Widget _buildSeckillBanner(List<GoodsModel> recommendList) {
+    // ✅ 添加调试日志
+    print('\n🎯 [秒杀轮播] 渲染秒杀卡片...');
+    print('📋 [秒杀列表长度] ${recommendList.length}');
+    
+    if (recommendList.isEmpty) {
+      print('⚠️ [秒杀轮播] 列表为空，显示空状态图片');
+    } else {
+      print('✅ [秒杀轮播] 显示 ${recommendList.length} 个秒杀商品:');
+      for (var i = 0; i < recommendList.length; i++) {
+        final goods = recommendList[i];
+        print('   [$i] ${goods.name} (ID: ${goods.goodsId}, permission_status: ${goods.permissionStatus})');
+      }
+    }
+    
     return SizedBox(
       width: double.infinity,
       height: 170.h, // 增加高度确保内容不溢出(小程序270rpx ÷ 2 = 135.h,实际需要更多)
@@ -298,14 +313,26 @@ class _HomePageState extends ConsumerState<HomePage> {
   /// 构建内容区域
   /// 对应小程序: .content
   Widget _buildContent(HomeState state) {
+    // ✅ 对照小程序 Line 108-120: 默认只显示「题库」tab
+    // 小程序通过 getConfigCo() 动态控制是否显示「网课」和「直播」
+    // TODO: 后续需要实现配置接口控制tab显示
     final tabs = ['题库', '网课', '直播'];
+    
+    // ✅ 根据tabIndex分发数据 (与小程序保持一致)
+    // 小程序 Line 48-59:
+    // tabIndex==1 → goodsList8a10a18 (题库)
+    // tabIndex==2 → goodsOnlineCourses (网课)
+    // tabIndex==3 → goodsListLive (直播)
     final List<GoodsModel> currentList;
     switch (_tabIndex) {
       case 1:
-        currentList = state.onlineCourseList;
+        currentList = state.questionBankList; // ✅ 题库
         break;
       case 2:
-        currentList = state.liveList;
+        currentList = state.onlineCourseList; // ✅ 网课
+        break;
+      case 3:
+        currentList = state.liveList; // ✅ 直播
         break;
       default:
         currentList = state.questionBankList;
@@ -355,19 +382,21 @@ class _HomePageState extends ConsumerState<HomePage> {
                     tabs: tabs,
                     activeIndex: _tabIndex,
                     onTap: (idx) {
-                      if (_tabIndex != idx) {
+                      // ✅ 修复: idx范围为 0,1,2，需要+1转换为 1,2,3后再比较
+                      final newTabIndex = idx + 1;
+                      if (_tabIndex != newTabIndex) {
                         setState(() {
-                          _tabIndex = idx;
+                          _tabIndex = newTabIndex;
                         });
                       }
                     },
                   ),
                   SizedBox(height: 10.h), // 20rpx ÷ 2 = 10.h
-                  // 根据不同Tab显示不同列表
-                  if (_tabIndex == 0)
-                    _buildQuestionBankList(currentList)
+                  // ✅ 根据不同Tab显示不同列表 (对照小程序 Line 48-59)
+                  if (_tabIndex == 1)
+                    _buildQuestionBankList(currentList) // 题库 - 使用GoodsCard
                   else
-                    _buildCourseList(currentList),
+                    _buildCourseList(currentList), // 网课/直播 - 使用CourseCard
                   SizedBox(height: 30.h), // 60rpx ÷ 2 = 30.h
                 ],
               ),
@@ -389,16 +418,22 @@ class _HomePageState extends ConsumerState<HomePage> {
     required int activeIndex,
     required ValueChanged<int> onTap,
   }) {
+    // ✅ activeIndex: 1,2,3 → 转换为 0,1,2 显示
     return HomeTabBar(
       tabs: tabs,
-      activeIndex: activeIndex,
+      activeIndex: activeIndex - 1,
       onTap: onTap,
     );
   }
 
   /// 构建题库列表
   Widget _buildQuestionBankList(List<GoodsModel> list) {
+    // ✅ 添加调试日志
+    print('\n📚 [题库列表] 渲染题库卡片...');
+    print('📋 [题库数据长度] ${list.length}');
+    
     if (list.isEmpty) {
+      print('⚠️ [题库列表] 列表为空，显示空状态');
       return Center(
         child: Padding(
           padding: EdgeInsets.all(50.h),
@@ -418,6 +453,12 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ),
       );
+    }
+
+    print('✅ [题库列表] 显示 ${list.length} 个题库商品:');
+    for (var i = 0; i < list.length; i++) {
+      final goods = list[i];
+      print('   [$i] ${goods.name} (ID: ${goods.goodsId}, type: ${goods.type}, permission_status: ${goods.permissionStatus})');
     }
 
     return Column(
@@ -579,7 +620,15 @@ class _HomePageState extends ConsumerState<HomePage> {
     if (dataType == 2) {
       if (detailsType == 1) {
         // 模考+经典版+已购买
-        // TODO: 实现ExamInfoPage
+        // 对应小程序: pages/modelExaminationCompetition/examInfo
+        context.push(
+          AppRoutes.examInfo,
+          extra: {
+            'product_id': goodsId,
+            'title': goods.name,
+            'page': 'home',
+          },
+        );
         return;
       } else if (detailsType == 4) {
         // 模考+模考版+已购买
@@ -599,7 +648,14 @@ class _HomePageState extends ConsumerState<HomePage> {
       case 1:
       case 3:
         // 经典详情/科目详情 - 跳转考试页
-        // TODO: 实现TestExamPage
+        // 对应小程序: pages/test/exam
+        context.push(
+          AppRoutes.testExam,
+          extra: {
+            'id': goodsId,
+            'recitation_question_model': goods.recitationQuestionModel,
+          },
+        );
         break;
       case 2:
         // 真题详情

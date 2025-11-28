@@ -53,10 +53,11 @@ class MerchantModel with _$MerchantModel {
 }
 
 /// 员工信息Model
+/// ⚠️ employee_id 可能是 String（如"0"）或 int，使用 dynamic
 @freezed
 class EmployeeInfoModel with _$EmployeeInfoModel {
   const factory EmployeeInfoModel({
-    @JsonKey(name: 'employee_id') int? employeeId,  // 注意:返回的是数字类型
+    @JsonKey(name: 'employee_id') dynamic employeeId,  // ⚠️ String或int，兼容"0"和0
     @JsonKey(name: 'post_name') String? postName,
     @JsonKey(name: 'org_name') String? orgName,
   }) = _EmployeeInfoModel;
@@ -70,6 +71,13 @@ class EmployeeInfoModel with _$EmployeeInfoModel {
 /// 注意:小程序返回的是扁平结构,直接包含所有字段
 /// 
 /// Mock数据参考: lib/features/auth/mock/login_mock_data.dart
+/// 
+/// ⚠️ 关键字段类型说明（基于真实API响应 2025-01-27）:
+/// - major_id: 可能是 String（大数值如"524033912737962623"）或 int，使用 dynamic
+/// - employee_id: 可能是 String（如"0"）或 int，使用 dynamic
+/// - is_real_name: 可能是 String（如"2"）或 int，使用 dynamic
+/// - promoter_type: 可能是 String（如"2"）或 int，使用 dynamic
+/// - is_new: 可能是 String（如"0"）或 int，使用 dynamic
 @freezed
 class WechatLoginResponse with _$WechatLoginResponse {
   const factory WechatLoginResponse({
@@ -81,13 +89,13 @@ class WechatLoginResponse with _$WechatLoginResponse {
     String? phone,
     @JsonKey(name: 'merchant') List<MerchantModel>? merchants,
     @JsonKey(name: 'employee_info') EmployeeInfoModel? employeeInfo,
-    @JsonKey(name: 'major_id') dynamic majorId,  // 可能是int或String,因为数值可能超过int范围
+    @JsonKey(name: 'major_id') dynamic majorId,  // ⚠️ String或int，大数值使用String
     @JsonKey(name: 'major_name') String? majorName,
-    @JsonKey(name: 'employee_id') int? employeeId,  // 注意:返回的是数字类型
-    @JsonKey(name: 'is_real_name') int? isRealName,
+    @JsonKey(name: 'employee_id') dynamic employeeId,  // ⚠️ String或int，兼容"0"和0
+    @JsonKey(name: 'is_real_name') dynamic isRealName,  // ⚠️ String或int，兼容"2"和2
     @JsonKey(name: 'promoter_id') String? promoterId,
-    @JsonKey(name: 'promoter_type') int? promoterType,
-    @JsonKey(name: 'is_new') int? isNew,
+    @JsonKey(name: 'promoter_type') dynamic promoterType,  // ⚠️ String或int，兼容"2"和2
+    @JsonKey(name: 'is_new') dynamic isNew,  // ⚠️ String或int，兼容"0"和0
   }) = _WechatLoginResponse;
 
   factory WechatLoginResponse.fromJson(Map<String, dynamic> json) =>

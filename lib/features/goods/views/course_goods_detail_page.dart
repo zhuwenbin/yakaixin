@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../app/constants/storage_keys.dart';
+import '../../../core/storage/storage_service.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-// import 已移除 - 现在使用API调用，MockInterceptor会自动处理Mock数据
-import '../../order/providers/payment_provider.dart';
+import '../../order/providers/order_provider.dart';
+import '../../home/services/goods_service.dart';
+import '../../home/models/goods_model.dart';
 
 /// 课程商品详情页 - 对应小程序 course/courseDetail.vue
 /// 功能:展示课程介绍、课程大纲、购买入口
@@ -32,10 +35,11 @@ class _CourseGoodsDetailPageState
     extends ConsumerState<CourseGoodsDetailPage> {
   int _tabIndex = 1; // 1-课程介绍 2-课程大纲
 
-  // ✅ 遵守Mock规则: 通过API获取数据
-  Map<String, dynamic> _goodsDetail = {};
+  // ✅ 使用 Model 类存储商品详情
+  GoodsModel? _goodsDetail;
   List<Map<String, dynamic>> _courseList = [];
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -44,37 +48,126 @@ class _CourseGoodsDetailPageState
   }
 
   /// 加载商品详情
-  /// 对应小程序: getGoodsDetail API
+  /// 对应小程序: getGoodsDetail({ goods_id, user_id, student_id, merchant_id, brand_id, no_professional_id })
+  /// 参考: mini-dev_250812/src/modules/jintiku/pages/course/courseDetail.vue:357-410
   Future<void> _loadGoodsDetail() async {
-    try {
-      // TODO: 实现API调用获取商品详情
-      // final response = await goodsService.getGoodsDetail(goodsId: widget.goodsId);
-      // setState(() {
-      //   _goodsDetail = response.toJson();
-      //   _isLoading = false;
-      // });
-      
-      // 临时使用Mock数据（通过拦截器会自动返回）
-      await Future.delayed(const Duration(milliseconds: 300));
+    if (widget.goodsId == null || widget.goodsId!.isEmpty) {
       setState(() {
-        // ⚠️ 以下 Mock 数据引用已废弃，需要改为通过 API 调用获取
-        // TODO: 使用 Dio 调用 /c/goods/detail API，MockInterceptor 会自动返回 Mock 数据
-        if (widget.type == 2 || widget.type == 3) {
-          // 课程类型 - 使用courseGoodsDetail
-          _goodsDetail = {}; // CourseGoodsProfileMockData.courseGoodsDetail['data'];
-          print('📚 加载课程商品详情: ${_goodsDetail['name'] ?? ''}需要使用API');
-        } else {
-          // 题库类型 - 使用goodsDetail
-          _goodsDetail = {}; // CourseGoodsProfileMockData.goodsDetail['data'];
-          print('📚 加载题库商品详情: ${_goodsDetail['name'] ?? ''}需要使用API');
-        }
+        _errorMessage = '商品ID不能为空';
         _isLoading = false;
       });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // ✅ 调用真实API获取商品详情
+      final goodsService = ref.read(goodsServiceProvider);
+      final response = await goodsService.getGoodsDetail(
+        goodsId: widget.goodsId!,
+      );
+      
+      setState(() {
+        _goodsDetail = response;
+        _isLoading = false;
+      });
+      
+      print('✅ 加载商品详情成功: ${response.name}');
+      print('📦 商品详情数据: permission_status=${response.permissionStatus}');
+      print('🖼️ 封面图路径: ${response.materialCoverPath}');
+      print('📄 介绍图路径: ${response.materialIntroPath}');
+      
+      // ✅ 如果有课程大纲数据(detail_package_goods)，加载课程章节
+      if (response.detailPackageGoods != null && response.detailPackageGoods!.isNotEmpty) {
+        print('📚 开始加载 ${response.detailPackageGoods!.length} 个课程的章节数据...');
+        _courseList = response.detailPackageGoods!.map((course) {
+          return {
+            ...course,
+            'chapterData': [], // 初始化空章节数据
+          };
+        }).toList();
+        
+        // 为每个课程加载章节
+        for (var course in _courseList) {
+          await _loadChapterData(course);
+        }
+      }
     } catch (e) {
       setState(() {
+        _errorMessage = '加载失败: $e';
         _isLoading = false;
       });
       print('❌ 加载商品详情失败: $e');
+      EasyLoading.showError('加载失败');
+    }
+  }
+  
+  /// 拼接完整路径
+  /// 对应小程序: completePath() (Line 478-486)
+  /// 如果路径不包含完整域名,则拼接OSS域名前缀
+  String _completePath(String? path) {
+    if (path == null || path.isEmpty) {
+      return '';
+    }
+    // 如果已经包含完整域名,直接返回
+    if (path.contains('yakaixin.oss-cn-beijing.aliyuncs.com')) {
+      return path;
+    }
+    // 拼接完整路径
+    return 'https://yakaixin.oss-cn-beijing.aliyuncs.com/$path';
+  }
+  
+  /// 加载课程章节数据
+  /// 对应小程序: getChapter() -> chapterpaper API
+  /// 参考: mini-dev_250812/src/modules/jintiku/pages/course/courseDetail.vue:340-356
+  Future<void> _loadChapterData(Map<String, dynamic> course) async {
+    try {
+      final courseId = course['id']?.toString();
+      if (courseId == null || courseId.isEmpty) {
+        print('⚠️ 课程ID为空，跳过章节加载');
+        return;
+      }
+      
+      print('📖 加载课程章节: $courseId - ${course['name']}');
+      
+      // ✅ 调用真实API获取章节数据
+      // 对应小程序: chapterpaper({ goods_id, no_professional_id, no_user_id })
+      final goodsService = ref.read(goodsServiceProvider);
+      final response = await goodsService.getChapterPaper(
+        goodsId: courseId,
+        noProfessionalId: '1',
+        noUserId: '1',
+      );
+      
+      // ✅ 解析章节数据并设置默认展开状态
+      // 遵守 @data_type_safety.md: 安全的类型转换
+      final chapters = (response as List?)?.map((item) {
+        // ✅ 安全转换: dynamic -> Map<String, dynamic>
+        final chapterMap = item is Map<String, dynamic> 
+            ? item 
+            : (item as Map).cast<String, dynamic>();
+        
+        return {
+          ...chapterMap,
+          'expand': true, // 默认展开所有章节
+        };
+      }).toList() ?? [];
+      
+      setState(() {
+        course['chapterData'] = chapters;
+      });
+      
+      print('✅ 章节加载成功: ${chapters.length} 章');
+    } catch (e) {
+      print('❌ 加载章节失败: $e');
+      // ✅ 失败时设置空数据，不影响页面展示
+      setState(() {
+        course['chapterData'] = [];
+      });
     }
   }
 
@@ -96,12 +189,38 @@ class _CourseGoodsDetailPageState
         ),
         body: Stack(
           children: [
-            _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _buildBody(),
-            if (!_isLoading && _goodsDetail['permission_status'] == '2') _buildBottomBar(),
+            if (_isLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (_errorMessage != null)
+              _buildError()
+            else if (_goodsDetail != null)
+              _buildBody()
+            else
+              const Center(child: Text('暂无数据')),
+            if (!_isLoading && _goodsDetail?.permissionStatus == '2') _buildBottomBar(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64.sp, color: Colors.grey),
+          SizedBox(height: 16.h),
+          Text(
+            _errorMessage ?? '加载失败',
+            style: TextStyle(fontSize: 14.sp, color: Colors.grey),
+          ),
+          SizedBox(height: 16.h),
+          ElevatedButton(
+            onPressed: _loadGoodsDetail,
+            child: const Text('重试'),
+          ),
+        ],
       ),
     );
   }
@@ -111,8 +230,8 @@ class _CourseGoodsDetailPageState
       color: const Color(0xFFF5F6FA),
       child: CustomScrollView(
         slivers: [
+          _buildCoverImage(), // ✅ 封面图放在最顶部
           _buildCard(),
-          _buildCoverImage(),
           _buildTab(),
           if (_tabIndex == 1) _buildIntroduction(),
           if (_tabIndex == 2) _buildCourseOutline(),
@@ -122,36 +241,53 @@ class _CourseGoodsDetailPageState
     );
   }
 
-  /// 课程封面图（在标题下方）
+  /// 课程封面图（在顶部）
+  /// 对应小程序: .header-image-wrap (Line 503-535)
   Widget _buildCoverImage() {
+    // ✅ 使用 _completePath 拼接完整URL
+    final coverPath = _completePath(_goodsDetail?.materialCoverPath);
+    
     return SliverToBoxAdapter(
       child: Container(
-        color: Colors.white,
-        padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8.r),
-          child: _goodsDetail['material_cover_path'] != null &&
-                  _goodsDetail['material_cover_path'].isNotEmpty
-              ? Image.network(
-                  _goodsDetail['material_cover_path'],
-                  width: double.infinity,
-                  height: 200.h,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: double.infinity,
-                      height: 200.h,
+        width: double.infinity,
+        height: 300.h, // 小程序: 300px
+        child: Stack(
+          children: [
+            // ✅ 背景图片
+            Positioned.fill(
+              child: coverPath != null && coverPath.isNotEmpty
+                  ? Image.network(
+                      coverPath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: const Color(0xFFE5E5E5),
+                          child: Icon(Icons.image, size: 60.sp, color: Colors.grey),
+                        );
+                      },
+                    )
+                  : Container(
                       color: const Color(0xFFE5E5E5),
                       child: Icon(Icons.image, size: 60.sp, color: Colors.grey),
-                    );
-                  },
-                )
-              : Container(
-                  width: double.infinity,
-                  height: 200.h,
-                  color: const Color(0xFFE5E5E5),
-                  child: Icon(Icons.image, size: 60.sp, color: Colors.grey),
+                    ),
+            ),
+            // ✅ 底部圆角遮罩（.fake-bar）
+            Positioned(
+              bottom: -1,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 15.h, // 30rpx ÷ 2 = 15.h
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(15.r),
+                    topRight: Radius.circular(15.r),
+                  ),
                 ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -169,8 +305,8 @@ class _CourseGoodsDetailPageState
             _buildTitle(),
             SizedBox(height: 12.h),
             _buildTags(),
-            if (_goodsDetail['validity_start_date_val'] != null &&
-                !_goodsDetail['validity_start_date_val'].contains('0001')) ...[
+            if (_goodsDetail?.validityStartDateVal != null &&
+                !_goodsDetail!.validityStartDateVal!.contains('0001')) ...[
               SizedBox(height: 12.h),
               _buildValidityTime(),
             ],
@@ -186,13 +322,13 @@ class _CourseGoodsDetailPageState
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_goodsDetail['shop_type'] != null) ...[
-          _buildCourseTypeIcon(_goodsDetail['shop_type']),
+        if (_goodsDetail?.shopType != null) ...[
+          _buildCourseTypeIcon(_goodsDetail!.shopType!),
           SizedBox(width: 8.w),
         ],
         Expanded(
           child: Text(
-            _goodsDetail['name'] ?? '',
+            _goodsDetail?.name ?? '',
             style: TextStyle(
               fontSize: 17.sp,
               fontWeight: FontWeight.w500,
@@ -251,15 +387,15 @@ class _CourseGoodsDetailPageState
     return Wrap(
       spacing: 8.w,
       children: [
-        if (_goodsDetail['teaching_type_name'] != null)
+        if (_goodsDetail?.teachingTypeName != null)
           _buildTag(
-            _goodsDetail['teaching_type_name'],
+            _goodsDetail!.teachingTypeName!,
             const Color(0xFFE3EBFF),
             const Color(0xFF2E68FF),
           ),
-        if (_goodsDetail['service_type_name'] != null)
+        if (_goodsDetail?.serviceTypeName != null)
           _buildTag(
-            _goodsDetail['service_type_name'],
+            _goodsDetail!.serviceTypeName!,
             const Color(0xFFF5F5F5),
             Colors.black,
           ),
@@ -285,8 +421,11 @@ class _CourseGoodsDetailPageState
   }
 
   Widget _buildValidityTime() {
+    final startDate = _goodsDetail?.validityStartDateVal;
+    final endDate = _goodsDetail?.validityEndDateVal;
+    
     return Text(
-      '有效时间: ${_goodsDetail['validity_start_date_val']} - ${_goodsDetail['validity_end_date_val']}',
+      '有效时间: ${startDate ?? ''} - ${endDate ?? ''}',
       style: TextStyle(
         fontSize: 12.sp,
         color: const Color(0xFF999999),
@@ -295,17 +434,20 @@ class _CourseGoodsDetailPageState
   }
 
   Widget _buildBottomInfo() {
+    final permissionStatus = _goodsDetail?.permissionStatus;
+    final salePrice = _goodsDetail?.salePrice;
+    final studentNum = _goodsDetail?.studentNum;
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        if (_goodsDetail['permission_status'] == '2' &&
-            _goodsDetail['sale_price'] != null)
+        if (permissionStatus == '2' && salePrice != null)
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                '￥',
+                '¥',
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w500,
@@ -313,7 +455,7 @@ class _CourseGoodsDetailPageState
                 ),
               ),
               Text(
-                _goodsDetail['sale_price'].toString(),
+                salePrice,
                 style: TextStyle(
                   fontSize: 22.sp,
                   fontWeight: FontWeight.w600,
@@ -325,7 +467,7 @@ class _CourseGoodsDetailPageState
         else
           const SizedBox.shrink(),
         Text(
-          '${_goodsDetail['student_num'] ?? 0}人购买',
+          '${studentNum ?? 0}人购买',
           style: TextStyle(
             fontSize: 12.sp,
             color: const Color(0xFF999999),
@@ -336,13 +478,21 @@ class _CourseGoodsDetailPageState
   }
 
   /// Tab切换
+  /// 对应小程序: .tab (Line 747-786)
   Widget _buildTab() {
     final List<Map<String, dynamic>> tabList = _getTabList();
 
     return SliverToBoxAdapter(
       child: Container(
-        color: Colors.white,
-        margin: EdgeInsets.only(top: 8.h),
+        margin: EdgeInsets.only(top: 16.h), // 小程序: 32rpx
+        height: 60.h, // 小程序: 120rpx
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20.r), // 小程序: 40rpx
+            topRight: Radius.circular(20.r),
+          ),
+        ),
         child: Row(
           children: tabList.map((tab) {
             final isActive = _tabIndex == tab['id'];
@@ -353,49 +503,47 @@ class _CourseGoodsDetailPageState
                     _tabIndex = tab['id'];
                   });
                 },
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 16.h),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            tab['title'],
-                            style: TextStyle(
-                              fontSize: 15.sp,
-                              fontWeight:
-                                  isActive ? FontWeight.w600 : FontWeight.w400,
-                              color: isActive
-                                  ? const Color(0xFF2F69FF)
-                                  : const Color(0xFF999999),
-                            ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          tab['title'],
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontWeight:
+                                isActive ? FontWeight.w600 : FontWeight.w400,
+                            color: isActive
+                                ? const Color(0xFF2F69FF)
+                                : const Color(0xFF999999),
                           ),
-                          if (tab['hasIcon'] == true) ...[
-                            SizedBox(width: 4.w),
-                            Icon(
-                              Icons.play_circle,
-                              size: 16.sp,
-                              color: isActive
-                                  ? const Color(0xFF2F69FF)
-                                  : const Color(0xFF999999),
-                            ),
-                          ],
-                        ],
-                      ),
-                      SizedBox(height: 8.h),
-                      Container(
-                        height: 2.h,
-                        width: 40.w,
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? const Color(0xFF2F69FF)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(1.r),
                         ),
+                        if (tab['hasIcon'] == true) ...[
+                          SizedBox(width: 4.w),
+                          Icon(
+                            Icons.play_circle,
+                            size: 16.sp,
+                            color: isActive
+                                ? const Color(0xFF2F69FF)
+                                : const Color(0xFF999999),
+                          ),
+                        ],
+                      ],
+                    ),
+                    SizedBox(height: 3.h),
+                    Container(
+                      height: 3.h, // 小程序: 6rpx
+                      width: 40.w, // 小程序: 80rpx
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? const Color(0xFF1469FF) // 小程序: rgba(20, 105, 255, 1)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(2.r), // 小程序: 4rpx
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -421,14 +569,16 @@ class _CourseGoodsDetailPageState
 
   /// 课程介绍(图片)
   Widget _buildIntroduction() {
+    // ✅ 使用 _completePath 拼接完整URL
+    final introPath = _completePath(_goodsDetail?.materialIntroPath);
+    
     return SliverToBoxAdapter(
       child: Container(
         color: Colors.white,
         margin: EdgeInsets.only(top: 8.h),
-        child: _goodsDetail['material_intro_path'] != null &&
-                _goodsDetail['material_intro_path'].isNotEmpty
+        child: introPath != null && introPath.isNotEmpty
             ? Image.network(
-                _goodsDetail['material_intro_path'],
+                introPath,
                 width: double.infinity,
                 fit: BoxFit.fitWidth,
                 errorBuilder: (context, error, stackTrace) {
@@ -565,11 +715,15 @@ class _CourseGoodsDetailPageState
     );
   }
 
+  /// 课程小节项 - 简化版（单行居中对齐）
+  /// 对应小程序: .section-line (Line 554-609)
   Widget _buildSectionItem(Map<String, dynamic> section) {
+    // ✅ 对应小程序: v-if="section.is_trial_listening == 1"
     final canTrial = section['is_trial_listening'] == 1;
+    final name = section['name']?.toString() ?? '';
 
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 10.h),
+      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 4.w),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
@@ -579,40 +733,33 @@ class _CourseGoodsDetailPageState
         ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // 蓝色竖条
           Container(
-            width: 4.w,
-            height: 4.w,
-            decoration: const BoxDecoration(
-              color: Color(0xFF999999),
-              shape: BoxShape.circle,
+            width: 1.5,
+            height: 12,
+            decoration: BoxDecoration(
+              color: const Color(0xFF3B7BFB),
+              borderRadius: BorderRadius.circular(1),
             ),
           ),
-          SizedBox(width: 12.w),
+          SizedBox(width: 6.w),
+          // 课程名称
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  section['time'] ?? '',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: const Color(0xFF696E7A),
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  section['name'] ?? '',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: const Color(0xFF5B6E81),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+            child: Text(
+              name,
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: const Color(0xFF5B6E81),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
+          // 试听按钮
+          if (canTrial)
+            SizedBox(width: 8.w),
           if (canTrial)
             GestureDetector(
               onTap: () => _onTrialListen(section),
@@ -637,44 +784,45 @@ class _CourseGoodsDetailPageState
   }
 
   /// 底部购买/学习按钮
+  /// 对应小程序: .pay-bottom (Line 856-880)
   Widget _buildBottomBar() {
-    final isPurchased = _goodsDetail['permission_status'] == '1';
+    final isPurchased = _goodsDetail?.permissionStatus == '1';
 
     return Positioned(
       bottom: 0,
       left: 0,
       right: 0,
       child: Container(
-        padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
+        padding: EdgeInsets.symmetric(vertical: 10.h), // 小程序: 20rpx 0
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
+              color: Colors.black.withOpacity(0.08), // 小程序: rgba(0, 0, 0, 0.08)
+              blurRadius: 6, // 小程序: 12rpx
+              offset: const Offset(0, -2), // 小程序: -4rpx
             ),
           ],
         ),
         child: SafeArea(
           top: false,
-          child: SizedBox(
-            width: double.infinity,
+          child: Center(
             child: ElevatedButton(
               onPressed: isPurchased ? _onGoCourse : _onPurchase,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2F69FF),
+                backgroundColor: const Color(0xFF3B7BFB), // 小程序: #3B7BFB
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 14.h),
+                minimumSize: Size(238.w, 40.h), // 小程序: 476rpx × 80rpx
+                padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius: BorderRadius.circular(20.r), // 小程序: 40rpx
                 ),
                 elevation: 0,
               ),
               child: Text(
                 isPurchased ? '去学习' : '立即报名',
                 style: TextStyle(
-                  fontSize: 16.sp,
+                  fontSize: 14.sp, // 小程序: 28rpx
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -688,94 +836,170 @@ class _CourseGoodsDetailPageState
   // ===== 事件处理 =====
 
   /// 试听课程
+  /// 对应小程序: tryListen() (Line 321-338)
   Future<void> _onTrialListen(Map<String, dynamic> section) async {
     try {
       EasyLoading.show(status: '加载中...');
       
-      // TODO: 调用试听接口 trialListen API
-      // final response = await ref.read(courseApiProvider).trialListen(
-      //   goodsId: section['goods_id'],
-      //   systemId: section['system_id'],
+      // ✅ 对应小程序: trialListen API
+      // trialListen({ goods_id: section.goods_id, system_id: section.system_id })
+      final goodsId = section['goods_id']?.toString() ?? widget.goodsId;
+      final systemId = section['system_id']?.toString() ?? section['id']?.toString() ?? '';
+      
+      print('🎧 试听课程:');
+      print('   商品ID: $goodsId');
+      print('   章节ID: $systemId');
+      print('   章节名称: ${section['name']}');
+      
+      // TODO: 调用试听接口
+      // final response = await ref.read(courseServiceProvider).trialListen(
+      //   goodsId: goodsId,
+      //   systemId: systemId,
       // );
       
       // Mock演示：模拟网络请求延迟
-      await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(const Duration(milliseconds: 500));
       
       EasyLoading.dismiss();
       
+      // ✅ 对应小程序: if (res.data && res.data.path)
       // Mock数据：假设返回了视频路径
-      final String? videoPath = 'https://yakaixin.oss-cn-beijing.aliyuncs.com/test/video.mp4';
+      final String? videoPath = 'course/test/video.mp4'; // 相对路径
       
       if (videoPath != null && videoPath.isNotEmpty) {
-        // 跳转视频播放页
-        context.push(
-          AppRoutes.videoIndex,
-          extra: {
-            'url': videoPath,
-            'goods_id': widget.goodsId,
-            'system_id': section['id'],
-            'name': section['name'],
-          },
-        );
+        // ✅ 对应小程序: completePath(res.data.path)
+        final fullPath = _completePath(videoPath);
+        
+        // ✅ 对应小程序: this.$xh.push('jintiku', `pages/course/listenVideo?url=...`)
+        if (mounted) {
+          context.push(
+            AppRoutes.videoIndex,
+            extra: {
+              'url': fullPath,
+              'goods_id': goodsId,
+              'system_id': systemId,
+              'name': section['name'] ?? '',
+            },
+          );
+        }
       } else {
+        // ✅ 对应小程序: this.$xh.Toast('还没有试听内容')
         EasyLoading.showInfo('还没有试听内容');
       }
     } catch (e) {
       EasyLoading.dismiss();
       EasyLoading.showError('加载失败: $e');
+      print('❌ 试听失败: $e');
     }
   }
 
-  /// 支付流程 - 对应小程序 getOrder 方法
+  /// 报名/购买流程 - 对应小程序 getOrder 方法 (Line 417-476)
+  /// ✅ MVVM架构: View层调用ViewModel方法，不包含业务逻辑
+  /// 流程:
+  ///   1. 创建订单 (POST /c/order/v2)
+  ///   2. 判断金额:
+  ///      - > 0 元: 跳转支付页面
+  ///      - = 0 元: 直接跳转支付成功页
   Future<void> _onPurchase() async {
     try {
       EasyLoading.show(status: '创建订单中...');
       
-      // 1. 获取商品信息
-      final goodsId = _goodsDetail['id']?.toString() ?? '';
-      final salePrice = double.tryParse(_goodsDetail['sale_price']?.toString() ?? '0') ?? 0.0;
-      final goodsMonthsPriceId = _goodsDetail['goods_months_price_id']?.toString() ?? '';
-      final months = _goodsDetail['month'] ?? 0;
+      // 1. ✅ 获取商品信息 - 安全转换
+      final goodsId = _goodsDetail?.goodsId?.toString() ?? '';
+      final salePrice = _goodsDetail?.salePrice ?? '0';
+      final payableAmount = double.tryParse(salePrice) ?? 0.0;
       
-      print('💳 开始支付流程:');
-      print('💳 商品ID: $goodsId');
-      print('💳 价格: $salePrice');
-      print('💳 月价格ID: $goodsMonthsPriceId');
-      print('💳 月数: $months');
+      // ✅ 对应小程序: goods_months_price_id 和 month
+      final goodsMonthsPriceId = _goodsDetail?.goodsMonthsPriceId?.toString() ?? '';
+      final months = _goodsDetail?.month?.toString() ?? '';
       
-      // 2. 调用支付流程
-      final success = await ref.read(paymentProvider.notifier).processPayment(
+      // ✅ 对应小程序 Line 420: let student_id = uni.getStorageSync('__xingyun_userinfo__').student_id
+      // 从Storage读取用户信息
+      final storage = ref.read(storageServiceProvider);
+      final userInfoJson = storage.getJson(StorageKeys.userInfo);
+      final studentId = userInfoJson?['student_id']?.toString() ?? '';
+      
+      // ✅ 对应小程序 Line 447-448: employee_id
+      final employeeId = '508948528815416786';
+      
+      // ✅ 验证必要参数
+      if (goodsId.isEmpty) {
+        EasyLoading.showError('商品ID不能为空');
+        return;
+      }
+      
+      if (studentId.isEmpty) {
+        EasyLoading.showError('请先登录');
+        return;
+      }
+      
+      print('📦 开始报名流程:');
+      print('   商品ID: $goodsId');
+      print('   应付金额: $payableAmount');
+      print('   商品月份价格ID: $goodsMonthsPriceId');
+      print('   月份: $months');
+      print('   学员ID: $studentId');
+      print('   员工ID: $employeeId');
+      
+      // 2. ✅ 调用ViewModel创建订单
+      final result = await ref.read(orderNotifierProvider.notifier).createOrder(
         goodsId: goodsId,
         goodsMonthsPriceId: goodsMonthsPriceId,
         months: months,
-        payableAmount: salePrice,
+        payableAmount: payableAmount,
+        studentId: studentId,
+        employeeId: employeeId,
       );
       
       EasyLoading.dismiss();
       
-      // 3. 支付结果处理
-      if (success) {
-        print('💳 支付成功,跳转支付成功页');
-        if (mounted) {
-          context.push(
-            AppRoutes.paySuccess,
-            extra: {
-              'goods_id': goodsId,
-              'professional_id_name': _goodsDetail['professional_id_name'],
-              'isLearnButton': true,
-            },
-          );
-        }
-      } else {
-        print('💳 支付失败或取消');
-        EasyLoading.showError('支付失败');
-      }
+      // 3. ✅ 处理业务结果 (View层只负责UI导航)
+      // 对应小程序 Line 458-472
+      result.when(
+        needPayment: (orderId, flowId) {
+          // ✅ 对应小程序 Line 458-463: if (Number(payable_amount) > 0)
+          print('💰 需要支付,订单ID: $orderId, 流水ID: $flowId');
+          if (mounted) {
+            // TODO: 跳转支付页面
+            context.push(
+              '/payment',
+              extra: {
+                'order_id': orderId,
+                'flow_id': flowId,
+                'goods_id': goodsId,
+              },
+            );
+          }
+        },
+        freeOrder: (orderId) {
+          // ✅ 对应小程序 Line 464-472: else (0元课)
+          // this.$xh.push('jintiku', `pages/order/paySuccess?goods_id=..&professional_id_name=..&isLearnButton=1`)
+          print('🎉 0元课程,直接跳转成功页，订单ID: $orderId');
+          if (mounted) {
+            final professionalIdName = _goodsDetail?.professionalIdName?.toString() ?? '';
+            context.push(
+              AppRoutes.paySuccess,  // ✅ 使用正确的路由常量
+              extra: {
+                'goods_id': goodsId,
+                'professional_id_name': professionalIdName,
+                'isLearnButton': 1,
+              },
+            );
+          }
+        },
+        error: (message) {
+          // ✅ 错误处理
+          print('❌ 创建订单失败: $message');
+          EasyLoading.showError('创建订单失败: $message');
+        },
+      );
     } catch (e) {
       EasyLoading.dismiss();
-      print('💳 支付异常: $e');
-      EasyLoading.showError('支付失败: $e');
+      print('❌ 报名失败: $e');
+      EasyLoading.showError('报名失败: $e');
     }
   }
+
 
   void _onGoCourse() {
     // 已购买-跳转学习中心

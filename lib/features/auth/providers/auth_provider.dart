@@ -50,20 +50,46 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final majorJson = _storage.getJson(StorageKeys.majorInfo);
     final token = _storage.getString(StorageKeys.token);
 
+    print('🔍 [启动恢复] 开始从本地存储恢复用户数据...');
+    print('📦 [userJson] $userJson');
+    print('📦 [majorJson] $majorJson');
+    print('🔑 [token] ${token != null ? "存在(${token.substring(0, 20)}...)" : "不存在"}');
+
     if (userJson != null && token != null) {
       try {
         final user = UserModel.fromJson({...userJson, 'token': token});
-        final major = majorJson != null ? MajorModel.fromJson(majorJson) : null;
+        MajorModel? major;
+        
+        if (majorJson != null) {
+          print('🎯 [专业恢复] majorJson存在，开始解析...');
+          print('   - major_id类型: ${majorJson['major_id'].runtimeType}');
+          print('   - major_id值: ${majorJson['major_id']}');
+          print('   - major_name: ${majorJson['major_name']}');
+          
+          major = MajorModel.fromJson(majorJson);
+          print('✅ [专业恢复] 解析成功: ID=${major.majorId}, Name=${major.majorName}');
+        } else {
+          print('⚠️ [专业恢复] majorJson为null');
+        }
 
         state = state.copyWith(
           user: user,
           currentMajor: major,
           isLoggedIn: true,
         );
-      } catch (e) {
+        
+        print('✅ [启动恢复] 用户数据恢复完成');
+        print('   - 用户ID: ${user.studentId}');
+        print('   - 专业ID: ${major?.majorId ?? "未设置"}');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      } catch (e, stackTrace) {
         // 数据格式错误,清空
+        print('❌ [启动恢复] 数据解析失败: $e');
+        print('📍 堆栈: $stackTrace');
         await logout();
       }
+    } else {
+      print('⚠️ [启动恢复] 未找到登录信息（userJson或token为null）');
     }
   }
 
@@ -174,8 +200,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // 4. 处理专业信息
     // 对应小程序: index/index.vue:607-608, 331-332, 423-424
     MajorModel? currentMajor;
-    if (response.majorId != null && response.majorId != 0 && response.majorName != null) {
+    
+    print('\n🔍 [登录响应] 处理专业信息...');
+    print('📍 [response.majorId] ${response.majorId} (类型: ${response.majorId.runtimeType})');
+    print('📍 [response.majorName] ${response.majorName}');
+    
+    // ✅ 修复: majorId可能是String或int，需要安全判断
+    bool hasMajorId = false;
+    if (response.majorId != null) {
+      if (response.majorId is int) {
+        hasMajorId = response.majorId > 0;
+      } else if (response.majorId is String) {
+        final majorIdStr = response.majorId as String;
+        hasMajorId = majorIdStr.isNotEmpty && majorIdStr != '0';
+      }
+    }
+    
+    if (hasMajorId && response.majorName != null) {
       // 有专业信息，保存
+      print('✅ [专业信息] 登录返回了有效专业ID: ${response.majorId}, 专业名: ${response.majorName}');
       final majorJson = {
         'major_id': response.majorId.toString(),
         'major_name': response.majorName!,
@@ -183,13 +226,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _storage.setJson(StorageKeys.majorInfo, majorJson);
       await _storage.setString(StorageKeys.currentMajorId, response.majorId.toString());
       
+      print('💾 [存储] majorJson: $majorJson');
+      
       currentMajor = MajorModel(
         majorId: response.majorId.toString(),
         majorName: response.majorName!,
       );
     } else {
-      // 没有专业或major_id=0，设置默认专业
+      // 没有专业或major_id无效，设置默认专业
       // 对应小程序默认: 524033912737962623 - 口腔执业医师
+      print('⚠️ [专业信息] 登录未返回有效专业ID (majorId=${response.majorId})，使用默认专业');
       final defaultMajorJson = {
         'major_id': '524033912737962623',
         'major_name': '医学-口腔执业医师',
@@ -197,11 +243,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _storage.setJson(StorageKeys.majorInfo, defaultMajorJson);
       await _storage.setString(StorageKeys.currentMajorId, '524033912737962623');
       
+      print('💾 [存储] defaultMajorJson: $defaultMajorJson');
+      
       currentMajor = MajorModel(
         majorId: '524033912737962623',
         majorName: '医学-口腔执业医师',
       );
     }
+    
+    print('✅ [专业信息] 最终currentMajor: ID=${currentMajor.majorId}, Name=${currentMajor.majorName}');
+    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     // 5. 清除旧的答题缓存
     // 对应小程序: store/index.js:168

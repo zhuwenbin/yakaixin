@@ -117,8 +117,9 @@ class MockInterceptor extends Interceptor {
 }
 
 /// Mock开关状态Provider
-/// ⚠️ Debug 模式下默认开启 Mock，可在调试面板关闭
-final mockEnabledProvider = StateProvider<bool>((ref) => true);
+/// ✅ 默认关闭 Mock，使用真实 API
+/// 可在调试面板手动开启 Mock 模式进行测试
+final mockEnabledProvider = StateProvider<bool>((ref) => false);
 
 /// Mock延迟模式Provider
 final mockDelayProvider = StateProvider<MockDelayMode>((ref) => MockDelayMode.normal);

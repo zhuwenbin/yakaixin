@@ -299,6 +299,88 @@ class MockDatabase {
     };
   }
   
+  /// 查询课程章节数据
+  /// 
+  /// 对应接口: GET /c/goods/v2/chapter
+  /// 对应小程序: chapterpaper (courseDetail.vue:342-356)
+  /// 参数:
+  ///   - goods_id: 课程商品ID
+  ///   - no_professional_id: 不筛选专业ID (固定"1")
+  ///   - no_user_id: 不筛选用户ID (固定"1")
+  static Future<Map<String, dynamic>> queryCourseChapters(Map<String, dynamic> params) async {
+    await init();
+    
+    final goodsId = params['goods_id'] as String?;
+    print('🗄️ Mock数据库查询 - 课程章节');
+    print('   商品ID: $goodsId');
+    
+    // ✅ Mock数据: 返回课程章节列表
+    // 对应小程序返回结构: res.data (Array)
+    final mockChapters = [
+      {
+        'id': '1',
+        'name': '第一章 口腔解剖生理学',
+        'sections': [
+          {
+            'id': '1-1',
+            'name': '1.1 牙体组织',
+            'time': '00:15:30',
+            'is_trial_listening': 1, // 1=可以试听, 0=不可以
+            'video_url': '',
+          },
+          {
+            'id': '1-2',
+            'name': '1.2 牙髓组织',
+            'time': '00:20:15',
+            'is_trial_listening': 0,
+            'video_url': '',
+          },
+        ],
+      },
+      {
+        'id': '2',
+        'name': '第二章 口腔预防医学',
+        'sections': [
+          {
+            'id': '2-1',
+            'name': '2.1 龋病预防',
+            'time': '00:18:45',
+            'is_trial_listening': 0,
+            'video_url': '',
+          },
+          {
+            'id': '2-2',
+            'name': '2.2 牙周病预防',
+            'time': '00:22:30',
+            'is_trial_listening': 0,
+            'video_url': '',
+          },
+        ],
+      },
+      {
+        'id': '3',
+        'name': '第三章 口腔修复学',
+        'sections': [
+          {
+            'id': '3-1',
+            'name': '3.1 牙体缺损修复',
+            'time': '00:25:00',
+            'is_trial_listening': 0,
+            'video_url': '',
+          },
+        ],
+      },
+    ];
+    
+    print('   查询结果: ${mockChapters.length} 章');
+    
+    return {
+      'code': 100000,
+      'msg': '操作成功',
+      'data': mockChapters,
+    };
+  }
+  
   /// 查询每日一测
   /// 
   /// 参数:

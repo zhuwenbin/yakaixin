@@ -818,7 +818,8 @@ EmployeeInfoModel _$EmployeeInfoModelFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$EmployeeInfoModel {
   @JsonKey(name: 'employee_id')
-  int? get employeeId => throw _privateConstructorUsedError; // 注意:返回的是数字类型
+  dynamic get employeeId =>
+      throw _privateConstructorUsedError; // ⚠️ String或int，兼容"0"和0
   @JsonKey(name: 'post_name')
   String? get postName => throw _privateConstructorUsedError;
   @JsonKey(name: 'org_name')
@@ -837,7 +838,7 @@ abstract class $EmployeeInfoModelCopyWith<$Res> {
       _$EmployeeInfoModelCopyWithImpl<$Res, EmployeeInfoModel>;
   @useResult
   $Res call(
-      {@JsonKey(name: 'employee_id') int? employeeId,
+      {@JsonKey(name: 'employee_id') dynamic employeeId,
       @JsonKey(name: 'post_name') String? postName,
       @JsonKey(name: 'org_name') String? orgName});
 }
@@ -863,7 +864,7 @@ class _$EmployeeInfoModelCopyWithImpl<$Res, $Val extends EmployeeInfoModel>
       employeeId: freezed == employeeId
           ? _value.employeeId
           : employeeId // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
       postName: freezed == postName
           ? _value.postName
           : postName // ignore: cast_nullable_to_non_nullable
@@ -885,7 +886,7 @@ abstract class _$$EmployeeInfoModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {@JsonKey(name: 'employee_id') int? employeeId,
+      {@JsonKey(name: 'employee_id') dynamic employeeId,
       @JsonKey(name: 'post_name') String? postName,
       @JsonKey(name: 'org_name') String? orgName});
 }
@@ -909,7 +910,7 @@ class __$$EmployeeInfoModelImplCopyWithImpl<$Res>
       employeeId: freezed == employeeId
           ? _value.employeeId
           : employeeId // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
       postName: freezed == postName
           ? _value.postName
           : postName // ignore: cast_nullable_to_non_nullable
@@ -935,8 +936,8 @@ class _$EmployeeInfoModelImpl implements _EmployeeInfoModel {
 
   @override
   @JsonKey(name: 'employee_id')
-  final int? employeeId;
-// 注意:返回的是数字类型
+  final dynamic employeeId;
+// ⚠️ String或int，兼容"0"和0
   @override
   @JsonKey(name: 'post_name')
   final String? postName;
@@ -954,8 +955,8 @@ class _$EmployeeInfoModelImpl implements _EmployeeInfoModel {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$EmployeeInfoModelImpl &&
-            (identical(other.employeeId, employeeId) ||
-                other.employeeId == employeeId) &&
+            const DeepCollectionEquality()
+                .equals(other.employeeId, employeeId) &&
             (identical(other.postName, postName) ||
                 other.postName == postName) &&
             (identical(other.orgName, orgName) || other.orgName == orgName));
@@ -963,7 +964,8 @@ class _$EmployeeInfoModelImpl implements _EmployeeInfoModel {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, employeeId, postName, orgName);
+  int get hashCode => Object.hash(runtimeType,
+      const DeepCollectionEquality().hash(employeeId), postName, orgName);
 
   @JsonKey(ignore: true)
   @override
@@ -982,7 +984,7 @@ class _$EmployeeInfoModelImpl implements _EmployeeInfoModel {
 
 abstract class _EmployeeInfoModel implements EmployeeInfoModel {
   const factory _EmployeeInfoModel(
-          {@JsonKey(name: 'employee_id') final int? employeeId,
+          {@JsonKey(name: 'employee_id') final dynamic employeeId,
           @JsonKey(name: 'post_name') final String? postName,
           @JsonKey(name: 'org_name') final String? orgName}) =
       _$EmployeeInfoModelImpl;
@@ -992,8 +994,8 @@ abstract class _EmployeeInfoModel implements EmployeeInfoModel {
 
   @override
   @JsonKey(name: 'employee_id')
-  int? get employeeId;
-  @override // 注意:返回的是数字类型
+  dynamic get employeeId;
+  @override // ⚠️ String或int，兼容"0"和0
   @JsonKey(name: 'post_name')
   String? get postName;
   @override
@@ -1025,19 +1027,22 @@ mixin _$WechatLoginResponse {
   EmployeeInfoModel? get employeeInfo => throw _privateConstructorUsedError;
   @JsonKey(name: 'major_id')
   dynamic get majorId =>
-      throw _privateConstructorUsedError; // 可能是int或String,因为数值可能超过int范围
+      throw _privateConstructorUsedError; // ⚠️ String或int，大数值使用String
   @JsonKey(name: 'major_name')
   String? get majorName => throw _privateConstructorUsedError;
   @JsonKey(name: 'employee_id')
-  int? get employeeId => throw _privateConstructorUsedError; // 注意:返回的是数字类型
+  dynamic get employeeId =>
+      throw _privateConstructorUsedError; // ⚠️ String或int，兼容"0"和0
   @JsonKey(name: 'is_real_name')
-  int? get isRealName => throw _privateConstructorUsedError;
+  dynamic get isRealName =>
+      throw _privateConstructorUsedError; // ⚠️ String或int，兼容"2"和2
   @JsonKey(name: 'promoter_id')
   String? get promoterId => throw _privateConstructorUsedError;
   @JsonKey(name: 'promoter_type')
-  int? get promoterType => throw _privateConstructorUsedError;
+  dynamic get promoterType =>
+      throw _privateConstructorUsedError; // ⚠️ String或int，兼容"2"和2
   @JsonKey(name: 'is_new')
-  int? get isNew => throw _privateConstructorUsedError;
+  dynamic get isNew => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -1062,11 +1067,11 @@ abstract class $WechatLoginResponseCopyWith<$Res> {
       @JsonKey(name: 'employee_info') EmployeeInfoModel? employeeInfo,
       @JsonKey(name: 'major_id') dynamic majorId,
       @JsonKey(name: 'major_name') String? majorName,
-      @JsonKey(name: 'employee_id') int? employeeId,
-      @JsonKey(name: 'is_real_name') int? isRealName,
+      @JsonKey(name: 'employee_id') dynamic employeeId,
+      @JsonKey(name: 'is_real_name') dynamic isRealName,
       @JsonKey(name: 'promoter_id') String? promoterId,
-      @JsonKey(name: 'promoter_type') int? promoterType,
-      @JsonKey(name: 'is_new') int? isNew});
+      @JsonKey(name: 'promoter_type') dynamic promoterType,
+      @JsonKey(name: 'is_new') dynamic isNew});
 
   $EmployeeInfoModelCopyWith<$Res>? get employeeInfo;
 }
@@ -1144,11 +1149,11 @@ class _$WechatLoginResponseCopyWithImpl<$Res, $Val extends WechatLoginResponse>
       employeeId: freezed == employeeId
           ? _value.employeeId
           : employeeId // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
       isRealName: freezed == isRealName
           ? _value.isRealName
           : isRealName // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
       promoterId: freezed == promoterId
           ? _value.promoterId
           : promoterId // ignore: cast_nullable_to_non_nullable
@@ -1156,11 +1161,11 @@ class _$WechatLoginResponseCopyWithImpl<$Res, $Val extends WechatLoginResponse>
       promoterType: freezed == promoterType
           ? _value.promoterType
           : promoterType // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
       isNew: freezed == isNew
           ? _value.isNew
           : isNew // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
     ) as $Val);
   }
 
@@ -1196,11 +1201,11 @@ abstract class _$$WechatLoginResponseImplCopyWith<$Res>
       @JsonKey(name: 'employee_info') EmployeeInfoModel? employeeInfo,
       @JsonKey(name: 'major_id') dynamic majorId,
       @JsonKey(name: 'major_name') String? majorName,
-      @JsonKey(name: 'employee_id') int? employeeId,
-      @JsonKey(name: 'is_real_name') int? isRealName,
+      @JsonKey(name: 'employee_id') dynamic employeeId,
+      @JsonKey(name: 'is_real_name') dynamic isRealName,
       @JsonKey(name: 'promoter_id') String? promoterId,
-      @JsonKey(name: 'promoter_type') int? promoterType,
-      @JsonKey(name: 'is_new') int? isNew});
+      @JsonKey(name: 'promoter_type') dynamic promoterType,
+      @JsonKey(name: 'is_new') dynamic isNew});
 
   @override
   $EmployeeInfoModelCopyWith<$Res>? get employeeInfo;
@@ -1277,11 +1282,11 @@ class __$$WechatLoginResponseImplCopyWithImpl<$Res>
       employeeId: freezed == employeeId
           ? _value.employeeId
           : employeeId // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
       isRealName: freezed == isRealName
           ? _value.isRealName
           : isRealName // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
       promoterId: freezed == promoterId
           ? _value.promoterId
           : promoterId // ignore: cast_nullable_to_non_nullable
@@ -1289,11 +1294,11 @@ class __$$WechatLoginResponseImplCopyWithImpl<$Res>
       promoterType: freezed == promoterType
           ? _value.promoterType
           : promoterType // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
       isNew: freezed == isNew
           ? _value.isNew
           : isNew // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
     ));
   }
 }
@@ -1353,26 +1358,28 @@ class _$WechatLoginResponseImpl implements _WechatLoginResponse {
   @override
   @JsonKey(name: 'major_id')
   final dynamic majorId;
-// 可能是int或String,因为数值可能超过int范围
+// ⚠️ String或int，大数值使用String
   @override
   @JsonKey(name: 'major_name')
   final String? majorName;
   @override
   @JsonKey(name: 'employee_id')
-  final int? employeeId;
-// 注意:返回的是数字类型
+  final dynamic employeeId;
+// ⚠️ String或int，兼容"0"和0
   @override
   @JsonKey(name: 'is_real_name')
-  final int? isRealName;
+  final dynamic isRealName;
+// ⚠️ String或int，兼容"2"和2
   @override
   @JsonKey(name: 'promoter_id')
   final String? promoterId;
   @override
   @JsonKey(name: 'promoter_type')
-  final int? promoterType;
+  final dynamic promoterType;
+// ⚠️ String或int，兼容"2"和2
   @override
   @JsonKey(name: 'is_new')
-  final int? isNew;
+  final dynamic isNew;
 
   @override
   String toString() {
@@ -1400,15 +1407,15 @@ class _$WechatLoginResponseImpl implements _WechatLoginResponse {
             const DeepCollectionEquality().equals(other.majorId, majorId) &&
             (identical(other.majorName, majorName) ||
                 other.majorName == majorName) &&
-            (identical(other.employeeId, employeeId) ||
-                other.employeeId == employeeId) &&
-            (identical(other.isRealName, isRealName) ||
-                other.isRealName == isRealName) &&
+            const DeepCollectionEquality()
+                .equals(other.employeeId, employeeId) &&
+            const DeepCollectionEquality()
+                .equals(other.isRealName, isRealName) &&
             (identical(other.promoterId, promoterId) ||
                 other.promoterId == promoterId) &&
-            (identical(other.promoterType, promoterType) ||
-                other.promoterType == promoterType) &&
-            (identical(other.isNew, isNew) || other.isNew == isNew));
+            const DeepCollectionEquality()
+                .equals(other.promoterType, promoterType) &&
+            const DeepCollectionEquality().equals(other.isNew, isNew));
   }
 
   @JsonKey(ignore: true)
@@ -1425,11 +1432,11 @@ class _$WechatLoginResponseImpl implements _WechatLoginResponse {
       employeeInfo,
       const DeepCollectionEquality().hash(majorId),
       majorName,
-      employeeId,
-      isRealName,
+      const DeepCollectionEquality().hash(employeeId),
+      const DeepCollectionEquality().hash(isRealName),
       promoterId,
-      promoterType,
-      isNew);
+      const DeepCollectionEquality().hash(promoterType),
+      const DeepCollectionEquality().hash(isNew));
 
   @JsonKey(ignore: true)
   @override
@@ -1448,21 +1455,22 @@ class _$WechatLoginResponseImpl implements _WechatLoginResponse {
 
 abstract class _WechatLoginResponse implements WechatLoginResponse {
   const factory _WechatLoginResponse(
-      {required final String token,
-      @JsonKey(name: 'student_id') required final String studentId,
-      @JsonKey(name: 'student_name') final String? studentName,
-      final String? nickname,
-      final String? avatar,
-      final String? phone,
-      @JsonKey(name: 'merchant') final List<MerchantModel>? merchants,
-      @JsonKey(name: 'employee_info') final EmployeeInfoModel? employeeInfo,
-      @JsonKey(name: 'major_id') final dynamic majorId,
-      @JsonKey(name: 'major_name') final String? majorName,
-      @JsonKey(name: 'employee_id') final int? employeeId,
-      @JsonKey(name: 'is_real_name') final int? isRealName,
-      @JsonKey(name: 'promoter_id') final String? promoterId,
-      @JsonKey(name: 'promoter_type') final int? promoterType,
-      @JsonKey(name: 'is_new') final int? isNew}) = _$WechatLoginResponseImpl;
+          {required final String token,
+          @JsonKey(name: 'student_id') required final String studentId,
+          @JsonKey(name: 'student_name') final String? studentName,
+          final String? nickname,
+          final String? avatar,
+          final String? phone,
+          @JsonKey(name: 'merchant') final List<MerchantModel>? merchants,
+          @JsonKey(name: 'employee_info') final EmployeeInfoModel? employeeInfo,
+          @JsonKey(name: 'major_id') final dynamic majorId,
+          @JsonKey(name: 'major_name') final String? majorName,
+          @JsonKey(name: 'employee_id') final dynamic employeeId,
+          @JsonKey(name: 'is_real_name') final dynamic isRealName,
+          @JsonKey(name: 'promoter_id') final String? promoterId,
+          @JsonKey(name: 'promoter_type') final dynamic promoterType,
+          @JsonKey(name: 'is_new') final dynamic isNew}) =
+      _$WechatLoginResponseImpl;
 
   factory _WechatLoginResponse.fromJson(Map<String, dynamic> json) =
       _$WechatLoginResponseImpl.fromJson;
@@ -1490,24 +1498,24 @@ abstract class _WechatLoginResponse implements WechatLoginResponse {
   @override
   @JsonKey(name: 'major_id')
   dynamic get majorId;
-  @override // 可能是int或String,因为数值可能超过int范围
+  @override // ⚠️ String或int，大数值使用String
   @JsonKey(name: 'major_name')
   String? get majorName;
   @override
   @JsonKey(name: 'employee_id')
-  int? get employeeId;
-  @override // 注意:返回的是数字类型
+  dynamic get employeeId;
+  @override // ⚠️ String或int，兼容"0"和0
   @JsonKey(name: 'is_real_name')
-  int? get isRealName;
-  @override
+  dynamic get isRealName;
+  @override // ⚠️ String或int，兼容"2"和2
   @JsonKey(name: 'promoter_id')
   String? get promoterId;
   @override
   @JsonKey(name: 'promoter_type')
-  int? get promoterType;
-  @override
+  dynamic get promoterType;
+  @override // ⚠️ String或int，兼容"2"和2
   @JsonKey(name: 'is_new')
-  int? get isNew;
+  dynamic get isNew;
   @override
   @JsonKey(ignore: true)
   _$$WechatLoginResponseImplCopyWith<_$WechatLoginResponseImpl> get copyWith =>

@@ -26,7 +26,7 @@ class PurchasedQuestionsCard extends StatelessWidget {
             decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(8.r)),
             child: Row(
               children: [
-                Expanded(child: Text(goods.goodsName, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500))),
+                Expanded(child: Text(goods.name, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500))),
                 SizedBox(
                   width: 40.w,
                   height: 40.w,

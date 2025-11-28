@@ -3,21 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../core/storage/storage_service.dart';
+import '../../../app/constants/storage_keys.dart';
 
 /// 支付成功页面
-/// 对应小程序: order/paySuccess.vue
+/// 对应小程序: pages/order/paySuccess.vue
+/// 功能: 显示支付成功状态、学习群二维码、跳转学习或开始测验
 class PaySuccessPage extends ConsumerStatefulWidget {
   final String? goodsId;
-  final String? orderId; // 订单ID
-  final bool isLearnButton; // true-去学习按钮, false-开始测验按钮
-  final String? professionalIdName; // 专业名称
+  final String? professionalIdName;
+  final int? isLearnButton; // 1=显示"去学习"按钮, 0=显示"开始测验"按钮
 
   const PaySuccessPage({
     super.key,
     this.goodsId,
-    this.orderId,
-    this.isLearnButton = false,
     this.professionalIdName,
+    this.isLearnButton,
   });
 
   @override
@@ -26,79 +27,60 @@ class PaySuccessPage extends ConsumerStatefulWidget {
 
 class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
   String _qrcodeUrl = '';
-  Map<String, dynamic> _goodsInfo = {};
-  bool _isLoading = true;
 
-  // 二维码列表（根据专业显示不同的群二维码）
-  final List<Map<String, dynamic>> _qrcodeList = [
+  // ✅ 对应小程序 Line 40-56: qrcodeList
+  static const List<Map<String, dynamic>> _qrcodeList = [
     {
-      'key': ['口腔'],
-      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/60dc174341121431254320_b597430dda7e46cc7fe564a6aa6416a.png',
+      'keys': ['口腔'],
+      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/60dc174341121431254320_b597430dda7e46cc7fe564a6aa6416a.png'
     },
     {
-      'key': ['临床', '乡村'],
-      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/WechatIMG357.jpg',
+      'keys': ['临床', '乡村'],
+      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/WechatIMG357.jpg'
     },
     {
-      'key': ['中医', '护士', '药师', '西医', '中西医'],
-      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/WechatIMG357.jpg',
+      'keys': ['中医', '护士', '药师', '西医', '中西医'],
+      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/WechatIMG357.jpg'
     },
   ];
 
-  final String _allQrcode = 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/2ec4174341105901736218_tongyongma.png';
+  static const String _defaultQrcode = 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/2ec4174341105901736218_tongyongma.png';
 
   @override
   void initState() {
     super.initState();
-    _selectQrcode();
-    _loadGoodsDetail();
+    _initQrcode();
   }
 
-  /// 根据专业选择二维码
-  void _selectQrcode() {
-    // TODO: 从本地存储获取当前专业名称
-    String majorName = widget.professionalIdName ?? '';
+  /// 初始化二维码
+  /// 对应小程序 Line 63-76: 根据专业名称匹配二维码
+  /// ✅ 修复：从Storage读取专业名称，参考小程序 Line 64
+  void _initQrcode() async {
+    // ✅ 对应小程序 Line 64: 从Storage读取专业名称
+    final storage = ref.read(storageServiceProvider);
+    final majorInfo = storage.getJson(StorageKeys.majorInfo);
+    String majorName = majorInfo?['major_name']?.toString() ?? '';
     
-    _qrcodeUrl = _allQrcode; // 默认使用通用二维码
+    // ✅ 对应小程序 Line 65-67: 如果参数中有专业名称，则使用参数的
+    if (widget.professionalIdName != null && widget.professionalIdName!.isNotEmpty) {
+      majorName = widget.professionalIdName!;
+    }
     
-    for (var qrcode in _qrcodeList) {
-      final keys = qrcode['key'] as List<dynamic>;
+    // 默认使用通用二维码
+    _qrcodeUrl = _defaultQrcode;
+    
+    // 根据专业名称匹配二维码
+    for (var item in _qrcodeList) {
+      final keys = item['keys'] as List;
       for (var key in keys) {
-        if (majorName.contains(key as String)) {
-          _qrcodeUrl = qrcode['src'] as String;
+        // ✅ 对应小程序 Line 70-73: 使用正则匹配
+        if (majorName.contains(key)) {
+          setState(() {
+            _qrcodeUrl = item['src'];
+          });
           break;
         }
       }
-    }
-  }
-
-  /// 加载商品详情
-  Future<void> _loadGoodsDetail() async {
-    // 如果没有goodsId，不加载
-    if (widget.goodsId == null || widget.goodsId!.isEmpty) {
-      setState(() {
-        _isLoading = false;
-      });
-      return;
-    }
-    
-    try {
-      // TODO: 实现API调用获取商品详情
-      // final response = await goodsService.getGoodsDetail(goodsId: widget.goodsId!);
-      // setState(() {
-      //   _goodsInfo = response.toJson();
-      //   _isLoading = false;
-      // });
-      
-      await Future.delayed(const Duration(milliseconds: 300));
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      print('❌ 加载商品详情失败: $e');
     }
   }
 
@@ -107,93 +89,108 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
       body: SafeArea(
-        child: Column(
-          children: [
-            SizedBox(height: 51.h),
-            Expanded(
-              child: Column(
-                children: [
-                  _buildSuccessCard(),
-                  SizedBox(height: 40.h),
-                  _buildButtonGroup(),
-                ],
-              ),
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // ✅ 对应小程序 Line 205: padding-top: 102rpx
+              // ⚠️ ScreenUtil 基准 375，小程序 750，需要除以 2
+              SizedBox(height: 51.h), // 102rpx / 2
+              _buildSuccessCard(),
+              // ✅ 对应小程序 Line 238: padding-top: 80rpx
+              SizedBox(height: 40.h), // 80rpx / 2
+              _buildButtonGroup(),
+              // 底部安全间距
+              SizedBox(height: 20.h),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  /// 构建成功卡片
+  /// 成功卡片
+  /// 对应小程序 Line 164-200: .qrcode-box
+  /// ⚠️ ScreenUtil 基准 375，小程序 750rpx，所有 rpx 需要除以 2
   Widget _buildSuccessCard() {
     return Container(
-      width: 343.w,
-      height: 363.h,
-      margin: EdgeInsets.symmetric(horizontal: 16.w),
+      width: 343.w, // ✅ 686rpx / 2
+      height: 363.h, // ✅ 726rpx / 2
+      margin: EdgeInsets.symmetric(horizontal: 16.w), // ✅ 32rpx / 2
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(12.r), // ✅ 24rpx / 2
       ),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // 成功图标和文字（顶部悬浮）
+          // ✅ 成功图标（悬浮在卡片外上方）
+          // 对应小程序 Line 209-235: .success
           Positioned(
-            top: -31.h,
-            left: 0,
-            right: 0,
+            top: -31.h, // ✅ -62rpx / 2
+            left: (343.w / 2 - 51.5.w), // ✅ 居中: calc(50% - 103rpx/2)
             child: _buildSuccessIcon(),
           ),
-          // 内容区域
-          Padding(
-            padding: EdgeInsets.only(top: 114.h),
-            child: Column(
-              children: [
-                Text(
-                  '便于给您及时提供服务，长按二维码加群学习',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF202020).withOpacity(0.85),
-                    height: 1.43,
-                  ),
-                ),
-                SizedBox(height: 34.h),
-                _buildQrcode(),
-              ],
+          // ✅ 提示文字
+          // 对应小程序 Line 175-182: .tips
+          Positioned(
+            top: 114.h, // ✅ 228rpx / 2
+            left: 0,
+            right: 0,
+            child: Text(
+              '便于给您及时提供服务，长按二维码加群学习',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14.sp, // ✅ 28rpx / 2
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFF202020).withOpacity(0.85),
+                height: 20.sp / 14.sp, // ✅ 40rpx / 2 line-height
+              ),
             ),
+          ),
+          // ✅ 二维码
+          // 对应小程序 Line 184-199: .qrcode margin-top: 68rpx
+          Positioned(
+            top: 114.h + 20.h + 34.h, // ✅ (228 + 40 + 68)rpx / 2 = 168
+            left: (343.w / 2 - 77.5.w), // ✅ 居中
+            child: _buildQrcode(),
           ),
         ],
       ),
     );
   }
 
-  /// 构建成功图标
+  /// 成功图标
+  /// 对应小程序 Line 209-235: .success
+  /// ⚠️ ScreenUtil 基准 375，小程序 750rpx，所有 rpx 需要除以 2
   Widget _buildSuccessIcon() {
     return Column(
       children: [
+        // ✅ 圆形背景+图标
         Container(
-          width: 103.w,
-          height: 103.w,
+          width: 103.w, // ✅ 206rpx / 2
+          height: 103.h,
+          padding: EdgeInsets.all(18.w), // ✅ 36rpx / 2
           decoration: const BoxDecoration(
             color: Colors.white,
             shape: BoxShape.circle,
           ),
-          padding: EdgeInsets.all(18.w),
           child: Image.network(
             'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/26e2174185623886722986_%E7%BC%96%E7%BB%84%2013%402x.png',
-            width: 64.w,
-            height: 64.w,
+            width: 64.w, // ✅ 128rpx / 2
+            height: 64.h,
             fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              // ✅ 图片加载失败时显示图标
+              return const Icon(Icons.check_circle, size: 40, color: Colors.green);
+            },
           ),
         ),
-        SizedBox(height: 5.h),
+        SizedBox(height: 5.h), // ✅ 10rpx / 2
+        // ✅ "支付成功"文字
         Text(
           '支付成功',
           style: TextStyle(
-            fontSize: 22.sp,
+            fontSize: 22.sp, // ✅ 44rpx / 2
             fontWeight: FontWeight.w600,
             color: const Color(0xFF121212),
           ),
@@ -202,189 +199,143 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
     );
   }
 
-  /// 构建二维码
+  /// 二维码
+  /// 对应小程序 Line 184-199: .qrcode
+  /// ⚠️ ScreenUtil 基准 375，小程序 750rpx，所有 rpx 需要除以 2
+  /// 小程序结构：外层容器(.qrcode) + 内层图片(image)
   Widget _buildQrcode() {
     return Container(
-      width: 155.w,
-      height: 155.w,
-      decoration: BoxDecoration(
+      width: 155.w, // ✅ 310rpx / 2
+      height: 155.h, // ✅ 310rpx / 2
+      decoration: const BoxDecoration(
+        // ✅ 对应小程序 Line 192: background-image
         image: DecorationImage(
           image: NetworkImage(
             'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/46c2174185637060211201_%E5%BD%A2%E7%8A%B6%E7%BB%93%E5%90%88%402x.png',
           ),
-          fit: BoxFit.cover,
+          fit: BoxFit.contain, // ✅ 使用 contain 而不是 cover
         ),
       ),
       alignment: Alignment.center,
-      child: Image.network(
-        _qrcodeUrl,
-        width: 119.w,
-        height: 119.w,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            width: 119.w,
-            height: 119.w,
-            color: const Color(0xFFE4E8ED),
-            child: Icon(Icons.qr_code, size: 60.sp, color: Colors.grey),
-          );
-        },
+      child: Container(
+        width: 119.w, // ✅ 238rpx / 2
+        height: 119.h,
+        // ✅ 对应小程序 Line 197: background: #e4e8ed
+        color: const Color(0xFFE4E8ED).withOpacity(0.8),
+        // ✅ 正确处理二维码图片显示
+        child: _qrcodeUrl.isNotEmpty
+            ? Image.network(
+                _qrcodeUrl,
+                fit: BoxFit.contain, // ✅ 使用 contain 保持比例
+                errorBuilder: (context, error, stackTrace) {
+                  // ✅ 加载失败时显示占位符
+                  return Container(
+                    color: const Color(0xFFE4E8ED),
+                    child: const Icon(Icons.qr_code, size: 30, color: Colors.grey),
+                  );
+                },
+              )
+            : Container(
+                // ✅ URL为空时也显示占位符
+                color: const Color(0xFFE4E8ED),
+                child: const Icon(Icons.qr_code, size: 30, color: Colors.grey),
+              ),
       ),
     );
   }
 
-  /// 构建按钮组
+  /// 按钮组
+  /// 对应小程序 Line 20-24 + Line 237-262: .but-group
   Widget _buildButtonGroup() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // 返回按钮
-          GestureDetector(
-            onTap: _handleBack,
-            child: Container(
-              width: 132.w,
-              height: 44.h,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFD8DDE1), width: 1),
-                borderRadius: BorderRadius.circular(22.r),
-              ),
-              child: Text(
-                '返回',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: const Color(0xFF03203D).withOpacity(0.65),
+    final showLearnButton = widget.isLearnButton == 1;
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // ✅ 返回按钮
+        // 对应小程序 Line 21: @click="home"
+        _buildButton(
+          text: '返回',
+          isPrimary: false,
+          onTap: _onBack,
+        ),
+        SizedBox(width: 12.0), // ✅ 小程序: 12px (Line 255: margin-right)
+        // ✅ 右侧按钮（去学习 或 开始测验）
+        // 对应小程序 Line 22-23
+        _buildButton(
+          text: showLearnButton ? '去学习' : '开始测验',
+          isPrimary: true,
+          onTap: showLearnButton ? _onGoLearn : _onGoTest,
+        ),
+      ],
+    );
+  }
+
+  /// 单个按钮
+  /// 对应小程序 Line 242-262
+  /// ⚠️ 注意：小程序按钮宽度用 rpx，高度/圆角/字号用 px
+  Widget _buildButton({
+    required String text,
+    required bool isPrimary,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 132.w, // ✅ 264rpx / 2
+        height: 44.0, // ✅ 44px - 固定值
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isPrimary ? const Color(0xFF2E68FF) : Colors.white,
+          border: isPrimary
+              ? null
+              : Border.all(
+                  color: const Color(0xFFD8DDE1),
+                  width: 1,
                 ),
-              ),
-            ),
+          borderRadius: BorderRadius.circular(22.0), // ✅ 22px - 固定值
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 14.0, // ✅ 14px - 固定值
+            height: 1.0,
+          ).copyWith(
+            color: isPrimary
+                ? Colors.white
+                : const Color(0xFF03203D).withOpacity(0.65),
           ),
-          SizedBox(width: 12.w),
-          // 开始测验/去学习按钮
-          GestureDetector(
-            onTap: _handleAction,
-            child: Container(
-              width: 132.w,
-              height: 44.h,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: const Color(0xFF2E68FF),
-                borderRadius: BorderRadius.circular(22.r),
-              ),
-              child: Text(
-                widget.isLearnButton ? '去学习' : '开始测验',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  /// 处理返回
-  void _handleBack() {
-    context.pop();
+  // ===== 事件处理 =====
+
+  /// 返回
+  /// 对应小程序 Line 84-88: home()
+  void _onBack() {
+    if (mounted) {
+      context.pop();
+    }
   }
 
-  /// 处理操作按钮点击
-  void _handleAction() {
-    if (widget.isLearnButton) {
-      // 去学习 - 跳转到课程页
-      context.push(AppRoutes.myCourse);
-      return;
+  /// 去学习
+  /// 对应小程序 Line 89-91: goLearn()
+  void _onGoLearn() {
+    if (mounted) {
+      // 跳转到学习中心
+      context.go(AppRoutes.studyIndex);
     }
-
-    // 开始测验 - 根据商品类型跳转
-    _navigateByGoodsType();
   }
 
-  /// 根据商品类型跳转
-  void _navigateByGoodsType() {
-    final type = _goodsInfo['type'];
-    final dataType = _goodsInfo['data_type'];
-    final detailsType = _goodsInfo['details_type'];
-
-    // 课程类型
-    if (type == 2 || type == 3) {
-      context.push(
-        AppRoutes.myCourse,
-        extra: {
-          'professional_id': _goodsInfo['professional_id'],
-          'id': _goodsInfo['id'],
-          'type': type,
-        },
-      );
-      return;
-    }
-
-    // 模拟考试
-    if (dataType == 2) {
-      if (detailsType == 1) {
-        // 模考+经典版
-        context.push(
-          AppRoutes.examInfo,
-          extra: {
-            'product_id': _goodsInfo['id'],
-            'title': _goodsInfo['name'],
-            'page': 'home',
-          },
-        );
-      } else if (detailsType == 4) {
-        // 模考+模考版
-        context.push(
-          AppRoutes.simulatedExamRoom,
-          extra: {
-            'professional_id': _goodsInfo['professional_id'],
-            'id': _goodsInfo['id'],
-            'showPopup': 1,
-          },
-        );
-      }
-      return;
-    }
-
-    // 章节练习
-    if (type == 18) {
-      context.push(
-        AppRoutes.chapterList,
-        extra: {
-          'professional_id': _goodsInfo['professional_id'],
-          'goods_id': _goodsInfo['id'],
-          'total': _goodsInfo['tiku_goods_details']?['question_num'] ?? 0,
-        },
-      );
-      return;
-    }
-
-    // 模拟考试（老版）
-    if (type == 10) {
-      context.push(
-        AppRoutes.examInfo,
-        extra: {
-          'product_id': _goodsInfo['id'],
-          'title': _goodsInfo['name'],
-          'page': 'home',
-          'professional_id': _goodsInfo['professional_id'],
-        },
-      );
-      return;
-    }
-
-    // 普通考试
-    if (type == 8) {
-      context.push(
-        AppRoutes.examinationing,
-        extra: {
-          'id': _goodsInfo['id'],
-          'recitation_question_model': _goodsInfo['recitation_question_model'],
-        },
-      );
-      return;
+  /// 开始测验
+  /// 对应小程序 Line 99-155: goDetail()
+  void _onGoTest() {
+    // TODO: 实现根据商品类型跳转到对应页面
+    // 需要先获取商品详情，然后根据type判断跳转
+    if (mounted) {
+      context.go(AppRoutes.studyIndex);
     }
   }
 }

@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import '../../app/config/api_config.dart';
 import '../../app/constants/storage_keys.dart';
 import '../storage/storage_service.dart';
-import '../utils/logger.dart';
 
 /// API拦截器
 /// 对应小程序: src/api/request.js, src/modules/jintiku/utils/request.js
@@ -25,12 +24,39 @@ class ApiInterceptor extends Interceptor {
     )}';
     options.headers['Authorization'] = basicAuth;
 
-    // 2. 添加Token (如果已登录)
+    // 2. 添加 x-merchant-id 和 x-brand-id (对应小程序 setBasic)
+    // ✅ Base64 编码，与小程序保持一致
+    options.headers['x-merchant-id'] = base64Encode(
+      utf8.encode(ApiConfig.merchantId)
+    );
+    options.headers['x-brand-id'] = base64Encode(
+      utf8.encode(ApiConfig.brandId)
+    );
+
+    // 3. 添加 x-platform-id (对应小程序 setPlatForm)
+    // ✅ 使用 shelf_platform_id
+    options.headers['x-platform-id'] = base64Encode(
+      utf8.encode(ApiConfig.shelfPlatformId)
+    );
+
+    // 4. 添加Token (如果已登录)
     final token = _storage.getString(StorageKeys.token);
     if (token != null && token.isNotEmpty) {
-      // 小程序中token也通过authorization传递,会覆盖Basic认证
-      // 这里我们保留Basic,另外添加token header
-      options.headers['token'] = token;
+      // ✅ 使用 x-token 而非 token，与小程序保持一致
+      options.headers['x-token'] = token;
+    }
+
+    // 5. 添加 x-menu-identy (对应小程序 setIdentify)
+    // TODO: 菜单标识需要根据当前路由动态获取，暂时设置为 0
+    options.headers['x-menu-identy'] = base64Encode(utf8.encode('0'));
+
+    // 6. 设置 Content-Type (对应小程序 request.js:103-109)
+    if (!options.headers.containsKey('Content-Type') && !options.headers.containsKey('content-type')) {
+      if (options.method == 'POST' || options.method == 'PUT') {
+        options.headers['content-type'] = 'application/x-www-form-urlencoded';
+      } else {
+        options.headers['content-type'] = 'application/text';
+      }
     }
 
     // 3. 添加默认参数到请求体(POST)或查询参数(GET)

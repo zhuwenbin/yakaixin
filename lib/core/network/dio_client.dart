@@ -43,15 +43,18 @@ class DioClient {
       _dio.interceptors.add(NetworkLoggerInterceptor(_ref));
     }
     
-    // 2. Mock拦截器（只在 Debug 模式下初始化，根据开关动态添加）
-    // ✅ 修复：不自动添加，由 enableMock/disableMock 控制
-    if (_ref != null && ApiConfig.isDebug) {
+    // 2. Mock拦截器（只在 Debug 模式下初始化）
+    // ✅ 默认不添加，使用真实 API
+    // 可在调试面板手动开启 Mock 模式
+if (_ref != null && ApiConfig.isDebug) {
       _mockInterceptor = MockInterceptor(_ref);
-      // 检查初始 Mock 状态
+      // 检查初始 Mock 状态（默认为 false）
       final isMockEnabled = _ref.read(mockEnabledProvider);
       if (isMockEnabled) {
         _dio.interceptors.add(_mockInterceptor!);
         print('✅ Mock拦截器已启用');
+      } else {
+        print('✅ 使用真实 API（Mock 模式关闭）');
       }
     }
     

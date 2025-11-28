@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import '../constants/storage_keys.dart';
+import '../../core/storage/storage_service.dart';
 
 /// API配置
 /// 对应小程序: src/modules/jintiku/config.js, .env.production
@@ -10,7 +12,30 @@ class ApiConfig {
   static const String env = String.fromEnvironment('ENV', defaultValue: 'prod');
   
   // 运行时环境切换 (用于调试)
+  // ✅ 优化 1: 默认使用真实 API (生产环境)
   static String _runtimeEnv = env;
+  
+  // ✅ 优化 3: 保存 StorageService 引用，用于保存/恢复环境
+  static StorageService? _storage;
+  
+  /// 初始化 ApiConfig (从本地存储恢复环境)
+  /// ✅ Debug 模式下记录当前环境，热重启后不需要重新选择
+  static void init(StorageService storage) {
+    _storage = storage;
+    
+    // 在 Debug 模式下，尝试从本地存储恢复上次的环境
+    if (isDebug) {
+      final savedEnv = storage.getString(StorageKeys.debugEnv);
+      if (savedEnv != null && (savedEnv == 'prod' || savedEnv == 'test' || savedEnv == 'dev')) {
+        _runtimeEnv = savedEnv;
+        print('✅ 从本地存储恢复环境: $savedEnv');
+      } else {
+        // 首次启动，保存默认环境
+        storage.setString(StorageKeys.debugEnv, _runtimeEnv);
+        print('✅ 保存默认环境: $_runtimeEnv');
+      }
+    }
+  }
   
   /// 是否为 Debug 模式
   static bool get isDebug => kDebugMode;
@@ -19,15 +44,31 @@ class ApiConfig {
   static String get currentEnv => _runtimeEnv;
   
   /// 切换环境 (仅在 Debug 模式下可用)
+  /// ✅ 优化 2: 切换环境后退出登录，清除登录状态和用户数据
+  /// ✅ 优化 3: 保存环境到本地存储
   static void switchEnv(String newEnv) {
-    if (isDebug) {
+    if (isDebug && (newEnv == 'prod' || newEnv == 'test' || newEnv == 'dev')) {
       _runtimeEnv = newEnv;
+      
+      // ✅ 保存环境到本地存储
+      if (_storage != null) {
+        _storage!.setString(StorageKeys.debugEnv, newEnv);
+        print('✅ 保存环境到本地存储: $newEnv');
+        
+        // ✅ 切换环境后清除登录状态和用户数据
+        _storage!.remove(StorageKeys.token);
+        _storage!.remove(StorageKeys.userInfo);
+        _storage!.remove(StorageKeys.studentId);
+        _storage!.remove(StorageKeys.majorInfo);
+        _storage!.remove(StorageKeys.currentMajorId);
+        print('✅ 已清除登录状态和用户数据');
+      }
     }
   }
   
   // 基础URL
   static const String baseUrlProd = 'https://yakaixin.yunsop.com/api';
-  static const String baseUrlTest = 'https://xypaytest.jinyingjie.com/api';
+  static const String baseUrlTest = 'https://yakaixin-test.yunsop.com/api'; // ✅ 添加 https://
   static const String baseUrlDev = '/api'; // 本地代理
   
   static String get baseUrl {

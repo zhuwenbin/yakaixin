@@ -11,13 +11,14 @@ part 'goods_model.g.dart';
 class GoodsModel with _$GoodsModel {
   const factory GoodsModel({
     @JsonKey(name: 'id') dynamic goodsId, // API可能返回String或int,使用dynamic避免溢出
-    @JsonKey(name: 'name') String? goodsName, // API返回字段是name
-    @JsonKey(name: 'material_cover_path') String? coverImg,
+    @JsonKey(name: 'name') String? name, // ✅ 商品名称
+    @JsonKey(name: 'material_cover_path') String? materialCoverPath, // ✅ 封面路径
+    @JsonKey(name: 'material_intro_path') String? materialIntroPath, // ✅ 详情介绍HTML路径
     @JsonKey(name: 'type') dynamic type, // 可能是String或int
     @JsonKey(name: 'type_name') String? typeName,
     @JsonKey(name: 'details_type') dynamic detailsType, // 可能是String或int: 1=经典 2=真题 3=科目 4=模拟
     @JsonKey(name: 'data_type') dynamic dataType, // 可能是String或int: 1=普通 2=模考 3=其他
-    @JsonKey(name: 'sale_price') dynamic price, // 可能是String或num
+    @JsonKey(name: 'sale_price') String? salePrice, // ✅ 销售价格
     @JsonKey(name: 'original_price') dynamic originalPrice, // 可能是String或num
     @JsonKey(name: 'permission_status') String? permissionStatus, // 权限状态 1:已购买 2:未购买
     @JsonKey(name: 'is_homepage_recommend') dynamic isHomepageRecommend, // 可能是String或int
@@ -32,12 +33,19 @@ class GoodsModel with _$GoodsModel {
     @JsonKey(name: 'validity_type') String? validityType, // 有效期类型
     @JsonKey(name: 'validity_day') String? validityDay, // 有效天数
     @JsonKey(name: 'validity_start_date') String? validityStartDate, // 有效期开始日期
+    @JsonKey(name: 'validity_start_date_val') String? validityStartDateVal, // ✅ 有效期开始日期值
     @JsonKey(name: 'validity_end_date') String? validityEndDate, // 有效期结束日期
+    @JsonKey(name: 'validity_end_date_val') String? validityEndDateVal, // ✅ 有效期结束日期值
     @JsonKey(name: 'service_type_name') String? serviceTypeName, // 服务类型名称
     @JsonKey(name: 'new_type_name') String? newTypeName, // 新类型名称
     @JsonKey(name: 'student_num') dynamic studentNum, // 购买人数
     @JsonKey(name: 'shop_type') String? shopType, // 商店类型
+    @JsonKey(name: 'recitation_question_model') dynamic recitationQuestionModel, // 背诵模式: 1=开启 2=关闭
+    @JsonKey(name: 'goods_months_price_id') String? goodsMonthsPriceId, // ✅ 商品月份价格ID (小程序Line 428)
+    @JsonKey(name: 'month') String? month, // ✅ 月份 (小程序Line 429)
+    @JsonKey(name: 'professional_id_name') String? professionalIdName, // ✅ 专业ID名称 (小程序Line 470)
     @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails, // 题库商品详情
+    @JsonKey(name: 'detail_package_goods') List<Map<String, dynamic>>? detailPackageGoods, // ✅ 课程大纲数据
   }) = _GoodsModel;
 
   factory GoodsModel.fromJson(Map<String, dynamic> json) => _$GoodsModelFromJson(json);

@@ -74,7 +74,7 @@ Map<String, dynamic> _$$MerchantModelImplToJson(_$MerchantModelImpl instance) =>
 _$EmployeeInfoModelImpl _$$EmployeeInfoModelImplFromJson(
         Map<String, dynamic> json) =>
     _$EmployeeInfoModelImpl(
-      employeeId: (json['employee_id'] as num?)?.toInt(),
+      employeeId: json['employee_id'],
       postName: json['post_name'] as String?,
       orgName: json['org_name'] as String?,
     );
@@ -105,11 +105,11 @@ _$WechatLoginResponseImpl _$$WechatLoginResponseImplFromJson(
               json['employee_info'] as Map<String, dynamic>),
       majorId: json['major_id'],
       majorName: json['major_name'] as String?,
-      employeeId: (json['employee_id'] as num?)?.toInt(),
-      isRealName: (json['is_real_name'] as num?)?.toInt(),
+      employeeId: json['employee_id'],
+      isRealName: json['is_real_name'],
       promoterId: json['promoter_id'] as String?,
-      promoterType: (json['promoter_type'] as num?)?.toInt(),
-      isNew: (json['is_new'] as num?)?.toInt(),
+      promoterType: json['promoter_type'],
+      isNew: json['is_new'],
     );
 
 Map<String, dynamic> _$$WechatLoginResponseImplToJson(

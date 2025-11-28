@@ -12,12 +12,17 @@ import 'core/network/dio_client.dart';
 import 'core/payment/payment_service.dart';
 import 'app/routes/app_router.dart';
 import 'app/constants/app_constants.dart';
+import 'app/config/api_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // 初始化SharedPreferences
   final prefs = await SharedPreferences.getInstance();
+  final storage = StorageService(prefs);
+  
+  // ✅ 优化 3: 初始化 ApiConfig，从本地存储恢复环境
+  ApiConfig.init(storage);
   
   // 初始化中文日期格式化
   await initializeDateFormatting('zh_CN', null);
@@ -27,12 +32,14 @@ void main() async {
   print('🚀 应用初始化完成');
   print('🚀 应用名称: ${AppConstants.appName}');
   print('🚀 应用版本: ${AppConstants.appVersion}');
+  print('🌐 当前环境: ${ApiConfig.currentEnv}');
+  print('🌐 接口地址: ${ApiConfig.baseUrl}');
   
   runApp(
     ProviderScope(
       overrides: [
         // 初始化StorageService
-        storageServiceProvider.overrideWithValue(StorageService(prefs)),
+        storageServiceProvider.overrideWithValue(storage),
       ],
       child: const MyApp(),
     ),
@@ -75,10 +82,15 @@ class MyApp extends ConsumerWidget {
           routerConfig: router,
           // EasyLoading builder + 网络调试悬浮窗
           builder: (context, widget) {
-            // 先应用 EasyLoading
+            // 确保 widget 不为 null
+            if (widget == null) return const SizedBox.shrink();
+            
+            // 先包裹 NetworkDebugOverlay
+            widget = NetworkDebugOverlay(child: widget);
+            // 再应用 EasyLoading
             widget = EasyLoading.init()(context, widget);
-            // 再包裹 NetworkDebugOverlay
-            return NetworkDebugOverlay(child: widget ?? const SizedBox.shrink());
+            
+            return widget;
           },
         );
       },

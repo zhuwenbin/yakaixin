@@ -1,15 +1,27 @@
-/// 登录接口Mock数据
+  /// 登录接口Mock数据
 /// 用于开发和测试时参考真实返回数据结构
 /// 
 /// 数据来源: /c/student/smslogin 验证码登录接口
-/// 采集时间: 2024-01
+/// 更新时间: 2025-01-27 (来自真实API响应)
+/// 对应小程序: src/modules/jintiku/api/index.js - smslogin
 class LoginMockData {
-  /// 验证码登录成功响应 - 真实数据示例1
+  /// 验证码登录成功响应 - 真实数据示例1（来自真实API）
+  /// 
+  /// ⚠️ 关键字段类型说明:
+  /// - major_id: String类型（大数值，如"524033912737962623"）
+  /// - employee_id: String类型（"0"表示无员工身份）
+  /// - is_real_name: String类型（"2"表示已实名认证）
+  /// - promoter_type: String类型（"2"表示推广员类型）
+  /// - is_new: String类型（"0"表示非新用户）
+  /// - employee_info.employee_id: String类型（"0"表示无员工身份）
+  /// 
+  /// 数据来源: 2025-01-27 真实API响应
+  /// 手机号: 13521956613
   static const Map<String, dynamic> smsLoginSuccess1 = {
     "msg": ["操作成功"],
     "code": 100000,
     "data": {
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjY0MzA4MzYsImlhdCI6MTc2MzgzODgzNiwiaWQiOiI1OTQyNDQ2Mjk2MTY5MjU0MjQiLCJpc3MiOiJqaW5neWluZ2ppZS5jb20iLCJqdGkiOiI1OTQ0MzIyNTg1ODUxMzk5NTIiLCJuYmYiOjE3NjM4Mzg4MzZ9.3kp3vLWiBOD0XHb919oaDx-VhKCd_T57AE1sjnChxXo",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjY4OTQzOTUsImlhdCI6MTc2NDMwMjM5NSwiaWQiOiI1OTQyNDQ2Mjk2MTY5MjU0MjQiLCJpc3MiOiJqaW5neWluZ2ppZS5jb20iLCJqdGkiOiI1OTUyMDk5ODI4MDczODI4NTUiLCJuYmYiOjE3NjQzMDIzOTV9.ueZYdbNj1tGg_tyWBBylVStybuVqY7_B5leHwWujjQ4",
       "nickname": "牙开心6613",
       "avatar": "",
       "phone": "13521956613",
@@ -23,23 +35,29 @@ class LoginMockData {
           "brand_name": "牙开心"
         }
       ],
-      "major_id": 524033912737962623,  // 注意: int类型
+      "major_id": "524033912737962623",  // ⚠️ String类型（大数值）
       "major_name": "口腔执业医师",
-      "employee_id": 0,  // 注意: int类型, 0表示无员工身份
-      "is_real_name": 2,
+      "employee_id": "0",  // ⚠️ String类型
+      "is_real_name": "2",  // ⚠️ String类型
       "promoter_id": "594244629616925424",
-      "promoter_type": 2,
+      "promoter_type": "2",  // ⚠️ String类型
       "post_type_level": null,
       "employee_info": {
-        "employee_id": 0,  // 注意: int类型
+        "employee_id": "0",  // ⚠️ String类型
         "post_name": "",
         "org_name": ""
       },
-      "is_new": 0
+      "is_new": "0"  // ⚠️ String类型
     }
   };
 
-  /// 验证码登录成功响应 - 真实数据示例2 (首次注册用户)
+  /// 验证码登录成功响应 - 真实数据示例2（首次注册用户，保留以对比不同状态）
+  /// 
+  /// ⚠️ 注意: 这个示例的字段类型与真实API不一致！
+  /// 真实API返回的 is_real_name、promoter_type、is_new 等字段是 String 类型
+  /// 这个示例仅用于测试 Model 的兼容性
+  /// 
+  /// 推荐使用 smsLoginSuccess1 作为标准Mock数据
   static const Map<String, dynamic> smsLoginSuccess2 = {
     "msg": ["操作成功"],
     "code": 100000,
@@ -58,23 +76,24 @@ class LoginMockData {
           "brand_name": "牙开心"
         }
       ],
-      "major_id": 0,  // 注意: 0表示未选择专业
+      "major_id": "0",  // ⚠️ 改为String类型，"0"表示未选择专业
       "major_name": "",
-      "employee_id": 0,
-      "is_real_name": 2,
+      "employee_id": "0",  // ⚠️ 改为String类型
+      "is_real_name": "2",  // ⚠️ 改为String类型
       "promoter_id": "594245437976746736",
-      "promoter_type": 2,
+      "promoter_type": "2",  // ⚠️ 改为String类型
       "post_type_level": null,
       "employee_info": {
-        "employee_id": 0,
+        "employee_id": "0",  // ⚠️ 改为String类型
         "post_name": "",
         "org_name": ""
       },
-      "is_new": 0
+      "is_new": "0"  // ⚠️ 改为String类型
     }
   };
 
-  /// 字段说明和类型对照表
+  /// ✅ 字段说明和类型对照表（基于真实API响应）
+  /// 更新时间: 2025-01-27
   static const Map<String, String> fieldTypeMapping = {
     // 顶层响应
     "code": "int - 100000表示成功, 0也表示成功",
@@ -83,7 +102,7 @@ class LoginMockData {
     
     // 用户基本信息
     "token": "String - JWT token",
-    "student_id": "String - 学生ID",
+    "student_id": "String - 学生ID（大数值）",
     "student_name": "String - 学生姓名",
     "nickname": "String - 昵称(可能为空字符串)",
     "avatar": "String - 头像URL(可能为空字符串)",
@@ -97,31 +116,36 @@ class LoginMockData {
     "brand_name": "String - 品牌名称",
     
     // 专业信息
-    "major_id": "int - 专业ID, 0表示未选择",
+    "major_id": "⚠️ String - 专业ID（大数值，如'524033912737962623'），'0'表示未选择",
     "major_name": "String - 专业名称",
     
     // 员工信息
-    "employee_id": "int - 员工ID, 0表示非员工",
+    "employee_id": "⚠️ String - 员工ID，'0'表示非员工",
     "employee_info": "Map - 员工详细信息",
     "post_name": "String - 职位名称",
     "org_name": "String - 组织名称",
     
     // 其他信息
-    "is_real_name": "int - 实名状态",
+    "is_real_name": "⚠️ String - 实名状态，'2'表示已实名",
     "promoter_id": "String - 推广员ID",
-    "promoter_type": "int - 推广员类型",
+    "promoter_type": "⚠️ String - 推广员类型，'2'表示某种类型",
     "post_type_level": "dynamic - 职位级别(可能为null)",
-    "is_new": "int - 是否新用户, 0=否, 1=是",
+    "is_new": "⚠️ String - 是否新用户，'0'=否，'1'=是",
   };
 
-  /// 关键类型注意事项
+  /// ⚠️ 关键类型注意事项（基于真实API响应）
+  /// 更新时间: 2025-01-27
   static const List<String> typeNotes = [
-    "⚠️ major_id 是 int 类型,不是 String!",
-    "⚠️ employee_id 是 int 类型,不是 String!",
-    "⚠️ employee_info.employee_id 也是 int 类型!",
-    "⚠️ 值为 0 不等于 null,需要判断 != 0",
-    "⚠️ 空字符串 '' 不等于 null,需要判断 isEmpty",
+    "⚠️ major_id 是 String 类型！可能是超大整数如 '524033912737962623'",
+    "⚠️ employee_id 是 String 类型！'0' 表示无员工身份",
+    "⚠️ is_real_name 是 String 类型！'2' 表示已实名认证",
+    "⚠️ promoter_type 是 String 类型！'2' 表示推广员类型",
+    "⚠️ is_new 是 String 类型！'0' 表示非新用户",
+    "⚠️ employee_info.employee_id 也是 String 类型！",
+    "⚠️ 值 '0' 不等于 null 和空字符串，需要判断 == '0'",
+    "⚠️ 空字符串 '' 不等于 null，需要判断 isEmpty",
     "✅ code == 100000 或 code == 0 都表示成功",
-    "✅ msg 可能是字符串数组,需要用 join 拼接",
+    "✅ msg 可能是字符串数组，需要用 join 拼接",
+    "✅ Model 字段使用 dynamic 类型来兼容 String 和 int",
   ];
 }

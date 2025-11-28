@@ -54,7 +54,23 @@ class CourseService {
       );
 
       if (response.data['code'] == 100000 && response.data['data'] != null) {
-        return LessonsData.fromJson(response.data['data'] as Map<String, dynamic>);
+        final data = response.data['data'];
+        
+        // ✅ 处理两种数据格式
+        if (data is Map<String, dynamic>) {
+          // 格式1: {lesson_num: "2", lesson_attendance_num: "1", lesson_attendance: [...]}
+          return LessonsData.fromJson(data);
+        } else if (data is List) {
+          // 格式2: 直接返回课节列表 [...]
+          final lessons = data
+              .map((item) => LessonModel.fromJson(item as Map<String, dynamic>))
+              .toList();
+          return LessonsData(
+            lessonNum: lessons.length.toString(),
+            lessonAttendanceNum: '0',
+            lessonAttendance: lessons,
+          );
+        }
       }
       return null;
     } catch (e) {

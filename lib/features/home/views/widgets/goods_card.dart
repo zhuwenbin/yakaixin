@@ -52,7 +52,7 @@ class GoodsCard extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            goods.goodsName ?? '未命名商品',
+            goods.name ?? '未命名商品',
             style: TextStyle(
               fontSize: 17.sp,
               fontWeight: FontWeight.w500,
@@ -63,7 +63,7 @@ class GoodsCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        if (goods.price != null && goods.price.toString().isNotEmpty) ...[
+        if (goods.salePrice != null && goods.salePrice!.isNotEmpty) ...[
           SizedBox(width: 12.w),
           Flexible(
             child: FittedBox(
@@ -95,7 +95,7 @@ class GoodsCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${goods.price}',
+                    '${goods.salePrice}',
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w800,
@@ -169,6 +169,15 @@ class GoodsCard extends StatelessWidget {
                 ),
               ),
             ),
+          if (goods.permissionStatus == '2' &&
+              goods.salePrice != null &&
+              goods.salePrice!.isNotEmpty)
+            Text('￥${goods.salePrice}',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFFFF5E00),
+                )),
         ],
       ),
     );
