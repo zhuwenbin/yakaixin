@@ -46,6 +46,7 @@ class GoodsModel with _$GoodsModel {
     @JsonKey(name: 'professional_id_name') String? professionalIdName, // ✅ 专业ID名称 (小程序Line 470)
     @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails, // 题库商品详情
     @JsonKey(name: 'detail_package_goods') List<Map<String, dynamic>>? detailPackageGoods, // ✅ 课程大纲数据
+    @JsonKey(name: 'permission_order_id') dynamic permissionOrderId, // ✅ 权限订单ID (小程序Line 473: 为0表示未报名)
   }) = _GoodsModel;
 
   factory GoodsModel.fromJson(Map<String, dynamic> json) => _$GoodsModelFromJson(json);

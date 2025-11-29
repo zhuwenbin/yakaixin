@@ -110,7 +110,9 @@ mixin _$GoodsModel {
       throw _privateConstructorUsedError; // 题库商品详情
   @JsonKey(name: 'detail_package_goods')
   List<Map<String, dynamic>>? get detailPackageGoods =>
-      throw _privateConstructorUsedError;
+      throw _privateConstructorUsedError; // ✅ 课程大纲数据
+  @JsonKey(name: 'permission_order_id')
+  dynamic get permissionOrderId => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -162,7 +164,8 @@ abstract class $GoodsModelCopyWith<$Res> {
       @JsonKey(name: 'professional_id_name') String? professionalIdName,
       @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails,
       @JsonKey(name: 'detail_package_goods')
-      List<Map<String, dynamic>>? detailPackageGoods});
+      List<Map<String, dynamic>>? detailPackageGoods,
+      @JsonKey(name: 'permission_order_id') dynamic permissionOrderId});
 
   $TikuGoodsDetailsCopyWith<$Res>? get tikuGoodsDetails;
 }
@@ -216,6 +219,7 @@ class _$GoodsModelCopyWithImpl<$Res, $Val extends GoodsModel>
     Object? professionalIdName = freezed,
     Object? tikuGoodsDetails = freezed,
     Object? detailPackageGoods = freezed,
+    Object? permissionOrderId = freezed,
   }) {
     return _then(_value.copyWith(
       goodsId: freezed == goodsId
@@ -362,6 +366,10 @@ class _$GoodsModelCopyWithImpl<$Res, $Val extends GoodsModel>
           ? _value.detailPackageGoods
           : detailPackageGoods // ignore: cast_nullable_to_non_nullable
               as List<Map<String, dynamic>>?,
+      permissionOrderId: freezed == permissionOrderId
+          ? _value.permissionOrderId
+          : permissionOrderId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
     ) as $Val);
   }
 
@@ -424,7 +432,8 @@ abstract class _$$GoodsModelImplCopyWith<$Res>
       @JsonKey(name: 'professional_id_name') String? professionalIdName,
       @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails,
       @JsonKey(name: 'detail_package_goods')
-      List<Map<String, dynamic>>? detailPackageGoods});
+      List<Map<String, dynamic>>? detailPackageGoods,
+      @JsonKey(name: 'permission_order_id') dynamic permissionOrderId});
 
   @override
   $TikuGoodsDetailsCopyWith<$Res>? get tikuGoodsDetails;
@@ -477,6 +486,7 @@ class __$$GoodsModelImplCopyWithImpl<$Res>
     Object? professionalIdName = freezed,
     Object? tikuGoodsDetails = freezed,
     Object? detailPackageGoods = freezed,
+    Object? permissionOrderId = freezed,
   }) {
     return _then(_$GoodsModelImpl(
       goodsId: freezed == goodsId
@@ -623,6 +633,10 @@ class __$$GoodsModelImplCopyWithImpl<$Res>
           ? _value._detailPackageGoods
           : detailPackageGoods // ignore: cast_nullable_to_non_nullable
               as List<Map<String, dynamic>>?,
+      permissionOrderId: freezed == permissionOrderId
+          ? _value.permissionOrderId
+          : permissionOrderId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
     ));
   }
 }
@@ -667,7 +681,8 @@ class _$GoodsModelImpl implements _GoodsModel {
       @JsonKey(name: 'professional_id_name') this.professionalIdName,
       @JsonKey(name: 'tiku_goods_details') this.tikuGoodsDetails,
       @JsonKey(name: 'detail_package_goods')
-      final List<Map<String, dynamic>>? detailPackageGoods})
+      final List<Map<String, dynamic>>? detailPackageGoods,
+      @JsonKey(name: 'permission_order_id') this.permissionOrderId})
       : _teacherData = teacherData,
         _detailPackageGoods = detailPackageGoods;
 
@@ -833,9 +848,14 @@ class _$GoodsModelImpl implements _GoodsModel {
     return EqualUnmodifiableListView(value);
   }
 
+// ✅ 课程大纲数据
+  @override
+  @JsonKey(name: 'permission_order_id')
+  final dynamic permissionOrderId;
+
   @override
   String toString() {
-    return 'GoodsModel(goodsId: $goodsId, name: $name, materialCoverPath: $materialCoverPath, materialIntroPath: $materialIntroPath, type: $type, typeName: $typeName, detailsType: $detailsType, dataType: $dataType, salePrice: $salePrice, originalPrice: $originalPrice, permissionStatus: $permissionStatus, isHomepageRecommend: $isHomepageRecommend, seckillCountdown: $seckillCountdown, teachingType: $teachingType, teachingTypeName: $teachingTypeName, businessType: $businessType, isRecommend: $isRecommend, teacherData: $teacherData, questionNumber: $questionNumber, totalClassHour: $totalClassHour, validityType: $validityType, validityDay: $validityDay, validityStartDate: $validityStartDate, validityStartDateVal: $validityStartDateVal, validityEndDate: $validityEndDate, validityEndDateVal: $validityEndDateVal, serviceTypeName: $serviceTypeName, newTypeName: $newTypeName, studentNum: $studentNum, shopType: $shopType, recitationQuestionModel: $recitationQuestionModel, goodsMonthsPriceId: $goodsMonthsPriceId, month: $month, professionalIdName: $professionalIdName, tikuGoodsDetails: $tikuGoodsDetails, detailPackageGoods: $detailPackageGoods)';
+    return 'GoodsModel(goodsId: $goodsId, name: $name, materialCoverPath: $materialCoverPath, materialIntroPath: $materialIntroPath, type: $type, typeName: $typeName, detailsType: $detailsType, dataType: $dataType, salePrice: $salePrice, originalPrice: $originalPrice, permissionStatus: $permissionStatus, isHomepageRecommend: $isHomepageRecommend, seckillCountdown: $seckillCountdown, teachingType: $teachingType, teachingTypeName: $teachingTypeName, businessType: $businessType, isRecommend: $isRecommend, teacherData: $teacherData, questionNumber: $questionNumber, totalClassHour: $totalClassHour, validityType: $validityType, validityDay: $validityDay, validityStartDate: $validityStartDate, validityStartDateVal: $validityStartDateVal, validityEndDate: $validityEndDate, validityEndDateVal: $validityEndDateVal, serviceTypeName: $serviceTypeName, newTypeName: $newTypeName, studentNum: $studentNum, shopType: $shopType, recitationQuestionModel: $recitationQuestionModel, goodsMonthsPriceId: $goodsMonthsPriceId, month: $month, professionalIdName: $professionalIdName, tikuGoodsDetails: $tikuGoodsDetails, detailPackageGoods: $detailPackageGoods, permissionOrderId: $permissionOrderId)';
   }
 
   @override
@@ -909,7 +929,9 @@ class _$GoodsModelImpl implements _GoodsModel {
             (identical(other.tikuGoodsDetails, tikuGoodsDetails) ||
                 other.tikuGoodsDetails == tikuGoodsDetails) &&
             const DeepCollectionEquality()
-                .equals(other._detailPackageGoods, _detailPackageGoods));
+                .equals(other._detailPackageGoods, _detailPackageGoods) &&
+            const DeepCollectionEquality()
+                .equals(other.permissionOrderId, permissionOrderId));
   }
 
   @JsonKey(ignore: true)
@@ -951,7 +973,8 @@ class _$GoodsModelImpl implements _GoodsModel {
         month,
         professionalIdName,
         tikuGoodsDetails,
-        const DeepCollectionEquality().hash(_detailPackageGoods)
+        const DeepCollectionEquality().hash(_detailPackageGoods),
+        const DeepCollectionEquality().hash(permissionOrderId)
       ]);
 
   @JsonKey(ignore: true)
@@ -1009,7 +1032,9 @@ abstract class _GoodsModel implements GoodsModel {
       @JsonKey(name: 'tiku_goods_details')
       final TikuGoodsDetails? tikuGoodsDetails,
       @JsonKey(name: 'detail_package_goods')
-      final List<Map<String, dynamic>>? detailPackageGoods}) = _$GoodsModelImpl;
+      final List<Map<String, dynamic>>? detailPackageGoods,
+      @JsonKey(name: 'permission_order_id')
+      final dynamic permissionOrderId}) = _$GoodsModelImpl;
 
   factory _GoodsModel.fromJson(Map<String, dynamic> json) =
       _$GoodsModelImpl.fromJson;
@@ -1122,6 +1147,9 @@ abstract class _GoodsModel implements GoodsModel {
   @override // 题库商品详情
   @JsonKey(name: 'detail_package_goods')
   List<Map<String, dynamic>>? get detailPackageGoods;
+  @override // ✅ 课程大纲数据
+  @JsonKey(name: 'permission_order_id')
+  dynamic get permissionOrderId;
   @override
   @JsonKey(ignore: true)
   _$$GoodsModelImplCopyWith<_$GoodsModelImpl> get copyWith =>

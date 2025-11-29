@@ -66,21 +66,29 @@ class _CourseGoodsDetailPageState
 
     try {
       // ✅ 调用真实API获取商品详情
+      // 对应小程序: courseDetail.vue Line 362-369
+      // ⚠️ 重要: 商品详情页需要传 user_id 和 student_id 来获取 permission_status
+      // ⚠️ 这样后端才能判断用户是否已购买，从而返回正确的 permission_status
+      // ⚠️ permission_status='1' (已购买) → 显示"去学习"
+      // ⚠️ permission_status='2' (未购买) → 显示"立即报名"
       final goodsService = ref.read(goodsServiceProvider);
+      final storage = ref.read(storageServiceProvider);
+      
+      // 获取用户信息（如果已登录）
+      final studentId = storage.getString(StorageKeys.studentId);
+      
       final response = await goodsService.getGoodsDetail(
         goodsId: widget.goodsId!,
+        userId: studentId,     // ✅ 传入 user_id 以获取购买状态
+        studentId: studentId,  // ✅ 传入 student_id 以获取购买状态
+        noProfessionalId: '1', // 不筛选专业ID
       );
       
       setState(() {
         _goodsDetail = response;
         _isLoading = false;
       });
-      
-      print('✅ 加载商品详情成功: ${response.name}');
-      print('📦 商品详情数据: permission_status=${response.permissionStatus}');
-      print('🖼️ 封面图路径: ${response.materialCoverPath}');
-      print('📄 介绍图路径: ${response.materialIntroPath}');
-      
+    
       // ✅ 如果有课程大纲数据(detail_package_goods)，加载课程章节
       if (response.detailPackageGoods != null && response.detailPackageGoods!.isNotEmpty) {
         print('📚 开始加载 ${response.detailPackageGoods!.length} 个课程的章节数据...');
@@ -140,7 +148,7 @@ class _CourseGoodsDetailPageState
       final response = await goodsService.getChapterPaper(
         goodsId: courseId,
         noProfessionalId: '1',
-        noUserId: '1',
+        // noUserId: '1',
       );
       
       // ✅ 解析章节数据并设置默认展开状态

@@ -236,19 +236,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   /// 对应小程序: .seckill swiper
   /// 宽度: 100vw, 高度: 270rpx, left: -24rpx (突破父容器padding)
   Widget _buildSeckillBanner(List<GoodsModel> recommendList) {
-    // ✅ 添加调试日志
-    print('\n🎯 [秒杀轮播] 渲染秒杀卡片...');
-    print('📋 [秒杀列表长度] ${recommendList.length}');
-    
-    if (recommendList.isEmpty) {
-      print('⚠️ [秒杀轮播] 列表为空，显示空状态图片');
-    } else {
-      print('✅ [秒杀轮播] 显示 ${recommendList.length} 个秒杀商品:');
-      for (var i = 0; i < recommendList.length; i++) {
-        final goods = recommendList[i];
-        print('   [$i] ${goods.name} (ID: ${goods.goodsId}, permission_status: ${goods.permissionStatus})');
-      }
-    }
     
     return SizedBox(
       width: double.infinity,
@@ -398,6 +385,18 @@ class _HomePageState extends ConsumerState<HomePage> {
                   else
                     _buildCourseList(currentList), // 网课/直播 - 使用CourseCard
                   SizedBox(height: 30.h), // 60rpx ÷ 2 = 30.h
+                  // ✅ 已购试题区域（只在题库tab显示）
+                  // 对应小程序 Line 54-59
+                  if (_tabIndex == 1 && state.purchasedList.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionTitle('已购试题'),
+                        SizedBox(height: 10.h),
+                        _buildPurchasedList(state.purchasedList),
+                        SizedBox(height: 30.h),
+                      ],
+                    ),
                 ],
               ),
             ),
@@ -428,10 +427,6 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   /// 构建题库列表
   Widget _buildQuestionBankList(List<GoodsModel> list) {
-    // ✅ 添加调试日志
-    print('\n📚 [题库列表] 渲染题库卡片...');
-    print('📋 [题库数据长度] ${list.length}');
-    
     if (list.isEmpty) {
       print('⚠️ [题库列表] 列表为空，显示空状态');
       return Center(
@@ -459,6 +454,23 @@ class _HomePageState extends ConsumerState<HomePage> {
     for (var i = 0; i < list.length; i++) {
       final goods = list[i];
       print('   [$i] ${goods.name} (ID: ${goods.goodsId}, type: ${goods.type}, permission_status: ${goods.permissionStatus})');
+    }
+
+    return Column(
+      children: list.map((goods) => GoodsCard(
+        goods: goods,
+        onTap: () => _handleGoodsCardTap(goods),
+      )).toList(),
+    );
+  }
+
+  /// ✅ 构建已购试题列表
+  /// 对应小程序 Line 59
+  Widget _buildPurchasedList(List<GoodsModel> list) {
+    print('✅ [已购试题] 显示 ${list.length} 个已购商品:');
+    for (var i = 0; i < list.length; i++) {
+      final goods = list[i];
+      print('   [$i] ${goods.name} (ID: ${goods.goodsId}, type: ${goods.type})');
     }
 
     return Column(
@@ -681,6 +693,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
   
   /// 构建课程列表（网课/直播）
+  /// 对应小程序: 首页课程卡片点击逻辑
   Widget _buildCourseList(List<GoodsModel> list) {
     if (list.isEmpty) {
       return Center(
@@ -707,18 +720,70 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Column(
       children: list.map((goods) => CourseCard(
         goods: goods,
-        onTap: () {
-          final major = ref.read(currentMajorProvider);
-          context.push(
-            AppRoutes.goodsDetail,
-            extra: {
-              'goods_id': goods.goodsId?.toString(),
-              'professional_id': major?.majorId.toString(),
-              'type': goods.type, // 2/3=课程
-            },
-          );
-        },
+        onTap: () => _handleCourseCardTap(goods),
       )).toList(),
+    );
+  }
+  
+  /// 处理课程卡片点击
+  /// 对应小程序: courseDetail.vue 的跳转逻辑
+  void _handleCourseCardTap(GoodsModel goods) {
+
+    final major = ref.read(currentMajorProvider);
+    final goodsId = goods.goodsId?.toString();
+    final professionalId = major?.majorId.toString();
+    final type = goods.type;
+    
+    // ✅ 对应小程序 Line 511-516: 网课/直播课特殊处理
+    if ((type == 2 || type == 3) && 
+        (goods.teachingType == 1 || goods.teachingType == 3)) {
+      
+      // ⚠️ 根据购买状态跳转不同页面
+      if (goods.permissionStatus == '1') {
+        // ✅ 已购买 - 跳转课程学习页 CourseDetailPage
+        // 对应小程序: study/detail/index.vue (带 order_id)
+        print('\n✅ 判断: 已购买课程');
+        print('  → 跳转 CourseDetailPage (课程学习页)');
+        print('  → 传递 orderId: ${goods.permissionOrderId}');
+        print('==============================================\n');
+        
+        context.push(
+          AppRoutes.courseDetail,
+          extra: {
+            'goodsId': goodsId,
+            'orderId': goods.permissionOrderId?.toString() ?? '0',  // ✅ 传递 orderId
+            'goodsPid': null,
+          },
+        );
+      } else {
+        // ❌ 未购买 - 跳转商品详情页 CourseGoodsDetailPage
+        // 对应小程序: courseDetail.vue (报名页)
+        print('\n❌ 判断: 未购买课程');
+        print('  → 跳转 CourseGoodsDetailPage (商品详情/报名页)');
+        print('==============================================\n');
+        
+        context.push(
+          AppRoutes.goodsDetail,
+          extra: {
+            'goods_id': goodsId,
+            'professional_id': professionalId,
+            'type': type,
+          },
+        );
+      }
+      return;
+    }
+    
+    // ⚠️ 其他类型课程（目前暂无）
+    print('\n⚠️ 其他类型课程，跳转商品详情页');
+    print('==============================================\n');
+    context.push(
+      AppRoutes.goodsDetail,
+      extra: {
+        'goods_id': goodsId,
+        'professional_id': professionalId,
+        'type': type,
+      },
     );
   }
 }

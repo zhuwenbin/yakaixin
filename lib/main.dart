@@ -35,6 +35,24 @@ void main() async {
   print('🌐 当前环境: ${ApiConfig.currentEnv}');
   print('🌐 接口地址: ${ApiConfig.baseUrl}');
   
+  // ⚠️ 调试：打印所有已保存的用户信息
+  print('\n================================');
+  print('💾 [已保存数据] 开始检查本地存储...');
+  print('================================');
+  
+  final token = storage.getString('token');
+  final studentId = storage.getString('student_id');
+  final userInfo = storage.getJson('user_info');  // ✅ 修复: user_info 带下划线
+  final majorInfo = storage.getJson('major_info');  // ✅ 修复: major_info 带下划线
+  final currentMajorId = storage.getString('current_major_id');  // ✅ 修复: current_major_id 带下划线
+  
+  print('🔑 [Token] ${token ?? '未登录'}');
+  print('👤 [StudentId] ${studentId ?? 'null'}');
+  print('👥 [UserInfo] $userInfo');
+  print('🎯 [MajorInfo] $majorInfo');
+  print('🎯 [CurrentMajorId] ${currentMajorId ?? 'null'}');
+  print('================================\n');
+  
   runApp(
     ProviderScope(
       overrides: [

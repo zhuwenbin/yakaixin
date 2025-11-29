@@ -51,6 +51,7 @@ _$GoodsModelImpl _$$GoodsModelImplFromJson(Map<String, dynamic> json) =>
       detailPackageGoods: (json['detail_package_goods'] as List<dynamic>?)
           ?.map((e) => e as Map<String, dynamic>)
           .toList(),
+      permissionOrderId: json['permission_order_id'],
     );
 
 Map<String, dynamic> _$$GoodsModelImplToJson(_$GoodsModelImpl instance) =>
@@ -91,6 +92,7 @@ Map<String, dynamic> _$$GoodsModelImplToJson(_$GoodsModelImpl instance) =>
       'professional_id_name': instance.professionalIdName,
       'tiku_goods_details': instance.tikuGoodsDetails,
       'detail_package_goods': instance.detailPackageGoods,
+      'permission_order_id': instance.permissionOrderId,
     };
 
 _$TikuGoodsDetailsImpl _$$TikuGoodsDetailsImplFromJson(

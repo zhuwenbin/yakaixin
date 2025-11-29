@@ -20,18 +20,20 @@ OrderModel _$OrderModelFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$OrderModel {
+// ✅ ID类字段使用 dynamic（可能是超大整数String或int）
   @JsonKey(name: 'id')
-  String? get id => throw _privateConstructorUsedError;
+  dynamic get id => throw _privateConstructorUsedError;
   @JsonKey(name: 'order_id')
-  String? get orderId => throw _privateConstructorUsedError;
+  dynamic get orderId => throw _privateConstructorUsedError;
   @JsonKey(name: 'order_no')
   String get orderNo => throw _privateConstructorUsedError;
   @JsonKey(name: 'goods_id')
-  String? get goodsId => throw _privateConstructorUsedError;
+  dynamic get goodsId => throw _privateConstructorUsedError;
   @JsonKey(name: 'goods_name')
   String get goodsName => throw _privateConstructorUsedError;
   @JsonKey(name: 'goods_type')
-  String? get goodsType => throw _privateConstructorUsedError;
+  dynamic get goodsType =>
+      throw _privateConstructorUsedError; // ✅ 可能是 String "2" 或 int 2
   @JsonKey(name: 'status')
   String get status =>
       throw _privateConstructorUsedError; // 1:待支付 2:已完成 3:待补缴 4:已取消 5:退费中 6:已退费
@@ -40,13 +42,16 @@ mixin _$OrderModel {
   @JsonKey(name: 'payable_amount')
   String get payableAmount => throw _privateConstructorUsedError;
   @JsonKey(name: 'countdown')
-  int? get countdown => throw _privateConstructorUsedError; // 倒计时秒数
+  dynamic get countdown =>
+      throw _privateConstructorUsedError; // ✅ 倒计时秒数（可能是 String 或 int）
   @JsonKey(name: 'flow_id')
-  String? get flowId => throw _privateConstructorUsedError;
+  dynamic get flowId =>
+      throw _privateConstructorUsedError; // ✅ 可能是 String "0" 或 int 0
   @JsonKey(name: 'professional_id_name')
   String? get professionalIdName => throw _privateConstructorUsedError;
   @JsonKey(name: 'months')
-  int? get months => throw _privateConstructorUsedError;
+  dynamic get months =>
+      throw _privateConstructorUsedError; // ✅ 可能是 String "0" 或 int 0
   @JsonKey(name: 'tiku_goods_details')
   Map<String, dynamic>? get tikuGoodsDetails =>
       throw _privateConstructorUsedError;
@@ -70,19 +75,19 @@ abstract class $OrderModelCopyWith<$Res> {
       _$OrderModelCopyWithImpl<$Res, OrderModel>;
   @useResult
   $Res call(
-      {@JsonKey(name: 'id') String? id,
-      @JsonKey(name: 'order_id') String? orderId,
+      {@JsonKey(name: 'id') dynamic id,
+      @JsonKey(name: 'order_id') dynamic orderId,
       @JsonKey(name: 'order_no') String orderNo,
-      @JsonKey(name: 'goods_id') String? goodsId,
+      @JsonKey(name: 'goods_id') dynamic goodsId,
       @JsonKey(name: 'goods_name') String goodsName,
-      @JsonKey(name: 'goods_type') String? goodsType,
+      @JsonKey(name: 'goods_type') dynamic goodsType,
       @JsonKey(name: 'status') String status,
       @JsonKey(name: 'status_name') String statusName,
       @JsonKey(name: 'payable_amount') String payableAmount,
-      @JsonKey(name: 'countdown') int? countdown,
-      @JsonKey(name: 'flow_id') String? flowId,
+      @JsonKey(name: 'countdown') dynamic countdown,
+      @JsonKey(name: 'flow_id') dynamic flowId,
       @JsonKey(name: 'professional_id_name') String? professionalIdName,
-      @JsonKey(name: 'months') int? months,
+      @JsonKey(name: 'months') dynamic months,
       @JsonKey(name: 'tiku_goods_details')
       Map<String, dynamic>? tikuGoodsDetails,
       @JsonKey(name: 'teaching_system') Map<String, dynamic>? teachingSystem,
@@ -127,11 +132,11 @@ class _$OrderModelCopyWithImpl<$Res, $Val extends OrderModel>
       id: freezed == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as dynamic,
       orderId: freezed == orderId
           ? _value.orderId
           : orderId // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as dynamic,
       orderNo: null == orderNo
           ? _value.orderNo
           : orderNo // ignore: cast_nullable_to_non_nullable
@@ -139,7 +144,7 @@ class _$OrderModelCopyWithImpl<$Res, $Val extends OrderModel>
       goodsId: freezed == goodsId
           ? _value.goodsId
           : goodsId // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as dynamic,
       goodsName: null == goodsName
           ? _value.goodsName
           : goodsName // ignore: cast_nullable_to_non_nullable
@@ -147,7 +152,7 @@ class _$OrderModelCopyWithImpl<$Res, $Val extends OrderModel>
       goodsType: freezed == goodsType
           ? _value.goodsType
           : goodsType // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as dynamic,
       status: null == status
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
@@ -163,11 +168,11 @@ class _$OrderModelCopyWithImpl<$Res, $Val extends OrderModel>
       countdown: freezed == countdown
           ? _value.countdown
           : countdown // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
       flowId: freezed == flowId
           ? _value.flowId
           : flowId // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as dynamic,
       professionalIdName: freezed == professionalIdName
           ? _value.professionalIdName
           : professionalIdName // ignore: cast_nullable_to_non_nullable
@@ -175,7 +180,7 @@ class _$OrderModelCopyWithImpl<$Res, $Val extends OrderModel>
       months: freezed == months
           ? _value.months
           : months // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
       tikuGoodsDetails: freezed == tikuGoodsDetails
           ? _value.tikuGoodsDetails
           : tikuGoodsDetails // ignore: cast_nullable_to_non_nullable
@@ -209,19 +214,19 @@ abstract class _$$OrderModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {@JsonKey(name: 'id') String? id,
-      @JsonKey(name: 'order_id') String? orderId,
+      {@JsonKey(name: 'id') dynamic id,
+      @JsonKey(name: 'order_id') dynamic orderId,
       @JsonKey(name: 'order_no') String orderNo,
-      @JsonKey(name: 'goods_id') String? goodsId,
+      @JsonKey(name: 'goods_id') dynamic goodsId,
       @JsonKey(name: 'goods_name') String goodsName,
-      @JsonKey(name: 'goods_type') String? goodsType,
+      @JsonKey(name: 'goods_type') dynamic goodsType,
       @JsonKey(name: 'status') String status,
       @JsonKey(name: 'status_name') String statusName,
       @JsonKey(name: 'payable_amount') String payableAmount,
-      @JsonKey(name: 'countdown') int? countdown,
-      @JsonKey(name: 'flow_id') String? flowId,
+      @JsonKey(name: 'countdown') dynamic countdown,
+      @JsonKey(name: 'flow_id') dynamic flowId,
       @JsonKey(name: 'professional_id_name') String? professionalIdName,
-      @JsonKey(name: 'months') int? months,
+      @JsonKey(name: 'months') dynamic months,
       @JsonKey(name: 'tiku_goods_details')
       Map<String, dynamic>? tikuGoodsDetails,
       @JsonKey(name: 'teaching_system') Map<String, dynamic>? teachingSystem,
@@ -264,11 +269,11 @@ class __$$OrderModelImplCopyWithImpl<$Res>
       id: freezed == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as dynamic,
       orderId: freezed == orderId
           ? _value.orderId
           : orderId // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as dynamic,
       orderNo: null == orderNo
           ? _value.orderNo
           : orderNo // ignore: cast_nullable_to_non_nullable
@@ -276,7 +281,7 @@ class __$$OrderModelImplCopyWithImpl<$Res>
       goodsId: freezed == goodsId
           ? _value.goodsId
           : goodsId // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as dynamic,
       goodsName: null == goodsName
           ? _value.goodsName
           : goodsName // ignore: cast_nullable_to_non_nullable
@@ -284,7 +289,7 @@ class __$$OrderModelImplCopyWithImpl<$Res>
       goodsType: freezed == goodsType
           ? _value.goodsType
           : goodsType // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as dynamic,
       status: null == status
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
@@ -300,11 +305,11 @@ class __$$OrderModelImplCopyWithImpl<$Res>
       countdown: freezed == countdown
           ? _value.countdown
           : countdown // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
       flowId: freezed == flowId
           ? _value.flowId
           : flowId // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as dynamic,
       professionalIdName: freezed == professionalIdName
           ? _value.professionalIdName
           : professionalIdName // ignore: cast_nullable_to_non_nullable
@@ -312,7 +317,7 @@ class __$$OrderModelImplCopyWithImpl<$Res>
       months: freezed == months
           ? _value.months
           : months // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as dynamic,
       tikuGoodsDetails: freezed == tikuGoodsDetails
           ? _value._tikuGoodsDetails
           : tikuGoodsDetails // ignore: cast_nullable_to_non_nullable
@@ -367,24 +372,26 @@ class _$OrderModelImpl implements _OrderModel {
   factory _$OrderModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$OrderModelImplFromJson(json);
 
+// ✅ ID类字段使用 dynamic（可能是超大整数String或int）
   @override
   @JsonKey(name: 'id')
-  final String? id;
+  final dynamic id;
   @override
   @JsonKey(name: 'order_id')
-  final String? orderId;
+  final dynamic orderId;
   @override
   @JsonKey(name: 'order_no')
   final String orderNo;
   @override
   @JsonKey(name: 'goods_id')
-  final String? goodsId;
+  final dynamic goodsId;
   @override
   @JsonKey(name: 'goods_name')
   final String goodsName;
   @override
   @JsonKey(name: 'goods_type')
-  final String? goodsType;
+  final dynamic goodsType;
+// ✅ 可能是 String "2" 或 int 2
   @override
   @JsonKey(name: 'status')
   final String status;
@@ -397,18 +404,21 @@ class _$OrderModelImpl implements _OrderModel {
   final String payableAmount;
   @override
   @JsonKey(name: 'countdown')
-  final int? countdown;
-// 倒计时秒数
+  final dynamic countdown;
+// ✅ 倒计时秒数（可能是 String 或 int）
   @override
   @JsonKey(name: 'flow_id')
-  final String? flowId;
+  final dynamic flowId;
+// ✅ 可能是 String "0" 或 int 0
   @override
   @JsonKey(name: 'professional_id_name')
   final String? professionalIdName;
   @override
   @JsonKey(name: 'months')
-  final int? months;
+  final dynamic months;
+// ✅ 可能是 String "0" 或 int 0
   final Map<String, dynamic>? _tikuGoodsDetails;
+// ✅ 可能是 String "0" 或 int 0
   @override
   @JsonKey(name: 'tiku_goods_details')
   Map<String, dynamic>? get tikuGoodsDetails {
@@ -448,25 +458,23 @@ class _$OrderModelImpl implements _OrderModel {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$OrderModelImpl &&
-            (identical(other.id, id) || other.id == id) &&
-            (identical(other.orderId, orderId) || other.orderId == orderId) &&
+            const DeepCollectionEquality().equals(other.id, id) &&
+            const DeepCollectionEquality().equals(other.orderId, orderId) &&
             (identical(other.orderNo, orderNo) || other.orderNo == orderNo) &&
-            (identical(other.goodsId, goodsId) || other.goodsId == goodsId) &&
+            const DeepCollectionEquality().equals(other.goodsId, goodsId) &&
             (identical(other.goodsName, goodsName) ||
                 other.goodsName == goodsName) &&
-            (identical(other.goodsType, goodsType) ||
-                other.goodsType == goodsType) &&
+            const DeepCollectionEquality().equals(other.goodsType, goodsType) &&
             (identical(other.status, status) || other.status == status) &&
             (identical(other.statusName, statusName) ||
                 other.statusName == statusName) &&
             (identical(other.payableAmount, payableAmount) ||
                 other.payableAmount == payableAmount) &&
-            (identical(other.countdown, countdown) ||
-                other.countdown == countdown) &&
-            (identical(other.flowId, flowId) || other.flowId == flowId) &&
+            const DeepCollectionEquality().equals(other.countdown, countdown) &&
+            const DeepCollectionEquality().equals(other.flowId, flowId) &&
             (identical(other.professionalIdName, professionalIdName) ||
                 other.professionalIdName == professionalIdName) &&
-            (identical(other.months, months) || other.months == months) &&
+            const DeepCollectionEquality().equals(other.months, months) &&
             const DeepCollectionEquality()
                 .equals(other._tikuGoodsDetails, _tikuGoodsDetails) &&
             const DeepCollectionEquality()
@@ -481,19 +489,19 @@ class _$OrderModelImpl implements _OrderModel {
   @override
   int get hashCode => Object.hash(
       runtimeType,
-      id,
-      orderId,
+      const DeepCollectionEquality().hash(id),
+      const DeepCollectionEquality().hash(orderId),
       orderNo,
-      goodsId,
+      const DeepCollectionEquality().hash(goodsId),
       goodsName,
-      goodsType,
+      const DeepCollectionEquality().hash(goodsType),
       status,
       statusName,
       payableAmount,
-      countdown,
-      flowId,
+      const DeepCollectionEquality().hash(countdown),
+      const DeepCollectionEquality().hash(flowId),
       professionalIdName,
-      months,
+      const DeepCollectionEquality().hash(months),
       const DeepCollectionEquality().hash(_tikuGoodsDetails),
       const DeepCollectionEquality().hash(_teachingSystem),
       numText,
@@ -516,19 +524,19 @@ class _$OrderModelImpl implements _OrderModel {
 
 abstract class _OrderModel implements OrderModel {
   const factory _OrderModel(
-      {@JsonKey(name: 'id') final String? id,
-      @JsonKey(name: 'order_id') final String? orderId,
+      {@JsonKey(name: 'id') final dynamic id,
+      @JsonKey(name: 'order_id') final dynamic orderId,
       @JsonKey(name: 'order_no') required final String orderNo,
-      @JsonKey(name: 'goods_id') final String? goodsId,
+      @JsonKey(name: 'goods_id') final dynamic goodsId,
       @JsonKey(name: 'goods_name') required final String goodsName,
-      @JsonKey(name: 'goods_type') final String? goodsType,
+      @JsonKey(name: 'goods_type') final dynamic goodsType,
       @JsonKey(name: 'status') required final String status,
       @JsonKey(name: 'status_name') required final String statusName,
       @JsonKey(name: 'payable_amount') required final String payableAmount,
-      @JsonKey(name: 'countdown') final int? countdown,
-      @JsonKey(name: 'flow_id') final String? flowId,
+      @JsonKey(name: 'countdown') final dynamic countdown,
+      @JsonKey(name: 'flow_id') final dynamic flowId,
       @JsonKey(name: 'professional_id_name') final String? professionalIdName,
-      @JsonKey(name: 'months') final int? months,
+      @JsonKey(name: 'months') final dynamic months,
       @JsonKey(name: 'tiku_goods_details')
       final Map<String, dynamic>? tikuGoodsDetails,
       @JsonKey(name: 'teaching_system')
@@ -540,25 +548,25 @@ abstract class _OrderModel implements OrderModel {
   factory _OrderModel.fromJson(Map<String, dynamic> json) =
       _$OrderModelImpl.fromJson;
 
-  @override
+  @override // ✅ ID类字段使用 dynamic（可能是超大整数String或int）
   @JsonKey(name: 'id')
-  String? get id;
+  dynamic get id;
   @override
   @JsonKey(name: 'order_id')
-  String? get orderId;
+  dynamic get orderId;
   @override
   @JsonKey(name: 'order_no')
   String get orderNo;
   @override
   @JsonKey(name: 'goods_id')
-  String? get goodsId;
+  dynamic get goodsId;
   @override
   @JsonKey(name: 'goods_name')
   String get goodsName;
   @override
   @JsonKey(name: 'goods_type')
-  String? get goodsType;
-  @override
+  dynamic get goodsType;
+  @override // ✅ 可能是 String "2" 或 int 2
   @JsonKey(name: 'status')
   String get status;
   @override // 1:待支付 2:已完成 3:待补缴 4:已取消 5:退费中 6:已退费
@@ -569,17 +577,17 @@ abstract class _OrderModel implements OrderModel {
   String get payableAmount;
   @override
   @JsonKey(name: 'countdown')
-  int? get countdown;
-  @override // 倒计时秒数
+  dynamic get countdown;
+  @override // ✅ 倒计时秒数（可能是 String 或 int）
   @JsonKey(name: 'flow_id')
-  String? get flowId;
-  @override
+  dynamic get flowId;
+  @override // ✅ 可能是 String "0" 或 int 0
   @JsonKey(name: 'professional_id_name')
   String? get professionalIdName;
   @override
   @JsonKey(name: 'months')
-  int? get months;
-  @override
+  dynamic get months;
+  @override // ✅ 可能是 String "0" 或 int 0
   @JsonKey(name: 'tiku_goods_details')
   Map<String, dynamic>? get tikuGoodsDetails;
   @override

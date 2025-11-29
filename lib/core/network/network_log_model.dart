@@ -51,11 +51,14 @@ class NetworkLogModel {
       id: id,
       timestamp: timestamp,
       method: method,
-      url: url,
+      // ✅ 使用 response.requestOptions.uri.toString() 获取完整的 URL（包括拦截器添加的查询参数）
+      url: response.requestOptions.uri.toString(),
       // ✅ 使用 response.requestOptions.headers 获取完整的 headers（包括拦截器添加的）
       headers: response.requestOptions.headers.map((key, value) => MapEntry(key, value.toString())),
-      requestData: requestData,
-      queryParameters: queryParameters,
+      // ✅ 使用 response.requestOptions.data 获取完整的请求体（包括拦截器添加的用户参数）
+      requestData: response.requestOptions.data,
+      // ✅ 使用 response.requestOptions.queryParameters 获取完整的查询参数（包括拦截器添加的用户参数）
+      queryParameters: response.requestOptions.queryParameters,
       statusCode: response.statusCode,
       responseData: response.data,
       duration: duration,
@@ -69,11 +72,14 @@ class NetworkLogModel {
       id: id,
       timestamp: timestamp,
       method: method,
-      url: url,
+      // ✅ 使用 error.requestOptions.uri.toString() 获取完整的 URL（包括拦截器添加的查询参数）
+      url: error.requestOptions.uri.toString(),
       // ✅ 使用 error.requestOptions.headers 获取完整的 headers（包括拦截器添加的）
       headers: error.requestOptions.headers.map((key, value) => MapEntry(key, value.toString())),
-      requestData: requestData,
-      queryParameters: queryParameters,
+      // ✅ 使用 error.requestOptions.data 获取完整的请求体（包括拦截器添加的用户参数）
+      requestData: error.requestOptions.data,
+      // ✅ 使用 error.requestOptions.queryParameters 获取完整的查询参数（包括拦截器添加的用户参数）
+      queryParameters: error.requestOptions.queryParameters,
       statusCode: error.response?.statusCode,
       responseData: error.response?.data,
       errorMessage: error.error?.toString() ?? error.message,

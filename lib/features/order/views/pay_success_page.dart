@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
+import '../../main/main_tab_page.dart';
 
 /// 支付成功页面
 /// 对应小程序: pages/order/paySuccess.vue
@@ -322,10 +323,13 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
 
   /// 去学习
   /// 对应小程序 Line 89-91: goLearn()
+  /// ✅ 优化：返回主页面并切换到课程Tab（索引2）
   void _onGoLearn() {
     if (mounted) {
-      // 跳转到学习中心
-      context.go(AppRoutes.studyIndex);
+      // 1. 设置Tab索引为课程页（索引2）
+      ref.read(mainTabIndexProvider.notifier).state = 2;
+      // 2. 返回主Tab页面
+      context.go(AppRoutes.mainTab);
     }
   }
 

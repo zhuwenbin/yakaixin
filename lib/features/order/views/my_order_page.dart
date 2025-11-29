@@ -230,7 +230,7 @@ class _OrderItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 倒计时（如果是待支付且有倒计时）
-          if (order.status == '1' && (order.countdown ?? 0) > 0)
+          if (order.status == '1' && _getCountdownSeconds(order.countdown) > 0)
             _buildCountdown(),
           // 订单号和状态
           _buildOrderInfo(),
@@ -266,7 +266,7 @@ class _OrderItem extends StatelessWidget {
       alignment: Alignment.centerRight,
       padding: EdgeInsets.only(right: 8.w),
       child: Text(
-        _formatCountdown(order.countdown!),
+        _formatCountdown(_getCountdownSeconds(order.countdown)),
         style: TextStyle(
           fontSize: 12.sp,
           fontWeight: FontWeight.w500,
@@ -274,6 +274,16 @@ class _OrderItem extends StatelessWidget {
         ),
       ),
     );
+  }
+  
+  /// ✅ 安全获取倒计时秒数（dynamic 转 int）
+  int _getCountdownSeconds(dynamic countdown) {
+    if (countdown == null) return 0;
+    if (countdown is int) return countdown;
+    if (countdown is String) {
+      return int.tryParse(countdown) ?? 0;
+    }
+    return 0;
   }
 
   /// 格式化倒计时
@@ -291,35 +301,45 @@ class _OrderItem extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Text(
-                order.orderNo,
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: Color(0xFF03203D).withOpacity(0.65),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              GestureDetector(
-                onTap: () => _copyOrderNo(order.orderNo),
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF03203D).withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(9.r),
-                  ),
+          // ✅ 使用 Expanded 包裹订单号区域，防止溢出
+          Expanded(
+            child: Row(
+              children: [
+                // ✅ 订单号使用 Flexible，允许收缩
+                Flexible(
                   child: Text(
-                    '复制',
+                    order.orderNo,
                     style: TextStyle(
-                      fontSize: 10.sp,
-                      color: Color(0xFF03203D).withOpacity(0.75),
+                      fontSize: 12.sp,
+                      color: Color(0xFF03203D).withOpacity(0.65),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                GestureDetector(
+                  onTap: () => _copyOrderNo(order.orderNo),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF03203D).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(9.r),
+                    ),
+                    child: Text(
+                      '复制',
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        color: Color(0xFF03203D).withOpacity(0.75),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          SizedBox(width: 8.w),
+          // ✅ 状态文字不换行
           Text(
             order.statusName,
             style: TextStyle(

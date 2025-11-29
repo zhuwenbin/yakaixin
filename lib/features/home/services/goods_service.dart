@@ -53,10 +53,27 @@ class GoodsService {
   }
 
   /// 获取商品详情
-  Future<GoodsModel> getGoodsDetail({required String goodsId}) async {
+  /// 对应小程序: getGoodsDetail (courseDetail.vue Line 362-369)
+  /// 接口: GET /c/goods/v2/detail
+  /// ⚠️ 关键参数: user_id, student_id 必须传递才能获取 permission_order_id 和 permission_status
+  Future<GoodsModel> getGoodsDetail({
+    required String goodsId,
+    String? userId,       // ✅ 新增: 用户ID
+    String? studentId,    // ✅ 新增: 学生ID
+    String merchantId = "408559575579495187",  // 商户ID
+    String brandId = "408559632588540691",     // 品牌ID
+    String noProfessionalId = '1',              // 不筛选专业ID
+  }) async {
     final response = await _dioClient.get(
       '/c/goods/v2/detail',
-      queryParameters: {'goods_id': goodsId},
+      queryParameters: {
+        'goods_id': goodsId,
+        if (userId != null) 'user_id': userId,
+        if (studentId != null) 'student_id': studentId,
+        'merchant_id': merchantId,
+        'brand_id': brandId,
+        'no_professional_id': noProfessionalId,
+      },
     );
 
     return GoodsModel.fromJson(response.data['data']);
@@ -97,7 +114,7 @@ class GoodsService {
       queryParameters: {
         'goods_id': goodsId,
         'no_professional_id': noProfessionalId,
-        'no_user_id': noUserId,
+        // 'no_user_id': noUserId,
       },
     );
 

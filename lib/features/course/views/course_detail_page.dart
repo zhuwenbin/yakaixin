@@ -3,6 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yakaixin_app/app/routes/app_routes.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import '../../home/services/goods_service.dart';
+import '../../home/models/goods_model.dart';
+import '../../main/main_tab_page.dart'; // 导入 mainTabIndexProvider
+import '../../../core/storage/storage_service.dart'; // ✅ 新增 StorageService
+import '../../../app/constants/storage_keys.dart';  // ✅ 新增 StorageKeys
 // import 已移除 - 现在使用API调用，MockInterceptor会自动处理Mock数据
 
 /// 课程详情页面 - 对应小程序 study/detail/index.vue
@@ -24,20 +30,257 @@ class CourseDetailPage extends ConsumerStatefulWidget {
 }
 
 class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
+  // ✅ 使用真实数据模型
+  GoodsModel? _goodsDetail;
+  bool _isLoading = true;
+  String? _errorMessage;
+  
   // 从 Mock数据文件获取数据
   // ⚠️ 以下 Mock 数据引用已废弃，需要改为通过 API 调用获取
   // TODO: 使用 Dio 调用 API，MockInterceptor 会自动返回 Mock 数据
   Map<String, dynamic> get _mockCourseInfo => {}; // MockCourseData.courseDetail;
   Map<String, dynamic> get _mockRecentlyData => {}; // MockCourseData.recentlyData;
   List<Map<String, dynamic>> get _mockLessonList => []; // MockCourseData.lessonList;
-
+  
   @override
+  void initState() {
+    super.initState();
+    _loadGoodsDetail();
+  }
+  
+  /// 加载商品详情，检查购买状态
+  /// 对应小程序 Line 466-480: mounted() 中的逻辑
+  Future<void> _loadGoodsDetail() async {
+    try {
+      // ✅ 关键修复：优先使用传入的 orderId 参数（对应小程序 Line 651-653）
+      final orderId = _getOrderIdValue(widget.orderId);
+      
+      print('\n========== 🔍 [课程详情] 开始加载 ==========');
+      print('📦 传入参数:');
+      print('  - goodsId: ${widget.goodsId}');
+      print('  - orderId: ${widget.orderId} (原始值)');
+      print('  - orderId (转换后): $orderId');
+      print('  - goodsPid: ${widget.goodsPid}');
+      
+      // ⚠️ 如果传入的 orderId 有值且大于0，说明已报名，直接显示课程详情
+      if (orderId != null && orderId > 0) {
+        print('\n✅ 判断结果: 已报名（orderId > 0）');
+        print('  → 直接显示课程详情 + "去学习"按钮');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      
+      // ⚠️ orderId 为空或0，需要调用 getGoodsDetail 检查 permission_order_id
+      print('\n📝 判断结果: orderId 为空或0，需要调用 getGoodsDetail 检查权限');
+      
+      final goodsService = ref.read(goodsServiceProvider);
+      
+      // ✅ 关键修复: 获取学生ID并传递给API
+      final storage = ref.read(storageServiceProvider);
+      final studentId = storage.getString(StorageKeys.studentId);
+      
+      
+      final goods = await goodsService.getGoodsDetail(
+        goodsId: widget.goodsId,
+        userId: studentId,     // ✅ 传递 userId
+        studentId: studentId,  // ✅ 传递 studentId
+      );
+      
+ 
+      
+      setState(() {
+        _goodsDetail = goods;
+        _isLoading = false;
+      });
+      
+      // ✅ 关键判断：参照小程序 Line 475-478
+      // 检查 permission_order_id 是否为 0（未报名）
+      final permissionOrderId = _getOrderIdValue(goods.permissionOrderId);
+      
+      print('\n🔍 购买状态判断:');
+      print('  - permission_order_id (转换后): $permissionOrderId');
+      
+      // ⚠️ permission_order_id 为 0 或 null 时，跳转到商品详情页（报名页）
+      if (permissionOrderId == null || permissionOrderId == 0) {
+        print('\n❌ 最终判断: 未报名（permission_order_id 为空或0）');
+        print('  → 跳转到商品详情页（报名/购买页面）');
+        // 跳转到商品详情页（报名/购买页面）
+        if (mounted) {
+          context.push('/course-goods-detail', extra: {
+            'goods_id': widget.goodsId,
+            'type': goods.type,
+          });
+        }
+        return;
+      }
+      
+      // ✅ 已报名，显示课程详情
+      print('\n✅ 最终判断: 已报名（permission_order_id > 0）');
+      print('  → 显示课程详情 + "去学习"按钮');
+      print('========== ✅ [课程详情] 加载完成 ==========\n');
+      
+    } catch (e, stackTrace) {
+      print('\n❌ [课程详情] 加载失败:');
+      print('  错误: $e');
+      print('  堆栈: $stackTrace');
+      setState(() {
+        _errorMessage = '加载失败: $e';
+        _isLoading = false;
+      });
+      EasyLoading.showError('加载课程详情失败');
+    }
+  }
+  
+  /// 安全获取 order_id 值
+  /// 处理 dynamic 类型，可能是 String "0" 或 int 0 或 null
+  int? _getOrderIdValue(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) {
+      if (value.isEmpty) return null;
+      return int.tryParse(value);
+    }
+    return null;
+  }
+
+ @override
   Widget build(BuildContext context) {
+    // ⚠️ 加载中状态
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
+        appBar: _buildAppBar(),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    // ⚠️ 错误状态
+    if (_errorMessage != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
+        appBar: _buildAppBar(),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(_errorMessage!, style: TextStyle(color: Colors.red)),
+              SizedBox(height: 16.h),
+              ElevatedButton(
+                onPressed: _loadGoodsDetail,
+                child: const Text('重试'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    // ✅ 正常显示
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: _buildAppBar(),
       body: _buildBody(),
+      // ✅ 添加底部"去学习"按钮（已购买且有order_id）
+      bottomNavigationBar: _shouldShowLearnButton()
+          ? _buildBottomButton()
+          : null,
     );
+  }
+  
+  /// 判断是否显示"去学习"按钮
+  /// 对应小程序逻辑: 有 order_id 且不为 0
+  bool _shouldShowLearnButton() {
+    print('\n========== 🔍 判断是否显示"去学习"按钮 ==========');
+    
+    // ✅ 优先检查传入的 orderId 参数
+    final orderId = _getOrderIdValue(widget.orderId);
+    print('👉 检查 widget.orderId:');
+    print('  - 原始值: ${widget.orderId}');
+    print('  - 转换后: $orderId');
+    
+    if (orderId != null && orderId > 0) {
+      print('\n✅ 结果: 显示"去学习"按钮（因为 widget.orderId > 0）');
+      print('==============================================\n');
+      return true;
+    }
+    
+    // ✅ 如果没有传入 orderId，检查 goodsDetail.permissionOrderId
+    print('\n👉 widget.orderId 为空或0，检查 _goodsDetail.permissionOrderId:');
+    
+    if (_goodsDetail == null) {
+      print('  - _goodsDetail: null');
+      print('\n❌ 结果: 不显示按钮（_goodsDetail 为 null）');
+      print('==============================================\n');
+      return false;
+    }
+    
+    print('  - _goodsDetail.permissionOrderId (原始值): ${_goodsDetail!.permissionOrderId}');
+    
+    final permissionOrderId = _getOrderIdValue(_goodsDetail!.permissionOrderId);
+    print('  - permissionOrderId (转换后): $permissionOrderId');
+    
+    final shouldShow = permissionOrderId != null && permissionOrderId > 0;
+    
+    if (shouldShow) {
+      print('\n✅ 结果: 显示"去学习"按钮（permissionOrderId > 0）');
+    } else {
+      print('\n❌ 结果: 不显示按钮（permissionOrderId 为空或0）');
+    }
+    print('==============================================\n');
+    
+    return shouldShow;
+  }
+  
+  /// 底部"去学习"按钮
+  /// 对应小程序的购买后状态，点击返回主页面课程Tab
+  Widget _buildBottomButton() {
+    return Container(
+      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 24.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: _onGoLearn,
+        child: Container(
+          height: 44,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF018CFF), Color(0xFF0066CC)],
+            ),
+            borderRadius: BorderRadius.circular(22),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            '去学习',
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  /// 去学习 - 返回主页面课程Tab
+  /// 参照支付成功页的逻辑
+  void _onGoLearn() {
+    if (mounted) {
+      // 1. 设置Tab索引为课程页（索引2）
+      ref.read(mainTabIndexProvider.notifier).state = 2;
+      // 2. 返回主Tab页面
+      context.go(AppRoutes.mainTab);
+    }
   }
 
   PreferredSizeWidget _buildAppBar() {

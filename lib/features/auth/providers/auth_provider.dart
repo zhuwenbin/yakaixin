@@ -185,7 +185,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       nickname = '牙开心${phone.substring(phone.length - 4)}';
     }
 
-    // 3. 保存用户信息
+    // 3. 保存用户信息（保存完整的登录响应数据）
     final userJson = {
       'student_id': response.studentId,
       'student_name': response.studentName,
@@ -194,8 +194,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
       'phone': response.phone ?? phone,
       'merchant': response.merchants?.map((m) => m.toJson()).toList(),
       'employee_info': response.employeeInfo?.toJson(),
+      // ✅ 保存完整的登录响应字段
+      'major_id': response.majorId?.toString(),
+      'major_name': response.majorName,
+      'employee_id': response.employeeId?.toString(),
+      'is_real_name': response.isRealName?.toString(),
+      'promoter_id': response.promoterId,
+      'promoter_type': response.promoterType?.toString(),
+      'is_new': response.isNew?.toString(),
     };
     await _storage.setJson(StorageKeys.userInfo, userJson);
+    
+    // ✅ 同时单独保存 studentId，供 ApiInterceptor 使用
+    await _storage.setString(StorageKeys.studentId, response.studentId);
+    print('💾 [存储] 已保存 studentId: ${response.studentId}');
+    
+    // ⚠️ 调试：验证保存是否成功
+    final savedStudentId = _storage.getString(StorageKeys.studentId);
+    final savedUserInfo = _storage.getJson(StorageKeys.userInfo);
+    print('✅ [验证保存] 立即读取 studentId: $savedStudentId');
+    print('✅ [验证保存] 立即读取 userInfo: $savedUserInfo');
 
     // 4. 处理专业信息
     // 对应小程序: index/index.vue:607-608, 331-332, 423-424
@@ -317,6 +335,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'phone': mockData['phone'],
       };
       await _storage.setJson(StorageKeys.userInfo, userJson);
+      
+      // ✅ 同时单独保存 studentId
+      await _storage.setString(StorageKeys.studentId, mockData['student_id'] as String);
+      print('💾 [Mock存储] 已保存 studentId: ${mockData['student_id']}');
+      
+      // ⚠️ 调试：验证保存是否成功
+      final savedStudentId = _storage.getString(StorageKeys.studentId);
+      final savedUserInfo = _storage.getJson(StorageKeys.userInfo);
+      print('✅ [Mock验证保存] 立即读取 studentId: $savedStudentId');
+      print('✅ [Mock验证保存] 立即读取 userInfo: $savedUserInfo');
 
       // 4. 处理专业信息
       final majorId = mockData['major_id']?.toString() ?? '524033912737962623';

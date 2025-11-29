@@ -28,7 +28,7 @@ final orderNotifierProvider =
 );
 
 typedef _$OrderNotifier = AutoDisposeNotifier<OrderState>;
-String _$orderListHash() => r'98a57d6145d3372162c135147f5989bc3a5c61b5';
+String _$orderListHash() => r'07e2de84167c2222799eb5106262a62bb36093f1';
 
 /// Copied from Dart SDK
 class _SystemHash {

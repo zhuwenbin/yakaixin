@@ -96,37 +96,15 @@ class HomeNotifier extends StateNotifier<HomeState> {
       // 参考小程序 Line 258-262: 
       // res.data.list.filter(e => e.is_homepage_recommend == 1 && e.permission_status == '2')
       // ⚠️ 注意: permission_status='2' 表示未购买，'1'表示已购买
-      print('\n🔍 [秒杀筛选] 开始筛选推荐商品...');
-      print('📋 [题库总数] ${questionBankList.length} 条');
-      
+
       final recommendList = questionBankList.where((e) {
         final isRecommend = e.isHomepageRecommend?.toString() == '1' || e.isHomepageRecommend == 1;
         final isNotBought = e.permissionStatus == '2'; // ✅ 未购买商品才显示在秒杀区
         
-        // 打印每个商品的详细信息
-        if (isRecommend || isNotBought) {
-          print('  📦 商品: ${e.name}');
-          print('     - ID: ${e.goodsId}');
-          print('     - is_homepage_recommend: ${e.isHomepageRecommend}');
-          print('     - permission_status: ${e.permissionStatus}');
-          print('     - isRecommend: $isRecommend');
-          print('     - isNotBought: $isNotBought');
-          print('     - ✅ 满足条件: ${isRecommend && isNotBought}');
-        }
-        
         return isRecommend && isNotBought;
       }).toList();
       
-      print('\n🎯 [秒杀结果] 筛选到 ${recommendList.length} 个秒杀商品');
-      if (recommendList.isEmpty) {
-        print('⚠️ [秒杀为空] 将显示空状态图片');
-      } else {
-        print('✅ [秒杀商品列表]:');
-        for (var goods in recommendList) {
-          print('   - ${goods.name} (ID: ${goods.goodsId})');
-        }
-      }
-      
+  
       state = state.copyWith(
         questionBankList: questionBankList,
         recommendList: recommendList,
@@ -135,8 +113,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
         isLoading: false,
       );
       
-      print('\n✅ [首页数据加载] 完成!');
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
     } catch (e, stackTrace) {
       print('❌ [首页数据加载] 失败: $e');
       print('📍 堆栈信息: $stackTrace');

@@ -2,9 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/dio_client.dart';
 import '../models/create_order_request.dart';
+import '../models/order_model.dart';
 
 /// 订单服务
-/// 对应小程序: getOrderV2, payModeListNew, wechatapplet
+/// 对应小程序: getOrderV2, orderList, payModeListNew, wechatapplet
 /// 职责: 封装订单相关API调用
 class OrderService {
   final DioClient _dioClient;
@@ -46,7 +47,117 @@ class OrderService {
     }
   }
 
-  /// 获取支付方式列表
+  /// 获取订单列表
+  /// 对应小程序: orderList (api/index.js Line 908-914)
+  /// 接口: GET /c/order/my/list
+  /// 参数:
+  ///   - status: 订单状态 (0:全部 1:待支付 2:已支付 4:已取消)
+  ///   - page: 页码
+  ///   - size: 每页数量
+  Future<OrderListResponse> getOrderList({
+    String? status, // ✅ status='0' 时不传参（获取全部）
+    required int page,
+    required int size,
+  }) async {
+    try {
+      // ✅ 构造查询参数，对应小程序 Line 123-128
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'size': size,
+      };
+      
+      // ✅ 只有当 status 不为 '0' 时才传递 status 参数
+      if (status != null && status != '0') {
+        queryParams['status'] = status;
+      }
+      
+      print('✅ [订单列表] 请求参数: $queryParams');
+      
+      final response = await _dioClient.get(
+        '/c/order/my/list',
+        queryParameters: queryParams,
+      );
+      
+      print('📦 [订单列表] 响应: ${response.data}');
+      
+      // ✅ 统一处理响应码
+      if (response.data['code'] != 100000 && response.data['code'] != 0) {
+        final msg = response.data['msg'];
+        final errorMsg = msg is List ? msg.first : msg?.toString();
+        throw Exception(errorMsg ?? '获取订单列表失败');
+      }
+      
+      final data = response.data['data'];
+      if (data == null) {
+        return const OrderListResponse(list: [], total: 0);
+      }
+      
+      // ✅ 解析订单列表，对应小程序 Line 129-160
+      final list = (data['list'] as List?)?.map((item) {
+        final orderItem = item as Map<String, dynamic>;
+        
+        // ✅ 计算显示字段，对应小程序 Line 131-154
+        String? numText;
+        String? monthText;
+        String? tips;
+        
+        // 处理 num_text
+        final tikuDetails = orderItem['tiku_goods_details'] as Map<String, dynamic>?;
+        final goodsType = orderItem['goods_type']?.toString();
+        
+        if (tikuDetails != null) {
+          if (goodsType == '8') {
+            // 试卷类型
+            final paperNum = tikuDetails['paper_num']?.toString() ?? '0';
+            numText = '共${paperNum}份';
+          } else if (goodsType == '10') {
+            // 模考类型
+            final examRoundNum = tikuDetails['exam_round_num']?.toString() ?? '0';
+            numText = '共${examRoundNum}轮';
+          } else {
+            // 默认题目类型
+            final questionNum = tikuDetails['question_num']?.toString() ?? '0';
+            numText = '共${questionNum}题';
+          }
+        }
+        
+        // 处理 month_text
+        final months = orderItem['months'];
+        if (months != null) {
+          if (months == 0 || months == '0') {
+            monthText = '永久';
+          } else {
+            monthText = '${months}个月';
+          }
+        }
+        
+        // 处理 tips
+        final teachingSystem = orderItem['teaching_system'] as Map<String, dynamic>?;
+        if (goodsType == '10') {
+          // 模考显示开考时间
+          tips = '开考时间:${tikuDetails?['exam_time'] ?? ''}';
+        } else {
+          tips = teachingSystem?['system_id_name']?.toString() ?? '';
+        }
+        
+        // ✅ 添加计算字段到 orderItem
+        orderItem['num_text'] = numText;
+        orderItem['month_text'] = monthText;
+        orderItem['tips'] = tips;
+        
+        return OrderModel.fromJson(orderItem);
+      }).toList() ?? [];
+      
+      final total = data['total'] as int? ?? 0;
+      
+      print('✅ [订单列表] 解析成功: ${list.length} 条记录');
+      
+      return OrderListResponse(list: list, total: total);
+    } catch (e) {
+      print('❌ [订单列表] 失败: $e');
+      throw Exception('获取订单列表失败: $e');
+    }
+  }
   /// 对应小程序: payModeListNew (courseDetail.vue Line 254-281)
   /// 接口: GET /c/config/finance/account
   Future<List<Map<String, dynamic>>> getPayModeList({

@@ -233,35 +233,30 @@ class OrderList extends _$OrderList {
   }
 
   /// 加载订单列表
+  /// 对应小程序: getList (order-list.vue Line 119-160)
   Future<List<OrderModel>> _loadOrders({required int page}) async {
     try {
       final service = ref.read(orderServiceProvider);
       
-      // TODO: 调用OrderService获取订单列表
-      // final response = await service.getOrderList(
-      //   status: status == '0' ? null : status,
-      //   page: page,
-      //   size: 10,
-      // );
+      print('📝 [订单列表] 加载: status=$status, page=$page');
       
-      // Mock数据演示
-      await Future.delayed(const Duration(milliseconds: 500));
+      // ✅ 调用真实API，对应小程序 Line 123-128
+      final response = await service.getOrderList(
+        status: status == '0' ? null : status, // 全部时不传status
+        page: page,
+        size: 20, // 对应小程序 Line 89: size: 20
+      );
       
-      if (page == 1) {
-        _hasMore = true;
-        return [
-          OrderModel(
-            orderNo: 'ORDER_001',
-            goodsName: '口腔执业医师考试精品课',
-            status: status == '0' ? '2' : status,
-            statusName: _getStatusName(status == '0' ? '2' : status),
-            payableAmount: '1980.00',
-          ),
-        ];
+      print('✅ [订单列表] 加载成功: ${response.list.length} 条');
+      
+      // ✅ 如果返回空或数据少于20条，说明已到底
+      if (response.list.isEmpty || response.list.length < 20) {
+        _hasMore = false;
       }
       
-      return [];
+      return response.list;
     } catch (e) {
+      print('❌ [订单列表] 加载失败: $e');
       throw Exception('加载订单列表失败: $e');
     }
   }
