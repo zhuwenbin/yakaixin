@@ -27,6 +27,7 @@ import '../../features/exam_entry/views/exam_knack_page.dart';
 import '../../features/model_exam/views/model_exam_index_page.dart';
 import '../../features/model_exam/views/exam_info_page.dart';
 import '../../features/exam/views/exam_notice_page.dart';
+import '../../features/goods/views/course_goods_detail_page.dart';
 import '../../features/exam/views/examinationing_page.dart';
 import '../../features/exam/views/submit_success_page.dart';
 import '../../features/exam/views/test_exam_page.dart';
@@ -62,474 +63,483 @@ import 'app_routes.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   // 监听登录状态
   final isLoggedIn = ref.watch(isLoggedInProvider);
-  
+
   return GoRouter(
     initialLocation: AppRoutes.splash,
     redirect: (context, state) {
       final storage = ref.read(storageServiceProvider);
       final token = storage.getString(StorageKeys.token);
       final hasToken = token != null && token.isNotEmpty;
-      
-      final isOnLoginPage = state.matchedLocation == AppRoutes.loginCenter || 
-                           state.matchedLocation == AppRoutes.h5Login;
+
+      final isOnLoginPage =
+          state.matchedLocation == AppRoutes.loginCenter ||
+          state.matchedLocation == AppRoutes.h5Login;
       final isOnSplash = state.matchedLocation == AppRoutes.splash;
-      
+
       // 如果在启动页，不拦截
       if (isOnSplash) {
         return null;
       }
-      
+
       // 如果未登录且不在登录页，跳转到登录页
       if (!hasToken && !isOnLoginPage) {
         return AppRoutes.loginCenter;
       }
-      
+
       // 如果已登录且在登录页，跳转到主页
       if (hasToken && isOnLoginPage) {
         return AppRoutes.mainTab;
       }
-      
+
       return null;
     },
     routes: [
-    // 启动页
-    GoRoute(
-      path: AppRoutes.splash,
-      builder: (context, state) => const SplashPage(),
-    ),
-    
-    // 主框架
-    GoRoute(
-      path: AppRoutes.mainTab,
-      builder: (context, state) => const MainTabPage(),
-    ),
-    
-    // ===== F1. 用户认证模块 =====
-    GoRoute(
-      path: AppRoutes.loginCenter,
-      builder: (context, state) => const LoginCenterPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.h5Login,
-      builder: (context, state) => const H5LoginPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.selectMajor,
-      builder: (context, state) => const SelectMajorPage(),
-    ),
-    
-    // ===== F2. 题库练习模块 =====
-    GoRoute(
-      path: AppRoutes.home,
-      builder: (context, state) => const HomePage(),
-    ),
-    GoRoute(
-      path: AppRoutes.chapterList,
-      builder: (context, state) => const ChapterListPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.chapterDetail,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        // TODO: 实现ChapterDetailPage
-        return const Placeholder();
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.makeQuestion,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return MakeQuestionPage(extra: extra);
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.lookAnalysis,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        // TODO: 实现LookAnalysisPage（或与MakeQuestionPage合并）
-        return const Placeholder();
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.scoreReport,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        // TODO: 实现ScoreReportPage
-        return const Placeholder();
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.challengeIndex,
-      builder: (context, state) => const ChallengeIndexPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.levelList,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return LevelListPage(
-          challengeId: extra?['challenge_id'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.challengePractise,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return ChallengePractisePage(
-          levelId: extra?['level_id'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.challengeReport,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return ChallengeReportPage(
-          practiceId: extra?['practice_id'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.intelligentIndex,
-      builder: (context, state) => const IntelligentIndexPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.intelligentPractise,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return IntelligentPractisePage(
-          evaluationId: extra?['evaluation_id'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.intelligentReport,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return IntelligentReportPage(
-          practiceId: extra?['practice_id'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.examEntryIndex,
-      builder: (context, state) => const ExamEntryIndexPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.examEntryDetail,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return ExamEntryDetailPage(
-          entryId: extra?['entry_id'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.examKnack,
-      builder: (context, state) => const ExamKnackPage(),
-    ),
-    
-    // ===== F3. 模拟考试模块 =====
-    GoRoute(
-      path: AppRoutes.modelExamIndex,
-      builder: (context, state) => const ModelExamIndexPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.examInfo,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return ExamInfoPage(
-          productId: extra?['product_id'],
-          title: extra?['title'],
-          page: extra?['page'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.examNotice,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return ExamNoticePage(
-          examId: extra?['exam_id'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.examinationing,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return ExaminationingPage(
-          paperVersionId: extra?['paper_version_id'] ?? '',
-          goodsId: extra?['goods_id'] ?? '',
-          orderId: extra?['order_id'] ?? '',
-          title: extra?['title'] ?? '',
-          professionalId: extra?['professional_id'] ?? '',
-          type: extra?['type'] ?? '',
-          timeLimit: extra?['time_limit'] ?? 7200,
-          recitationQuestionModel: extra?['recitation_question_model'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.submitSuccess,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return SubmitSuccessPage(
-          sessionName: extra?['session_name'] ?? '',
-          mockName: extra?['mock_name'] ?? '',
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.testExam,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return TestExamPage(
-          id: extra?['id'],
-          recitationQuestionModel: extra?['recitation_question_model'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.examScoreReport,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return ExamScoreReportPage(
-          paperVersionId: extra?['paper_version_id'] ?? '',
-          orderId: extra?['order_id'] ?? '',
-          goodsId: extra?['goods_id'] ?? '',
-          title: extra?['title'] ?? '',
-          professionalId: extra?['professional_id'] ?? '',
-          recitationQuestionModel: extra?['recitation_question_model'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.rankList,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return RankListPage(
-          examId: extra?['exam_id'],
-        );
-      },
-    ),
-    
-    // ===== F4. 学习中心模块 =====
-    GoRoute(
-      path: AppRoutes.studyIndex,
-      builder: (context, state) => CoursePage(),
-    ),
-    GoRoute(
-      path: AppRoutes.myCourse,
-      builder: (context, state) => const MyCoursePage(),
-    ),
-    GoRoute(
-      path: AppRoutes.courseDetail,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return CourseDetailPage(
-          goodsId: extra?['goodsId'] ?? '',
-          orderId: extra?['orderId'] ?? '',
-          goodsPid: extra?['goodsPid'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.liveIndex,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return LiveIndexPage(
-          lessonId: extra?['lesson_id'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.videoIndex,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return VideoIndexPage(
-          lessonId: extra?['lesson_id'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.dataDownload,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return DataDownloadPage(
-          lessonId: extra?['lesson_id'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.pdfIndex,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return PdfIndexPage(
-          pdfUrl: extra?['pdf_url'],
-        );
-      },
-    ),
-    
-    // ===== F5. 商品订单模块 =====
-    GoRoute(
-      path: AppRoutes.goodsDetail,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        final type = extra?['type'];
-        
-        // 将type转换为字符串进行比较（兼容String和int）
-        final typeStr = type?.toString() ?? '';
-        
-        // 调试日志
-        print('📦 商品详情路由 - type: $type, typeStr: $typeStr, goodsId: ${extra?['goods_id']}');
-        
-        // 根据商品类型跳转不同的详情页
-        // type: 2/3=课程, 8=试卷, 10=模考, 18=题库
-        if (typeStr == '2' || typeStr == '3') {
-          print('✅ 跳转到课程商品详情页');
-          // 课程商品详情页
+      // 启动页
+      GoRoute(
+        path: AppRoutes.splash,
+        builder: (context, state) => const SplashPage(),
+      ),
+
+      // 主框架
+      GoRoute(
+        path: AppRoutes.mainTab,
+        builder: (context, state) => const MainTabPage(),
+      ),
+
+      // ===== F1. 用户认证模块 =====
+      GoRoute(
+        path: AppRoutes.loginCenter,
+        builder: (context, state) => const LoginCenterPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.h5Login,
+        builder: (context, state) => const H5LoginPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.selectMajor,
+        builder: (context, state) => const SelectMajorPage(),
+      ),
+
+      // ===== F2. 题库练习模块 =====
+      GoRoute(
+        path: AppRoutes.home,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          // ✅ 支持全局Tab参数（对应小程序 globalData.tabParams.index）
+          final initialTabIndex = extra?['index'] as int?;
+          return HomePage(initialTabIndex: initialTabIndex);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.chapterList,
+        builder: (context, state) => const ChapterListPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.chapterDetail,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          // TODO: 实现ChapterDetailPage
+          return const Placeholder();
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.makeQuestion,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return MakeQuestionPage(extra: extra);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.lookAnalysis,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          // TODO: 实现LookAnalysisPage（或与MakeQuestionPage合并）
+          return const Placeholder();
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.scoreReport,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          // TODO: 实现ScoreReportPage
+          return const Placeholder();
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.challengeIndex,
+        builder: (context, state) => const ChallengeIndexPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.levelList,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return LevelListPage(challengeId: extra?['challenge_id']);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.challengePractise,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ChallengePractisePage(levelId: extra?['level_id']);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.challengeReport,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ChallengeReportPage(practiceId: extra?['practice_id']);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.intelligentIndex,
+        builder: (context, state) => const IntelligentIndexPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.intelligentPractise,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return IntelligentPractisePage(evaluationId: extra?['evaluation_id']);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.intelligentReport,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return IntelligentReportPage(practiceId: extra?['practice_id']);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.examEntryIndex,
+        builder: (context, state) => const ExamEntryIndexPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.examEntryDetail,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ExamEntryDetailPage(entryId: extra?['entry_id']);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.examKnack,
+        builder: (context, state) => const ExamKnackPage(),
+      ),
+
+      // ===== F3. 模拟考试模块 =====
+      GoRoute(
+        path: AppRoutes.modelExamIndex,
+        builder: (context, state) => const ModelExamIndexPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.examInfo,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ExamInfoPage(
+            productId: extra?['product_id'],
+            title: extra?['title'],
+            page: extra?['page'],
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.examNotice,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ExamNoticePage(examId: extra?['exam_id']);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.examinationing,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ExaminationingPage(
+            paperVersionId: extra?['paper_version_id'] ?? '',
+            goodsId: extra?['goods_id'] ?? '',
+            orderId: extra?['order_id'] ?? '',
+            title: extra?['title'] ?? '',
+            professionalId: extra?['professional_id'] ?? '',
+            type: extra?['type'] ?? '',
+            timeLimit: extra?['time_limit'] ?? 7200,
+            recitationQuestionModel: extra?['recitation_question_model'],
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.submitSuccess,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return SubmitSuccessPage(
+            sessionName: extra?['session_name'] ?? '',
+            mockName: extra?['mock_name'] ?? '',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.testExam,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return TestExamPage(
+            id: extra?['id'],
+            recitationQuestionModel: extra?['recitation_question_model'],
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.examScoreReport,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ExamScoreReportPage(
+            paperVersionId: extra?['paper_version_id'] ?? '',
+            orderId: extra?['order_id'] ?? '',
+            goodsId: extra?['goods_id'] ?? '',
+            title: extra?['title'] ?? '',
+            professionalId: extra?['professional_id'] ?? '',
+            recitationQuestionModel: extra?['recitation_question_model'],
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.rankList,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return RankListPage(examId: extra?['exam_id']);
+        },
+      ),
+
+      // ===== F4. 学习中心模块 =====
+      GoRoute(
+        path: AppRoutes.studyIndex,
+        builder: (context, state) => CoursePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.myCourse,
+        builder: (context, state) => const MyCoursePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.courseDetail,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return CourseDetailPage(
+            goodsId: extra?['goodsId'] ?? '',
+            orderId: extra?['orderId'] ?? '',
+            goodsPid: extra?['goodsPid'],
+          );
+        },
+      ),
+      // 商品课程详情页（未购买）
+      GoRoute(
+        path: AppRoutes.courseGoodsDetail,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final typeValue = extra?['type'];
           return CourseGoodsDetailPage(
-            goodsId: extra?['goods_id'],
-            professionalId: extra?['professional_id'],
-            type: int.tryParse(typeStr),
+            goodsId: extra?['goods_id']?.toString(),
+            professionalId: extra?['professional_id']?.toString(),
+            type: typeValue is int
+                ? typeValue
+                : int.tryParse(typeValue?.toString() ?? ''),
           );
-        } else {
-          print('✅ 跳转到题库/试卷/模考商品详情页');
-          // 题库/试卷/模考商品详情页
-          return GoodsDetailPage(
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.liveIndex,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return LiveIndexPage(lessonId: extra?['lesson_id']);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.videoIndex,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return VideoIndexPage(
+            lessonId: extra?['lesson_id'],
             goodsId: extra?['goods_id'],
-            professionalId: extra?['professional_id'],
-            active: extra?['active'],
+            orderId: extra?['order_id'],
+            goodsPid: extra?['goods_pid'],
+            systemId: extra?['system_id'],
+            name: extra?['name'],
+            filterGoodsId: extra?['filter_goods_id'], // ✅ 新增
+            classId: extra?['class_id'], // ✅ 新增
+            chapterData: extra?['chapter_data'] != null
+                ? List<Map<String, dynamic>>.from(extra!['chapter_data'])
+                : null, // ✅ 新增：章节数据
           );
-        }
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.secretRealDetail,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return SecretRealDetailPage(
-          productId: extra?['product_id'],
-          professionalId: extra?['professional_id'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.subjectMockDetail,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return SubjectMockDetailPage(
-          productId: extra?['product_id'],
-          professionalId: extra?['professional_id'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.simulatedExamRoom,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return SimulatedExamRoomPage(
-          productId: extra?['product_id'],
-          professionalId: extra?['professional_id'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.myOrder,
-      builder: (context, state) => const MyOrderPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.paySuccess,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return PaySuccessPage(
-          goodsId: extra?['goods_id'],
-          professionalIdName: extra?['professional_id_name'],
-          isLearnButton: extra?['isLearnButton'],
-        );
-      },
-    ),
-    
-    // ===== F6. 我的中心模块 =====
-    GoRoute(
-      path: AppRoutes.myIndex,
-      builder: (context, state) => const ProfilePage(),
-    ),
-    GoRoute(
-      path: AppRoutes.personEdit,
-      builder: (context, state) => const PersonEditPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.reportCenter,
-      builder: (context, state) => const ReportCenterPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.settings,
-      builder: (context, state) => const SettingsPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.privacyPolicy,
-      builder: (context, state) => const PrivacyPolicyPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.userServiceAgreement,
-      builder: (context, state) => const UserServiceAgreementPage(),
-    ),
-    
-    // ===== F7. 错题本模块 =====
-    GoRoute(
-      path: AppRoutes.wrongBookIndex,
-      builder: (context, state) => const WrongBookPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.wrongBookDetail,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        // TODO: 实现错题详情页（或直接使用MakeQuestionPage）
-        return const Placeholder();
-      },
-    ),
-    
-    // ===== F8. 收藏管理模块 =====
-    GoRoute(
-      path: AppRoutes.collectIndex,
-      builder: (context, state) => const CollectPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.collectDetail,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        // TODO: 实现收藏详情页（或直接使用MakeQuestionPage）
-        return const Placeholder();
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.examEntryCollect,
-      builder: (context, state) {
-        // TODO: 实现考点收藏页
-        return const Placeholder();
-      },
-    ),
-    
-    // ===== F9. H5活动模块 =====
-    GoRoute(
-      path: AppRoutes.codeReceive,
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return CodeReceivePage(
-          code: extra?['code'],
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.appUpload,
-      builder: (context, state) => const AppUploadPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.openApp,
-      builder: (context, state) => const OpenAppPage(),
-    ),
-  ],
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.dataDownload,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return DataDownloadPage(lessonId: extra?['lesson_id']);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.pdfIndex,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return PdfIndexPage(pdfUrl: extra?['pdf_url']);
+        },
+      ),
+
+      // ===== F5. 商品订单模块 =====
+      GoRoute(
+        path: AppRoutes.goodsDetail,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final type = extra?['type'];
+
+          // 将type转换为字符串进行比较（兼容String和int）
+          final typeStr = type?.toString() ?? '';
+
+          // 调试日志
+          print(
+            '📦 商品详情路由 - type: $type, typeStr: $typeStr, goodsId: ${extra?['goods_id']}',
+          );
+
+          // 根据商品类型跳转不同的详情页
+          // type: 2/3=课程, 8=试卷, 10=模考, 18=题库
+          if (typeStr == '2' || typeStr == '3') {
+            print('✅ 跳转到课程商品详情页');
+            // 课程商品详情页
+            return CourseGoodsDetailPage(
+              goodsId: extra?['goods_id'],
+              professionalId: extra?['professional_id'],
+              type: int.tryParse(typeStr),
+            );
+          } else {
+            print('✅ 跳转到题库/试卷/模考商品详情页');
+            // 题库/试卷/模考商品详情页
+            return GoodsDetailPage(
+              goodsId: extra?['goods_id'],
+              professionalId: extra?['professional_id'],
+              active: extra?['active'],
+            );
+          }
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.secretRealDetail,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return SecretRealDetailPage(
+            productId: extra?['product_id'],
+            professionalId: extra?['professional_id'],
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.subjectMockDetail,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return SubjectMockDetailPage(
+            productId: extra?['product_id'],
+            professionalId: extra?['professional_id'],
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.simulatedExamRoom,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return SimulatedExamRoomPage(
+            productId: extra?['product_id'],
+            professionalId: extra?['professional_id'],
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.myOrder,
+        builder: (context, state) => const MyOrderPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.paySuccess,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return PaySuccessPage(
+            goodsId: extra?['goods_id'],
+            professionalIdName: extra?['professional_id_name'],
+            isLearnButton: extra?['isLearnButton'],
+          );
+        },
+      ),
+
+      // ===== F6. 我的中心模块 =====
+      GoRoute(
+        path: AppRoutes.myIndex,
+        builder: (context, state) => const ProfilePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.personEdit,
+        builder: (context, state) => const PersonEditPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportCenter,
+        builder: (context, state) => const ReportCenterPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.settings,
+        builder: (context, state) => const SettingsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.privacyPolicy,
+        builder: (context, state) => const PrivacyPolicyPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.userServiceAgreement,
+        builder: (context, state) => const UserServiceAgreementPage(),
+      ),
+
+      // ===== F7. 错题本模块 =====
+      GoRoute(
+        path: AppRoutes.wrongBookIndex,
+        builder: (context, state) => const WrongBookPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.wrongBookDetail,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          // TODO: 实现错题详情页（或直接使用MakeQuestionPage）
+          return const Placeholder();
+        },
+      ),
+
+      // ===== F8. 收藏管理模块 =====
+      GoRoute(
+        path: AppRoutes.collectIndex,
+        builder: (context, state) => const CollectPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.collectDetail,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          // TODO: 实现收藏详情页（或直接使用MakeQuestionPage）
+          return const Placeholder();
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.examEntryCollect,
+        builder: (context, state) {
+          // TODO: 实现考点收藏页
+          return const Placeholder();
+        },
+      ),
+
+      // ===== F9. H5活动模块 =====
+      GoRoute(
+        path: AppRoutes.codeReceive,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return CodeReceivePage(code: extra?['code']);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.appUpload,
+        builder: (context, state) => const AppUploadPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.openApp,
+        builder: (context, state) => const OpenAppPage(),
+      ),
+    ],
   );
 });

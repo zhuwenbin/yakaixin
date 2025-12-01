@@ -16,15 +16,10 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$HomeState {
-  List<GoodsModel> get recommendList =>
-      throw _privateConstructorUsedError; // 首页推荐（秒杀）
-  List<GoodsModel> get questionBankList =>
-      throw _privateConstructorUsedError; // 题库列表（全部）
-  List<GoodsModel> get purchasedList =>
-      throw _privateConstructorUsedError; // ✅ 已购试题列表
-  List<GoodsModel> get onlineCourseList =>
-      throw _privateConstructorUsedError; // 网课列表
-  List<GoodsModel> get liveList => throw _privateConstructorUsedError; // 直播列表
+  List<GoodsModel> get recommendList => throw _privateConstructorUsedError;
+  List<GoodsModel> get questionBankList => throw _privateConstructorUsedError;
+  List<GoodsModel> get onlineCourseList => throw _privateConstructorUsedError;
+  List<GoodsModel> get liveList => throw _privateConstructorUsedError;
   bool get isLoading => throw _privateConstructorUsedError;
   String? get error => throw _privateConstructorUsedError;
 
@@ -41,7 +36,6 @@ abstract class $HomeStateCopyWith<$Res> {
   $Res call(
       {List<GoodsModel> recommendList,
       List<GoodsModel> questionBankList,
-      List<GoodsModel> purchasedList,
       List<GoodsModel> onlineCourseList,
       List<GoodsModel> liveList,
       bool isLoading,
@@ -63,7 +57,6 @@ class _$HomeStateCopyWithImpl<$Res, $Val extends HomeState>
   $Res call({
     Object? recommendList = null,
     Object? questionBankList = null,
-    Object? purchasedList = null,
     Object? onlineCourseList = null,
     Object? liveList = null,
     Object? isLoading = null,
@@ -77,10 +70,6 @@ class _$HomeStateCopyWithImpl<$Res, $Val extends HomeState>
       questionBankList: null == questionBankList
           ? _value.questionBankList
           : questionBankList // ignore: cast_nullable_to_non_nullable
-              as List<GoodsModel>,
-      purchasedList: null == purchasedList
-          ? _value.purchasedList
-          : purchasedList // ignore: cast_nullable_to_non_nullable
               as List<GoodsModel>,
       onlineCourseList: null == onlineCourseList
           ? _value.onlineCourseList
@@ -113,7 +102,6 @@ abstract class _$$HomeStateImplCopyWith<$Res>
   $Res call(
       {List<GoodsModel> recommendList,
       List<GoodsModel> questionBankList,
-      List<GoodsModel> purchasedList,
       List<GoodsModel> onlineCourseList,
       List<GoodsModel> liveList,
       bool isLoading,
@@ -133,7 +121,6 @@ class __$$HomeStateImplCopyWithImpl<$Res>
   $Res call({
     Object? recommendList = null,
     Object? questionBankList = null,
-    Object? purchasedList = null,
     Object? onlineCourseList = null,
     Object? liveList = null,
     Object? isLoading = null,
@@ -147,10 +134,6 @@ class __$$HomeStateImplCopyWithImpl<$Res>
       questionBankList: null == questionBankList
           ? _value._questionBankList
           : questionBankList // ignore: cast_nullable_to_non_nullable
-              as List<GoodsModel>,
-      purchasedList: null == purchasedList
-          ? _value._purchasedList
-          : purchasedList // ignore: cast_nullable_to_non_nullable
               as List<GoodsModel>,
       onlineCourseList: null == onlineCourseList
           ? _value._onlineCourseList
@@ -178,14 +161,12 @@ class _$HomeStateImpl implements _HomeState {
   const _$HomeStateImpl(
       {final List<GoodsModel> recommendList = const [],
       final List<GoodsModel> questionBankList = const [],
-      final List<GoodsModel> purchasedList = const [],
       final List<GoodsModel> onlineCourseList = const [],
       final List<GoodsModel> liveList = const [],
       this.isLoading = false,
       this.error})
       : _recommendList = recommendList,
         _questionBankList = questionBankList,
-        _purchasedList = purchasedList,
         _onlineCourseList = onlineCourseList,
         _liveList = liveList;
 
@@ -198,9 +179,7 @@ class _$HomeStateImpl implements _HomeState {
     return EqualUnmodifiableListView(_recommendList);
   }
 
-// 首页推荐（秒杀）
   final List<GoodsModel> _questionBankList;
-// 首页推荐（秒杀）
   @override
   @JsonKey()
   List<GoodsModel> get questionBankList {
@@ -210,20 +189,7 @@ class _$HomeStateImpl implements _HomeState {
     return EqualUnmodifiableListView(_questionBankList);
   }
 
-// 题库列表（全部）
-  final List<GoodsModel> _purchasedList;
-// 题库列表（全部）
-  @override
-  @JsonKey()
-  List<GoodsModel> get purchasedList {
-    if (_purchasedList is EqualUnmodifiableListView) return _purchasedList;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_purchasedList);
-  }
-
-// ✅ 已购试题列表
   final List<GoodsModel> _onlineCourseList;
-// ✅ 已购试题列表
   @override
   @JsonKey()
   List<GoodsModel> get onlineCourseList {
@@ -233,9 +199,7 @@ class _$HomeStateImpl implements _HomeState {
     return EqualUnmodifiableListView(_onlineCourseList);
   }
 
-// 网课列表
   final List<GoodsModel> _liveList;
-// 网课列表
   @override
   @JsonKey()
   List<GoodsModel> get liveList {
@@ -244,7 +208,6 @@ class _$HomeStateImpl implements _HomeState {
     return EqualUnmodifiableListView(_liveList);
   }
 
-// 直播列表
   @override
   @JsonKey()
   final bool isLoading;
@@ -253,7 +216,7 @@ class _$HomeStateImpl implements _HomeState {
 
   @override
   String toString() {
-    return 'HomeState(recommendList: $recommendList, questionBankList: $questionBankList, purchasedList: $purchasedList, onlineCourseList: $onlineCourseList, liveList: $liveList, isLoading: $isLoading, error: $error)';
+    return 'HomeState(recommendList: $recommendList, questionBankList: $questionBankList, onlineCourseList: $onlineCourseList, liveList: $liveList, isLoading: $isLoading, error: $error)';
   }
 
   @override
@@ -265,8 +228,6 @@ class _$HomeStateImpl implements _HomeState {
                 .equals(other._recommendList, _recommendList) &&
             const DeepCollectionEquality()
                 .equals(other._questionBankList, _questionBankList) &&
-            const DeepCollectionEquality()
-                .equals(other._purchasedList, _purchasedList) &&
             const DeepCollectionEquality()
                 .equals(other._onlineCourseList, _onlineCourseList) &&
             const DeepCollectionEquality().equals(other._liveList, _liveList) &&
@@ -280,7 +241,6 @@ class _$HomeStateImpl implements _HomeState {
       runtimeType,
       const DeepCollectionEquality().hash(_recommendList),
       const DeepCollectionEquality().hash(_questionBankList),
-      const DeepCollectionEquality().hash(_purchasedList),
       const DeepCollectionEquality().hash(_onlineCourseList),
       const DeepCollectionEquality().hash(_liveList),
       isLoading,
@@ -297,7 +257,6 @@ abstract class _HomeState implements HomeState {
   const factory _HomeState(
       {final List<GoodsModel> recommendList,
       final List<GoodsModel> questionBankList,
-      final List<GoodsModel> purchasedList,
       final List<GoodsModel> onlineCourseList,
       final List<GoodsModel> liveList,
       final bool isLoading,
@@ -305,15 +264,13 @@ abstract class _HomeState implements HomeState {
 
   @override
   List<GoodsModel> get recommendList;
-  @override // 首页推荐（秒杀）
+  @override
   List<GoodsModel> get questionBankList;
-  @override // 题库列表（全部）
-  List<GoodsModel> get purchasedList;
-  @override // ✅ 已购试题列表
+  @override
   List<GoodsModel> get onlineCourseList;
-  @override // 网课列表
+  @override
   List<GoodsModel> get liveList;
-  @override // 直播列表
+  @override
   bool get isLoading;
   @override
   String? get error;

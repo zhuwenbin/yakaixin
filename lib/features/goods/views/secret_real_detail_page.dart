@@ -2,249 +2,315 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../../app/routes/app_routes.dart';
+import '../providers/secret_real_detail_provider.dart';
+import '../models/goods_detail_model.dart';
 
-/// P5-1-2 历年真题商品详情页
+/// P5-1-2 历年真题商品详情页（绝密真题）
 /// 对应小程序: modules/jintiku/pages/test/secretRealDetail.vue
 class SecretRealDetailPage extends ConsumerStatefulWidget {
   final String? productId;
   final String? professionalId;
 
-  const SecretRealDetailPage({
-    super.key,
-    this.productId,
-    this.professionalId,
-  });
+  const SecretRealDetailPage({super.key, this.productId, this.professionalId});
 
   @override
-  ConsumerState<SecretRealDetailPage> createState() => _SecretRealDetailPageState();
+  ConsumerState<SecretRealDetailPage> createState() =>
+      _SecretRealDetailPageState();
 }
 
 class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
-  // Mock数据
-  final Map<String, dynamic> _goodsInfo = {
-    'examTitle': '口腔执业医师',
-    'name': '2026口腔执业医师历年真题精选',
-    'tiku_goods_details': {
-      'question_num': 3580,
-      'exam_time': '2026-12-31',
-    },
-    'paper_statistics': {
-      'do_count': 0,
-      'total_accuracy_rate': '0',
-    },
-  };
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      if (widget.productId != null && widget.productId!.isNotEmpty) {
+        ref
+            .read(secretRealDetailNotifierProvider.notifier)
+            .loadDetail(widget.productId!);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(secretRealDetailNotifierProvider);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFF5F6F8),
       appBar: AppBar(
         title: const Text('绝密真题'),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          onPressed: () => context.pop(),
+        ),
       ),
-      body: _buildContent(),
-      bottomNavigationBar: _buildBottomBar(),
+      extendBodyBehindAppBar: true,
+      body: state.isLoading
+          ? _buildLoading()
+          : state.error != null
+          ? _buildError(state.error!)
+          : state.goodsDetail != null
+          ? _buildContent(state.goodsDetail!)
+          : _buildEmpty(),
+      bottomNavigationBar: state.goodsDetail != null
+          ? _buildBottomBar(state.goodsDetail!)
+          : null,
     );
   }
 
-  Widget _buildContent() {
-    return SingleChildScrollView(
+  Widget _buildLoading() {
+    return Center(
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildBlueBackground(),
-          _buildGoodsCard(),
-          SizedBox(height: 80.h),
+          CircularProgressIndicator(),
+          SizedBox(height: 16.h),
+          Text('加载中...', style: TextStyle(fontSize: 14.sp)),
         ],
       ),
     );
   }
 
-  /// 蓝色背景
-  Widget _buildBlueBackground() {
-    return Container(
-      height: 100.h,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF4A90E2), Color(0xFF5BA3F5)],
+  Widget _buildError(String error) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(50.h),
+        child: Column(
+          children: [
+            Icon(Icons.error_outline, size: 64.sp, color: Colors.red.shade300),
+            SizedBox(height: 16.h),
+            Text(error, textAlign: TextAlign.center),
+            SizedBox(height: 24.h),
+            ElevatedButton(
+              onPressed: () {
+                if (widget.productId != null) {
+                  ref
+                      .read(secretRealDetailNotifierProvider.notifier)
+                      .refresh(widget.productId!);
+                }
+              },
+              child: Text('重试'),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  /// 商品信息卡片
-  Widget _buildGoodsCard() {
-    final info = _goodsInfo;
-    final tikuDetails = info['tiku_goods_details'] as Map<String, dynamic>;
-    final paperStats = info['paper_statistics'] as Map<String, dynamic>;
+  Widget _buildEmpty() {
+    return Center(
+      child: Text('暂无数据', style: TextStyle(fontSize: 14.sp)),
+    );
+  }
 
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w),
-      transform: Matrix4.translationValues(0, -50.h, 0),
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10.r,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 标题
-          Text(
-            info['examTitle']?.toString() ?? '',
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF333333),
-            ),
-          ),
-          SizedBox(height: 12.h),
-          // 红色标签
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+  Widget _buildContent(GoodsDetailModel detail) {
+    // 对应小程序 Line 2-52
+    return Stack(
+      children: [
+        // 渐变背景（对应小程序 Line 3-5, CSS Line 701-709）
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: MediaQuery.of(context).size.height * 0.5,
+          child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFFFF4D4F),
-              borderRadius: BorderRadius.circular(4.r),
-            ),
-            child: Text(
-              '绝密真题',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFFB8E8FC), // 浅蓝色
+                  Color(0xFFF5F6F8), // 灰白色
+                ],
               ),
             ),
           ),
-          SizedBox(height: 16.h),
-          // 题目内容
-          Text(
-            '题目内容: ${info['name']}',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: const Color(0xFF666666),
+        ),
+        // 内容区域（对应小程序 Line 6-52）
+        SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 45.h, 16.w, 0),
+            child: Column(
+              children: [
+                // 绝密真题卡片（对应小程序 Line 7-47）
+                Expanded(child: _buildCard(detail)),
+              ],
             ),
           ),
-          SizedBox(height: 20.h),
-          // 统计信息列表
-          _buildStatsList(tikuDetails, paperStats),
-        ],
-      ),
-    );
-  }
-
-  /// 统计信息列表
-  Widget _buildStatsList(Map<String, dynamic> tikuDetails, Map<String, dynamic> paperStats) {
-    return Column(
-      children: [
-        _buildStatsItem(
-          '总题数:',
-          '${tikuDetails['question_num'] ?? 0}',
-        ),
-        _buildDivider(),
-        _buildStatsItem(
-          '做题次数:',
-          '${paperStats['do_count'] ?? 0}',
-        ),
-        _buildDivider(),
-        _buildStatsItem(
-          '正确率:',
-          '${paperStats['total_accuracy_rate'] ?? '0'}%',
-        ),
-        _buildDivider(),
-        _buildStatsItem(
-          '错题:',
-          '查看错题',
-          isLink: true,
-          onTap: _goToWrongQuestions,
-        ),
-        _buildDivider(),
-        _buildStatsItem(
-          '题库到期时间:',
-          tikuDetails['exam_time']?.toString() ?? '',
         ),
       ],
     );
   }
 
-  Widget _buildStatsItem(String label, String value, {bool isLink = false, VoidCallback? onTap}) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 12.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: const Color(0xFF666666),
-            ),
-          ),
-          GestureDetector(
-            onTap: onTap,
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: isLink ? const Color(0xFF1890FF) : const Color(0xFF333333),
-                fontWeight: isLink ? FontWeight.w500 : FontWeight.normal,
-              ),
-            ),
+  Widget _buildCard(GoodsDetailModel detail) {
+    // 对应小程序 Line 7-47
+    final questionNum = detail.tikuGoodsDetails?.questionNum?.toString() ?? '0';
+    final examTime = detail.tikuGoodsDetails?.examTime ?? '';
+    final doCount = detail.paperStatistics?.doCount?.toString() ?? '0';
+    final accuracyRate =
+        detail.paperStatistics?.totalAccuracyRate?.toString() ?? '0';
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(30.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: Offset(0, 4),
           ),
         ],
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 专业名称（对应小程序 Line 11-14）
+            Text(
+              detail.professionalIdName ?? '口腔执业医师',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 22.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            // 绝密真题标签（对应小程序 Line 15）
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: Color(0xFFFF5E00),
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+              child: Text(
+                '绝密真题',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            SizedBox(height: 24.h),
+            // 题目内容（对应小程序 Line 17-19）
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 12.h),
+              width: double.infinity,
+              child: Text(
+                '题目内容：${detail.name ?? ''}',
+                textAlign: TextAlign.left,
+                style: TextStyle(fontSize: 15.sp, color: Colors.black87),
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Divider(color: Colors.grey.shade300),
+            SizedBox(height: 16.h),
+            // 详情列表（对应小程序 Line 22-44）
+            _buildInfoRow('总题数', questionNum),
+            SizedBox(height: 16.h),
+            _buildInfoRow('做题次数', doCount),
+            SizedBox(height: 16.h),
+            _buildInfoRow('正确率', '$accuracyRate%'),
+            SizedBox(height: 16.h),
+            _buildInfoRowWithAction('错题', '查看错题', () {
+              // TODO: 跳转错题本（对应小程序 Line 221-230）
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('错题本功能开发中...')));
+            }),
+            SizedBox(height: 16.h),
+            _buildInfoRow('题库到期时间', examTime),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildDivider() {
-    return Divider(
-      height: 1,
-      color: const Color(0xFFF0F0F0),
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          '$label:',
+          style: TextStyle(fontSize: 15.sp, color: Colors.grey.shade600),
+        ),
+        Text(
+          value,
+          style: TextStyle(fontSize: 15.sp, color: Colors.black87),
+        ),
+      ],
     );
   }
 
-  /// 底部按钮栏
-  Widget _buildBottomBar() {
+  Widget _buildInfoRowWithAction(
+    String label,
+    String actionText,
+    VoidCallback onTap,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          '$label:',
+          style: TextStyle(fontSize: 15.sp, color: Colors.grey.shade600),
+        ),
+        GestureDetector(
+          onTap: onTap,
+          child: Text(
+            actionText,
+            style: TextStyle(
+              fontSize: 15.sp,
+              color: Color(0xFF2E68FF),
+              decoration: TextDecoration.none,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 底部按钮（对应小程序 Line 50, 211-220）
+  Widget _buildBottomBar(GoodsDetailModel detail) {
+    final isPurchased = detail.permissionStatus == '1';
+
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10.r,
-            offset: const Offset(0, -2),
+            offset: Offset(0, -2),
+            blurRadius: 8,
           ),
         ],
       ),
       child: SafeArea(
-        child: GestureDetector(
-          onTap: _startPractice,
-          child: Container(
-            width: double.infinity,
-            height: 48.h,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFF6B35), Color(0xFFFF8C42)],
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () => _handleAction(detail, isPurchased),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF2E68FF),
+              padding: EdgeInsets.symmetric(vertical: 16.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.r),
               ),
-              borderRadius: BorderRadius.circular(24.r),
+              elevation: 0,
             ),
-            child: Center(
-              child: Text(
-                '开始冲刺做题',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
+            child: Text(
+              isPurchased ? '开始冲刺做题' : '立即购买',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -253,15 +319,22 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
     );
   }
 
-  /// 查看错题
-  void _goToWrongQuestions() {
-    // TODO: 跳转到错题本页面
-    print('查看错题');
-  }
-
-  /// 开始做题
-  void _startPractice() {
-    // TODO: 开始做题
-    print('开始做题');
+  void _handleAction(GoodsDetailModel detail, bool isPurchased) {
+    if (isPurchased) {
+      // 已购买 - 跳转考试页（对应小程序 Line 215）
+      // pages/test/exam?id=${this.info.id}&recitation_question_model=${this.info.recitation_question_model}
+      context.push(
+        AppRoutes.testExam,
+        extra: {
+          'id': detail.goodsId?.toString(),
+          'recitation_question_model': detail.recitationQuestionModel,
+        },
+      );
+    } else {
+      // 未购买 - 显示购买弹窗（对应小程序 Line 218，54-98）
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('购买功能开发中...')));
+    }
   }
 }

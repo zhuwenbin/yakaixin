@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:yakaixin_app/core/utils/safe_type_converter.dart';
 
 part 'question_bank_model.freezed.dart';
 part 'question_bank_model.g.dart';
@@ -6,50 +7,9 @@ part 'question_bank_model.g.dart';
 // ============================================
 // 类型安全转换器 - 永远不要信任外部数据源
 // ============================================
-
-/// 类型安全转换器 - 处理所有可能的类型不匹配问题
-class SafeTypeConverter {
-  /// 安全转换为 int
-  static int toInt(dynamic value, {int defaultValue = 0}) {
-    if (value == null) return defaultValue;
-    if (value is int) return value;
-    if (value is double) return value.toInt();
-    if (value is String) {
-      return int.tryParse(value) ?? defaultValue;
-    }
-    return defaultValue;
-  }
-
-  /// 安全转换为 double
-  static double toDouble(dynamic value, {double defaultValue = 0.0}) {
-    if (value == null) return defaultValue;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) {
-      return double.tryParse(value) ?? defaultValue;
-    }
-    return defaultValue;
-  }
-
-  /// 安全转换为 String
-  static String toSafeString(dynamic value, {String defaultValue = ''}) {
-    if (value == null) return defaultValue;
-    return value.toString();
-  }
-
-  /// 安全转换为 bool
-  static bool toBool(dynamic value, {bool defaultValue = false}) {
-    if (value == null) return defaultValue;
-    if (value is bool) return value;
-    if (value is int) return value != 0;
-    if (value is String) {
-      final lower = value.toLowerCase();
-      if (lower == 'true' || lower == '1') return true;
-      if (lower == 'false' || lower == '0') return false;
-    }
-    return defaultValue;
-  }
-}
+// 
+// 注意：SafeTypeConverter 已统一在 lib/core/utils/safe_type_converter.dart 中定义
+// 本文件中的 JsonConverter 类使用统一的 SafeTypeConverter
 
 /// JsonConverter 实现
 class IntConverter implements JsonConverter<int, dynamic> {

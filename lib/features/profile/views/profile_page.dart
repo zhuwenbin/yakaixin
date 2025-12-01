@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../app/config/api_config.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/models/user_model.dart';
 import '../../main/main_tab_page.dart'; // 导入mainTabIndexProvider
@@ -80,20 +81,22 @@ class ProfilePage extends ConsumerWidget {
       padding: EdgeInsets.symmetric(horizontal: 16.w), // 32rpx ÷ 2 = 16.w
       child: Container(
         padding: EdgeInsets.only(bottom: 15.h), // 30rpx ÷ 2 = 15.h
-        child: Row(
-          children: [
-            // 头像
-            GestureDetector(
-              onTap: () {
-                if (isLoggedIn) {
-                  // 跳转到个人信息编辑页
-                  context.push(AppRoutes.personEdit);
-                } else {
-                  // 跳转到登录页面
-                  context.push(AppRoutes.loginCenter);
-                }
-              },
-              child: Container(
+        child: GestureDetector(
+          // ✅ 优化：整个区域都可点击
+          onTap: () {
+            if (isLoggedIn) {
+              // 跳转到个人信息编辑页
+              context.push(AppRoutes.personEdit);
+            } else {
+              // 跳转到登录页面
+              context.push(AppRoutes.loginCenter);
+            }
+          },
+          behavior: HitTestBehavior.opaque, // ✅ 确保整个区域可点击
+          child: Row(
+            children: [
+              // 头像
+              Container(
                 width: 64.w, // 128rpx ÷ 2 = 64.w
                 height: 64.w,
                 decoration: BoxDecoration(
@@ -106,7 +109,8 @@ class ProfilePage extends ConsumerWidget {
                 child: ClipOval(
                   child: isLoggedIn && user?.avatar != null && user!.avatar!.isNotEmpty
                       ? CachedNetworkImage(
-                          imageUrl: user.avatar!,
+                          // ✅ 修复：使用 ApiConfig.completeImageUrl() 拼接完整URL
+                          imageUrl: ApiConfig.completeImageUrl(user.avatar),
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(
                             color: Colors.grey[300],
@@ -123,42 +127,39 @@ class ProfilePage extends ConsumerWidget {
                         ),
                 ),
               ),
-            ),
-            SizedBox(width: 12.w), // 24rpx ÷ 2 = 12.w
-            // 用户信息
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isLoggedIn
-                        ? (user?.nickname ?? user?.studentName ?? '用户')
-                        : '请登录',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF03203D),
-                    ),
-                  ),
-                  if (isLoggedIn && user?.phone != null) ...[
-                    SizedBox(height: 4.h),
+              SizedBox(width: 12.w), // 24rpx ÷ 2 = 12.w
+              // 用户信息
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      _formatPhone(user!.phone!),
+                      isLoggedIn
+                          ? (user?.nickname ?? user?.studentName ?? '用户')
+                          : '请登录',
                       style: TextStyle(
-                        fontSize: 14.sp,
+                        fontSize: 18.sp,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFF03203D).withOpacity(0.85),
+                        color: const Color(0xFF03203D),
                       ),
                     ),
+                    if (isLoggedIn && user?.phone != null) ...[
+                      SizedBox(height: 4.h),
+                      Text(
+                        _formatPhone(user!.phone!),
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF03203D).withOpacity(0.85),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            // 编辑图标
-            if (isLoggedIn)
-              GestureDetector(
-                onTap: () => context.push(AppRoutes.personEdit),
-                child: Image.network(
+              // 编辑图标
+              if (isLoggedIn)
+                Image.network(
                   'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/34e7174539261545097316_%E7%BC%96%E7%BB%84%204%E5%A4%87%E4%BB%BD%203%402x.png',
                   width: 20.w,
                   height: 20.w,
@@ -168,8 +169,8 @@ class ProfilePage extends ConsumerWidget {
                     size: 24.sp,
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

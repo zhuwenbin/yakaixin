@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:convert';
@@ -19,28 +20,26 @@ import '../../app/config/api_config.dart';
 class NetworkDebugOverlay extends ConsumerStatefulWidget {
   final Widget child;
 
-  const NetworkDebugOverlay({
-    super.key,
-    required this.child,
-  });
+  const NetworkDebugOverlay({super.key, required this.child});
 
   @override
-  ConsumerState<NetworkDebugOverlay> createState() => _NetworkDebugOverlayState();
+  ConsumerState<NetworkDebugOverlay> createState() =>
+      _NetworkDebugOverlayState();
 }
 
 class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
   // 悬浮按钮位置
   Offset _position = Offset(20.w, 100.h);
-  
+
   // 是否展开列表
   bool _isExpanded = false;
-  
+
   // 是否显示环境选择器
   bool _showingEnvSelector = false;
-  
+
   // ⚠️ Mock 开关状态 - 从全局 Provider 读取
   // 注意：不要在这里初始化为固定值，而是在 build 方法中从 Provider 读取
-  
+
   // 当前显示详情的日志
   NetworkLogModel? _selectedLog;
 
@@ -63,7 +62,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
     final logs = ref.watch(networkLogsProvider);
     // ✅ 从全局 Provider 读取 Mock 状态
     final isMockEnabled = ref.watch(mockEnabledProvider);
-    
+
     // 在 Debug 模式下才显示悬浮按钮
     if (!kDebugMode) {
       return widget.child;
@@ -73,7 +72,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
       children: [
         // 原始页面
         widget.child,
-        
+
         // 调试悬浮窗
         if (!_isExpanded)
           // 折叠状态 - 悬浮按钮
@@ -105,24 +104,18 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
               child: _buildFloatingButton(logs.length),
             ),
           ),
-        
+
         // 展开状态 - 请求列表
         if (_isExpanded)
-          Positioned.fill(
-            child: _buildLogList(logs, isMockEnabled),
-          ),
-        
+          Positioned.fill(child: _buildLogList(logs, isMockEnabled)),
+
         // 环境选择器弹窗
         if (_showingEnvSelector)
-          Positioned.fill(
-            child: _buildEnvSelectorOverlay(),
-          ),
-        
+          Positioned.fill(child: _buildEnvSelectorOverlay()),
+
         // 请求详情弹窗
         if (_selectedLog != null)
-          Positioned.fill(
-            child: _buildLogDetailOverlay(_selectedLog!),
-          ),
+          Positioned.fill(child: _buildLogDetailOverlay(_selectedLog!)),
       ],
     );
   }
@@ -146,11 +139,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.network_check,
-            color: Colors.white,
-            size: 24.sp,
-          ),
+          Icon(Icons.network_check, color: Colors.white, size: 24.sp),
           SizedBox(height: 2.h),
           Text(
             '$requestCount',
@@ -199,12 +188,20 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                   ),
                   // 环境切换按钮
                   IconButton(
-                    icon: Icon(Icons.settings, color: Colors.white, size: 20.sp),
+                    icon: Icon(
+                      Icons.settings,
+                      color: Colors.white,
+                      size: 20.sp,
+                    ),
                     onPressed: _showEnvSelector,
                   ),
                   // 清空按钮
                   IconButton(
-                    icon: Icon(Icons.delete_outline, color: Colors.white, size: 20.sp),
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: Colors.white,
+                      size: 20.sp,
+                    ),
                     onPressed: () {
                       ref.read(networkLogsProvider.notifier).clearLogs();
                     },
@@ -221,7 +218,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                 ],
               ),
             ),
-            
+
             // 环境信息栏
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
@@ -242,10 +239,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                   Expanded(
                     child: Text(
                       ApiConfig.baseUrl,
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 11.sp,
-                      ),
+                      style: TextStyle(color: Colors.white54, fontSize: 11.sp),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -253,7 +247,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                 ],
               ),
             ),
-            
+
             // Mock 状态栏
             if (isMockEnabled)
               Container(
@@ -261,7 +255,11 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                 color: Colors.amber.shade900.withOpacity(0.3),
                 child: Row(
                   children: [
-                    Icon(Icons.science, color: Colors.amber.shade300, size: 14.sp),
+                    Icon(
+                      Icons.science,
+                      color: Colors.amber.shade300,
+                      size: 14.sp,
+                    ),
                     SizedBox(width: 8.w),
                     Text(
                       'Mock 模式已启用',
@@ -274,15 +272,12 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                     SizedBox(width: 8.w),
                     Text(
                       '所有请求将返回模拟数据',
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 11.sp,
-                      ),
+                      style: TextStyle(color: Colors.white54, fontSize: 11.sp),
                     ),
                   ],
                 ),
               ),
-            
+
             // 请求列表
             Expanded(
               child: logs.isEmpty
@@ -298,10 +293,8 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                   : ListView.separated(
                       padding: EdgeInsets.symmetric(vertical: 8.h),
                       itemCount: logs.length,
-                      separatorBuilder: (context, index) => Divider(
-                        height: 1,
-                        color: Colors.white10,
-                      ),
+                      separatorBuilder: (context, index) =>
+                          Divider(height: 1, color: Colors.white10),
                       itemBuilder: (context, index) {
                         final log = logs[index];
                         return _buildLogItem(log);
@@ -313,16 +306,16 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
       ),
     );
   }
-  
+
   /// 切换 Mock 开关
   void _toggleMock() {
     // ✅ 直接更新全局 Mock 状态，不再使用局部状态
     final currentState = ref.read(mockEnabledProvider);
     final newState = !currentState;
-    
+
     // 更新全局 Mock 状态
     ref.read(mockEnabledProvider.notifier).state = newState;
-    
+
     // ✅ 动态添加/移除 Mock 拦截器
     final dioClient = ref.read(dioClientProvider);
     if (newState) {
@@ -332,7 +325,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
       dioClient.disableMock();
       print('🔴 Mock 模式已关闭（全局状态: false）');
     }
-    
+
     // 显示提示
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -342,14 +335,14 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
       ),
     );
   }
-  
+
   /// 显示环境选择器
   void _showEnvSelector() {
     setState(() {
       _showingEnvSelector = true;
     });
   }
-  
+
   /// 构建环境选择器覆盖层
   Widget _buildEnvSelectorOverlay() {
     return Material(
@@ -370,10 +363,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
                   border: Border(
-                    bottom: BorderSide(
-                      color: Colors.white10,
-                      width: 1,
-                    ),
+                    bottom: BorderSide(color: Colors.white10, width: 1),
                   ),
                 ),
                 child: Row(
@@ -418,7 +408,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
       ),
     );
   }
-  
+
   /// 构建环境选项
   Widget _buildEnvOption(String env, String name, String url) {
     final isSelected = ApiConfig.currentEnv == env;
@@ -445,8 +435,8 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
       child: Container(
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? Colors.blue.shade700.withOpacity(0.3) 
+          color: isSelected
+              ? Colors.blue.shade700.withOpacity(0.3)
               : Colors.grey.shade800,
           border: Border.all(
             color: isSelected ? Colors.blue : Colors.transparent,
@@ -460,18 +450,16 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
             Row(
               children: [
                 if (isSelected)
-                  Icon(
-                    Icons.check_circle,
-                    color: Colors.blue,
-                    size: 16.sp,
-                  ),
+                  Icon(Icons.check_circle, color: Colors.blue, size: 16.sp),
                 if (isSelected) SizedBox(width: 6.w),
                 Text(
                   name,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 14.sp,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
               ],
@@ -479,17 +467,14 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
             SizedBox(height: 4.h),
             Text(
               url,
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 11.sp,
-              ),
+              style: TextStyle(color: Colors.white54, fontSize: 11.sp),
             ),
           ],
         ),
       ),
     );
   }
-  
+
   /// 获取环境名称
   String _getEnvName(String env) {
     switch (env) {
@@ -509,8 +494,8 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
     final statusColor = log.isSuccess
         ? Colors.green
         : log.errorMessage != null
-            ? Colors.red
-            : Colors.orange;
+        ? Colors.red
+        : Colors.orange;
 
     return InkWell(
       onTap: () {
@@ -545,10 +530,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                 Expanded(
                   child: Text(
                     _getShortUrl(log.url),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12.sp,
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 12.sp),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -557,7 +539,10 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                 // 状态码
                 if (log.statusCode != null)
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 6.w,
+                      vertical: 2.h,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.2),
                       border: Border.all(color: statusColor, width: 1),
@@ -580,10 +565,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
               children: [
                 Text(
                   _formatTime(log.timestamp),
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 11.sp,
-                  ),
+                  style: TextStyle(color: Colors.white54, fontSize: 11.sp),
                 ),
                 if (log.duration != null) ...[
                   SizedBox(width: 12.w),
@@ -600,10 +582,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                   Expanded(
                     child: Text(
                       log.errorMessage!,
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 11.sp,
-                      ),
+                      style: TextStyle(color: Colors.red, fontSize: 11.sp),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -623,7 +602,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
       _selectedLog = log;
     });
   }
-  
+
   /// 构建请求详情覆盖层
   Widget _buildLogDetailOverlay(NetworkLogModel log) {
     return Material(
@@ -649,9 +628,14 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                 children: [
                   // 标题栏
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 12.h,
+                    ),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(16.r),
+                      ),
                       border: Border(
                         bottom: BorderSide(color: Colors.white10, width: 1),
                       ),
@@ -668,7 +652,11 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                         ),
                         const Spacer(),
                         IconButton(
-                          icon: Icon(Icons.close, color: Colors.white, size: 20.sp),
+                          icon: Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 20.sp,
+                          ),
                           onPressed: () {
                             setState(() {
                               _selectedLog = null;
@@ -678,42 +666,57 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                       ],
                     ),
                   ),
-                  
+
                   // 详情内容
                   Expanded(
                     child: ListView(
                       padding: EdgeInsets.all(16.w),
                       children: [
+                        // ✅ 添加 curl 命令区块
+                        _buildCurlSection(log),
+
                         _buildDetailSection('基本信息', [
                           _buildDetailRow('请求方法', log.method),
                           _buildDetailRow('请求URL', log.url),
                           if (log.statusCode != null)
                             _buildDetailRow('状态码', '${log.statusCode}'),
                           if (log.duration != null)
-                            _buildDetailRow('耗时', '${log.duration!.inMilliseconds}ms'),
+                            _buildDetailRow(
+                              '耗时',
+                              '${log.duration!.inMilliseconds}ms',
+                            ),
                           _buildDetailRow('时间', _formatTime(log.timestamp)),
                         ]),
-                        
+
                         if (log.headers != null && log.headers!.isNotEmpty)
                           _buildDetailSection('请求头', [
                             _buildJsonView(log.headers!),
                           ]),
-                        
-                        if (log.queryParameters != null && log.queryParameters!.isNotEmpty)
+
+                        if (log.queryParameters != null &&
+                            log.queryParameters!.isNotEmpty)
                           _buildDetailSection('查询参数', [
                             _buildJsonView(log.queryParameters!),
                           ]),
-                        
+
                         if (log.requestData != null)
                           _buildDetailSection('请求体', [
-                            _buildJsonView(log.requestData is Map ? log.requestData : {'data': log.requestData.toString()}),
+                            _buildJsonView(
+                              log.requestData is Map
+                                  ? log.requestData
+                                  : {'data': log.requestData.toString()},
+                            ),
                           ]),
-                        
+
                         if (log.responseData != null)
                           _buildDetailSection('响应体', [
-                            _buildJsonView(log.responseData is Map ? log.responseData : {'data': log.responseData.toString()}),
+                            _buildJsonView(
+                              log.responseData is Map
+                                  ? log.responseData
+                                  : {'data': log.responseData.toString()},
+                            ),
                           ]),
-                        
+
                         if (log.errorMessage != null)
                           _buildDetailSection('错误信息', [
                             _buildDetailRow('错误', log.errorMessage!),
@@ -729,7 +732,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
       ),
     );
   }
-  
+
   /// 构建详情区块
   Widget _buildDetailSection(String title, List<Widget> children) {
     return Column(
@@ -760,7 +763,131 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
       ],
     );
   }
-  
+
+  /// 生成 curl 命令
+  String _generateCurlCommand(NetworkLogModel log) {
+    final buffer = StringBuffer();
+
+    // 基本命令
+    buffer.write('curl -X ${log.method}');
+
+    // URL (包含查询参数)
+    String url = log.url;
+    if (log.queryParameters != null && log.queryParameters!.isNotEmpty) {
+      final uri = Uri.parse(log.url);
+      final newUri = uri.replace(
+        queryParameters: log.queryParameters!.map(
+          (key, value) => MapEntry(key, value.toString()),
+        ),
+      );
+      url = newUri.toString();
+    }
+    buffer.write(' "$url"');
+
+    // 请求头
+    if (log.headers != null && log.headers!.isNotEmpty) {
+      log.headers!.forEach((key, value) {
+        // 跳过某些自动添加的头
+        if (key.toLowerCase() != 'content-length' &&
+            key.toLowerCase() != 'host') {
+          buffer.write(' \\\n  -H "$key: $value"');
+        }
+      });
+    }
+
+    // 请求体
+    if (log.requestData != null) {
+      String data;
+      if (log.requestData is Map || log.requestData is List) {
+        try {
+          data = jsonEncode(log.requestData);
+        } catch (e) {
+          data = log.requestData.toString();
+        }
+      } else {
+        data = log.requestData.toString();
+      }
+
+      // 转义特殊字符
+      data = data.replaceAll('"', '\\"').replaceAll('\$', '\\\$');
+      buffer.write(' \\\n  -d "$data"');
+    }
+
+    return buffer.toString();
+  }
+
+  /// 构建 curl 命令区块
+  Widget _buildCurlSection(NetworkLogModel log) {
+    final curlCommand = _generateCurlCommand(log);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.code, color: Colors.orange.shade300, size: 18.sp),
+            SizedBox(width: 8.w),
+            Text(
+              'cURL 命令',
+              style: TextStyle(
+                color: Colors.orange.shade300,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Spacer(),
+            // 复制按钮
+            TextButton.icon(
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: curlCommand));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('✅ cURL 命令已复制到剪贴板'),
+                    duration: const Duration(seconds: 2),
+                    backgroundColor: Colors.green.shade700,
+                  ),
+                );
+              },
+              icon: Icon(Icons.copy, size: 16.sp, color: Colors.white70),
+              label: Text(
+                '复制',
+                style: TextStyle(fontSize: 12.sp, color: Colors.white70),
+              ),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 8.h),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(
+              color: Colors.orange.shade300.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: SelectableText(
+            curlCommand,
+            style: TextStyle(
+              color: Colors.orange.shade100,
+              fontSize: 11.sp,
+              fontFamily: 'monospace',
+              height: 1.5,
+            ),
+          ),
+        ),
+        SizedBox(height: 16.h),
+      ],
+    );
+  }
+
   /// 构建详情行
   Widget _buildDetailRow(String label, String value) {
     return Padding(
@@ -770,24 +897,18 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
         children: [
           Text(
             label,
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12.sp,
-            ),
+            style: TextStyle(color: Colors.white70, fontSize: 12.sp),
           ),
           SizedBox(height: 4.h),
           SelectableText(
             value,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 12.sp,
-            ),
+            style: TextStyle(color: Colors.white, fontSize: 12.sp),
           ),
         ],
       ),
     );
   }
-  
+
   /// 构建 JSON 视图
   Widget _buildJsonView(dynamic data) {
     String jsonStr;
@@ -868,7 +989,9 @@ class _NetworkLogDetailSheet extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                 decoration: BoxDecoration(
                   color: Colors.black,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(16.r),
+                  ),
                   border: Border(
                     bottom: BorderSide(color: Colors.white10, width: 1),
                   ),
@@ -891,7 +1014,7 @@ class _NetworkLogDetailSheet extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // 详情内容
               Expanded(
                 child: ListView(
@@ -904,38 +1027,37 @@ class _NetworkLogDetailSheet extends StatelessWidget {
                       if (log.statusCode != null)
                         _buildInfoRow('状态码', '${log.statusCode}'),
                       if (log.duration != null)
-                        _buildInfoRow('耗时', '${log.duration!.inMilliseconds}ms'),
+                        _buildInfoRow(
+                          '耗时',
+                          '${log.duration!.inMilliseconds}ms',
+                        ),
                       _buildInfoRow('时间', log.timestamp.toString()),
                     ]),
-                    
+
                     if (log.headers != null && log.headers!.isNotEmpty)
-                      _buildSection('请求头', [
-                        _buildJsonView(log.headers!),
-                      ]),
-                    
-                    if (log.queryParameters != null && log.queryParameters!.isNotEmpty)
+                      _buildSection('请求头', [_buildJsonView(log.headers!)]),
+
+                    if (log.queryParameters != null &&
+                        log.queryParameters!.isNotEmpty)
                       _buildSection('查询参数', [
                         _buildJsonView(log.queryParameters!),
                       ]),
-                    
+
                     if (log.requestData != null)
                       _buildSection('请求数据', [
                         _buildJsonView(_toMap(log.requestData)),
                       ]),
-                    
+
                     if (log.responseData != null)
                       _buildSection('响应数据', [
                         _buildJsonView(_toMap(log.responseData)),
                       ]),
-                    
+
                     if (log.errorMessage != null)
                       _buildSection('错误信息', [
                         Text(
                           log.errorMessage!,
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 12.sp,
-                          ),
+                          style: TextStyle(color: Colors.red, fontSize: 12.sp),
                         ),
                       ]),
                   ],
@@ -987,19 +1109,13 @@ class _NetworkLogDetailSheet extends StatelessWidget {
             width: 80.w,
             child: Text(
               '$label:',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 12.sp,
-              ),
+              style: TextStyle(color: Colors.white70, fontSize: 12.sp),
             ),
           ),
           Expanded(
             child: SelectableText(
               value,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12.sp,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 12.sp),
             ),
           ),
         ],
@@ -1021,10 +1137,7 @@ class _NetworkLogDetailSheet extends StatelessWidget {
     } catch (e) {
       return Text(
         data.toString(),
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 12.sp,
-        ),
+        style: TextStyle(color: Colors.white, fontSize: 12.sp),
       );
     }
   }

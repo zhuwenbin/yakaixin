@@ -3,15 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yakaixin_app/app/routes/app_routes.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
-import '../../home/services/goods_service.dart';
-import '../../home/models/goods_model.dart';
-import '../../main/main_tab_page.dart'; // 导入 mainTabIndexProvider
-import '../../../core/storage/storage_service.dart'; // ✅ 新增 StorageService
-import '../../../app/constants/storage_keys.dart';  // ✅ 新增 StorageKeys
-// import 已移除 - 现在使用API调用，MockInterceptor会自动处理Mock数据
+import '../providers/course_detail_provider.dart';
+import '../models/course_detail_model.dart';
+import '../../../core/utils/safe_type_converter.dart';
 
-/// 课程详情页面 - 对应小程序 study/detail/index.vue
+/// 学习课程详情页面 - 对应小程序 study/detail/index.vue
 /// 功能：显示课程信息、学习进度、课程列表
 class CourseDetailPage extends ConsumerStatefulWidget {
   final String goodsId;
@@ -30,257 +26,49 @@ class CourseDetailPage extends ConsumerStatefulWidget {
 }
 
 class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
-  // ✅ 使用真实数据模型
-  GoodsModel? _goodsDetail;
-  bool _isLoading = true;
-  String? _errorMessage;
-  
-  // 从 Mock数据文件获取数据
-  // ⚠️ 以下 Mock 数据引用已废弃，需要改为通过 API 调用获取
-  // TODO: 使用 Dio 调用 API，MockInterceptor 会自动返回 Mock 数据
-  Map<String, dynamic> get _mockCourseInfo => {}; // MockCourseData.courseDetail;
-  Map<String, dynamic> get _mockRecentlyData => {}; // MockCourseData.recentlyData;
-  List<Map<String, dynamic>> get _mockLessonList => []; // MockCourseData.lessonList;
-  
+  /// 拼接完整图片路径
+  /// 对应小程序: completePath() (Line 478-486)
+  String _completePath(String? path) {
+    if (path == null || path.isEmpty) {
+      return '';
+    }
+    // 如果已经包含完整域名,直接返回
+    if (path.contains('http://') || path.contains('https://')) {
+      return path;
+    }
+    // 拼接完整路径
+    return 'https://yakaixin.oss-cn-beijing.aliyuncs.com/$path';
+  }
+
   @override
   void initState() {
     super.initState();
-    _loadGoodsDetail();
-  }
-  
-  /// 加载商品详情，检查购买状态
-  /// 对应小程序 Line 466-480: mounted() 中的逻辑
-  Future<void> _loadGoodsDetail() async {
-    try {
-      // ✅ 关键修复：优先使用传入的 orderId 参数（对应小程序 Line 651-653）
-      final orderId = _getOrderIdValue(widget.orderId);
-      
-      print('\n========== 🔍 [课程详情] 开始加载 ==========');
-      print('📦 传入参数:');
-      print('  - goodsId: ${widget.goodsId}');
-      print('  - orderId: ${widget.orderId} (原始值)');
-      print('  - orderId (转换后): $orderId');
-      print('  - goodsPid: ${widget.goodsPid}');
-      
-      // ⚠️ 如果传入的 orderId 有值且大于0，说明已报名，直接显示课程详情
-      if (orderId != null && orderId > 0) {
-        print('\n✅ 判断结果: 已报名（orderId > 0）');
-        print('  → 直接显示课程详情 + "去学习"按钮');
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-      
-      // ⚠️ orderId 为空或0，需要调用 getGoodsDetail 检查 permission_order_id
-      print('\n📝 判断结果: orderId 为空或0，需要调用 getGoodsDetail 检查权限');
-      
-      final goodsService = ref.read(goodsServiceProvider);
-      
-      // ✅ 关键修复: 获取学生ID并传递给API
-      final storage = ref.read(storageServiceProvider);
-      final studentId = storage.getString(StorageKeys.studentId);
-      
-      
-      final goods = await goodsService.getGoodsDetail(
-        goodsId: widget.goodsId,
-        userId: studentId,     // ✅ 传递 userId
-        studentId: studentId,  // ✅ 传递 studentId
-      );
-      
- 
-      
-      setState(() {
-        _goodsDetail = goods;
-        _isLoading = false;
-      });
-      
-      // ✅ 关键判断：参照小程序 Line 475-478
-      // 检查 permission_order_id 是否为 0（未报名）
-      final permissionOrderId = _getOrderIdValue(goods.permissionOrderId);
-      
-      print('\n🔍 购买状态判断:');
-      print('  - permission_order_id (转换后): $permissionOrderId');
-      
-      // ⚠️ permission_order_id 为 0 或 null 时，跳转到商品详情页（报名页）
-      if (permissionOrderId == null || permissionOrderId == 0) {
-        print('\n❌ 最终判断: 未报名（permission_order_id 为空或0）');
-        print('  → 跳转到商品详情页（报名/购买页面）');
-        // 跳转到商品详情页（报名/购买页面）
-        if (mounted) {
-          context.push('/course-goods-detail', extra: {
-            'goods_id': widget.goodsId,
-            'type': goods.type,
-          });
-        }
-        return;
-      }
-      
-      // ✅ 已报名，显示课程详情
-      print('\n✅ 最终判断: 已报名（permission_order_id > 0）');
-      print('  → 显示课程详情 + "去学习"按钮');
-      print('========== ✅ [课程详情] 加载完成 ==========\n');
-      
-    } catch (e, stackTrace) {
-      print('\n❌ [课程详情] 加载失败:');
-      print('  错误: $e');
-      print('  堆栈: $stackTrace');
-      setState(() {
-        _errorMessage = '加载失败: $e';
-        _isLoading = false;
-      });
-      EasyLoading.showError('加载课程详情失败');
-    }
-  }
-  
-  /// 安全获取 order_id 值
-  /// 处理 dynamic 类型，可能是 String "0" 或 int 0 或 null
-  int? _getOrderIdValue(dynamic value) {
-    if (value == null) return null;
-    if (value is int) return value;
-    if (value is String) {
-      if (value.isEmpty) return null;
-      return int.tryParse(value);
-    }
-    return null;
+    // ✅ 使用 Provider 加载数据
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(courseDetailNotifierProvider.notifier)
+          .loadAllData(
+            goodsId: widget.goodsId,
+            orderId: widget.orderId,
+            goodsPid: widget.goodsPid,
+          );
+    });
   }
 
- @override
+  @override
   Widget build(BuildContext context) {
-    // ⚠️ 加载中状态
-    if (_isLoading) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
-        appBar: _buildAppBar(),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-    
-    // ⚠️ 错误状态
-    if (_errorMessage != null) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
-        appBar: _buildAppBar(),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(_errorMessage!, style: TextStyle(color: Colors.red)),
-              SizedBox(height: 16.h),
-              ElevatedButton(
-                onPressed: _loadGoodsDetail,
-                child: const Text('重试'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    
-    // ✅ 正常显示
+    final state = ref.watch(courseDetailNotifierProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: _buildAppBar(),
-      body: _buildBody(),
-      // ✅ 添加底部"去学习"按钮（已购买且有order_id）
-      bottomNavigationBar: _shouldShowLearnButton()
-          ? _buildBottomButton()
-          : null,
+      body: state.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : state.error != null
+          ? _buildError(state.error!)
+          : _buildContent(state),
+      // ✅ 小程序中没有底部按钮，已删除
     );
-  }
-  
-  /// 判断是否显示"去学习"按钮
-  /// 对应小程序逻辑: 有 order_id 且不为 0
-  bool _shouldShowLearnButton() {
-    print('\n========== 🔍 判断是否显示"去学习"按钮 ==========');
-    
-    // ✅ 优先检查传入的 orderId 参数
-    final orderId = _getOrderIdValue(widget.orderId);
-    print('👉 检查 widget.orderId:');
-    print('  - 原始值: ${widget.orderId}');
-    print('  - 转换后: $orderId');
-    
-    if (orderId != null && orderId > 0) {
-      print('\n✅ 结果: 显示"去学习"按钮（因为 widget.orderId > 0）');
-      print('==============================================\n');
-      return true;
-    }
-    
-    // ✅ 如果没有传入 orderId，检查 goodsDetail.permissionOrderId
-    print('\n👉 widget.orderId 为空或0，检查 _goodsDetail.permissionOrderId:');
-    
-    if (_goodsDetail == null) {
-      print('  - _goodsDetail: null');
-      print('\n❌ 结果: 不显示按钮（_goodsDetail 为 null）');
-      print('==============================================\n');
-      return false;
-    }
-    
-    print('  - _goodsDetail.permissionOrderId (原始值): ${_goodsDetail!.permissionOrderId}');
-    
-    final permissionOrderId = _getOrderIdValue(_goodsDetail!.permissionOrderId);
-    print('  - permissionOrderId (转换后): $permissionOrderId');
-    
-    final shouldShow = permissionOrderId != null && permissionOrderId > 0;
-    
-    if (shouldShow) {
-      print('\n✅ 结果: 显示"去学习"按钮（permissionOrderId > 0）');
-    } else {
-      print('\n❌ 结果: 不显示按钮（permissionOrderId 为空或0）');
-    }
-    print('==============================================\n');
-    
-    return shouldShow;
-  }
-  
-  /// 底部"去学习"按钮
-  /// 对应小程序的购买后状态，点击返回主页面课程Tab
-  Widget _buildBottomButton() {
-    return Container(
-      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 24.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: GestureDetector(
-        onTap: _onGoLearn,
-        child: Container(
-          height: 44,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF018CFF), Color(0xFF0066CC)],
-            ),
-            borderRadius: BorderRadius.circular(22),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            '去学习',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-  
-  /// 去学习 - 返回主页面课程Tab
-  /// 参照支付成功页的逻辑
-  void _onGoLearn() {
-    if (mounted) {
-      // 1. 设置Tab索引为课程页（索引2）
-      ref.read(mainTabIndexProvider.notifier).state = 2;
-      // 2. 返回主Tab页面
-      context.go(AppRoutes.mainTab);
-    }
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -292,13 +80,49 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildError(String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
+          SizedBox(height: 16.h),
+          Text(
+            error,
+            style: TextStyle(fontSize: 14.sp, color: Colors.red),
+          ),
+          SizedBox(height: 16.h),
+          ElevatedButton(
+            onPressed: () {
+              ref
+                  .read(courseDetailNotifierProvider.notifier)
+                  .loadAllData(
+                    goodsId: widget.goodsId,
+                    orderId: widget.orderId,
+                    goodsPid: widget.goodsPid,
+                  );
+            },
+            child: const Text('重试'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(CourseDetailState state) {
+    final courseInfo = state.courseInfo;
+    final classList = state.classList;
+    final recentlyData = state.recentlyData;
+
     return SingleChildScrollView(
       child: Column(
         children: [
-          _buildCourseHeader(),
-          if (_mockRecentlyData['lesson_id'] != null) _buildContinueLearning(),
-          ..._buildLessonList(),
+          // 课程头部信息
+          if (courseInfo != null) _buildCourseHeader(courseInfo),
+          // 继续学习卡片
+          if (recentlyData != null) _buildContinueLearning(recentlyData),
+          // 课程列表
+          ...classList.map((classItem) => _buildLessonClassCard(classItem)),
           SizedBox(height: 20.h),
         ],
       ),
@@ -306,12 +130,15 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
   }
 
   /// 课程头部信息
-  Widget _buildCourseHeader() {
-    final classInfo = _mockCourseInfo['class'];
-    final progress = _calculateProgress(
+  Widget _buildCourseHeader(CourseDetailModel courseInfo) {
+    final classInfo = courseInfo.classInfo ?? {};
+    final lessonNum = SafeTypeConverter.toInt(classInfo['lesson_num']);
+    final lessonAttendanceNum = SafeTypeConverter.toInt(
       classInfo['lesson_attendance_num'],
-      classInfo['lesson_num'],
     );
+    final progress = lessonNum > 0
+        ? ((lessonAttendanceNum / lessonNum) * 100).round()
+        : 0;
 
     return Container(
       color: Colors.white,
@@ -319,20 +146,20 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildCourseName(),
+          _buildCourseName(courseInfo),
           SizedBox(height: 12.h),
-          _buildCourseDate(classInfo['date']),
+          _buildCourseDate(classInfo['date']?.toString() ?? ''),
           SizedBox(height: 16.h),
           _buildProgress(progress),
           SizedBox(height: 16.h),
-          _buildTeachers(classInfo['teacher']),
+          _buildTeachers(classInfo['teacher'] as List? ?? []),
         ],
       ),
     );
   }
 
-  Widget _buildCourseName() {
-    final businessType = _mockCourseInfo['business_type'];
+  Widget _buildCourseName(CourseDetailModel courseInfo) {
+    final businessType = SafeTypeConverter.toInt(courseInfo.businessType);
 
     return Row(
       children: [
@@ -341,20 +168,24 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
             margin: EdgeInsets.only(right: 8.w),
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
             decoration: BoxDecoration(
-              color: businessType == 2 ? const Color(0xFFFFE5CC) : const Color(0xFFE6F4FF),
+              color: businessType == 2
+                  ? const Color(0xFFFFE5CC)
+                  : const Color(0xFFE6F4FF),
               borderRadius: BorderRadius.circular(4.r),
             ),
             child: Text(
               businessType == 2 ? '高端' : '私塾',
               style: TextStyle(
                 fontSize: 12.sp,
-                color: businessType == 2 ? const Color(0xFFFF6600) : const Color(0xFF018CFF),
+                color: businessType == 2
+                    ? const Color(0xFFFF6600)
+                    : const Color(0xFF018CFF),
               ),
             ),
           ),
         Expanded(
           child: Text(
-            _mockCourseInfo['goods_name'] ?? '',
+            courseInfo.goodsName ?? '课程名称',
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.w600,
@@ -368,11 +199,8 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
 
   Widget _buildCourseDate(String date) {
     return Text(
-      date ?? '',
-      style: TextStyle(
-        fontSize: 12.sp,
-        color: const Color(0xFF999999),
-      ),
+      date,
+      style: TextStyle(fontSize: 12.sp, color: const Color(0xFF999999)),
     );
   }
 
@@ -381,10 +209,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
       children: [
         Text(
           '学习进度',
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: const Color(0xFF666666),
-          ),
+          style: TextStyle(fontSize: 14.sp, color: const Color(0xFF666666)),
         ),
         SizedBox(width: 12.w),
         Expanded(
@@ -401,31 +226,32 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
         SizedBox(width: 12.w),
         Text(
           '$progress%',
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: const Color(0xFF666666),
-          ),
+          style: TextStyle(fontSize: 14.sp, color: const Color(0xFF666666)),
         ),
       ],
     );
   }
 
   Widget _buildTeachers(List teachers) {
-    if (teachers == null || teachers.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (teachers.isEmpty) return const SizedBox.shrink();
 
     return Wrap(
       spacing: 16.w,
       runSpacing: 12.h,
       children: teachers.map<Widget>((teacher) {
-        return _TeacherItem(teacher: teacher);
+        if (teacher is! Map<String, dynamic>) return const SizedBox.shrink();
+        return _TeacherItem(teacher: teacher, completePath: _completePath);
       }).toList(),
     );
   }
 
   /// 继续学习卡片
-  Widget _buildContinueLearning() {
+  Widget _buildContinueLearning(RecentlyDataModel recentlyData) {
+    final lessonName = recentlyData.lessonName ?? '';
+    final displayName = lessonName.length > 12
+        ? '${lessonName.substring(0, 12)}...'
+        : lessonName;
+
     return Container(
       margin: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 0),
       padding: EdgeInsets.all(16.w),
@@ -435,13 +261,24 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
       ),
       child: Row(
         children: [
-          Icon(Icons.play_circle, size: 20.sp, color: const Color(0xFF018CFF)),
-          SizedBox(width: 8.w),
+          // ✅ 使用图片图标（与小程序一致）
+          Image.network(
+            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/5022173314276286241077_播放.png',
+            width: 20.w,
+            height: 20.w,
+            errorBuilder: (_, __, ___) => Icon(
+              Icons.play_circle,
+              size: 20.sp,
+              color: const Color(0xFF018CFF),
+            ),
+          ),
+          SizedBox(width: 10.w),
           Expanded(
             child: Text(
-              _mockRecentlyData['lesson_name'] ?? '',
+              displayName,
               style: TextStyle(
                 fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
                 color: const Color(0xFF262629),
               ),
               maxLines: 1,
@@ -449,18 +286,26 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
             ),
           ),
           GestureDetector(
-            onTap: () => _goLookCourse(_mockRecentlyData['lesson_id'], '3'),
+            onTap: () {
+              if (recentlyData.lessonId != null) {
+                _goLookCourse(recentlyData.lessonId!, '3', {
+                  'lesson_id': recentlyData.lessonId,
+                  'lesson_name': recentlyData.lessonName,
+                });
+              }
+            },
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
               decoration: BoxDecoration(
-                color: const Color(0xFF018CFF),
-                borderRadius: BorderRadius.circular(16.r),
+                // ✅ 与小程序一致：rgba(1, 163, 99, 0.07)
+                color: const Color(0xFF018CFF).withOpacity(0.07),
+                borderRadius: BorderRadius.circular(14.r),
               ),
               child: Text(
                 '继续学习',
                 style: TextStyle(
-                  fontSize: 13.sp,
-                  color: Colors.white,
+                  fontSize: 12.sp,
+                  color: const Color(0xFF018CFF),
                 ),
               ),
             ),
@@ -470,117 +315,20 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
     );
   }
 
-  /// 课程列表
-  List<Widget> _buildLessonList() {
-    return _mockLessonList.map((item) {
-      return _LessonClassCard(
-        classInfo: item,
-        onToggle: () {
-          setState(() {
-            item['isClose'] = !item['isClose'];
-          });
-        },
-        onLessonTap: _goLookCourse,
-        onHomeworkTap: _goAnswer,
-      );
-    }).toList();
-  }
-
-  int _calculateProgress(int completed, int total) {
-    if (total == 0) return 0;
-    return ((completed / total) * 100).round();
-  }
-
-  void _goLookCourse(String lessonId, String teachingType) {
-    if (teachingType == '3') {
-      // 录播
-      context.push(AppRoutes.videoIndex, extra: {
-        'lesson_id': lessonId,
-      });
-    } else if (teachingType == '1') {
-      // 直播
-      context.push(AppRoutes.liveIndex, extra: {
-        'lesson_id': lessonId,
-      });
-    }
-  }
-
-  void _goAnswer(Map<String, dynamic> lesson, Map<String, dynamic> btn) {
-    context.push(AppRoutes.makeQuestion, extra: {
-      'paper_version_id': btn['paper_version_id'],
-      'evaluation_type_id': btn['id'],
-      'lesson_id': lesson['lesson_id'],
-    });
-  }
-}
-
-/// 教师信息项
-class _TeacherItem extends StatelessWidget {
-  final Map<String, dynamic> teacher;
-
-  const _TeacherItem({required this.teacher});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        CircleAvatar(
-          radius: 20.r,
-          backgroundImage: teacher['avatar'] != null && teacher['avatar'].isNotEmpty
-              ? NetworkImage(teacher['avatar'])
-              : null,
-          child: teacher['avatar'] == null || teacher['avatar'].isEmpty
-              ? Icon(Icons.person, size: 20.sp)
-              : null,
-        ),
-        SizedBox(width: 8.w),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              teacher['name'] ?? '',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF262629),
-              ),
-            ),
-            Text(
-              teacher['title'] ?? '',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: const Color(0xFF999999),
-              ),
-            ),
-          ],
-        ),
-      ],
+  /// 班级课程卡片
+  Widget _buildLessonClassCard(CourseClassModel classItem) {
+    final index = ref
+        .read(courseDetailNotifierProvider)
+        .classList
+        .indexOf(classItem);
+    final isClose = classItem.isClose;
+    final lessonNum = SafeTypeConverter.toInt(classItem.lessonNum);
+    final lessonAttendanceNum = SafeTypeConverter.toInt(
+      classItem.lessonAttendanceNum,
     );
-  }
-}
-
-/// 班级课程卡片
-class _LessonClassCard extends StatelessWidget {
-  final Map<String, dynamic> classInfo;
-  final VoidCallback onToggle;
-  final Function(String, String) onLessonTap;
-  final Function(Map<String, dynamic>, Map<String, dynamic>) onHomeworkTap;
-
-  const _LessonClassCard({
-    required this.classInfo,
-    required this.onToggle,
-    required this.onLessonTap,
-    required this.onHomeworkTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isClose = classInfo['isClose'] ?? false;
-    final progress = _calculateProgress(
-      classInfo['lesson_attendance_num'],
-      classInfo['lesson_num'],
-    );
+    final progress = lessonNum > 0
+        ? ((lessonAttendanceNum / lessonNum) * 100).round()
+        : 0;
 
     return Container(
       margin: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 0),
@@ -590,16 +338,30 @@ class _LessonClassCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildHeader(isClose, progress),
-          if (!isClose) _buildLessonList(),
+          _buildClassHeader(classItem, isClose, progress, index),
+          if (!isClose) _buildLessonList(classItem),
         ],
       ),
     );
   }
 
-  Widget _buildHeader(bool isClose, int progress) {
+  Widget _buildClassHeader(
+    CourseClassModel classItem,
+    bool isClose,
+    int progress,
+    int index,
+  ) {
+    final lessonNum = SafeTypeConverter.toInt(classItem.lessonNum);
+    final lessonAttendanceNum = SafeTypeConverter.toInt(
+      classItem.lessonAttendanceNum,
+    );
+
     return GestureDetector(
-      onTap: onToggle,
+      onTap: () {
+        ref
+            .read(courseDetailNotifierProvider.notifier)
+            .toggleClassExpand(index);
+      },
       child: Container(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -614,7 +376,7 @@ class _LessonClassCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4.r),
                   ),
                   child: Text(
-                    classInfo['teaching_type_name'] ?? '',
+                    classItem.teachingTypeName ?? '',
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: const Color(0xFF018CFF),
@@ -624,7 +386,7 @@ class _LessonClassCard extends StatelessWidget {
                 SizedBox(width: 8.w),
                 Expanded(
                   child: Text(
-                    classInfo['name'] ?? '',
+                    classItem.name ?? '',
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w500,
@@ -633,7 +395,7 @@ class _LessonClassCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '(${classInfo['lesson_attendance_num'] ?? 0}/${classInfo['lesson_num'] ?? 0})',
+                  '($lessonAttendanceNum/$lessonNum)',
                   style: TextStyle(
                     fontSize: 12.sp,
                     color: const Color(0xFF999999),
@@ -647,14 +409,18 @@ class _LessonClassCard extends StatelessWidget {
                 ),
               ],
             ),
-            if (classInfo['address'] != null && classInfo['address'].isNotEmpty) ...[
+            if (classItem.address != null && classItem.address!.isNotEmpty) ...[
               SizedBox(height: 12.h),
               Row(
                 children: [
-                  Icon(Icons.location_on, size: 14.sp, color: const Color(0xFF999999)),
+                  Icon(
+                    Icons.location_on,
+                    size: 14.sp,
+                    color: const Color(0xFF999999),
+                  ),
                   SizedBox(width: 4.w),
                   Text(
-                    classInfo['address'],
+                    classItem.address!,
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: const Color(0xFF999999),
@@ -680,14 +446,16 @@ class _LessonClassCard extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: progress / 100,
                       backgroundColor: const Color(0xFFD3F4E2),
-                      valueColor: const AlwaysStoppedAnimation(Color(0xFF018CFF)),
+                      valueColor: const AlwaysStoppedAnimation(
+                        Color(0xFF018CFF),
+                      ),
                       minHeight: 4.h,
                     ),
                   ),
                 ),
                 SizedBox(width: 12.w),
                 Text(
-                  '${classInfo['lesson_attendance_num'] ?? 0}/${classInfo['lesson_num'] ?? 0}',
+                  '$lessonAttendanceNum/$lessonNum',
                   style: TextStyle(
                     fontSize: 12.sp,
                     color: const Color(0xFF999999),
@@ -701,8 +469,8 @@ class _LessonClassCard extends StatelessWidget {
     );
   }
 
-  Widget _buildLessonList() {
-    final lessons = classInfo['lesson'] as List? ?? [];
+  Widget _buildLessonList(CourseClassModel classItem) {
+    final lessons = classItem.lessons ?? [];
 
     return Column(
       children: lessons.asMap().entries.map((entry) {
@@ -711,17 +479,188 @@ class _LessonClassCard extends StatelessWidget {
         return _LessonItem(
           lesson: lesson,
           index: index,
-          teachingType: classInfo['teaching_type'],
-          onTap: onLessonTap,
-          onHomeworkTap: onHomeworkTap,
+          teachingType: classItem.teachingType ?? '',
+          onTap:
+              (
+                String lessonId,
+                String teachingType,
+                Map<String, dynamic> lessonData,
+              ) => _goLookCourse(lessonId, teachingType, lesson),
+          onHomeworkTap: _goAnswer,
         );
       }).toList(),
     );
   }
 
-  int _calculateProgress(int completed, int total) {
-    if (total == 0) return 0;
-    return ((completed / total) * 100).round();
+  void _goLookCourse(
+    String lessonId,
+    String teachingType,
+    Map<String, dynamic> lesson,
+  ) {
+    // ✅ 对应小程序 goLookCourse 方法
+    // teaching_type: "1"=直播, "3"=录播
+
+    // 获取当前班级的ID (对应小程序的 courseItem.id)
+    // ⚠️ 修复：使用 lesson_id 进行匹配，避免对象引用比较失败
+    final classList = ref.read(courseDetailNotifierProvider).classList;
+
+    print('\n========== 🔍 [开始查找班级] ==========');
+    print('📚 班级总数: ${classList.length}');
+    print('🎯 目标 lesson_id: ${lesson['lesson_id']}');
+
+    final classItem = classList.firstWhere(
+      (item) {
+        final lessons = item.lessons;
+        if (lessons == null || lessons.isEmpty) {
+          print('   - 班级 "${item.name}" (班级ID: ${item.classId}): lessons 为空');
+          return false;
+        }
+        final hasLesson = lessons.any(
+          (l) => l['lesson_id'] == lesson['lesson_id'],
+        );
+        if (hasLesson) {
+          print('   ✅ 找到匹配班级: "${item.name}" (班级ID: ${item.classId})');
+        }
+        return hasLesson;
+      },
+      orElse: () {
+        print('\u26a0️ [班级查找] 未找到匹配的班级，使用第一个班级');
+        if (classList.isNotEmpty) {
+          print(
+            '   ✅ 使用第一个班级: "${classList.first.name}" (班级ID: ${classList.first.classId})',
+          );
+          return classList.first;
+        }
+        throw Exception('班级列表为空');
+      },
+    );
+
+    print('=========================================\n');
+
+    // ✅ 添加详细日志，验证参数传递
+    print('\n========== 🎬 [跳转视频播放页] ==========');
+    print('🆔 课节ID (lesson_id): $lessonId');
+    print('📝 课节名称 (lesson_name): ${lesson['lesson_name']}');
+    print('🎥 教学类型 (teaching_type): $teachingType');
+    print('📦 套餐商品ID (goods_id): ${widget.goodsId}');
+    print('🎯 班级ID (filter_goods_id): ${classItem.classId}');
+    print('🎯 班级名称: ${classItem.name}');
+    print('🏫 班级ID (class_id): ${classItem.classId}');
+    print('🔧 系统ID (system_id): ${lesson['system_id']}');
+    print('📋 订单ID (order_id): ${widget.orderId}');
+
+    // ✅ 准备章节数据（从班级中提取）
+    final List<Map<String, dynamic>> chapterData = [];
+    // 将班级作为一个章节，班级内的lessons作为subs
+    if (classItem.lessons != null && classItem.lessons!.isNotEmpty) {
+      chapterData.add({
+        'id': classItem.classId ?? '1',
+        'name': classItem.name ?? '课程列表',
+        'subs': classItem.lessons!.map((lessonMap) {
+          return {
+            'lesson_id': lessonMap['lesson_id']?.toString() ?? '',
+            'name': lessonMap['lesson_name']?.toString() ?? '',
+            'time': '', // 可以从lesson中获取
+            'is_trial_listening':
+                lessonMap['is_trial_listening']?.toString() ?? '0',
+            'teaching_type': lessonMap['teaching_type']?.toString() ?? '3',
+            'system_id': lessonMap['system_id']?.toString() ?? '',
+            'status': lessonMap['status']?.toString() ?? '1',
+          };
+        }).toList(),
+      });
+      print(
+        '📚 准备传递章节数据: ${chapterData.length} 个章节, 共 ${classItem.lessons!.length} 个课节',
+      );
+    } else {
+      print('⚠️ 当前班级没有课节数据');
+    }
+
+    print('==========================================\n');
+
+    if (teachingType == '3') {
+      // 录播 - 跳转录播页面
+      context.push(
+        AppRoutes.videoIndex,
+        extra: {
+          'lesson_id': lessonId,
+          'goods_id': widget.goodsId,
+          'order_id': widget.orderId,
+          'goods_pid': widget.goodsPid,
+          'system_id': lesson['system_id']?.toString(),
+          'name': lesson['lesson_name']?.toString(),
+          'filter_goods_id': classItem.classId, // ✅ 对应小程序 filter_goods_id
+          'class_id': classItem.classId, // ✅ 对应小程序 class_id
+          'chapter_data': chapterData, // ✅ 新增：直接传递章节数据
+        },
+      );
+    } else if (teachingType == '1') {
+      // 直播 - 跳转直播页面
+      context.push(
+        AppRoutes.liveIndex,
+        extra: {
+          'lesson_id': lessonId,
+          'filter_goods_id': classItem.classId,
+          'class_id': classItem.classId,
+        },
+      );
+    }
+  }
+
+  void _goAnswer(Map<String, dynamic> lesson, Map<String, dynamic> btn) {
+    context.push(
+      AppRoutes.makeQuestion,
+      extra: {
+        'paper_version_id': btn['paper_version_id'],
+        'evaluation_type_id': btn['id'],
+        'lesson_id': lesson['lesson_id'],
+      },
+    );
+  }
+}
+
+/// 教师信息项
+class _TeacherItem extends StatelessWidget {
+  final Map<String, dynamic> teacher;
+  final String Function(String?) completePath;
+
+  const _TeacherItem({required this.teacher, required this.completePath});
+
+  @override
+  Widget build(BuildContext context) {
+    final avatar = teacher['avatar']?.toString() ?? '';
+    final avatarUrl = avatar.isNotEmpty ? completePath(avatar) : '';
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CircleAvatar(
+          radius: 20.r,
+          backgroundImage: avatarUrl.isNotEmpty
+              ? NetworkImage(avatarUrl)
+              : null,
+          child: avatarUrl.isEmpty ? Icon(Icons.person, size: 20.sp) : null,
+        ),
+        SizedBox(width: 8.w),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              teacher['name'] ?? '',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF262629),
+              ),
+            ),
+            Text(
+              teacher['title'] ?? '',
+              style: TextStyle(fontSize: 12.sp, color: const Color(0xFF999999)),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }
 
@@ -730,7 +669,7 @@ class _LessonItem extends StatefulWidget {
   final Map<String, dynamic> lesson;
   final int index;
   final String teachingType;
-  final Function(String, String) onTap;
+  final Function(String, String, Map<String, dynamic>) onTap;
   final Function(Map<String, dynamic>, Map<String, dynamic>) onHomeworkTap;
 
   const _LessonItem({
@@ -763,7 +702,11 @@ class _LessonItemState extends State<_LessonItem> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
-            onTap: () => widget.onTap(widget.lesson['lesson_id'], widget.teachingType),
+            onTap: () => widget.onTap(
+              widget.lesson['lesson_id'],
+              widget.teachingType,
+              widget.lesson,
+            ),
             child: Row(
               children: [
                 Text(
@@ -793,46 +736,77 @@ class _LessonItemState extends State<_LessonItem> {
             _buildLessonDescription(),
           ],
           SizedBox(height: 8.h),
-          Row(
-            children: [
-              if (widget.teachingType == '1') ...[
-                Icon(
-                  widget.lesson['lesson_status'] == '3' ? Icons.play_circle : Icons.videocam,
-                  size: 14.sp,
-                  color: const Color(0xFF999999),
-                ),
-                SizedBox(width: 4.w),
-                Text(
-                  widget.lesson['lesson_status'] == '3' ? '回放' : '直播',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: const Color(0xFF999999),
-                  ),
-                ),
-                SizedBox(width: 12.w),
-              ],
-              Expanded(
-                child: Text(
-                  widget.lesson['date'] ?? '',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: const Color(0xFF999999),
-                  ),
-                ),
+          // ✅ 课节消息区域（与小程序一致：浅黄色背景，可点击）
+          GestureDetector(
+            onTap: () => widget.onTap(
+              widget.lesson['lesson_id'],
+              widget.teachingType,
+              widget.lesson,
+            ),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF6E3), // 与小程序一致
+                borderRadius: BorderRadius.circular(4.r),
               ),
-              Text(
-                isFinished ? '已学完' : '未学习',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: isFinished ? const Color(0xFF999999) : const Color(0xFF018CFF),
-                ),
+              child: Row(
+                children: [
+                  if (widget.teachingType == '1') ...[
+                    Icon(
+                      widget.lesson['lesson_status'] == '3'
+                          ? Icons.play_circle
+                          : Icons.videocam,
+                      size: 14.sp,
+                      color: const Color(0xFF424B57),
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      widget.lesson['lesson_status'] == '3' ? '回放' : '直播',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: const Color(0xFF424B57),
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Container(
+                      width: 1,
+                      height: 10.h,
+                      color: const Color(0xFFE1E5E8),
+                    ),
+                    SizedBox(width: 8.w),
+                  ],
+                  Expanded(
+                    child: Text(
+                      widget.lesson['date'] ?? '',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: const Color(0xFF424B57),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    isFinished ? '已学完' : '未学习',
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: isFinished
+                          ? const Color(0xFF999999)
+                          : const Color(0xFF018CFF),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
           if (widget.lesson['evaluation_type_top'] != null &&
               widget.lesson['evaluation_type_top'].isNotEmpty) ...[
             SizedBox(height: 12.h),
-            _buildHomeworkButtons(),
+            _buildTopOperations(),
+          ],
+          // ✅ 新增：底部作业列表
+          if (widget.lesson['evaluation_type_bottom'] != null &&
+              widget.lesson['evaluation_type_bottom'].isNotEmpty) ...[
+            SizedBox(height: 12.h),
+            _buildBottomEvaluations(),
           ],
         ],
       ),
@@ -848,10 +822,7 @@ class _LessonItemState extends State<_LessonItem> {
       children: [
         Text(
           description,
-          style: TextStyle(
-            fontSize: 12.sp,
-            color: const Color(0xFF999999),
-          ),
+          style: TextStyle(fontSize: 12.sp, color: const Color(0xFF999999)),
           maxLines: _isExpanded ? null : 1,
           overflow: _isExpanded ? null : TextOverflow.ellipsis,
         ),
@@ -864,48 +835,154 @@ class _LessonItemState extends State<_LessonItem> {
             },
             child: Text(
               _isExpanded ? '收起' : '展开',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: const Color(0xFF018CFF),
-              ),
+              style: TextStyle(fontSize: 12.sp, color: const Color(0xFF018CFF)),
             ),
           ),
       ],
     );
   }
 
-  Widget _buildHomeworkButtons() {
-    final buttons = widget.lesson['evaluation_type_top'] as List;
+  /// 顶部操作区（作业+资料）
+  Widget _buildTopOperations() {
+    final topButtons = widget.lesson['evaluation_type_top'] as List;
+    final resourceDocument = widget.lesson['resource_document'] as List? ?? [];
 
-    return Wrap(
-      spacing: 12.w,
-      runSpacing: 8.h,
-      children: buttons.map<Widget>((btn) {
-        return GestureDetector(
-          onTap: () => widget.onHomeworkTap(widget.lesson, btn),
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F6FA),
-              borderRadius: BorderRadius.circular(4.r),
+    return Container(
+      padding: EdgeInsets.only(bottom: 22.h), // 与小程序一致
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // 作业按钮
+          ...topButtons.asMap().entries.map((entry) {
+            final index = entry.key;
+            final btn = entry.value;
+            final isLast =
+                index == topButtons.length - 1 && resourceDocument.isEmpty;
+            return _buildOperationButton(
+              icon: Icons.assignment,
+              text: btn['name'] ?? '',
+              onTap: () => widget.onHomeworkTap(widget.lesson, btn),
+              showDivider: !isLast,
+            );
+          }),
+          // 资料按钮
+          if (resourceDocument.isNotEmpty)
+            _buildOperationButton(
+              icon: Icons.file_download,
+              text: '资料',
+              onTap: () {
+                final path = resourceDocument[0]['path'];
+                if (path != null) {
+                  context.push(
+                    AppRoutes.dataDownload,
+                    extra: {'resource_path': path},
+                  );
+                }
+              },
+              showDivider: false,
             ),
+        ],
+      ),
+    );
+  }
+
+  /// 操作按钮（带分隔线）
+  Widget _buildOperationButton({
+    required IconData icon,
+    required String text,
+    required VoidCallback onTap,
+    bool showDivider = false,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: onTap,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14.sp, color: const Color(0xFF018CFF)),
+              SizedBox(width: 4.w),
+              Text(
+                text,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: const Color(0xFF018CFF),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (showDivider) ...[
+          SizedBox(width: 12.w),
+          Container(width: 1, height: 10.h, color: const Color(0xFFECEEF1)),
+          SizedBox(width: 12.w),
+        ],
+      ],
+    );
+  }
+
+  /// 底部作业列表（独立测评）
+  Widget _buildBottomEvaluations() {
+    final bottomButtons = widget.lesson['evaluation_type_bottom'] as List;
+
+    return Container(
+      margin: EdgeInsets.only(top: 8.h),
+      padding: EdgeInsets.symmetric(vertical: 12.h),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: const Color(0xFFE8E9EA).withOpacity(0.6)),
+        ),
+      ),
+      child: Column(
+        children: bottomButtons.map<Widget>((item) {
+          final isCompleted = item['is_evaluation'] == '1';
+          return Container(
+            margin: EdgeInsets.only(bottom: 12.h),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.assignment, size: 14.sp, color: const Color(0xFF018CFF)),
-                SizedBox(width: 4.w),
-                Text(
-                  btn['name'] ?? '',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: const Color(0xFF018CFF),
+                Icon(Icons.quiz, size: 16.sp, color: const Color(0xFF018CFF)),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    item['name'] ?? '',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: const Color(0xFF262629),
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: isCompleted
+                      ? null
+                      : () => widget.onHomeworkTap(widget.lesson, item),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 6.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isCompleted
+                          ? const Color(0xFFE8E9EA)
+                          : const Color(0xFF018CFF),
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                    child: Text(
+                      isCompleted ? '已完成' : '去考试',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: isCompleted
+                            ? const Color(0xFF999999)
+                            : Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 }

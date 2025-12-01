@@ -109,4 +109,24 @@ class ApiConfig {
   
   // 版本号 (对应小程序 version)
   static const String version = '1.4.14';
+  
+  // ✅ OSS配置 (对应小程序 VUE_APP_YAKAIXIN_BASEOSSURL)
+  // 用于拼接完整的图片URL
+  static const String ossBaseUrl = 'https://yakaixin.oss-cn-beijing.aliyuncs.com/';
+  
+  /// 拼接完整的图片URL
+  /// 对应小程序: utils/index.js Line 615-616 completePathNew()
+  static String completeImageUrl(String? path) {
+    if (path == null || path.isEmpty) {
+      return '';
+    }
+    
+    // 如果已经包含完整URL，直接返回
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    
+    // 拼接OSS基础URL
+    return ossBaseUrl + path;
+  }
 }

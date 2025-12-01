@@ -84,13 +84,13 @@ class HomeNotifier extends StateNotifier<HomeState> {
       final questionBankList = results[0].list;
       print('📚 [题库数据] 获取到 ${questionBankList.length} 条数据');
       
-      // ✅ 网课列表
-      final onlineCourseList = results[1].list;
-      print('🎓 [网课数据] 获取到 ${onlineCourseList.length} 条数据');
+      // ✅ 网课列表 - 增强数据处理（对应小程序 Line 336-356）
+      final onlineCourseList = _enhanceCourseData(results[1].list);
+      print('🎓 [网课数据] 获取到 ${onlineCourseList.length} 条数据（已增强）');
       
-      // ✅ 直播列表
-      final liveList = results[2].list;
-      print('📡 [直播数据] 获取到 ${liveList.length} 条数据');
+      // ✅ 直播列表 - 增强数据处理（对应小程序 Line 313-332）
+      final liveList = _enhanceCourseData(results[2].list);
+      print('📡 [直播数据] 获取到 ${liveList.length} 条数据（已增强）');
 
       // ✅ 筛选秒杀推荐商品 (首页推荐 且 **未购买**)
       // 参考小程序 Line 258-262: 
@@ -128,6 +128,44 @@ class HomeNotifier extends StateNotifier<HomeState> {
   Future<void> refresh() async {
     // ⚠️ 不清空数据，直接重新加载，保持 loading 状态
     await loadHomeData();
+  }
+  
+  /// 增强课程数据
+  /// 对应小程序 brushing.vue Line 274-356 的数据处理逻辑
+  /// 
+  /// 处理内容：
+  /// 1. new_type_name: 根据 type 计算类型名称（试卷/章节练习/套餐）
+  /// 2. shop_type: 计算商店类型（推荐/好课/课程类型）
+  /// 3. showTeacherData: 只显示前4个教师
+  List<GoodsModel> _enhanceCourseData(List<GoodsModel> list) {
+    return list.map((item) {
+      // 1. ✅ 计算 new_type_name（对应小程序 Line 274-286）
+      String newTypeName = '';
+      final typeStr = item.type?.toString() ?? '';
+      if (typeStr == '8') {
+        newTypeName = '试卷';
+      } else if (typeStr == '18') {
+        newTypeName = '章节练习';
+      } else if (typeStr == '3' || typeStr == '2') {
+        newTypeName = '套餐';
+      }
+      
+      // 2. ✅ 计算 shop_type（对应小程序 Line 289-310 computGoodType）
+      // 已在 GoodsModelExtension 中实现 computeShopType()
+      final shopType = item.computeShopType();
+      
+      // 3. ✅ 提取前4个教师数据（对应小程序 Line 323, 347）
+      final showTeacherData = item.teacherData != null && item.teacherData!.length > 4
+          ? item.teacherData!.sublist(0, 4)
+          : item.teacherData;
+      
+      // ✅ 返回增强后的数据（使用 copyWith 保持不可变性）
+      return item.copyWith(
+        newTypeName: newTypeName.isEmpty ? item.newTypeName : newTypeName,
+        shopType: shopType,
+        teacherData: showTeacherData,
+      );
+    }).toList();
   }
 }
 

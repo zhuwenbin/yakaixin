@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../providers/subject_mock_detail_provider.dart';
+import '../models/goods_detail_model.dart';
+import '../../../core/utils/safe_type_converter.dart';
 
 /// P5-1-3 科目模考商品详情页
 /// 对应小程序: modules/jintiku/pages/test/subjectMockDetail.vue
@@ -8,30 +12,30 @@ class SubjectMockDetailPage extends ConsumerStatefulWidget {
   final String? productId;
   final String? professionalId;
 
-  const SubjectMockDetailPage({
-    super.key,
-    this.productId,
-    this.professionalId,
-  });
+  const SubjectMockDetailPage({super.key, this.productId, this.professionalId});
 
   @override
-  ConsumerState<SubjectMockDetailPage> createState() => _SubjectMockDetailPageState();
+  ConsumerState<SubjectMockDetailPage> createState() =>
+      _SubjectMockDetailPageState();
 }
 
 class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
-  // Mock数据
-  final Map<String, dynamic> _goodsInfo = {
-    'name': '2026口腔执业医师科目模考',
-    'subtitle': '查漏补缺 直击重点',
-    'sale_price': '199.00',
-    'original_price': '299.00',
-    'longImagePath': '', // 长图路径，暂时为空
-  };
-
-  bool _showBuyPopup = false;
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      if (widget.productId != null && widget.productId!.isNotEmpty) {
+        ref
+            .read(subjectMockDetailNotifierProvider.notifier)
+            .loadDetail(widget.productId!);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(subjectMockDetailNotifierProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -39,189 +43,231 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-      body: _buildContent(),
-      bottomNavigationBar: _buildBottomBar(),
+      body: state.isLoading
+          ? _buildLoading()
+          : state.error != null
+          ? _buildError(state.error!)
+          : state.goodsDetail != null
+          ? _buildContent(state.goodsDetail!)
+          : _buildEmpty(),
+      bottomNavigationBar: state.goodsDetail != null
+          ? _buildBottomBar(state.goodsDetail!)
+          : null,
     );
   }
 
-  Widget _buildContent() {
-    final longImagePath = _goodsInfo['longImagePath']?.toString() ?? '';
-    
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // 长图展示区域
-          if (longImagePath.isNotEmpty)
-            Image.network(
-              longImagePath,
-              width: double.infinity,
-              fit: BoxFit.fitWidth,
-              errorBuilder: (context, error, stackTrace) {
-                return _buildPlaceholder();
-              },
-            )
-          else
-            _buildPlaceholder(),
-        ],
-      ),
-    );
-  }
-
-  /// 占位图（当长图未配置时显示）
-  Widget _buildPlaceholder() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(40.w),
-      color: const Color(0xFFF5F7FA),
+  Widget _buildLoading() {
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.image_outlined,
-            size: 80.sp,
-            color: const Color(0xFFCCCCCC),
-          ),
+          CircularProgressIndicator(),
           SizedBox(height: 16.h),
-          Text(
-            _goodsInfo['name']?.toString() ?? '',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF333333),
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            _goodsInfo['subtitle']?.toString() ?? '',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: const Color(0xFF999999),
-            ),
-          ),
-          SizedBox(height: 40.h),
-          Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Column(
-              children: [
-                _buildInfoRow('课程名称', _goodsInfo['name']?.toString() ?? ''),
-                SizedBox(height: 12.h),
-                _buildInfoRow('课程特点', _goodsInfo['subtitle']?.toString() ?? ''),
-                SizedBox(height: 12.h),
-                _buildInfoRow(
-                  '价格',
-                  '¥${_goodsInfo['sale_price']}',
-                  valueColor: const Color(0xFFFF4D4F),
-                ),
-              ],
-            ),
-          ),
+          Text('加载中...', style: TextStyle(fontSize: 14.sp)),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {Color? valueColor}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: const Color(0xFF666666),
-          ),
+  Widget _buildError(String error) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(50.h),
+        child: Column(
+          children: [
+            Icon(Icons.error_outline, size: 64.sp, color: Colors.red.shade300),
+            SizedBox(height: 16.h),
+            Text(error, textAlign: TextAlign.center),
+            SizedBox(height: 24.h),
+            ElevatedButton(
+              onPressed: () {
+                if (widget.productId != null) {
+                  ref
+                      .read(subjectMockDetailNotifierProvider.notifier)
+                      .refresh(widget.productId!);
+                }
+              },
+              child: Text('重试'),
+            ),
+          ],
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: valueColor ?? const Color(0xFF333333),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  /// 底部购买栏
-  Widget _buildBottomBar() {
-    final salePrice = _goodsInfo['sale_price']?.toString() ?? '0.00';
+  Widget _buildEmpty() {
+    return Center(
+      child: Text('暂无数据', style: TextStyle(fontSize: 14.sp)),
+    );
+  }
+
+  Widget _buildContent(GoodsDetailModel detail) {
+    // 科目模考显示长图介绍（对应小程序 Line 4-6）
+    final longImagePath = detail.longImgPath;
+    
+    // ✅ 对照小程序 Line 444: this.longImagePath = this.completepath(res.data.long_img_path)
+    // ✅ completepath 逻辑：如果不是 http 开头，则补全 OSS 域名
+    String? completeImageUrl;
+    if (longImagePath != null && longImagePath.isNotEmpty) {
+      if (longImagePath.startsWith('http')) {
+        completeImageUrl = longImagePath;
+      } else {
+        completeImageUrl = 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/$longImagePath';
+      }
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          if (completeImageUrl != null && completeImageUrl.isNotEmpty)
+            CachedNetworkImage(
+              imageUrl: completeImageUrl,
+              fit: BoxFit.fitWidth,
+              placeholder: (context, url) => Container(
+                height: 200.h,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              errorWidget: (context, error, stackTrace) {
+                return Container(
+                  padding: EdgeInsets.all(50.h),
+                  child: Column(
+                    children: [
+                      Icon(Icons.image, size: 64.sp, color: Colors.grey),
+                      SizedBox(height: 16.h),
+                      Text(
+                        '图片加载失败',
+                        style: TextStyle(fontSize: 14.sp, color: Colors.grey),
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        'URL: $completeImageUrl',
+                        style: TextStyle(fontSize: 10.sp, color: Colors.grey),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            )
+          else
+            Container(
+              padding: EdgeInsets.all(50.h),
+              child: Column(
+                children: [
+                  Icon(Icons.description, size: 64.sp, color: Colors.grey),
+                  SizedBox(height: 16.h),
+                  Text(
+                    '暂无商品介绍',
+                    style: TextStyle(fontSize: 14.sp, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          SizedBox(height: 100.h),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(GoodsDetailModel detail) {
+    final isPurchased = detail.permissionStatus == '1';
+    final activePriceIndex = ref.watch(
+      subjectMockDetailNotifierProvider.select((s) => s.activePriceIndex),
+    );
+    final prices = detail.prices ?? [];
+    final currentPrice = prices.isNotEmpty && activePriceIndex < prices.length
+        ? prices[activePriceIndex]
+        : null;
+    final currentSalePrice = SafeTypeConverter.toSafeString(
+      currentPrice?.salePrice,
+      defaultValue: '0',
+    );
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10.r,
-            offset: const Offset(0, -2),
+            offset: Offset(0, -2),
+            blurRadius: 8,
           ),
         ],
       ),
       child: SafeArea(
         child: Row(
           children: [
-            // 价格
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
+            if (!isPurchased && currentPrice != null) ...[
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '¥',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: const Color(0xFFFF4D4F),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      salePrice,
-                      style: TextStyle(
-                        fontSize: 24.sp,
-                        color: const Color(0xFFFF4D4F),
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '¥',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            color: Color(0xFFCD3F2F),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          currentSalePrice,
+                          style: TextStyle(
+                            fontSize: 24.sp,
+                            color: Color(0xFFCD3F2F),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-            SizedBox(width: 16.w),
-            // 购买按钮
-            Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _showBuyPopup = true),
-                child: Container(
-                  height: 44.h,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFF6B35), Color(0xFFFF8C42)],
-                    ),
-                    borderRadius: BorderRadius.circular(22.r),
+              ),
+              SizedBox(width: 16.w),
+              ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('购买功能开发中...')));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF2E68FF),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 40.w,
+                    vertical: 14.h,
                   ),
-                  child: Center(
-                    child: Text(
-                      '立即购买',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24.r),
                   ),
                 ),
+                child: Text('立即购买', style: TextStyle(fontSize: 16.sp)),
               ),
-            ),
+            ] else ...[
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('开始练习功能开发中...')));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF2E68FF),
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24.r),
+                    ),
+                  ),
+                  child: Text('开始练习', style: TextStyle(fontSize: 16.sp)),
+                ),
+              ),
+            ],
           ],
         ),
       ),

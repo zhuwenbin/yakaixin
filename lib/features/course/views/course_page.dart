@@ -8,9 +8,10 @@ import '../../../app/routes/app_routes.dart';
 import '../providers/course_provider.dart';
 import '../models/lesson_model.dart';
 import '../models/course_model.dart';
+import '../../auth/providers/auth_provider.dart';
 
 /// 上课主页 - 对应小程序: src/modules/jintiku/pages/study/index.vue
-/// 
+///
 /// 主要功能：
 /// 1. 日历选择器 - 选择日期查看当天课程
 /// 2. 今日课程列表 (LessonsList) - 显示选中日期的课节
@@ -27,11 +28,11 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   DateTime _selectedDate = DateTime.now();
   String _teachingType = ''; // "": 全部, "1": 直播, "2": 面授, "3": 录播
   bool _showCalendar = false;
-  
+
   // ✅ Overlay 相关
   OverlayEntry? _calendarOverlay;
   final LayerLink _layerLink = LayerLink();
-  
+
   final List<Map<String, String>> _teachingTypeOptions = [
     {'name': '全部', 'id': ''},
     {'name': '录播', 'id': '3'},
@@ -44,7 +45,9 @@ class _CoursePageState extends ConsumerState<CoursePage> {
     super.initState();
     // ✅ 使用 Provider 加载数据
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(courseNotifierProvider.notifier).loadInitialData(_selectedDate, _teachingType);
+      ref
+          .read(courseNotifierProvider.notifier)
+          .loadInitialData(_selectedDate, _teachingType);
     });
   }
 
@@ -57,10 +60,10 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   /// 显示日历 Overlay
   void _showCalendarOverlay() {
     _removeCalendarOverlay();
-    
+
     // ✅ 获取当前 dotDates
     final dotDates = ref.read(courseNotifierProvider).dotDates;
-    
+
     _calendarOverlay = OverlayEntry(
       builder: (context) => Stack(
         children: [
@@ -68,9 +71,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
           Positioned.fill(
             child: GestureDetector(
               onTap: _removeCalendarOverlay,
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.5),
-              ),
+              child: Container(color: Colors.black.withValues(alpha: 0.5)),
             ),
           ),
           // 日历下拉框 - 从周历底部展开
@@ -79,7 +80,10 @@ class _CoursePageState extends ConsumerState<CoursePage> {
             child: CompositedTransformFollower(
               link: _layerLink,
               showWhenUnlinked: false,
-              offset: Offset(0, 42.h + 7.h + 5.h), // ✅ 周历高度(42h) + 底部padding(7h) + 顶部padding(5h)
+              offset: Offset(
+                0,
+                42.h + 7.h + 5.h,
+              ), // ✅ 周历高度(42h) + 底部padding(7h) + 顶部padding(5h)
               child: Material(
                 color: Colors.transparent,
                 child: Container(
@@ -95,20 +99,23 @@ class _CoursePageState extends ConsumerState<CoursePage> {
         ],
       ),
     );
-    
+
     Overlay.of(context).insert(_calendarOverlay!);
     setState(() {
       _showCalendar = true;
     });
   }
-  
+
   /// 移除日历 Overlay
   void _removeCalendarOverlay() {
     _calendarOverlay?.remove();
     _calendarOverlay = null;
-    setState(() {
-      _showCalendar = false;
-    });
+    // ✅ 修复：dispose时不能调用setState，需要判断mounted状态
+    if (mounted) {
+      setState(() {
+        _showCalendar = false;
+      });
+    }
   }
 
   String _formatDate(DateTime date) {
@@ -127,7 +134,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
     final isLoading = courseState.isLoading;
     final isCourseListLoading = courseState.isCourseListLoading;
     final showPlan = courseState.showPlan;
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: Stack(
@@ -151,7 +158,8 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                               (lessonsData.lessonNum ?? '0') != '0')
                             _buildLessonsList(lessonsData),
                           // 学习计划区域
-                          if (showPlan) _buildStudyPlan(courseList, isCourseListLoading),
+                          if (showPlan)
+                            _buildStudyPlan(courseList, isCourseListLoading),
                           // ✅ 无学习内容提示 - 没有课程且没有学习计划时显示
                           if ((lessonsData == null ||
                                   (lessonsData.lessonNum ?? '0') == '0') &&
@@ -196,7 +204,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
 
   Widget _buildWeekCalendar(List<String> dotDates) {
     final weekDays = _getCurrentWeek(_selectedDate);
-    
+
     return CompositedTransformTarget(
       link: _layerLink,
       child: Container(
@@ -209,7 +217,9 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                 height: 42.h,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: weekDays.map((day) => _buildWeekDayItem(day, dotDates)).toList(),
+                  children: weekDays
+                      .map((day) => _buildWeekDayItem(day, dotDates))
+                      .toList(),
                 ),
               ),
             ),
@@ -224,7 +234,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
     final isSelected = isSameDay(day, _selectedDate);
     final isToday = isSameDay(day, DateTime.now());
     final hasDot = dotDates.contains(_formatDate(day));
-    
+
     return GestureDetector(
       onTap: () async {
         setState(() {
@@ -269,8 +279,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                 height: 1.1,
               ),
             ),
-            if (hasDot)
-              SizedBox(height: 3.h),
+            if (hasDot) SizedBox(height: 3.h),
             if (hasDot)
               Container(
                 width: 5.w,
@@ -346,11 +355,11 @@ class _CoursePageState extends ConsumerState<CoursePage> {
     final lessonNum = lessonsData.lessonNum ?? '0';
     final attendanceNum = lessonsData.lessonAttendanceNum ?? '0';
     final lessons = lessonsData.lessonAttendance;
-    
+
     if (lessonNum == '0' || lessons.isEmpty) {
       return const SizedBox.shrink();
     }
-    
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 15.w),
       padding: EdgeInsets.all(16.w),
@@ -433,7 +442,10 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   }
 
   /// 学习计划
-  Widget _buildStudyPlan(List<CourseModel> courseList, bool isCourseListLoading) {
+  Widget _buildStudyPlan(
+    List<CourseModel> courseList,
+    bool isCourseListLoading,
+  ) {
     return Container(
       margin: EdgeInsets.only(top: 10.h),
       color: Colors.white,
@@ -473,7 +485,9 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                     _teachingType = value;
                   });
                   // ✅ 使用 Provider 加载数据
-                  ref.read(courseNotifierProvider.notifier).loadDateCourse(_selectedDate, value);
+                  ref
+                      .read(courseNotifierProvider.notifier)
+                      .loadDateCourse(_selectedDate, value);
                 },
                 offset: Offset(0, 35.h),
                 shape: RoundedRectangleBorder(
@@ -561,7 +575,9 @@ class _CoursePageState extends ConsumerState<CoursePage> {
             Padding(
               padding: EdgeInsets.only(top: 10.h),
               child: Column(
-                children: courseList.map((course) => _buildCourseCard(course)).toList(),
+                children: courseList
+                    .map((course) => _buildCourseCard(course))
+                    .toList(),
               ),
             ),
         ],
@@ -581,10 +597,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
         SizedBox(height: 8.h),
         Text(
           '未找到符合的学习内容',
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: const Color(0xFF999999),
-          ),
+          style: TextStyle(fontSize: 14.sp, color: const Color(0xFF999999)),
         ),
         SizedBox(height: 15.h),
       ],
@@ -610,10 +623,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
           SizedBox(height: 16.h),
           Text(
             '未找到学习内容',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: const Color(0xFF999999),
-            ),
+            style: TextStyle(fontSize: 14.sp, color: const Color(0xFF999999)),
           ),
         ],
       ),
@@ -712,9 +722,15 @@ class _LessonItemWidget extends StatelessWidget {
                     ),
                     SizedBox(height: 6.h),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 6.w,
+                        vertical: 2.h,
+                      ),
                       decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFF0F4921), width: 1.5),
+                        border: Border.all(
+                          color: const Color(0xFF0F4921),
+                          width: 1.5,
+                        ),
                         borderRadius: BorderRadius.circular(4.r),
                       ),
                       child: Text(
@@ -771,7 +787,10 @@ class _LessonItemWidget extends StatelessWidget {
                       '课前作业',
                       isHighlight: true,
                       onTap: () {
-                        context.push(AppRoutes.dataDownload, extra: {'lesson_id': lessonId});
+                        context.push(
+                          AppRoutes.dataDownload,
+                          extra: {'lesson_id': lessonId},
+                        );
                       },
                     ),
                   if (hasDocument && evaluationTypes.isNotEmpty)
@@ -809,7 +828,12 @@ class _LessonItemWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildLessonButton(BuildContext context, String text, {bool isHighlight = false, VoidCallback? onTap}) {
+  Widget _buildLessonButton(
+    BuildContext context,
+    String text, {
+    bool isHighlight = false,
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -821,7 +845,9 @@ class _LessonItemWidget extends StatelessWidget {
                   colors: [Color(0xFFFF860E), Color(0xFFFF6912)],
                 )
               : null,
-          border: isHighlight ? null : Border.all(color: const Color(0xFFFF5500)),
+          border: isHighlight
+              ? null
+              : Border.all(color: const Color(0xFFFF5500)),
           borderRadius: BorderRadius.circular(15.r),
         ),
         child: Text(
@@ -939,14 +965,8 @@ class _FullCalendarWidget extends StatelessWidget {
 
   DaysOfWeekStyle _buildDaysOfWeekStyle() {
     return DaysOfWeekStyle(
-      weekdayStyle: TextStyle(
-        color: const Color(0xFF666666),
-        fontSize: 12.sp,
-      ),
-      weekendStyle: TextStyle(
-        color: const Color(0xFF666666),
-        fontSize: 12.sp,
-      ),
+      weekdayStyle: TextStyle(color: const Color(0xFF666666), fontSize: 12.sp),
+      weekendStyle: TextStyle(color: const Color(0xFF666666), fontSize: 12.sp),
     );
   }
 
@@ -957,10 +977,7 @@ class _FullCalendarWidget extends StatelessWidget {
         return Center(
           child: Text(
             text,
-            style: TextStyle(
-              color: const Color(0xFF666666),
-              fontSize: 12.sp,
-            ),
+            style: TextStyle(color: const Color(0xFF666666), fontSize: 12.sp),
           ),
         );
       },
@@ -987,13 +1004,13 @@ class _FullCalendarWidget extends StatelessWidget {
 }
 
 /// 课程卡片组件
-class _CourseCardWidget extends StatelessWidget {
+class _CourseCardWidget extends ConsumerWidget {
   final CourseModel course;
 
   const _CourseCardWidget({required this.course});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final goodsName = course.goodsName ?? '';
     final teachingTypeName = course.teachingTypeName ?? '';
     final classInfo = course.classInfo;
@@ -1003,17 +1020,33 @@ class _CourseCardWidget extends StatelessWidget {
     final goodsId = course.goodsId ?? '';
     final orderId = course.orderId ?? '';
 
+    // ✅ 获取当前专业ID
+    final currentMajor = ref.watch(currentMajorProvider);
+
     return GestureDetector(
       onTap: () {
-        // ✅ 修复：使用正确的参数键名（驼峰命名）
-        context.push(
-          AppRoutes.courseDetail,
-          extra: {
-            'goodsId': goodsId,
-            'orderId': orderId,
-            'goodsPid': goodsPid,
-          },
-        );
+        // ✅ 判断是否已购买（有 orderId 且不为 "0"）
+        if (orderId.isNotEmpty && orderId != '0') {
+          // 已购买 → 学习课程详情页
+          context.push(
+            AppRoutes.courseDetail,
+            extra: {
+              'goodsId': goodsId,
+              'orderId': orderId,
+              'goodsPid': goodsPid,
+            },
+          );
+        } else {
+          // 未购买 → 商品课程详情页
+          context.push(
+            AppRoutes.courseGoodsDetail,
+            extra: {
+              'goods_id': goodsId,
+              'professional_id': currentMajor?.majorId,
+              'type': null, // CourseModel 没有 type 字段，传 null
+            },
+          );
+        }
       },
       child: Container(
         margin: EdgeInsets.only(bottom: 10.h),
@@ -1039,10 +1072,7 @@ class _CourseCardWidget extends StatelessWidget {
                   ),
                   child: Text(
                     teachingTypeName,
-                    style: TextStyle(
-                      fontSize: 10.sp,
-                      color: Colors.white,
-                    ),
+                    style: TextStyle(fontSize: 10.sp, color: Colors.white),
                   ),
                 ),
               ),
@@ -1060,10 +1090,7 @@ class _CourseCardWidget extends StatelessWidget {
             SizedBox(height: 6.h),
             Text(
               classDate,
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: const Color(0xFF666666),
-              ),
+              style: TextStyle(fontSize: 12.sp, color: const Color(0xFF666666)),
             ),
             if (goodsPid != '0' && goodsPidName.isNotEmpty)
               Column(

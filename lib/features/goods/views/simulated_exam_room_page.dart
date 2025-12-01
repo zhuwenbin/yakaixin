@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../providers/simulated_exam_room_provider.dart';
+import '../models/goods_detail_model.dart';
 
 /// P5-1-4 模拟考场页
 /// 对应小程序: modules/jintiku/pages/test/simulatedExamRoom.vue
@@ -8,273 +10,326 @@ class SimulatedExamRoomPage extends ConsumerStatefulWidget {
   final String? productId;
   final String? professionalId;
 
-  const SimulatedExamRoomPage({
-    super.key,
-    this.productId,
-    this.professionalId,
-  });
+  const SimulatedExamRoomPage({super.key, this.productId, this.professionalId});
 
   @override
-  ConsumerState<SimulatedExamRoomPage> createState() => _SimulatedExamRoomPageState();
+  ConsumerState<SimulatedExamRoomPage> createState() =>
+      _SimulatedExamRoomPageState();
 }
 
 class _SimulatedExamRoomPageState extends ConsumerState<SimulatedExamRoomPage> {
-  // Mock数据
-  final Map<String, dynamic> _examInfo = {
-    'examTitle': '口腔执业医师',
-    'permission_status': '2', // 1-已购买 2-未购买
-    'mkgoods_statistics': {
-      'fullMarkScore': 600,
-      'examDuration': 150,
-    },
-  };
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      if (widget.productId != null && widget.productId!.isNotEmpty) {
+        ref
+            .read(simulatedExamRoomNotifierProvider.notifier)
+            .loadDetail(widget.productId!);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(simulatedExamRoomNotifierProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: Stack(
+      body: state.isLoading
+          ? _buildLoading()
+          : state.error != null
+          ? _buildError(state.error!)
+          : state.goodsDetail != null
+          ? _buildContent(state.goodsDetail!)
+          : _buildEmpty(),
+    );
+  }
+
+  Widget _buildLoading() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16.h),
+          Text('加载中...', style: TextStyle(fontSize: 14.sp)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildError(String error) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(50.h),
+        child: Column(
           children: [
-            _buildLeftSidebar(),
-            _buildMainContent(),
+            Icon(Icons.error_outline, size: 64.sp, color: Colors.red.shade300),
+            SizedBox(height: 16.h),
+            Text(error, textAlign: TextAlign.center),
+            SizedBox(height: 24.h),
+            ElevatedButton(
+              onPressed: () {
+                if (widget.productId != null) {
+                  ref
+                      .read(simulatedExamRoomNotifierProvider.notifier)
+                      .refresh(widget.productId!);
+                }
+              },
+              child: Text('重试'),
+            ),
           ],
         ),
       ),
     );
   }
 
-  /// 左侧考生信息栏
-  Widget _buildLeftSidebar() {
-    return Positioned(
-      left: 0,
-      top: 0,
-      bottom: 0,
-      width: 120.w,
-      child: Container(
-        color: const Color(0xFFFF6B6B),
-        padding: EdgeInsets.symmetric(vertical: 30.h),
-        child: Column(
-          children: [
-            _buildSidebarItem('姓名：', 'FELIXELICSI'),
-            SizedBox(height: 20.h),
-            _buildSidebarItem('准考证号：', '1001'),
-            SizedBox(height: 20.h),
-            _buildSidebarItem('考场号：', '01'),
-            SizedBox(height: 20.h),
-            _buildSidebarItem('座位号：', '01'),
-          ],
-        ),
+  Widget _buildEmpty() {
+    return Center(
+      child: Text('暂无数据', style: TextStyle(fontSize: 14.sp)),
+    );
+  }
+
+  /// 主内容（对应小程序 Line 2-76）
+  Widget _buildContent(GoodsDetailModel detail) {
+    return SafeArea(
+      child: Row(
+        children: [
+          // 左侧考生信息栏（对应小程序 Line 3-21）
+          _buildLeftSidebar(detail),
+          // 右侧内容区（对应小程序 Line 22-75）
+          Expanded(child: _buildRightContent(detail)),
+        ],
+      ),
+    );
+  }
+
+  /// 左侧考生信息栏（对应小程序 Line 3-21）
+  Widget _buildLeftSidebar(GoodsDetailModel detail) {
+    return Container(
+      width: 115.w,
+      color: Colors.white,
+      padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 10.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // 专业名称（对应小程序没有，根据截图添加）
+          Text(
+            detail.professionalIdName ?? '口腔执业医师',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          SizedBox(height: 20.h),
+          Divider(color: Colors.grey.shade300),
+          SizedBox(height: 20.h),
+          // 满分（对应截图）
+          _buildSidebarItem('满分', '600分'),
+          SizedBox(height: 20.h),
+          // 时长（对应截图）
+          _buildSidebarItem('时长', '150分钟'),
+        ],
       ),
     );
   }
 
   Widget _buildSidebarItem(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600),
+        ),
+        SizedBox(height: 6.h),
+        Text(
+          value,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 右侧内容区（对应小程序 Line 22-75）
+  Widget _buildRightContent(GoodsDetailModel detail) {
+    final isPurchased = detail.permissionStatus == '1';
+
+    return Container(
+      color: const Color(0xFFF5F5F5),
+      child: Column(
+        children: [
+          // 头部（对应小程序 Line 23-31）
+          Container(
+            width: double.infinity,
+            color: Colors.white,
+            padding: EdgeInsets.all(20.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 标题（对应小程序 Line 24）
+                Text(
+                  detail.name ?? '',
+                  style: TextStyle(
+                    fontSize: 17.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                // 副标题（对应小程序 Line 25）
+                Text(
+                  '查漏补缺 直击重点',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                // 总分和时间（对应小程序 Line 28-31）
+                Row(
+                  children: [
+                    Text(
+                      '总分: 600分',
+                      style: TextStyle(fontSize: 13.sp, color: Colors.grey),
+                    ),
+                    SizedBox(width: 20.w),
+                    Text(
+                      '时间: 150分钟',
+                      style: TextStyle(fontSize: 13.sp, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 10.h),
+          // 考试统计表格区域（对应小程序 Line 33-60）
+          // 注意：小程序中表格数据来自 mkgoods_statistics，这里暂时占位
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 12.w),
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.description,
+                  size: 48.sp,
+                  color: Colors.grey.shade400,
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  '考试列表功能开发中...',
+                  style: TextStyle(fontSize: 14.sp, color: Colors.grey),
+                ),
+                SizedBox(height: 6.h),
+                Text(
+                  '需要额外接口支持',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey.shade400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 10.h),
+          // 注意事项（对应小程序 Line 63-70）
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 12.w),
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '注意事项',
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                _buildNoticeItem('1. 交卷后，显示分数及答案解析。'),
+                SizedBox(height: 8.h),
+                _buildNoticeItemWithHighlight('2. 每天每个科目只能进行', '1', '次考试。'),
+                SizedBox(height: 8.h),
+                _buildNoticeItem('3. 考试中途退出会保留做题记录。'),
+              ],
+            ),
+          ),
+          Spacer(),
+          // 底部按钮（对应小程序 Line 72-74）
+          _buildBottomButton(detail, isPurchased),
+          SizedBox(height: 20.h),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoticeItem(String text) {
+    return Text(
+      text,
+      style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade700),
+    );
+  }
+
+  Widget _buildNoticeItemWithHighlight(
+    String prefix,
+    String highlight,
+    String suffix,
+  ) {
+    return RichText(
+      text: TextSpan(
+        style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade700),
+        children: [
+          TextSpan(text: prefix),
+          TextSpan(
+            text: highlight,
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+          ),
+          TextSpan(text: suffix),
+        ],
+      ),
+    );
+  }
+
+  /// 底部按钮（对应小程序 Line 72-74, 348-358）
+  Widget _buildBottomButton(GoodsDetailModel detail, bool isPurchased) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 12.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11.sp,
-              color: Colors.white,
-              height: 1.5,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 11.sp,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 主内容区域
-  Widget _buildMainContent() {
-    return Container(
-      margin: EdgeInsets.only(left: 120.w),
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            SizedBox(height: 24.h),
-            _buildInfoSummary(),
-            SizedBox(height: 24.h),
-            _buildNotice(),
-            SizedBox(height: 32.h),
-            _buildEnterButton(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 标题区域
-  Widget _buildHeader() {
-    final examTitle = _examInfo['examTitle']?.toString() ?? '';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          examTitle,
-          style: TextStyle(
-            fontSize: 24.sp,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF333333),
-          ),
-        ),
-        SizedBox(height: 8.h),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1890FF),
-            borderRadius: BorderRadius.circular(4.r),
-          ),
-          child: Text(
-            '模拟考场',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 考试信息摘要
-  Widget _buildInfoSummary() {
-    final stats = _examInfo['mkgoods_statistics'] as Map<String, dynamic>;
-    final fullScore = stats['fullMarkScore'] ?? 0;
-    final duration = stats['examDuration'] ?? 0;
-
-    return Row(
-      children: [
-        Text(
-          '总分: ${fullScore}分',
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: const Color(0xFF666666),
-          ),
-        ),
-        SizedBox(width: 24.w),
-        Text(
-          '时间: ${duration}分钟',
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: const Color(0xFF666666),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 注意事项
-  Widget _buildNotice() {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: const Color(0xFFE8E8E8),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '注意事项',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF333333),
-            ),
-          ),
-          SizedBox(height: 12.h),
-          _buildNoticeItem('1. 交卷后，显示分数及答案解析。'),
-          _buildNoticeItem('2. 每天每个科目只能进行 1 次考试。', hasHighlight: true),
-          _buildNoticeItem('3. 考试中途退出会保留做题记录。'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNoticeItem(String text, {bool hasHighlight = false}) {
-    if (!hasHighlight) {
-      return Padding(
-        padding: EdgeInsets.only(bottom: 8.h),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: const Color(0xFF666666),
-            height: 1.6,
-          ),
-        ),
-      );
-    }
-
-    // 处理高亮文本
-    final parts = text.split('1');
-    return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
-      child: RichText(
-        text: TextSpan(
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: const Color(0xFF666666),
-            height: 1.6,
-          ),
-          children: [
-            TextSpan(text: parts[0]),
-            TextSpan(
-              text: '1',
-              style: TextStyle(
-                color: const Color(0xFFFF4D4F),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (parts.length > 1) TextSpan(text: parts[1]),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 进入考场按钮
-  Widget _buildEnterButton() {
-    return GestureDetector(
-      onTap: _enterExamRoom,
-      child: Container(
+      child: SizedBox(
         width: double.infinity,
-        height: 48.h,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF4A90E2), Color(0xFF5BA3F5)],
+        child: ElevatedButton(
+          onPressed: () => _handleEnterExamRoom(detail, isPurchased),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF2E68FF),
+            padding: EdgeInsets.symmetric(vertical: 16.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            elevation: 0,
           ),
-          borderRadius: BorderRadius.circular(24.r),
-        ),
-        child: Center(
           child: Text(
             '进入考场',
             style: TextStyle(
               fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
               color: Colors.white,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
@@ -282,11 +337,22 @@ class _SimulatedExamRoomPageState extends ConsumerState<SimulatedExamRoomPage> {
     );
   }
 
-  /// 进入考场
-  void _enterExamRoom() {
-    // TODO: 根据permission_status判断是否已购买
-    // 如果未购买，弹出购买弹窗
-    // 如果已购买，开始考试
-    print('进入考场');
+  /// 处理进入考场（对应小程序 Line 348-358）
+  void _handleEnterExamRoom(GoodsDetailModel detail, bool isPurchased) {
+    if (!isPurchased) {
+      // 未购买 - 显示购买弹窗（对应小程序 Line 350-351）
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('购买功能开发中...')));
+    } else {
+      // 已购买 - 显示选择考试科目弹窗（对应小程序 Line 353-356）
+      // TODO: 实现考试科目选择弹窗
+      // 需要调用 getExaminfoDetail 接口获取 exam_rounds
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('考试列表功能开发中...\n需要接口: /c/tiku/mockexam/examinfo'),
+        ),
+      );
+    }
   }
 }

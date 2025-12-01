@@ -12,6 +12,8 @@ PODS:
   - fluwx/pay (0.0.1):
     - Flutter
     - WechatOpenSDK-XCFramework (~> 2.0.5)
+  - image_picker_ios (0.0.1):
+    - Flutter
   - objective_c (0.0.1):
     - Flutter
   - package_info_plus (0.4.5):
@@ -37,6 +39,7 @@ DEPENDENCIES:
   - flutter_pdfview (from `.symlinks/plugins/flutter_pdfview/ios`)
   - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
   - fluwx (from `.symlinks/plugins/fluwx/ios`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - objective_c (from `.symlinks/plugins/objective_c/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
@@ -60,6 +63,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/fluttertoast/ios"
   fluwx:
     :path: ".symlinks/plugins/fluwx/ios"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
   objective_c:
     :path: ".symlinks/plugins/objective_c/ios"
   package_info_plus:
@@ -81,6 +86,7 @@ SPEC CHECKSUMS:
   flutter_pdfview: 32bf27bda6fd85b9dd2c09628a824df5081246cf
   fluttertoast: 2c67e14dce98bbdb200df9e1acf610d7a6264ea1
   fluwx: 2ef787502fccb3f3596b380509001a8ea71cbbff
+  image_picker_ios: e0ece4aa2a75771a7de3fa735d26d90817041326
   objective_c: 89e720c30d716b036faf9c9684022048eee1eee2
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb

@@ -1,0 +1,125 @@
+{
+  "version": "1.0.0",
+  "api_group": "course_detail",
+  "update_time": "2025-11-30",
+  "description": "学习课程详情页 Mock 数据",
+  "apis": {
+    "course_detail": {
+      "path": "/c/study/learning/series",
+      "method": "GET",
+      "response": {
+        "code": 100000,
+        "msg": ["成功"],
+        "data": {
+          "list": [
+            {
+              "goods_id": "594826813692189511",
+              "goods_name": "2026口腔执业医师精品班",
+              "business_type": 2,
+              "class": {
+                "name": "精品班A班",
+                "date": "2024年10月-2025年6月",
+                "teaching_type": "1",
+                "teaching_type_name": "直播",
+                "lesson_num": 120,
+                "lesson_attendance_num": 45,
+                "address": "北京市朝阳区XX路XX号",
+                "teacher": [
+                  {
+                    "id": "1",
+                    "name": "张医生",
+                    "title": "主任医师",
+                    "avatar": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/avatar1.png"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "course_lessons": {
+      "path": "/c/study/learning/series/goods",
+      "method": "GET",
+      "response": {
+        "code": 100000,
+        "msg": ["成功"],
+        "data": {
+          "list": [
+            {
+              "class_id": "1",
+              "name": "基础阶段",
+              "teaching_type": "1",
+              "teaching_type_name": "直播",
+              "lesson_num": 40,
+              "lesson_attendance_num": 15,
+              "address": "线上直播",
+              "lesson": [
+                {
+                  "lesson_id": "101",
+                  "lesson_name": "口腔解剖学",
+                  "lesson_name_other": "牙体解剖、颌面部解剖",
+                  "date": "2024-10-15 19:00-21:00",
+                  "teaching_type": "1",
+                  "status": "2",
+                  "lesson_status": "3",
+                  "evaluation_type_top": [
+                    {
+                      "id": "1",
+                      "name": "课前作业",
+                      "paper_version_id": "123"
+                    }
+                  ]
+                },
+                {
+                  "lesson_id": "102",
+                  "lesson_name": "口腔组织病理学",
+                  "lesson_name_other": "牙体组织、口腔粘膜病理",
+                  "date": "2024-10-22 19:00-21:00",
+                  "teaching_type": "1",
+                  "status": "1",
+                  "lesson_status": "1",
+                  "evaluation_type_top": []
+                }
+              ]
+            },
+            {
+              "class_id": "2",
+              "name": "提高阶段",
+              "teaching_type": "3",
+              "teaching_type_name": "录播",
+              "lesson_num": 50,
+              "lesson_attendance_num": 20,
+              "address": "",
+              "lesson": [
+                {
+                  "lesson_id": "201",
+                  "lesson_name": "口腔内科学",
+                  "lesson_name_other": "龋病、牙髓病、根尖周病",
+                  "date": "随时观看",
+                  "teaching_type": "3",
+                  "status": "2",
+                  "lesson_status": "3",
+                  "evaluation_type_top": []
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "recently_data": {
+      "path": "/c/study/learning/series/recent",
+      "method": "GET",
+      "response": {
+        "code": 100000,
+        "msg": ["成功"],
+        "data": {
+          "lesson_id": "101",
+          "lesson_name": "口腔解剖学"
+        }
+      }
+    }
+  }
+}
+

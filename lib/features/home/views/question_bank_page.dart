@@ -7,8 +7,8 @@ import '../../../app/routes/app_routes.dart';
 import '../providers/question_bank_provider.dart';
 import '../models/question_bank_model.dart';
 import '../../major/widgets/major_selector_dialog.dart';
-import '../providers/home_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../goods/services/goods_service.dart' as goods_service;
 
 /// 题库首页
 /// 对应小程序: src/modules/jintiku/pages/index/index.vue
@@ -34,24 +34,21 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   Widget build(BuildContext context) {
     // ✅ 通过 ref.watch 监听 ViewModel 状态
     final state = ref.watch(questionBankProvider);
-    
+
     // ✅ 使用 ref.listen 处理副作用（Toast、导航等）
-    ref.listen<QuestionBankState>(
-      questionBankProvider,
-      (previous, next) {
-        // 打卡成功提示
-        if (next.checkInSuccess && !(previous?.checkInSuccess ?? false)) {
-          EasyLoading.showSuccess(next.successMessage ?? '打卡成功');
-          ref.read(questionBankProvider.notifier).clearSuccessFlag();
-        }
-        
-        // 错误提示
-        if (next.error != null && next.error != previous?.error) {
-          EasyLoading.showError(next.error!);
-        }
-      },
-    );
-    
+    ref.listen<QuestionBankState>(questionBankProvider, (previous, next) {
+      // 打卡成功提示
+      if (next.checkInSuccess && !(previous?.checkInSuccess ?? false)) {
+        EasyLoading.showSuccess(next.successMessage ?? '打卡成功');
+        ref.read(questionBankProvider.notifier).clearSuccessFlag();
+      }
+
+      // 错误提示
+      if (next.error != null && next.error != previous?.error) {
+        EasyLoading.showError(next.error!);
+      }
+    });
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: RefreshIndicator(
@@ -81,10 +78,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFB8E8FC),
-              Color(0xFFE9F7FF),
-            ],
+            colors: [Color(0xFFB8E8FC), Color(0xFFE9F7FF)],
             stops: [0.0, 1.0],
           ),
         ),
@@ -93,7 +87,11 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   }
 
   /// 主内容
-  Widget _buildContent(BuildContext context, WidgetRef ref, QuestionBankState state) {
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    QuestionBankState state,
+  ) {
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: _buildHeader(context, ref)),
@@ -102,16 +100,20 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
         SliverToBoxAdapter(child: _buildStudyCardGrid(context, ref)),
         SliverToBoxAdapter(child: SizedBox(height: 16.h)),
         // 每日一测
-        if (state.dailyPractice != null) ...[  
-          SliverToBoxAdapter(child: _buildDailyPractice(context, state.dailyPractice!)),
+        if (state.dailyPractice != null) ...[
+          SliverToBoxAdapter(
+            child: _buildDailyPractice(context, state.dailyPractice!),
+          ),
           SliverToBoxAdapter(child: SizedBox(height: 16.h)),
         ],
         // 章节练习
         SliverToBoxAdapter(child: _buildChapterPractice(state)),
         SliverToBoxAdapter(child: SizedBox(height: 16.h)),
-        // 技能模拟  
-        if (state.skillMock != null) ...[  
-          SliverToBoxAdapter(child: _buildSkillMockSection(context, state.skillMock!)),
+        // 技能模拟
+        if (state.skillMock != null) ...[
+          SliverToBoxAdapter(
+            child: _buildSkillMockSection(context, state.skillMock!),
+          ),
           SliverToBoxAdapter(child: SizedBox(height: 16.h)),
         ],
         // 已购试题
@@ -126,7 +128,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
     // ✅ 从 majorProvider 读取当前专业信息
     final majorInfo = ref.watch(currentMajorProvider);
     final majorName = majorInfo?.majorName ?? '选择专业';
-    
+
     return GestureDetector(
       onTap: () {
         // ✅ 打开专业选择弹窗(与首页保持一致)
@@ -151,11 +153,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
               ),
             ),
             SizedBox(width: 8.w),
-            Icon(
-              Icons.keyboard_arrow_down,
-              size: 20.sp,
-              color: Colors.black54,
-            ),
+            Icon(Icons.keyboard_arrow_down, size: 20.sp, color: Colors.black54),
           ],
         ),
       ),
@@ -177,25 +175,29 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       {
         'title': '绝密押题',
         'subtitle': '名师密押 考后即焚',
-        'imageUrl': 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/predictIcon.png',
+        'imageUrl':
+            'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/predictIcon.png',
         'action': () => _handleCardClick(context, ref, 0),
       },
       {
         'title': '科目模考',
         'subtitle': '查漏补缺 直击重点',
-        'imageUrl': 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/test-icon.png',
+        'imageUrl':
+            'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/test-icon.png',
         'action': () => _handleCardClick(context, ref, 1),
       },
       {
         'title': '模拟考试',
         'subtitle': '全真模拟 还原考场',
-        'imageUrl': 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/exam-icon.png',
+        'imageUrl':
+            'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/exam-icon.png',
         'action': () => _handleCardClick(context, ref, 2),
       },
       {
         'title': '学习报告',
         'subtitle': '实时学习情况',
-        'imageUrl': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/col-4.png',
+        'imageUrl':
+            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/col-4.png',
         'action': () => _handleCardClick(context, ref, 3),
       },
     ];
@@ -291,11 +293,14 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   }
 
   /// 每日一测
-  Widget _buildDailyPractice(BuildContext context, DailyPracticeModel dailyPractice) {
+  Widget _buildDailyPractice(
+    BuildContext context,
+    DailyPracticeModel dailyPractice,
+  ) {
     final totalQuestions = dailyPractice.totalQuestions;
     final doneQuestions = dailyPractice.doneQuestions;
     final name = dailyPractice.name;
-    
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 12.w),
       child: Column(
@@ -357,14 +362,12 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
           children: [
             _buildSectionTitle('章节练习'),
             SizedBox(height: 12.h),
-            Center(
-              child: CircularProgressIndicator(),
-            ),
+            Center(child: CircularProgressIndicator()),
           ],
         ),
       );
     }
-    
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 12.w),
       child: Column(
@@ -373,19 +376,23 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
           _buildSectionTitle('章节练习'),
           SizedBox(height: 12.h),
           // 显示前3个章节
-          ...(state.chapters.take(3).map((chapter) => Padding(
-            padding: EdgeInsets.only(bottom: 12.h),
-            child: _buildChapterItem(
-              chapter.sectionName,
-              '${chapter.questionNumber}题',
-              '已做${chapter.doQuestionNum}题',
-              chapter.correctRate,
-              () {
-                // TODO: 跳转到章节详情
-                EasyLoading.showToast('点击了章节: ${chapter.sectionName}');
-              },
-            ),
-          ))),
+          ...(state.chapters
+              .take(3)
+              .map(
+                (chapter) => Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: _buildChapterItem(
+                    chapter.sectionName,
+                    '${chapter.questionNumber}题',
+                    '已做${chapter.doQuestionNum}题',
+                    chapter.correctRate,
+                    () {
+                      // TODO: 跳转到章节详情
+                      EasyLoading.showToast('点击了章节: ${chapter.sectionName}');
+                    },
+                  ),
+                ),
+              )),
           // 查看更多按钮
           if (state.chapters.length > 3)
             GestureDetector(
@@ -406,13 +413,14 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
                   children: [
                     Text(
                       '查看全部 ${state.chapters.length} 个章节',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: Colors.blue,
-                      ),
+                      style: TextStyle(fontSize: 14.sp, color: Colors.blue),
                     ),
                     SizedBox(width: 4.w),
-                    Icon(Icons.arrow_forward_ios, size: 12.sp, color: Colors.blue),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 12.sp,
+                      color: Colors.blue,
+                    ),
                   ],
                 ),
               ),
@@ -464,18 +472,12 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
                       SizedBox(width: 16.w),
                       Text(
                         doneQuestions,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: Colors.blue,
-                        ),
+                        style: TextStyle(fontSize: 12.sp, color: Colors.blue),
                       ),
                       SizedBox(width: 16.w),
                       Text(
                         '正确率 ${accuracy.toStringAsFixed(0)}%',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: Colors.green,
-                        ),
+                        style: TextStyle(fontSize: 12.sp, color: Colors.green),
                       ),
                     ],
                   ),
@@ -488,10 +490,12 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       ),
     );
   }
-  
+
   /// 技能模拟区域
-  Widget _buildSkillMockSection(BuildContext context, SkillMockModel skillMock) {
-    
+  Widget _buildSkillMockSection(
+    BuildContext context,
+    SkillMockModel skillMock,
+  ) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 12.w),
       child: Column(
@@ -510,10 +514,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16.r),
                 gradient: LinearGradient(
-                  colors: [
-                    Color(0xFFF5F7FF),
-                    Colors.white,
-                  ],
+                  colors: [Color(0xFFF5F7FF), Colors.white],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -585,7 +586,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
         ),
       );
     }
-    
+
     if (state.purchasedGoods.isEmpty) {
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 12.w),
@@ -603,14 +604,15 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.inbox_outlined, size: 50.sp, color: Colors.grey.shade300),
+                    Icon(
+                      Icons.inbox_outlined,
+                      size: 50.sp,
+                      color: Colors.grey.shade300,
+                    ),
                     SizedBox(height: 12.h),
                     Text(
                       '暂无已购试题',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: Colors.grey,
-                      ),
+                      style: TextStyle(fontSize: 14.sp, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -620,7 +622,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
         ),
       );
     }
-    
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 12.w),
       child: Column(
@@ -631,17 +633,21 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
           ...(state.purchasedGoods.map((goods) {
             final name = goods.name;
             final coverPath = goods.materialCoverPath;
-            final imageUrl = coverPath.startsWith('http') 
-                ? coverPath 
-                : 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/$coverPath';
-            
+
+            // ✅ 安全处理封面路径
+            final imageUrl =
+                coverPath.isNotEmpty && coverPath.startsWith('http')
+                ? coverPath
+                : coverPath.isNotEmpty
+                ? 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/$coverPath'
+                : '';
+
+            // ✅ 使用 PurchasedGoodsModel 的 questionCount 字段
+            final questionCount = '${goods.questionCount}题';
+
             return Padding(
               padding: EdgeInsets.only(bottom: 12.h),
-              child: _buildPurchasedItem(
-                name,
-                '${goods.questionCount}题',
-                imageUrl,
-              ),
+              child: _buildPurchasedItem(name, questionCount, imageUrl),
             );
           })),
         ],
@@ -747,16 +753,34 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   void _handleCardClick(BuildContext context, WidgetRef ref, int type) {
     switch (type) {
       case 0:
-        // 绝密押题 - 跳转到历年真题详情页
-        _navigateToGoodsDetail(context, ref, 'linianzhenti', AppRoutes.secretRealDetail);
+        // 绝密押题 - 历年真题
+        // ✅ 对照小程序：position_identify = "linianzhenti"
+        _navigateToGoodsDetail(
+          context,
+          ref,
+          'linianzhenti',
+          AppRoutes.secretRealDetail,
+        );
         break;
       case 1:
-        // 科目模考 - 跳转到科目模考详情页
-        _navigateToGoodsDetail(context, ref, 'kemumokao', AppRoutes.subjectMockDetail);
+        // 科目模考
+        // ✅ 对照小程序：position_identify = "kemumokao"
+        _navigateToGoodsDetail(
+          context,
+          ref,
+          'kemumokao',
+          AppRoutes.subjectMockDetail,
+        );
         break;
       case 2:
-        // 模拟考试 - 跳转到模拟考场页
-        _navigateToGoodsDetail(context, ref, 'monikaoshi', AppRoutes.simulatedExamRoom);
+        // 模拟考试
+        // ✅ 对照小程序：position_identify = "monikaoshi"
+        _navigateToGoodsDetail(
+          context,
+          ref,
+          'monikaoshi',
+          AppRoutes.simulatedExamRoom,
+        );
         break;
       case 3:
         // 学习报告 - 跳转到报告中心
@@ -773,31 +797,31 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
     String routePath,
   ) async {
     if (!mounted) return;
-    
+
     try {
       EasyLoading.show(status: '加载中...');
-      
+
       // 获取当前用户的专业ID
       final authState = ref.read(authProvider);
       final professionalId = authState.currentMajor?.majorId ?? '';
-      
+
       // ✅ 通过API获取商品数据 (Mock拦截器会自动返回Mock数据)
-      final goodsService = ref.read(goodsServiceProvider);
+      final goodsService = ref.read(goods_service.goodsServiceProvider);
       final response = await goodsService.getGoodsByPosition(
         positionIdentify: positionIdentify,
         professionalId: professionalId.isNotEmpty ? professionalId : null,
       );
-      
+
       if (!mounted) return;
       EasyLoading.dismiss();
-      
+
       if (response.list.isEmpty) {
         EasyLoading.showToast('暂无数据');
         return;
       }
-      
+
       final firstGoods = response.list[0];
-      
+
       // 跳转到对应的详情页
       if (!mounted) return;
       context.push(
@@ -807,7 +831,6 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
           'professional_id': professionalId,
         },
       );
-      
     } catch (e) {
       if (!mounted) return;
       EasyLoading.dismiss();
@@ -903,17 +926,13 @@ class _StudyCalendarCard extends StatelessWidget {
   }
 
   Widget _buildDivider() {
-    return Container(
-      width: 1,
-      height: 40.h,
-      color: const Color(0xFFE5E5E5),
-    );
+    return Container(width: 1, height: 40.h, color: const Color(0xFFE5E5E5));
   }
 
   Widget _buildCheckInButton(bool isCheckin, VoidCallback onCheckIn) {
     // ⚠️ 加载中时禁用按钮
     final isDisabled = isCheckin || isLoadingLearningData;
-    
+
     return GestureDetector(
       onTap: isDisabled ? null : onCheckIn,
       child: Container(
@@ -1031,20 +1050,14 @@ class _StatItem extends StatelessWidget {
             SizedBox(width: 2.w),
             Text(
               unit,
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: const Color(0xFF999999),
-              ),
+              style: TextStyle(fontSize: 12.sp, color: const Color(0xFF999999)),
             ),
           ],
         ),
         SizedBox(height: 4.h),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12.sp,
-            color: const Color(0xFF666666),
-          ),
+          style: TextStyle(fontSize: 12.sp, color: const Color(0xFF666666)),
         ),
       ],
     );

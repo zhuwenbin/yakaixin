@@ -1,0 +1,269 @@
+{
+  "version": "1.0.0",
+  "api": "GET /c/goods/v2/detail",
+  "update_time": "2025-11-29",
+  "description": "商品详情Mock数据 - 覆盖所有跳转场景",
+  "notes": {
+    "type": "18-题库, 8-试卷, 10-模拟考试, 2-网课, 3-系列课",
+    "permission_status": "1-已购买, 2-未购买",
+    "details_type": "1-经典商品, 2-历年真题, 3-科目模考, 4-模拟考场",
+    "data_type": "1-普通, 2-模考类型"
+  },
+  "data": [
+    {
+      "id": "593505082385898224",
+      "goods_id": "593505082385898224",
+      "name": "【跳转→GoodsDetailPage】口腔组织病理学题库",
+      "subtitle": "3580道精选题目 覆盖全部考点",
+      "type": 18,
+      "permission_status": "2",
+      "details_type": 1,
+      "data_type": 1,
+      "professional_id": "1",
+      "professional_id_name": "口腔执业医师",
+      "material_cover_path": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/cover1.jpg",
+      "material_intro_path": "<h2>商品介绍</h2><p>口腔组织病理学题库，包含3580道精选题目。</p><h3>核心特色</h3><ul><li>章节练习</li><li>智能错题本</li><li>名师视频讲解</li></ul>",
+      "recitation_question_model": "1",
+      "prices": [
+        {
+          "id": "1001",
+          "goods_id": "593505082385898224",
+          "month": "3",
+          "sale_price": "299.00",
+          "original_price": "399.00",
+          "validity_day": "90",
+          "validity_type": "1"
+        },
+        {
+          "id": "1002",
+          "goods_id": "593505082385898224",
+          "month": "0",
+          "sale_price": "899.00",
+          "original_price": "1299.00",
+          "validity_day": "36500",
+          "validity_type": "2"
+        }
+      ],
+      "tiku_goods_details": {
+        "question_num": 3580,
+        "exam_time": "2025-12-31"
+      },
+      "chapter_tree": [
+        {
+          "id": "ch1",
+          "name": "口腔组织学",
+          "children": [
+            {"id": "sec1", "name": "牙体组织", "question_count": 120},
+            {"id": "sec2", "name": "牙周组织", "question_count": 85}
+          ]
+        }
+      ],
+      "confirmation_page_data": "<p>✅ 3580道精选题目</p><p>✅ 章节练习+模拟考试</p>",
+      "paper_statistics": {"do_count": 0, "total_accuracy_rate": 0}
+    },
+    {
+      "id": "593505082385898225",
+      "goods_id": "593505082385898225",
+      "name": "【跳转→SecretRealDetailPage】2026口腔执业医师历年真题",
+      "subtitle": "近5年真题精讲",
+      "type": 8,
+      "permission_status": "2",
+      "details_type": 2,
+      "data_type": 1,
+      "professional_id": "1",
+      "professional_id_name": "口腔执业医师",
+      "exam_title": "2026年全国口腔执业医师资格考试",
+      "material_cover_path": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/cover2.jpg",
+      "material_intro_path": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/intro2.jpg",
+      "recitation_question_model": "2",
+      "prices": [
+        {
+          "id": "1004",
+          "goods_id": "593505082385898225",
+          "month": "12",
+          "sale_price": "199.00",
+          "original_price": "299.00",
+          "validity_day": "365",
+          "validity_type": "1"
+        }
+      ],
+      "tiku_goods_details": {
+        "question_num": 850,
+        "exam_time": "2026-06-30"
+      },
+      "paper_statistics": {"do_count": 0, "total_accuracy_rate": 0}
+    },
+    {
+      "id": "593505082385898226",
+      "goods_id": "593505082385898226",
+      "name": "【跳转→SimulatedExamRoomPage】口腔医学综合模拟考场",
+      "subtitle": "全真模拟 查漏补缺",
+      "type": 10,
+      "permission_status": "2",
+      "details_type": 4,
+      "data_type": 2,
+      "professional_id": "1",
+      "professional_id_name": "口腔执业医师",
+      "material_cover_path": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/cover4.jpg",
+      "material_intro_path": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/intro4.jpg",
+      "prices": [
+        {
+          "id": "1006",
+          "goods_id": "593505082385898226",
+          "month": "12",
+          "sale_price": "149.00",
+          "original_price": "199.00",
+          "validity_day": "365",
+          "validity_type": "1"
+        }
+      ],
+      "tiku_goods_details": {
+        "question_num": 2000,
+        "exam_time": "2025-12-31"
+      }
+    },
+    {
+      "id": "593505082385898227",
+      "goods_id": "593505082385898227",
+      "name": "【跳转→SubjectMockDetailPage】口腔解剖学科目模考",
+      "subtitle": "专项突破 精准提分",
+      "type": 8,
+      "permission_status": "2",
+      "details_type": 3,
+      "data_type": 1,
+      "professional_id": "1",
+      "professional_id_name": "口腔执业医师",
+      "material_cover_path": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/cover3.jpg",
+      "material_intro_path": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/subject_mock_long_image.jpg",
+      "long_img_path": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/subject_mock_long_image.jpg",
+      "prices": [
+        {
+          "id": "1005",
+          "goods_id": "593505082385898227",
+          "month": "6",
+          "sale_price": "399.00",
+          "original_price": "599.00",
+          "validity_day": "180",
+          "validity_type": "1"
+        }
+      ],
+      "tiku_goods_details": {
+        "question_num": 1200,
+        "exam_time": "2025-08-31"
+      }
+    },
+    {
+      "id": "593505082385898228",
+      "goods_id": "593505082385898228",
+      "name": "【跳转→SecretRealDetailPage】口腔修复学历年真题",
+      "subtitle": "近10年真题汇总",
+      "type": 8,
+      "permission_status": "1",
+      "details_type": 2,
+      "data_type": 1,
+      "professional_id": "1",
+      "professional_id_name": "口腔执业医师",
+      "exam_title": "2026年全国口腔执业医师资格考试",
+      "material_cover_path": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/cover6.jpg",
+      "material_intro_path": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/intro6.jpg",
+      "recitation_question_model": "1",
+      "prices": [
+        {
+          "id": "1009",
+          "goods_id": "593505082385898228",
+          "month": "12",
+          "sale_price": "99.00",
+          "original_price": "149.00",
+          "validity_day": "365",
+          "validity_type": "1"
+        }
+      ],
+      "tiku_goods_details": {
+        "question_num": 1500,
+        "exam_time": "2026-03-31"
+      },
+      "paper_statistics": {
+        "do_count": 32,
+        "total_accuracy_rate": 85.3
+      },
+      "permission_order_id": "ORD111222333"
+    },
+    {
+      "id": "593505082385898229",
+      "goods_id": "593505082385898229",
+      "name": "【跳转→GoodsDetailPage】口腔预防医学题库",
+      "subtitle": "5000+道题 全面覆盖",
+      "type": 18,
+      "permission_status": "2",
+      "details_type": 1,
+      "data_type": 1,
+      "professional_id": "1",
+      "professional_id_name": "口腔执业医师",
+      "material_cover_path": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/cover5.jpg",
+      "material_intro_path": "<h2>商品介绍</h2><p>口腔预防医学题库，包含5280道精选题目。</p>",
+      "prices": [
+        {
+          "id": "1007",
+          "goods_id": "593505082385898229",
+          "month": "3",
+          "sale_price": "249.00",
+          "original_price": "349.00",
+          "validity_day": "90",
+          "validity_type": "1"
+        },
+        {
+          "id": "1008",
+          "goods_id": "593505082385898229",
+          "month": "0",
+          "sale_price": "799.00",
+          "original_price": "1499.00",
+          "validity_day": "36500",
+          "validity_type": "2"
+        }
+      ],
+      "tiku_goods_details": {
+        "question_num": 5280,
+        "exam_time": "2025-10-31"
+      },
+      "chapter_tree": [
+        {
+          "id": "ch10",
+          "name": "预防医学基础",
+          "children": [
+            {"id": "sec10", "name": "龋病预防", "question_count": 300}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "593505082385898230",
+      "goods_id": "593505082385898230",
+      "name": "【跳转→SimulatedExamRoomPage】口腔综合能力模拟考场",
+      "subtitle": "全真模拟 实战演练",
+      "type": 10,
+      "permission_status": "1",
+      "details_type": 4,
+      "data_type": 2,
+      "professional_id": "1",
+      "professional_id_name": "口腔执业医师",
+      "material_cover_path": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/cover7.jpg",
+      "material_intro_path": "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/intro7.jpg",
+      "prices": [
+        {
+          "id": "1010",
+          "goods_id": "593505082385898230",
+          "month": "12",
+          "sale_price": "499.00",
+          "original_price": "699.00",
+          "validity_day": "365",
+          "validity_type": "1"
+        }
+      ],
+      "tiku_goods_details": {
+        "question_num": 3000,
+        "exam_time": "2026-12-31"
+      },
+      "permission_order_id": "ORD987654321"
+    }
+  ]
+}
