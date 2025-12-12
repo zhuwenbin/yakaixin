@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/utils/toast_util.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../providers/auth_provider.dart';
 import '../../../app/routes/app_routes.dart';
 
@@ -24,8 +26,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   // 登录方式: true=验证码, false=密码
   bool _isCodeLogin = true;
   
+  // 密码可见性
+  bool _obscurePassword = true;
+  
   // 验证码倒计时
   int _countdown = 0;
+  
+  // 协议勾选状态
+  bool _agreeProtocol = false;
 
   @override
   void dispose() {
@@ -33,6 +41,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _codeController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+  
+  // 切换密码可见性
+  void _togglePasswordVisibility() {
+    setState(() {
+      _obscurePassword = !_obscurePassword;
+    });
   }
 
   // 发送验证码
@@ -71,6 +86,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
+    // ✅ 协议验证
+    if (!_agreeProtocol) {
+      ToastUtil.error('请阅读并同意用户协议和隐私政策');
+      return;
+    }
+    
     // ✅ 表单验证
     if (!_formKey.currentState!.validate()) {
       return;
@@ -115,248 +136,391 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(height: 80.h),
+                SizedBox(height: 60.h),
                 
                 // Logo
-                // ✅ 符合数据安全规则: 添加 errorBuilder 处理图片加载失败
                 Center(
-                  child: Image.asset(
-                    'assets/images/logo.png',
-                    width: 120.w,
-                    height: 120.w,
+                  child: Image.network(
+                    'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/16954380355842bbc169543803558573934_%E5%AE%89%E5%8D%93%402x.png',
+                    width: 80.w,
+                    height: 80.w,
                     errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 120.w,
-                        height: 120.w,
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.school,
-                          size: 60.sp,
-                          color: Colors.blue,
-                        ),
+                      return Icon(
+                        Icons.account_circle,
+                        size: 80.sp,
+                        color: AppColors.primary,
                       );
                     },
                   ),
                 ),
                 
-                SizedBox(height: 20.h),
+                SizedBox(height: 48.h),
                 
-                // 标题
-                Text(
-                  '牙开心题库',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 28.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                // 标题：手机号登陆
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '手机号登陆',
+                    style: TextStyle(
+                      fontSize: 28.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
                 
-                SizedBox(height: 10.h),
-                
-                Text(
-                  '专业的医学考试题库',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey,
-                  ),
-                ),
-                
-                SizedBox(height: 60.h),
+                SizedBox(height: 40.h),
                 
                 // 手机号输入
-                // ✅ 符合 UI 迁移规则: 使用 .sp .w .r 单位
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: '手机号',
-                    hintText: '请输入手机号',
-                    prefixIcon: const Icon(Icons.phone_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(color: Colors.blue, width: 2),
-                    ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.inputBackground,
+                    borderRadius: BorderRadius.circular(8.r),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '请输入手机号';
-                    }
-                    if (value.length != 11) {
-                      return '请输入正确的手机号';
-                    }
-                    return null;
-                  },
-                ),
-                
-                SizedBox(height: 20.h),
-                
-                // 验证码或密码输入
-                if (_isCodeLogin)
-                  // 验证码输入
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _codeController,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: '验证码',
-                            hintText: '请输入验证码',
-                            prefixIcon: const Icon(Icons.message_outlined),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                              borderSide: const BorderSide(color: Colors.blue, width: 2),
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return '请输入验证码';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      // 发送验证码按钮
-                      SizedBox(
-                        width: 110.w,
-                        height: 56.h,
-                        child: ElevatedButton(
-                          onPressed: _countdown > 0 ? null : _sendCode,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade50,
-                            foregroundColor: Colors.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            _countdown > 0 ? '$_countdown秒' : '获取验证码',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                else
-                  // 密码输入
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: true,
+                  child: TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    style: TextStyle(fontSize: 15.sp),
                     decoration: InputDecoration(
-                      labelText: '密码',
-                      hintText: '请输入密码',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
+                      hintText: '请输入手机号码',
+                      hintStyle: TextStyle(
+                        fontSize: 15.sp,
+                        color: AppColors.textHint,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      prefixIcon: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12.w),
+                        child: Image.network(
+                          'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/16981168209892506169811682099042826_person.png',
+                          width: 20.w,
+                          height: 20.w,
+                          errorBuilder: (_, __, ___) => Icon(
+                            Icons.person_outline,
+                            size: 20.sp,
+                            color: AppColors.textHint,
+                          ),
+                        ),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: const BorderSide(color: Colors.blue, width: 2),
+                      prefixIconConstraints: BoxConstraints(
+                        minWidth: 44.w,
+                        minHeight: 20.h,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 16.h,
                       ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return '请输入密码';
+                        return '请输入手机号';
+                      }
+                      if (value.length != 11) {
+                        return '请输入正确的手机号';
                       }
                       return null;
                     },
                   ),
-                
-                SizedBox(height: 20.h),
-                
-                // 切换登录方式
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _isCodeLogin = !_isCodeLogin;
-                      });
-                    },
-                    child: Text(
-                      _isCodeLogin ? '密码登录' : '验证码登录',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: Colors.blue,
-                      ),
-                    ),
-                  ),
                 ),
                 
-                SizedBox(height: 40.h),
+                SizedBox(height: 16.h),
                 
-                // 登录按钮
-                ElevatedButton(
-                  onPressed: authState.isLoading ? null : _handleLogin,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 16.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
+                // 验证码或密码输入
+                if (_isCodeLogin)
+                  // 验证码输入
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.inputBackground,
+                      borderRadius: BorderRadius.circular(8.r),
                     ),
-                    elevation: 0,
-                  ),
-                  child: authState.isLoading
-                      ? SizedBox(
-                          height: 20.h,
-                          width: 20.w,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          '登录',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: 12.w, right: 8.w),
+                          child: Image.network(
+                            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/1698116851191468616981168511918397_dun.png',
+                            width: 20.w,
+                            height: 20.w,
+                            errorBuilder: (_, __, ___) => Icon(
+                              Icons.shield_outlined,
+                              size: 20.sp,
+                              color: AppColors.textHint,
+                            ),
                           ),
                         ),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _codeController,
+                            keyboardType: TextInputType.number,
+                            style: TextStyle(fontSize: 15.sp),
+                            decoration: InputDecoration(
+                              hintText: '请输入短信验证码',
+                              hintStyle: TextStyle(
+                                fontSize: 15.sp,
+                                color: AppColors.textHint,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 16.h,
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return '请输入验证码';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        // 发送验证码按钮
+                        GestureDetector(
+                          onTap: _countdown > 0 ? null : _sendCode,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 12.h,
+                            ),
+                            child: Text(
+                              _countdown > 0 ? '${_countdown}s' : '发送验证码',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: _countdown > 0
+                                    ? AppColors.textDisabled
+                                    : AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  // 密码输入
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.inputBackground,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: 12.w, right: 8.w),
+                          child: Image.network(
+                            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/1698116851191468616981168511918397_dun.png',
+                            width: 20.w,
+                            height: 20.w,
+                            errorBuilder: (_, __, ___) => Icon(
+                              Icons.lock_outline,
+                              size: 20.sp,
+                              color: AppColors.textHint,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            style: TextStyle(fontSize: 15.sp),
+                            decoration: InputDecoration(
+                              hintText: '请输入密码',
+                              hintStyle: TextStyle(
+                                fontSize: 15.sp,
+                                color: AppColors.textHint,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 16.h,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  size: 20.sp,
+                                  color: AppColors.textHint,
+                                ),
+                                onPressed: _togglePasswordVisibility,
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return '请输入密码';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                
+                
+                SizedBox(height: 16.h),
+                
+                // 切换登录方式 & 忘记密码
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // 切换登录方式按钮
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _isCodeLogin = !_isCodeLogin;
+                            });
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 8.h),
+                            minimumSize: Size(0, 0),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            _isCodeLogin ? '密码登录' : '验证码登录',
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // 忘记密码按钮（仅密码登录时显示）
+                    if (!_isCodeLogin)
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              print('🔑 点击忘记密码，跳转到: ${AppRoutes.forgetPassword}');
+                              context.push(AppRoutes.forgetPassword);
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 8.h),
+                              minimumSize: Size(0, 0),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              '忘记密码？',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                color: AppColors.textHint,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                
+                SizedBox(height: 80.h),
+                
+                // 登录按钮
+                SizedBox(
+                  width: double.infinity,
+                  height: 48.h,
+                  child: ElevatedButton(
+                    onPressed: authState.isLoading ? null : _handleLogin,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24.r),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: authState.isLoading
+                        ? SizedBox(
+                            height: 20.h,
+                            width: 20.w,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Text(
+                            '登录',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
                 ),
                 
                 SizedBox(height: 20.h),
                 
-                // 提示信息
-                Center(
-                  child: Text(
-                    _isCodeLogin ? '未注册手机号验证后自动创建账号' : '忘记密码请使用验证码登录',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: Colors.grey,
+                // 协议勾选
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 20.w,
+                      height: 20.w,
+                      child: Checkbox(
+                        value: _agreeProtocol,
+                        onChanged: (value) {
+                          setState(() {
+                            _agreeProtocol = value ?? false;
+                          });
+                        },
+                        activeColor: AppColors.primary,
+                        shape: const CircleBorder(),
+                      ),
                     ),
-                  ),
+                    SizedBox(width: 4.w),
+                    Flexible(
+                      child: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            '我已阅读并同意',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: AppColors.textHint,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              context.push(AppRoutes.userServiceAgreement);
+                            },
+                            child: Text(
+                              '《用户权限》',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              context.push(AppRoutes.privacyPolicy);
+                            },
+                            child: Text(
+                              '《隐私政策》',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '，并授权使用该账号信息进行统一管理',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: AppColors.textHint,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 
-                SizedBox(height: 40.h),
+                SizedBox(height: 32.h),
               ],
             ),
           ),

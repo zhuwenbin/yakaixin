@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_radius.dart';
 import '../providers/secret_real_detail_provider.dart';
 import '../models/goods_detail_model.dart';
 
@@ -37,13 +41,13 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
     final state = ref.watch(secretRealDetailNotifierProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6F8),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('绝密真题'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          icon: Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
       ),
@@ -66,9 +70,9 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16.h),
-          Text('加载中...', style: TextStyle(fontSize: 14.sp)),
+          const CircularProgressIndicator(),
+          SizedBox(height: AppSpacing.mdV),
+          Text('加载中...', style: AppTextStyles.bodyMedium),
         ],
       ),
     );
@@ -80,10 +84,10 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
         padding: EdgeInsets.all(50.h),
         child: Column(
           children: [
-            Icon(Icons.error_outline, size: 64.sp, color: Colors.red.shade300),
-            SizedBox(height: 16.h),
+            Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
+            SizedBox(height: AppSpacing.mdV),
             Text(error, textAlign: TextAlign.center),
-            SizedBox(height: 24.h),
+            SizedBox(height: AppSpacing.lgV),
             ElevatedButton(
               onPressed: () {
                 if (widget.productId != null) {
@@ -92,7 +96,10 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
                       .refresh(widget.productId!);
                 }
               },
-              child: Text('重试'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: Text('重试', style: AppTextStyles.buttonMedium),
             ),
           ],
         ),
@@ -102,7 +109,7 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
 
   Widget _buildEmpty() {
     return Center(
-      child: Text('暂无数据', style: TextStyle(fontSize: 14.sp)),
+      child: Text('暂无数据', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint)),
     );
   }
 
@@ -123,7 +130,7 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
                 end: Alignment.bottomCenter,
                 colors: [
                   Color(0xFFB8E8FC), // 浅蓝色
-                  Color(0xFFF5F6F8), // 灰白色
+                  AppColors.background, // 灰白色
                 ],
               ),
             ),
@@ -155,15 +162,15 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(30.w),
+      padding: EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: AppColors.cardShadowLight,
             blurRadius: 20,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -175,30 +182,25 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
             Text(
               detail.professionalIdName ?? '口腔执业医师',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 22.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
+              style: AppTextStyles.heading2.copyWith(color: AppColors.textPrimary),
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: AppSpacing.mdV),
             // 绝密真题标签（对应小程序 Line 15）
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: AppSpacing.smV),
               decoration: BoxDecoration(
-                color: Color(0xFFFF5E00),
-                borderRadius: BorderRadius.circular(4.r),
+                color: AppColors.unpurchased,
+                borderRadius: BorderRadius.circular(AppRadius.xs),
               ),
               child: Text(
                 '绝密真题',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.white,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textWhite,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            SizedBox(height: 24.h),
+            SizedBox(height: AppSpacing.lgV),
             // 题目内容（对应小程序 Line 17-19）
             Container(
               padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -206,26 +208,26 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
               child: Text(
                 '题目内容：${detail.name ?? ''}',
                 textAlign: TextAlign.left,
-                style: TextStyle(fontSize: 15.sp, color: Colors.black87),
+                style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textPrimary),
               ),
             ),
-            SizedBox(height: 16.h),
-            Divider(color: Colors.grey.shade300),
-            SizedBox(height: 16.h),
+            SizedBox(height: AppSpacing.mdV),
+            Divider(color: AppColors.divider),
+            SizedBox(height: AppSpacing.mdV),
             // 详情列表（对应小程序 Line 22-44）
             _buildInfoRow('总题数', questionNum),
-            SizedBox(height: 16.h),
+            SizedBox(height: AppSpacing.mdV),
             _buildInfoRow('做题次数', doCount),
-            SizedBox(height: 16.h),
+            SizedBox(height: AppSpacing.mdV),
             _buildInfoRow('正确率', '$accuracyRate%'),
-            SizedBox(height: 16.h),
+            SizedBox(height: AppSpacing.mdV),
             _buildInfoRowWithAction('错题', '查看错题', () {
               // TODO: 跳转错题本（对应小程序 Line 221-230）
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text('错题本功能开发中...')));
             }),
-            SizedBox(height: 16.h),
+            SizedBox(height: AppSpacing.mdV),
             _buildInfoRow('题库到期时间', examTime),
           ],
         ),
@@ -239,11 +241,11 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
       children: [
         Text(
           '$label:',
-          style: TextStyle(fontSize: 15.sp, color: Colors.grey.shade600),
+          style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
         ),
         Text(
           value,
-          style: TextStyle(fontSize: 15.sp, color: Colors.black87),
+          style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textPrimary),
         ),
       ],
     );
@@ -259,15 +261,14 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
       children: [
         Text(
           '$label:',
-          style: TextStyle(fontSize: 15.sp, color: Colors.grey.shade600),
+          style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
         ),
         GestureDetector(
           onTap: onTap,
           child: Text(
             actionText,
-            style: TextStyle(
-              fontSize: 15.sp,
-              color: Color(0xFF2E68FF),
+            style: AppTextStyles.bodyLarge.copyWith(
+              color: AppColors.primary,
               decoration: TextDecoration.none,
             ),
           ),
@@ -281,13 +282,13 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
     final isPurchased = detail.permissionStatus == '1';
 
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            offset: Offset(0, -2),
+            color: AppColors.cardShadowLight,
+            offset: const Offset(0, -2),
             blurRadius: 8,
           ),
         ],
@@ -298,20 +299,16 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
           child: ElevatedButton(
             onPressed: () => _handleAction(detail, isPurchased),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF2E68FF),
-              padding: EdgeInsets.symmetric(vertical: 16.h),
+              backgroundColor: AppColors.primary,
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.mdV),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30.r),
+                borderRadius: BorderRadius.circular(AppRadius.xl),
               ),
               elevation: 0,
             ),
             child: Text(
               isPurchased ? '开始冲刺做题' : '立即购买',
-              style: TextStyle(
-                fontSize: 16.sp,
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
+              style: AppTextStyles.buttonLarge.copyWith(color: AppColors.textWhite),
             ),
           ),
         ),

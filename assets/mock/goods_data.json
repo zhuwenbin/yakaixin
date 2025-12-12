@@ -79,20 +79,32 @@
     },
     {
       "id": "593505082385898228",
-      "name": "【跳转→SecretRealDetailPage】口腔修复学历年真题",
+      "name": "口腔修复学历年真题",
       "material_cover_path": "408559575579495187/2025/09/15/175812345678923ef-175812345678912.jpg",
       "type": "8",
       "type_name": "试卷",
       "teaching_type": "0",
-      "details_type": 2,
+      "details_type": "2",
+      "data_type": "",
       "sale_price": "99.00",
       "original_price": "149.00",
       "permission_status": "1",
       "is_homepage_recommend": "0",
       "seckill_countdown": null,
       "validity_day": "90",
+      "validity_start_date": "2025-01-01",
+      "validity_end_date": "2025-12-31",
       "student_num": "890",
-      "create_time": "2025-09-15 10:30:00"
+      "created_at": "2025-09-15",
+      "num_text": "共12份",
+      "professional_id": "524033912737962623",
+      "recitation_question_model": "0",
+      "tiku_goods_details": {
+        "question_num": 0,
+        "paper_num": 12,
+        "exam_round_num": 0,
+        "exam_time": ""
+      }
     },
     {
       "id": "593505082385898229",
@@ -113,21 +125,32 @@
     },
     {
       "id": "593505082385898230",
-      "name": "【跳转→SimulatedExamRoomPage】口腔综合能力模拟考场",
+      "name": "口腔综合能力模拟考场",
       "material_cover_path": "408559575579495187/2025/08/20/175612345678945ij-175612345678934.jpg",
       "type": "10",
       "type_name": "模考",
       "teaching_type": "0",
-      "details_type": 4,
-      "data_type": 2,
+      "details_type": "4",
+      "data_type": "2",
       "sale_price": "499.00",
       "original_price": "699.00",
       "permission_status": "1",
       "is_homepage_recommend": "1",
       "seckill_countdown": null,
       "validity_day": "365",
+      "validity_start_date": "2025-01-01",
+      "validity_end_date": "2025-12-31",
       "student_num": "4123",
-      "create_time": "2025-08-20 11:00:00"
+      "created_at": "2025-08-20",
+      "num_text": "共5轮",
+      "professional_id": "524033912737962623",
+      "recitation_question_model": "0",
+      "tiku_goods_details": {
+        "question_num": 0,
+        "paper_num": 0,
+        "exam_round_num": 5,
+        "exam_time": "2025-12-15"
+      }
     },
     {
       "id": "593505082385898231",

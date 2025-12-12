@@ -9,11 +9,13 @@ import '../../core/storage/storage_service.dart';
 import '../constants/storage_keys.dart';
 import '../../features/auth/views/h5_login_page.dart';
 import '../../features/auth/views/select_major_page.dart';
+import '../../features/auth/views/forget_password_page.dart';
+import '../../features/auth/views/change_password_page.dart';
 import '../../features/home/views/home_page.dart';
 import '../../features/question_bank/views/chapter_list_page.dart';
 import '../../features/question_bank/views/make_question_page.dart';
 import '../../features/question_bank/views/wrong_book_page.dart';
-import '../../features/question_bank/views/collect_page.dart';
+import '../../features/collection/views/collection_page.dart';
 import '../../features/challenge/views/challenge_index_page.dart';
 import '../../features/challenge/views/level_list_page.dart';
 import '../../features/challenge/views/challenge_practise_page.dart';
@@ -44,7 +46,6 @@ import '../../features/goods/views/goods_detail_page.dart';
 import '../../features/goods/views/secret_real_detail_page.dart';
 import '../../features/goods/views/subject_mock_detail_page.dart';
 import '../../features/goods/views/simulated_exam_room_page.dart';
-import '../../features/goods/views/course_goods_detail_page.dart';
 import '../../features/order/views/my_order_page.dart';
 import '../../features/order/views/pay_success_page.dart';
 import '../../features/profile/views/profile_page.dart';
@@ -56,6 +57,7 @@ import '../../features/profile/views/user_service_agreement_page.dart';
 import '../../features/activity/views/code_receive_page.dart';
 import '../../features/activity/views/app_upload_page.dart';
 import '../../features/activity/views/open_app_page.dart';
+import '../../features/payment/views/confirm_payment_page.dart';
 import 'app_routes.dart';
 
 /// 应用路由配置
@@ -74,15 +76,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isOnLoginPage =
           state.matchedLocation == AppRoutes.loginCenter ||
           state.matchedLocation == AppRoutes.h5Login;
-      final isOnSplash = state.matchedLocation == AppRoutes.splash;
+      
+      // ✅ 允许访问的无需登录页面
+      final isOnPublicPage = 
+          state.matchedLocation == AppRoutes.splash ||
+          state.matchedLocation == AppRoutes.loginCenter ||
+          state.matchedLocation == AppRoutes.h5Login ||
+          state.matchedLocation == AppRoutes.forgetPassword ||  // ✅ 忘记密码
+          state.matchedLocation == AppRoutes.changePassword ||  // ✅ 修改密码
+          state.matchedLocation == AppRoutes.selectMajor;       // ✅ 选择专业
 
       // 如果在启动页，不拦截
-      if (isOnSplash) {
+      if (state.matchedLocation == AppRoutes.splash) {
         return null;
       }
 
-      // 如果未登录且不在登录页，跳转到登录页
-      if (!hasToken && !isOnLoginPage) {
+      // 如果未登录且不在公共页面，跳转到登录页
+      if (!hasToken && !isOnPublicPage) {
         return AppRoutes.loginCenter;
       }
 
@@ -118,6 +128,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.selectMajor,
         builder: (context, state) => const SelectMajorPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgetPassword,
+        builder: (context, state) => const ForgetPasswordPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.changePassword,
+        builder: (context, state) => const ChangePasswordPage(),
       ),
 
       // ===== F2. 题库练习模块 =====
@@ -257,6 +275,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             orderId: extra?['order_id'] ?? '',
             title: extra?['title'] ?? '',
             professionalId: extra?['professional_id'] ?? '',
+            evaluationTypeId: extra?['evaluation_type_id'] ?? '',  // ✅ 测评分类ID
             type: extra?['type'] ?? '',
             timeLimit: extra?['time_limit'] ?? 7200,
             recitationQuestionModel: extra?['recitation_question_model'],
@@ -279,6 +298,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final extra = state.extra as Map<String, dynamic>?;
           return TestExamPage(
             id: extra?['id'],
+            professionalId:
+                extra?['professional_id'], // ✅ 添加 professional_id 参数
             recitationQuestionModel: extra?['recitation_question_model'],
           );
         },
@@ -301,7 +322,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.rankList,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
-          return RankListPage(examId: extra?['exam_id']);
+          return RankListPage(
+            paperVersionId: extra?['paper_version_id'] ?? '',
+            goodsId: extra?['goods_id'] ?? '',
+          );
         },
       ),
 
@@ -391,30 +415,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           // 将type转换为字符串进行比较（兼容String和int）
           final typeStr = type?.toString() ?? '';
 
+          // ✅ 同时支持 product_id 和 goods_id（兼容不同来源的跳转）
+          final goodsId = extra?['goods_id'] ?? extra?['product_id'];
+          final productId = extra?['product_id'];
+
           // 调试日志
           print(
-            '📦 商品详情路由 - type: $type, typeStr: $typeStr, goodsId: ${extra?['goods_id']}',
+            '📦 商品详情路由 - type: $type, typeStr: $typeStr, goodsId: $goodsId, productId: $productId',
           );
 
-          // 根据商品类型跳转不同的详情页
-          // type: 2/3=课程, 8=试卷, 10=模考, 18=题库
-          if (typeStr == '2' || typeStr == '3') {
-            print('✅ 跳转到课程商品详情页');
-            // 课程商品详情页
-            return CourseGoodsDetailPage(
-              goodsId: extra?['goods_id'],
-              professionalId: extra?['professional_id'],
-              type: int.tryParse(typeStr),
-            );
-          } else {
-            print('✅ 跳转到题库/试卷/模考商品详情页');
-            // 题库/试卷/模考商品详情页
-            return GoodsDetailPage(
-              goodsId: extra?['goods_id'],
-              professionalId: extra?['professional_id'],
-              active: extra?['active'],
-            );
-          }
+          // 题库/试卷/模考商品详情页
+          return GoodsDetailPage(
+            goodsId: goodsId?.toString(),
+            productId: productId?.toString(),
+            professionalId: extra?['professional_id']?.toString(),
+            active: extra?['active']?.toString(),
+          );
         },
       ),
       GoRoute(
@@ -506,7 +522,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // ===== F8. 收藏管理模块 =====
       GoRoute(
         path: AppRoutes.collectIndex,
-        builder: (context, state) => const CollectPage(),
+        builder: (context, state) => const CollectionPage(),
       ),
       GoRoute(
         path: AppRoutes.collectDetail,
@@ -539,6 +555,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.openApp,
         builder: (context, state) => const OpenAppPage(),
+      ),
+
+      // ===== F10. 支付模块 =====
+      GoRoute(
+        path: AppRoutes.confirmPayment,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+
+          return ConfirmPaymentPage(
+            // ✅ 必需参数（由 startPayment 返回）
+            orderId: extra?['order_id'] as String? ?? '',
+            flowId: extra?['flow_id'] as String? ?? '',
+            goodsId: extra?['goods_id'] as String? ?? '',
+            financeBodyId: extra?['finance_body_id'] as String? ?? '',  // ✅ 财务主体ID
+            goodsName: extra?['goods_name'] as String? ?? '',
+            payableAmount:
+                (extra?['payable_amount'] as num?)?.toDouble() ?? 0.0,
+            // ✅ 可选参数（用于回调刷新）
+            refreshGoodsId: extra?['refresh_goods_id'] as String?,
+            professionalIdName: extra?['professional_id_name'] as String?,
+          );
+        },
       ),
     ],
   );

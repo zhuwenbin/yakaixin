@@ -12,6 +12,7 @@ _$LessonModelImpl _$$LessonModelImplFromJson(Map<String, dynamic> json) =>
       lessonNum: json['lesson_num'] as String?,
       lessonName: json['lesson_name'] as String?,
       startTime: json['start_time'] as String?,
+      teachingType: json['teaching_type'],
       teachingTypeName: json['teaching_type_name'] as String?,
       resourceDocument: json['resource_document'] as List<dynamic>? ?? const [],
       evaluationType: (json['evaluation_type'] as List<dynamic>?)
@@ -26,6 +27,7 @@ Map<String, dynamic> _$$LessonModelImplToJson(_$LessonModelImpl instance) =>
       'lesson_num': instance.lessonNum,
       'lesson_name': instance.lessonName,
       'start_time': instance.startTime,
+      'teaching_type': instance.teachingType,
       'teaching_type_name': instance.teachingTypeName,
       'resource_document': instance.resourceDocument,
       'evaluation_type': instance.evaluationType,

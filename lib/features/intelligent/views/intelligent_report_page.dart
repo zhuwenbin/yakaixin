@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
 /// P2-13 测评报告 - 测评成绩
+/// 
+/// 🚨 暂不实现
+/// 
+/// 原因：智能测评功能整体暂不实现
+/// 小程序路径：modules/jintiku/pages/intelligentEvaluation/report
 class IntelligentReportPage extends StatelessWidget {
   final String? practiceId;
   

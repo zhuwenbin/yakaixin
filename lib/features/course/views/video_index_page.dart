@@ -12,6 +12,7 @@ import '../services/video_service.dart';
 import '../../../core/utils/safe_type_converter.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
+import '../../../core/media/video_player_manager.dart'; // ✅ 新增
 
 /// 视频播放页面 - 对应小程序 study/newVideo/index.vue
 /// 功能：播放录播视频课程，显示目录和讲义
@@ -92,7 +93,8 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
   void dispose() {
     _progressTimer?.cancel();
     _chewieController?.dispose();
-    _videoPlayerController?.dispose();
+    // ✅ 使用管理器释放 video_player 资源
+    VideoPlayerManager.instance.disposeVideoPlayer();
     super.dispose();
   }
 
@@ -296,51 +298,81 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
 
   /// 初始化视频播放器
   Future<void> _initVideoPlayer(String url, double initialTime) async {
-    _videoPlayerController?.dispose();
-    _chewieController?.dispose();
+    try {
+      // ✅ 使用管理器初始化 video_player
+      debugPrint('🎬 [视频播放] 开始初始化播放器');
+      _videoPlayerController = await VideoPlayerManager.instance.initVideoPlayer(url);
+      
+      // 释放旧的 chewie 控制器
+      _chewieController?.dispose();
 
-    _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(url));
-    await _videoPlayerController!.initialize();
-
-    _chewieController = ChewieController(
-      videoPlayerController: _videoPlayerController!,
-      autoPlay: true,
-      looping: false,
-      aspectRatio: 16 / 9,
-      allowFullScreen: true,
-      allowMuting: true,
-      showControls: true,
-      startAt: Duration(seconds: initialTime.toInt()),
-      // ✅ 添加黑色占位符（加载时显示）
-      placeholder: Container(
-        color: Colors.black,
-        child: const Center(
-          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+      _chewieController = ChewieController(
+        videoPlayerController: _videoPlayerController!,
+        autoPlay: true,
+        looping: false,
+        aspectRatio: 16 / 9,
+        allowFullScreen: true,
+        allowMuting: true,
+        showControls: true,
+        startAt: Duration(seconds: initialTime.toInt()),
+        // ✅ 添加黑色占位符（加载时显示）
+        placeholder: Container(
+          color: Colors.black,
+          child: const Center(
+            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+          ),
         ),
-      ),
-      // ✅ 完善全屏逻辑
-      deviceOrientationsAfterFullScreen: [
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ],
-      deviceOrientationsOnEnterFullScreen: [
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ],
-      systemOverlaysAfterFullScreen: SystemUiOverlay.values,
-    );
+        // ✅ 完善全屏逻辑
+        deviceOrientationsAfterFullScreen: [
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ],
+        deviceOrientationsOnEnterFullScreen: [
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ],
+        systemOverlaysAfterFullScreen: SystemUiOverlay.values,
+      );
 
-    // 监听播放进度
-    _videoPlayerController!.addListener(_onVideoProgress);
+      // 监听播放进度
+      _videoPlayerController!.addListener(_onVideoProgress);
 
-    // 启动定时器保存进度
-    _progressTimer?.cancel();
-    _progressTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      _saveProgress();
-    });
+      // 启动定时器保存进度
+      _progressTimer?.cancel();
+      _progressTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+        _saveProgress();
+      });
 
-    if (mounted) {
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
+      
+      debugPrint('✅ [视频播放] 播放器初始化成功');
+      
+    } catch (e) {
+      debugPrint('❌ [视频播放] 初始化失败: $e');
+      
+      // 如果是冲突异常，显示友好的错误信息
+      if (e is VideoPlayerConflictException) {
+        if (mounted) {
+          setState(() {
+            _error = '播放器冲突：${e.message}';
+          });
+        }
+        
+        // 显示提示
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.message),
+              duration: const Duration(seconds: 5),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else {
+        rethrow;
+      }
     }
   }
 
@@ -445,9 +477,8 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
 
     final systemId = section['system_id']?.toString() ?? '';
 
-    // ✅ 优化策略：保存旧控制器引用，先显示loading，后台释放
+    // ✅ 优化策略：先显示loading，后台释放
     final oldChewieController = _chewieController;
-    final oldVideoPlayerController = _videoPlayerController;
 
     // ✅ 1. 立即更新UI状态，显示黑色背景
     setState(() {
@@ -460,7 +491,8 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
     // ✅ 2. 异步释放旧控制器（不阻塞UI）
     Future.microtask(() {
       oldChewieController?.dispose();
-      oldVideoPlayerController?.dispose();
+      // ✅ 使用管理器释放 video_player
+      VideoPlayerManager.instance.disposeVideoPlayer();
     });
 
     // ✅ 3. 后台加载讲义

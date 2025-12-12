@@ -11,6 +11,7 @@ class LessonModel with _$LessonModel {
     @JsonKey(name: 'lesson_num') String? lessonNum,
     @JsonKey(name: 'lesson_name') String? lessonName,
     @JsonKey(name: 'start_time') String? startTime,
+    @JsonKey(name: 'teaching_type') dynamic teachingType, // ✅ 授课类型: 1-直播, 2-面授, 3-录播
     @JsonKey(name: 'teaching_type_name') String? teachingTypeName,
     @JsonKey(name: 'resource_document') @Default([]) List<dynamic> resourceDocument,
     @JsonKey(name: 'evaluation_type') @Default([]) List<Map<String, dynamic>> evaluationType,

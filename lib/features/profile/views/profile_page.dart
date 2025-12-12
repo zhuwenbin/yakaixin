@@ -33,7 +33,7 @@ class ProfilePage extends ConsumerWidget {
             left: 0,
             right: 0,
             child: CachedNetworkImage(
-              imageUrl: 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/my-background-img.png',
+              imageUrl: ApiConfig.completeImageUrl('my-background-img.png'),
               height: statusBarHeight + 220.h, // 状态栏 + 头部区域高度
               fit: BoxFit.cover,
               errorWidget: (context, error, stackTrace) {
@@ -122,6 +122,8 @@ class ProfilePage extends ConsumerWidget {
                           ),
                         )
                       : Image.network(
+                          // ✅ 修复：未登录时使用旧OSS域名的默认头像
+                          // 对应小程序: Line 10 (使用旧OSS域名)
                           'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixindf.png',
                           fit: BoxFit.cover,
                         ),
@@ -160,7 +162,7 @@ class ProfilePage extends ConsumerWidget {
               // 编辑图标
               if (isLoggedIn)
                 Image.network(
-                  'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/34e7174539261545097316_%E7%BC%96%E7%BB%84%204%E5%A4%87%E4%BB%BD%203%402x.png',
+                  ApiConfig.completeImageUrl('public/34e7174539261545097316_%E7%BC%96%E7%BB%84%204%E5%A4%87%E4%BB%BD%203%402x.png'),
                   width: 20.w,
                   height: 20.w,
                   errorBuilder: (context, error, stackTrace) => Icon(
@@ -181,7 +183,7 @@ class ProfilePage extends ConsumerWidget {
   Widget _buildTabs(BuildContext context, WidgetRef ref) {
     final tabs = [
       {
-        'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/order.png',
+        'icon': ApiConfig.completeImageUrl('order.png'),
         'text': '我的课程',
         'onTap': () {
           // 切换到课程 Tab
@@ -189,7 +191,7 @@ class ProfilePage extends ConsumerWidget {
         },
       },
       {
-        'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/flower.png',
+        'icon': ApiConfig.completeImageUrl('flower.png'),
         'text': '我的报告',
         'onTap': () {
           // 跳转到报告中心页面
@@ -197,7 +199,7 @@ class ProfilePage extends ConsumerWidget {
         },
       },
       {
-        'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/error.png',
+        'icon': ApiConfig.completeImageUrl('error.png'),
         'text': '错题本',
         'onTap': () {
           // 跳转到错题本页面
@@ -205,7 +207,7 @@ class ProfilePage extends ConsumerWidget {
         },
       },
       {
-        'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/mail.png',
+        'icon': ApiConfig.completeImageUrl('mail.png'),
         'text': '试题收藏',
         'onTap': () {
           // 跳转到试题收藏页面
@@ -264,7 +266,15 @@ class ProfilePage extends ConsumerWidget {
   Widget _buildMenuList(BuildContext context, WidgetRef ref) {
     final menuItems = [
       {
-        'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/file.png',
+        'icon': ApiConfig.completeImageUrl('wallet.png'),
+        'title': '我的余额',
+        'onTap': () {
+          // 跳转到余额页面
+          context.push('/balance');
+        },
+      },
+      {
+        'icon': ApiConfig.completeImageUrl('file.png'),
         'title': '我的订单',
         'onTap': () {
           // 跳转到订单页面
@@ -272,7 +282,7 @@ class ProfilePage extends ConsumerWidget {
         },
       },
       {
-        'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/pen.png',
+        'icon': ApiConfig.completeImageUrl('pen.png'),
         'title': '我的练习',
         'onTap': () {
           // 切换到首页 Tab
@@ -280,7 +290,7 @@ class ProfilePage extends ConsumerWidget {
         },
       },
       {
-        'icon': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/meme.png',
+        'icon': ApiConfig.completeImageUrl('meme.png'),
         'title': '设置',
         'onTap': () {
           // 跳转到设置页面

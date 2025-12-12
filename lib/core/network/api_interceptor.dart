@@ -50,14 +50,18 @@ class ApiInterceptor extends Interceptor {
     // TODO: 菜单标识需要根据当前路由动态获取，暂时设置为 0
     options.headers['x-menu-identy'] = base64Encode(utf8.encode('0'));
 
-    // 6. 设置 Content-Type (对应小程序 request.js:103-109)
-    if (!options.headers.containsKey('Content-Type') && !options.headers.containsKey('content-type')) {
-      if (options.method == 'POST' || options.method == 'PUT') {
-        options.headers['content-type'] = 'application/x-www-form-urlencoded';
-      } else {
-        options.headers['content-type'] = 'application/text';
-      }
-    }
+    // 6. 强制设置 Content-Type (对应小程序 request.js:103-109)
+    // ⚠️ 关键修复：必须显式设置，不能依赖 Dio 的默认值
+    // Dio 的 BaseOptions.contentType 只作为默认值，不会自动添加到 headers 中
+    // if (options.method == 'POST' || options.method == 'PUT') {
+    //   // ✅ 强制设置为 form-urlencoded（与小程序保持一致）
+    //   // options.headers['content-type'] = 'application/x-www-form-urlencoded';
+    // } else if (options.method == 'GET') {
+    //   // ✅ GET 请求不设置 content-type（与小程序保持一致）
+    //   // 如果已存在，则移除
+    //   options.headers.remove('content-type');
+    //   options.headers.remove('Content-Type');
+    // }
 
     // 3. 添加默认参数到请求体(POST)或查询参数(GET)
     // ✅ 对应小程序 request.js Line 64-74, 142-150
@@ -96,19 +100,13 @@ class ApiInterceptor extends Interceptor {
       currentParams = Map<String, dynamic>.from(options.data as Map);
     }
     
-    // ✅ 第一步：添加基础默认参数（所有接口都需要）
-    final baseParams = {
-      'platform_id': ApiConfig.platformId,
-      'merchant_id': ApiConfig.merchantId,
-      'brand_id': ApiConfig.brandId,
-      'channel_id': ApiConfig.channelId,
-      'extend_uid': ApiConfig.extendUid,
-    };
+    // ⚠️ 第一步：基础参数（platform_id, channel_id, extend_uid）已在请求头中（Line 29-40）
+    // 通过 Base64 编码添加到请求头，不需要添加到请求体
+    final baseParams = <String, dynamic>{};
     
     // ✅ 第二步：添加用户相关参数
-    // 对应小程序: data.no_user_id !== "1"
-    // ⚠️ 关键修复: 已登录用户总是添加 user_id 和 student_id，不管是否在白名单中
-    // ⚠️ 这样商品详情等接口才能正确返回 permission_status
+    // 对应小程序 request.js Line 64-74:
+    // 当添加 user_id 时，同时添加 merchant_id 和 brand_id 到请求体
     final shouldAddUserParams = !currentParams.containsKey('user_id') && 
                                 currentParams['no_user_id'] != "1";
     
@@ -121,8 +119,13 @@ class ApiInterceptor extends Interceptor {
       userParams = {
         'user_id': studentId,
         'student_id': studentId,
+        // ✅ 关键修复：只有添加 user_id 时才添加 merchant_id 和 brand_id
+        // 对应小程序 request.js Line 72-73
+        'merchant_id': ApiConfig.merchantId,
+        'brand_id': ApiConfig.brandId,
       };
       print('👤 [API拦截器] 添加用户参数: user_id=$studentId, student_id=$studentId');
+      print('🏢 [API拦截器] 添加商户参数: merchant_id=${ApiConfig.merchantId}, brand_id=${ApiConfig.brandId}');
     } else {
       print('⚠️ [API拦截器] 未添加用户参数: shouldAdd=$shouldAddUserParams, studentId=${studentId ?? "null"}');
     } 
@@ -182,16 +185,23 @@ class ApiInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-
-    // 小程序统一响应格式检查
+    // 统一处理响应结果
     // 对应: src/utlis/request.js 和 src/modules/jintiku/api/request.js
     // 响应格式: {code: 100000, msg: [...], data: ...}
+    
+    // ✅ 添加响应日志
+    print('\n📦 [API响应] ${response.requestOptions.method} ${response.requestOptions.uri.path}');
+    print('📊 [状态码] ${response.statusCode}');
+    print('📦 [响应数据] ${response.data}');
+    
     if (response.data is Map) {
       final data = response.data as Map<String, dynamic>;
       
       // 检查业务错误码
       if (data.containsKey('code')) {
         final code = data['code'];
+        
+        print('🎯 [业务码] $code');
         
         // 小程序中: code == 100000 或 code == 0 表示成功
         // 对应: normal_code = 100000 (src/modules/jintiku/api/request.js:92)

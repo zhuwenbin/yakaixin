@@ -3,12 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+
 import '../../../app/routes/app_routes.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../providers/question_bank_provider.dart';
 import '../models/question_bank_model.dart';
+import '../models/goods_model.dart';
 import '../../major/widgets/major_selector_dialog.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../goods/services/goods_service.dart' as goods_service;
+import '../widgets/study_calendar_card.dart';
+import '../widgets/study_card_grid.dart';
+import '../widgets/daily_practice_card.dart';
+import '../widgets/chapter_practice_section.dart';
+import '../widgets/skill_mock_section.dart';
+import '../widgets/purchased_questions_section.dart';
+import '../../../../app/config/api_config.dart';
 
 /// 题库首页
 /// 对应小程序: src/modules/jintiku/pages/index/index.vue
@@ -50,7 +62,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: AppColors.background,
       body: RefreshIndicator(
         onRefresh: () async {
           // ✅ 通过 ViewModel 处理业务逻辑
@@ -146,14 +158,16 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
           children: [
             Text(
               majorName,
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w500,
-                color: Colors.black,
+              style: AppTextStyles.heading3.copyWith(
+                color: AppColors.textPrimary,
               ),
             ),
-            SizedBox(width: 8.w),
-            Icon(Icons.keyboard_arrow_down, size: 20.sp, color: Colors.black54),
+            SizedBox(width: AppSpacing.sm),
+            Icon(
+              Icons.keyboard_arrow_down,
+              size: 20.sp,
+              color: AppColors.textSecondary,
+            ),
           ],
         ),
       ),
@@ -162,7 +176,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
 
   /// 学习日历卡片
   Widget _buildStudyCalendar(QuestionBankState state, WidgetRef ref) {
-    return _StudyCalendarCard(
+    return StudyCalendarCard(
       learningData: state.learningData,
       isLoadingLearningData: state.isLoadingLearning,
       onCheckIn: () => ref.read(questionBankProvider.notifier).checkIn(),
@@ -172,124 +186,36 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   /// 学习卡片网格(绝密押题、科目模考、模拟考试、学习报告)
   Widget _buildStudyCardGrid(BuildContext context, WidgetRef ref) {
     final cards = [
-      {
-        'title': '绝密押题',
-        'subtitle': '名师密押 考后即焚',
-        'imageUrl':
+      StudyCardData(
+        title: '绝密押题',
+        subtitle: '名师密押 考后即焚',
+        imageUrl:
             'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/predictIcon.png',
-        'action': () => _handleCardClick(context, ref, 0),
-      },
-      {
-        'title': '科目模考',
-        'subtitle': '查漏补缺 直击重点',
-        'imageUrl':
+        onTap: () => _handleCardClick(context, ref, 0),
+      ),
+      StudyCardData(
+        title: '科目模考',
+        subtitle: '查漏补缺 直击重点',
+        imageUrl:
             'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/test-icon.png',
-        'action': () => _handleCardClick(context, ref, 1),
-      },
-      {
-        'title': '模拟考试',
-        'subtitle': '全真模拟 还原考场',
-        'imageUrl':
+        onTap: () => _handleCardClick(context, ref, 1),
+      ),
+      StudyCardData(
+        title: '模拟考试',
+        subtitle: '全真模拟 还原考场',
+        imageUrl:
             'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/exam-icon.png',
-        'action': () => _handleCardClick(context, ref, 2),
-      },
-      {
-        'title': '学习报告',
-        'subtitle': '实时学习情况',
-        'imageUrl':
-            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/col-4.png',
-        'action': () => _handleCardClick(context, ref, 3),
-      },
+        onTap: () => _handleCardClick(context, ref, 2),
+      ),
+      StudyCardData(
+        title: '学习报告',
+        subtitle: '实时学习情况',
+        imageUrl: ApiConfig.completeImageUrl('col-4.png'),
+        onTap: () => _handleCardClick(context, ref, 3),
+      ),
     ];
 
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 12.w),
-      child: GridView.builder(
-        padding: EdgeInsets.zero,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 1.5,
-          crossAxisSpacing: 12.w,
-          mainAxisSpacing: 12.h,
-        ),
-        itemCount: cards.length,
-        itemBuilder: (context, index) {
-          final card = cards[index];
-          return _buildStudyCard(
-            title: card['title'] as String,
-            subtitle: card['subtitle'] as String,
-            imageUrl: card['imageUrl'] as String,
-            onTap: card['action'] as VoidCallback,
-          );
-        },
-      ),
-    );
-  }
-
-  /// 学习卡片单项
-  Widget _buildStudyCard({
-    required String title,
-    required String subtitle,
-    required String imageUrl,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Row(
-          children: [
-            // 图标
-            Image.network(
-              imageUrl,
-              width: 30.w,
-              height: 30.w,
-              errorBuilder: (context, error, stackTrace) {
-                return Icon(
-                  Icons.image,
-                  size: 30.w,
-                  color: const Color(0xFFCCCCCC),
-                );
-              },
-            ),
-            SizedBox(width: 12.w),
-            // 文字
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF333333),
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: const Color(0xFF999999),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return StudyCardGrid(cards: cards);
   }
 
   /// 每日一测
@@ -297,197 +223,19 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
     BuildContext context,
     DailyPracticeModel dailyPractice,
   ) {
-    final totalQuestions = dailyPractice.totalQuestions;
-    final doneQuestions = dailyPractice.doneQuestions;
-    final name = dailyPractice.name;
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 12.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionTitle('每日一测'),
-          SizedBox(height: 12.h),
-          GestureDetector(
-            onTap: () => _handleDailyPractice(context),
-            child: Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.today, size: 40.w, color: Colors.orange),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          '已做 $doneQuestions/$totalQuestions 题',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: const Color(0xFF999999),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.chevron_right, size: 24.w, color: Colors.grey),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+    return DailyPracticeCard(
+      dailyPractice: dailyPractice,
+      onTap: () => _handleDailyPractice(context),
     );
   }
 
   /// 章节练习
+  /// 对应小程序: src/modules/jintiku/components/commen/index-nav.vue
   Widget _buildChapterPractice(QuestionBankState state) {
-    if (state.isLoadingChapters) {
-      return Container(
-        margin: EdgeInsets.symmetric(horizontal: 12.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle('章节练习'),
-            SizedBox(height: 12.h),
-            Center(child: CircularProgressIndicator()),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 12.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionTitle('章节练习'),
-          SizedBox(height: 12.h),
-          // 显示前3个章节
-          ...(state.chapters
-              .take(3)
-              .map(
-                (chapter) => Padding(
-                  padding: EdgeInsets.only(bottom: 12.h),
-                  child: _buildChapterItem(
-                    chapter.sectionName,
-                    '${chapter.questionNumber}题',
-                    '已做${chapter.doQuestionNum}题',
-                    chapter.correctRate,
-                    () {
-                      // TODO: 跳转到章节详情
-                      EasyLoading.showToast('点击了章节: ${chapter.sectionName}');
-                    },
-                  ),
-                ),
-              )),
-          // 查看更多按钮
-          if (state.chapters.length > 3)
-            GestureDetector(
-              onTap: () {
-                // TODO: 跳转到章节列表页
-                EasyLoading.showToast('查看全部 ${state.chapters.length} 个章节');
-              },
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 12.h),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: const Color(0xFFE5E5E5)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '查看全部 ${state.chapters.length} 个章节',
-                      style: TextStyle(fontSize: 14.sp, color: Colors.blue),
-                    ),
-                    SizedBox(width: 4.w),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 12.sp,
-                      color: Colors.blue,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  /// 章节练习单项
-  Widget _buildChapterItem(
-    String title,
-    String totalQuestions,
-    String doneQuestions,
-    double accuracy,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Row(
-                    children: [
-                      Text(
-                        totalQuestions,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: const Color(0xFF999999),
-                        ),
-                      ),
-                      SizedBox(width: 16.w),
-                      Text(
-                        doneQuestions,
-                        style: TextStyle(fontSize: 12.sp, color: Colors.blue),
-                      ),
-                      SizedBox(width: 16.w),
-                      Text(
-                        '正确率 ${accuracy.toStringAsFixed(0)}%',
-                        style: TextStyle(fontSize: 12.sp, color: Colors.green),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, size: 24.w, color: Colors.grey),
-          ],
-        ),
-      ),
+    return ChapterPracticeSection(
+      chapterExercise: state.chapterExercise,
+      isLoading: state.isLoadingChapters,
+      onTap: () => _handleChapterPractice(context),
     );
   }
 
@@ -496,306 +244,56 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
     BuildContext context,
     SkillMockModel skillMock,
   ) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 12.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionTitle('技能模拟'),
-          SizedBox(height: 12.h),
-          GestureDetector(
-            onTap: () {
-              // TODO: 跳转到技能模拟页面
-              EasyLoading.showToast('点击了技能模拟');
-            },
-            child: Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                gradient: LinearGradient(
-                  colors: [Color(0xFFF5F7FF), Colors.white],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Row(
-                children: [
-                  // 图标
-                  Container(
-                    width: 50.w,
-                    height: 50.w,
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade100,
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Icon(
-                      Icons.medical_services,
-                      size: 30.w,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  // 文字
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          skillMock.name,
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          skillMock.description,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: const Color(0xFF999999),
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.chevron_right, size: 24.w, color: Colors.grey),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+    return SkillMockSection(
+      skillMock: skillMock,
+      onTap: () {
+        EasyLoading.showToast('点击了技能模拟');
+      },
     );
   }
 
   /// 已购试题
   Widget _buildPurchasedQuestions(QuestionBankState state) {
-    if (state.isLoadingPurchased) {
-      return Container(
-        margin: EdgeInsets.symmetric(horizontal: 12.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle('已购试题'),
-            SizedBox(height: 12.h),
-            Center(child: CircularProgressIndicator()),
-          ],
-        ),
-      );
-    }
-
-    if (state.purchasedGoods.isEmpty) {
-      return Container(
-        margin: EdgeInsets.symmetric(horizontal: 12.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle('已购试题'),
-            SizedBox(height: 12.h),
-            Container(
-              padding: EdgeInsets.all(40.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.inbox_outlined,
-                      size: 50.sp,
-                      color: Colors.grey.shade300,
-                    ),
-                    SizedBox(height: 12.h),
-                    Text(
-                      '暂无已购试题',
-                      style: TextStyle(fontSize: 14.sp, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 12.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionTitle('已购试题'),
-          SizedBox(height: 12.h),
-          ...(state.purchasedGoods.map((goods) {
-            final name = goods.name;
-            final coverPath = goods.materialCoverPath;
-
-            // ✅ 安全处理封面路径
-            final imageUrl =
-                coverPath.isNotEmpty && coverPath.startsWith('http')
-                ? coverPath
-                : coverPath.isNotEmpty
-                ? 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/$coverPath'
-                : '';
-
-            // ✅ 使用 PurchasedGoodsModel 的 questionCount 字段
-            final questionCount = '${goods.questionCount}题';
-
-            return Padding(
-              padding: EdgeInsets.only(bottom: 12.h),
-              child: _buildPurchasedItem(name, questionCount, imageUrl),
-            );
-          })),
-        ],
-      ),
-    );
-  }
-
-  /// 已购试题单项
-  Widget _buildPurchasedItem(
-    String title,
-    String questionCount,
-    String imageUrl,
-  ) {
-    return GestureDetector(
-      onTap: () {
-        // TODO: 跳转到试题详情
+    return PurchasedQuestionsSection(
+      goods: state.purchasedGoods,
+      isLoading: state.isLoadingPurchased,
+      onItemTap: (goods) {
+        _handlePurchasedItemTap(context, goods);
       },
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8.r),
-              child: Image.network(
-                imageUrl,
-                width: 80.w,
-                height: 60.h,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 80.w,
-                    height: 60.h,
-                    color: const Color(0xFFF5F5F5),
-                    child: Icon(Icons.image, color: Colors.grey),
-                  );
-                },
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    questionCount,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: const Color(0xFF999999),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, size: 24.w, color: Colors.grey),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 分段标题
-  Widget _buildSectionTitle(String title) {
-    return Row(
-      children: [
-        Image.network(
-          'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/title-icon.png',
-          width: 15.w,
-          height: 15.w,
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(Icons.star, size: 15.w, color: Colors.blue);
-          },
-        ),
-        SizedBox(width: 5.w),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF333333),
-          ),
-        ),
-      ],
     );
   }
 
   // ==================== 事件处理 ====================
 
   /// 处理卡片点击
-  void _handleCardClick(BuildContext context, WidgetRef ref, int type) {
+  /// 对应小程序: src/modules/jintiku/components/commen/study-card-grid.vue
+  Future<void> _handleCardClick(
+    BuildContext context,
+    WidgetRef ref,
+    int type,
+  ) async {
+    String positionIdentify;
     switch (type) {
       case 0:
         // 绝密押题 - 历年真题
-        // ✅ 对照小程序：position_identify = "linianzhenti"
-        _navigateToGoodsDetail(
-          context,
-          ref,
-          'linianzhenti',
-          AppRoutes.secretRealDetail,
-        );
+        positionIdentify = 'linianzhenti';
         break;
       case 1:
         // 科目模考
-        // ✅ 对照小程序：position_identify = "kemumokao"
-        _navigateToGoodsDetail(
-          context,
-          ref,
-          'kemumokao',
-          AppRoutes.subjectMockDetail,
-        );
+        positionIdentify = 'kemumokao';
         break;
       case 2:
         // 模拟考试
-        // ✅ 对照小程序：position_identify = "monikaoshi"
-        _navigateToGoodsDetail(
-          context,
-          ref,
-          'monikaoshi',
-          AppRoutes.simulatedExamRoom,
-        );
+        positionIdentify = 'monikaoshi';
         break;
       case 3:
         // 学习报告 - 跳转到报告中心
         context.push(AppRoutes.reportCenter);
-        break;
+        return;
+      default:
+        return;
     }
-  }
 
-  /// 跳转到商品详情页
-  Future<void> _navigateToGoodsDetail(
-    BuildContext context,
-    WidgetRef ref,
-    String positionIdentify,
-    String routePath,
-  ) async {
     if (!mounted) return;
 
     try {
@@ -805,7 +303,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       final authState = ref.read(authProvider);
       final professionalId = authState.currentMajor?.majorId ?? '';
 
-      // ✅ 通过API获取商品数据 (Mock拦截器会自动返回Mock数据)
+      // 通过API获取商品数据
       final goodsService = ref.read(goods_service.goodsServiceProvider);
       final response = await goodsService.getGoodsByPosition(
         positionIdentify: positionIdentify,
@@ -821,15 +319,11 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       }
 
       final firstGoods = response.list[0];
-
-      // 跳转到对应的详情页
-      if (!mounted) return;
-      context.push(
-        routePath,
-        extra: {
-          'product_id': firstGoods.goodsId?.toString() ?? '',
-          'professional_id': professionalId,
-        },
+      _goDetailPage(
+        context,
+        firstGoods,
+        professionalId,
+        positionIdentify: positionIdentify, // ✅ 传递 position_identify
       );
     } catch (e) {
       if (!mounted) return;
@@ -838,228 +332,434 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
     }
   }
 
-  /// 处理每日一测点击
-  void _handleDailyPractice(BuildContext context) {
-    // TODO: 调用API获取每日30题数据，跳转到做题页面
-    context.push(AppRoutes.makeQuestion);
-  }
-}
+  /// 跳转到详情页
+  /// 对应小程序: src/modules/jintiku/components/commen/study-card-grid.vue goDetailPage方法
+  void _goDetailPage(
+    BuildContext context,
+    GoodsModel item,
+    String professionalId, {
+    String? positionIdentify, // ✅ 新增：用于判断是否是绝密押题
+  }) {
+    if (!mounted) return;
 
-// ==================== 独立 Widget 组件 ====================
+    // 使用 SafeTypeConverter 安全转换类型
+    final permissionStatus = item.permissionStatus ?? '2';
+    final dataType = item.dataType;
+    final detailsType = item.detailsType;
+    final goodsType = item.type; // 商品类型: 18=章节练习, 8=试卷, 10=模考
+    final productId = item.goodsId?.toString() ?? '';
+    final recitationQuestionModel =
+        item.recitationQuestionModel?.toString() ?? '';
 
-/// 学习日历卡片
-class _StudyCalendarCard extends StatelessWidget {
-  final LearningDataModel? learningData;
-  final bool isLoadingLearningData;
-  final VoidCallback onCheckIn;
-
-  const _StudyCalendarCard({
-    required this.learningData,
-    required this.isLoadingLearningData,
-    required this.onCheckIn,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final checkinNum = learningData?.checkinNum ?? 0;
-    final totalNum = learningData?.totalNum ?? 0;
-    final correctRate = learningData?.correctRate ?? '0';
-    final isCheckin = (learningData?.isCheckin ?? 0) == 1;
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 12.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8.r,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(20.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildTitle(),
-                SizedBox(height: 20.h),
-                _buildStatsRow(checkinNum, totalNum, correctRate),
-                SizedBox(height: 20.h),
-                _buildCheckInButton(isCheckin, onCheckIn),
-              ],
-            ),
-          ),
-          _buildDecoration(),
-          _buildCheckInStatus(isCheckin),
-        ],
-      ),
+    // ✅ 调试日志：打印商品数据信息
+    print(
+      '🔍 绝密押题跳转 - permissionStatus: $permissionStatus, '
+      'dataType: $dataType, detailsType: $detailsType, '
+      'goodsType: $goodsType, productId: $productId, name: ${item.name}',
     );
-  }
 
-  Widget _buildTitle() {
-    return Text(
-      '学习日历',
-      style: TextStyle(
-        fontSize: 16.sp,
-        fontWeight: FontWeight.w600,
-        color: const Color(0xFF333333),
-      ),
-    );
-  }
+    // 未购买 (permission_status == '2' 或 '0')
+    if (permissionStatus == '2' || permissionStatus == '0') {
+      // 模考类型 (data_type == 2)
+      if (dataType == 2 || dataType == '2') {
+        if (detailsType == 1 || detailsType == '1') {
+          // 模考+经典版+没有购买 -> 跳转到经典商品详情页
+          context.push(
+            AppRoutes.goodsDetail,
+            extra: {'product_id': productId, 'professional_id': professionalId},
+          );
+          return;
+        } else if (detailsType == 4 || detailsType == '4') {
+          // 模考+模考版+没有购买 -> 跳转到模拟考试商品详情页
+          context.push(
+            AppRoutes.simulatedExamRoom,
+            extra: {'product_id': productId, 'professional_id': professionalId},
+          );
+          return;
+        }
+      }
 
-  Widget _buildStatsRow(int checkinNum, int totalNum, String correctRate) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _StatItem(label: '坚持打卡', value: '$checkinNum', unit: '天'),
-        _buildDivider(),
-        _StatItem(label: '做题总数', value: '$totalNum', unit: '题'),
-        _buildDivider(),
-        _StatItem(label: '正确率', value: correctRate, unit: '%'),
-      ],
-    );
-  }
+      // 根据 details_type 跳转
+      if (detailsType == 1 || detailsType == '1') {
+        // 经典商品详情
+        context.push(
+          AppRoutes.goodsDetail,
+          extra: {'product_id': productId, 'professional_id': professionalId},
+        );
+      } else if (detailsType == 2 || detailsType == '2') {
+        // 真题商品详情
+        context.push(
+          AppRoutes.secretRealDetail,
+          extra: {'product_id': productId, 'professional_id': professionalId},
+        );
+      } else if (detailsType == 3 || detailsType == '3') {
+        // 科目商品详情
+        context.push(
+          AppRoutes.subjectMockDetail,
+          extra: {'product_id': productId, 'professional_id': professionalId},
+        );
+      } else if (detailsType == 4 || detailsType == '4') {
+        // 模拟商品详情
+        context.push(
+          AppRoutes.simulatedExamRoom,
+          extra: {'product_id': productId, 'professional_id': professionalId},
+        );
+      }
+      return;
+    }
 
-  Widget _buildDivider() {
-    return Container(width: 1, height: 40.h, color: const Color(0xFFE5E5E5));
-  }
-
-  Widget _buildCheckInButton(bool isCheckin, VoidCallback onCheckIn) {
-    // ⚠️ 加载中时禁用按钮
-    final isDisabled = isCheckin || isLoadingLearningData;
-
-    return GestureDetector(
-      onTap: isDisabled ? null : onCheckIn,
-      child: Container(
-        width: double.infinity,
-        height: 44.h,
-        decoration: BoxDecoration(
-          color: isCheckin ? const Color(0xFFFFEEE7) : const Color(0xFFFF5500),
-          borderRadius: BorderRadius.circular(8.r),
-        ),
-        child: Center(
-          child: isLoadingLearningData
-              ? SizedBox(
-                  width: 20.w,
-                  height: 20.w,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      isCheckin ? const Color(0xFFF44900) : Colors.white,
-                    ),
-                  ),
-                )
-              : Text(
-                  isCheckin ? '已打卡' : '打卡',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: isCheckin ? const Color(0xFFF44900) : Colors.white,
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDecoration() {
-    return Positioned(
-      top: 0,
-      right: 0,
-      child: Image.network(
-        'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/study-card-color.png',
-        width: 130.w,
-        height: 32.h,
-        opacity: const AlwaysStoppedAnimation(0.8),
-        errorBuilder: (context, error, stackTrace) {
-          return SizedBox(width: 130.w, height: 32.h);
-        },
-      ),
-    );
-  }
-
-  Widget _buildCheckInStatus(bool isCheckin) {
-    return Positioned(
-      top: 0,
-      right: 0,
-      width: 130.w,
-      height: 32.h,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.network(
-            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/study-card-zan.png',
-            width: 16.w,
-            height: 16.w,
-            errorBuilder: (context, error, stackTrace) {
-              return Icon(
-                isCheckin ? Icons.check_circle : Icons.circle_outlined,
-                size: 16.w,
-                color: const Color(0xFF666666),
-              );
+    // 已购买 (permission_status == '1')
+    // 对应小程序: study-card-grid.vue Line 259-313
+    if (permissionStatus == '1') {
+      // 模考类型 (data_type == 2)
+      if (dataType == 2 || dataType == '2') {
+        if (detailsType == 1 || detailsType == '1') {
+          // 模考+经典版+购买 -> 跳转到模考详情页
+          context.push(
+            AppRoutes.examInfo,
+            extra: {
+              'product_id': productId,
+              'title': item.name ?? '',
+              'page': 'home',
             },
-          ),
-          SizedBox(width: 4.w),
-          Text(
-            isCheckin ? '今日已打卡' : '今日未打卡',
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF333333),
-            ),
-          ),
-        ],
-      ),
-    );
+          );
+          return;
+        } else if (detailsType == 4 || detailsType == '4') {
+          // 模考+模考版+购买 -> 跳转到模拟考试详情页
+          context.push(
+            AppRoutes.simulatedExamRoom,
+            extra: {'product_id': productId, 'professional_id': professionalId},
+          );
+          return;
+        }
+      }
+
+      // 根据 details_type 跳转
+      if (detailsType == 1 || detailsType == '1') {
+        // 购买后，经典详情 -> 跳转到试卷详情页
+        // 对应小程序 Line 287-290
+        // ✅ 无论是绝密押题还是其他，已购买都跳转到试卷详情页（exam）
+        // 试卷详情页会显示试卷列表，根据 paper_exercise_id 判断是否已完成
+        print('✅ 已购买 detailsType=1 -> 跳转到试卷详情页 (TestExam)');
+        context.push(
+          AppRoutes.testExam,
+          extra: {
+            'id': productId,
+            'professional_id': professionalId,
+            'recitation_question_model': recitationQuestionModel,
+          },
+        );
+      } else if (detailsType == 2 || detailsType == '2') {
+        // 购买后，真题详情 -> 跳转到真题详情页
+        // 对应小程序 Line 291-297
+        print('✅ 已购买 detailsType=2 -> 跳转到真题详情页 (SecretRealDetail)');
+        context.push(
+          AppRoutes.secretRealDetail,
+          extra: {'product_id': productId, 'professional_id': professionalId},
+        );
+      } else if (detailsType == 3 || detailsType == '3') {
+        // 购买后，科目详情 -> 跳转到试卷详情页
+        // 对应小程序 Line 298-301
+        print('✅ 已购买 detailsType=3 -> 跳转到试卷详情页 (TestExam)');
+        context.push(
+          AppRoutes.testExam,
+          extra: {
+            'id': productId,
+            'professional_id': professionalId,
+            'recitation_question_model': recitationQuestionModel,
+          },
+        );
+      } else if (detailsType == 4 || detailsType == '4') {
+        // 购买后，模拟详情 -> 跳转到模拟考试详情页
+        // 对应小程序 Line 302-311
+        print('✅ 已购买 detailsType=4 -> 跳转到模拟考试详情页 (SimulatedExamRoom)');
+        context.push(
+          AppRoutes.simulatedExamRoom,
+          extra: {
+            'product_id': productId,
+            'professional_id': professionalId,
+            'title': item.name ?? '',
+            'page': 'home',
+            'recitation_question_model': recitationQuestionModel,
+          },
+        );
+      }
+    }
   }
-}
 
-/// 统计项组件
-class _StatItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final String unit;
+  /// 处理已购试题点击
+  /// 对应小程序: index-nav-item.vue Line 91-222
+  void _handlePurchasedItemTap(
+    BuildContext context,
+    PurchasedGoodsModel goods,
+  ) {
+    // ✅ 使用 SafeTypeConverter 安全转换类型
+    final type = goods.type;
+    final dataType = goods.dataType;
+    final detailsType = goods.detailsType;
+    final permissionStatus = goods.permissionStatus;
+    final productId = goods.id;
+    final professionalId = goods.professionalId;
+    final recitationQuestionModel = goods.recitationQuestionModel;
 
-  const _StatItem({
-    required this.label,
-    required this.value,
-    required this.unit,
-  });
+    print('🔍 点击已购试题:');
+    print('  → 类型: $type');
+    print('  → 数据类型: $dataType');
+    print('  → 购买状态: $permissionStatus');
+    print('  → 详情页类型: $detailsType');
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFFFF5500),
-              ),
-            ),
-            SizedBox(width: 2.w),
-            Text(
-              unit,
-              style: TextStyle(fontSize: 12.sp, color: const Color(0xFF999999)),
-            ),
-          ],
-        ),
-        SizedBox(height: 4.h),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12.sp, color: const Color(0xFF666666)),
-        ),
-      ],
+    // ✅ 对应小程序 Line 103-161: 未购买场景 (permission_status == '2')
+    if (permissionStatus == '2') {
+      // 模考 (data_type == 2)
+      if (dataType == '2') {
+        if (detailsType == '1') {
+          // 模考+经典版+没有购买 → 跳转商品详情
+          print('🎯 模考+经典版+未购买 → 跳转 goodsDetail');
+          context.push(
+            AppRoutes.goodsDetail,
+            extra: {'product_id': productId, 'professional_id': professionalId},
+          );
+          return;
+        } else if (detailsType == '4') {
+          // 模考+模考版+没有购买 → 跳转模拟考试
+          print('🎯 模考+模考版+未购买 → 跳转 simulatedExamRoom');
+          context.push(
+            AppRoutes.simulatedExamRoom,
+            extra: {'product_id': productId, 'professional_id': professionalId},
+          );
+          return;
+        }
+      }
+
+      // 根据 details_type 跳转不同类型的商品详情页
+      switch (detailsType) {
+        case '1':
+          // 经典商品详情
+          print('📝 detailsType == 1 (经典)，未购买 → 跳转 goodsDetail');
+          context.push(
+            AppRoutes.goodsDetail,
+            extra: {'product_id': productId, 'professional_id': professionalId},
+          );
+          break;
+        case '2':
+          // 真题商品详情
+          print('📖 detailsType == 2 (真题)，未购买 → 跳转 secretRealDetail');
+          context.push(
+            AppRoutes.secretRealDetail,
+            extra: {'product_id': productId, 'professional_id': professionalId},
+          );
+          break;
+        case '3':
+          // 科目商品详情
+          print('📊 detailsType == 3 (科目)，未购买 → 跳转 subjectMockDetail');
+          context.push(
+            AppRoutes.subjectMockDetail,
+            extra: {'product_id': productId, 'professional_id': professionalId},
+          );
+          break;
+        case '4':
+          // 模拟商品详情
+          print('🎯 detailsType == 4 (模拟)，未购买 → 跳转 simulatedExamRoom');
+          context.push(
+            AppRoutes.simulatedExamRoom,
+            extra: {'product_id': productId, 'professional_id': professionalId},
+          );
+          break;
+      }
+      return;
+    }
+
+    // ✅ 对应小程序 Line 164-222: 已购买场景 (permission_status == '1')
+    if (permissionStatus == '1') {
+      // 模考 (data_type == 2)
+      if (dataType == '2') {
+        if (detailsType == '1') {
+          // 模考+经典版+购买 → 跳转模考详情页
+          print('🎯 模考+经典版+已购买 → 跳转 examInfo');
+          context.push(
+            AppRoutes.examInfo,
+            extra: {
+              'product_id': productId,
+              'title': goods.name,
+              'page': 'home',
+            },
+          );
+          return;
+        } else if (detailsType == '4') {
+          // 模考+模考版+购买 → 跳转模拟考试
+          print('🎯 模考+模考版+已购买 → 跳转 simulatedExamRoom');
+          context.push(
+            AppRoutes.simulatedExamRoom,
+            extra: {'product_id': productId, 'professional_id': professionalId},
+          );
+          return;
+        }
+      }
+
+      // 根据 details_type 跳转不同类型的练习页
+      switch (detailsType) {
+        case '1':
+        case '3':
+          // detailsType == 1 或 3 → 试卷
+          print('📝 detailsType == $detailsType (试卷)，已购买 → 跳转 testExam');
+          context.push(
+            AppRoutes.testExam,
+            extra: {
+              'id': productId,
+              'professional_id': professionalId,
+              'recitation_question_model': recitationQuestionModel,
+            },
+          );
+          break;
+        case '2':
+          // detailsType == 2 → 真题详情
+          print('📖 detailsType == 2 (真题)，已购买 → 跳转 secretRealDetail');
+          context.push(
+            AppRoutes.secretRealDetail,
+            extra: {'product_id': productId, 'professional_id': professionalId},
+          );
+          break;
+        case '4':
+          // detailsType == 4 → 模拟考试
+          print('🎯 detailsType == 4 (模拟)，已购买 → 跳转 simulatedExamRoom');
+          context.push(
+            AppRoutes.simulatedExamRoom,
+            extra: {'product_id': productId, 'professional_id': professionalId},
+          );
+          break;
+      }
+    }
+  }
+  /// 对应小程序: daily-nav.vue Line 112-136
+  void _handleDailyPractice(BuildContext context) {
+    final state = ref.read(questionBankProvider);
+    final dailyPractice = state.dailyPractice;
+
+    if (dailyPractice == null) {
+      EasyLoading.showInfo('暂无每日一测数据');
+      return;
+    }
+
+    // 获取当前专业ID
+    final authState = ref.read(authProvider);
+    final currentMajor = authState.currentMajor;
+    final professionalId = currentMajor?.majorId;
+
+    if (professionalId == null || professionalId.isEmpty) {
+      EasyLoading.showInfo('请先选择专业');
+      return;
+    }
+
+    final goodsId = dailyPractice.id;
+    if (goodsId.isEmpty || goodsId == '0') {
+      EasyLoading.showInfo('暂无免费每日一测！');
+      return;
+    }
+
+    // ✅ 根据小程序逻辑: daily-nav.vue Line 123-135
+    // 注意：小程序中每日一练和章节练习用同一个组件，但根据 type 跳转不同页面：
+    // - type == 18 (章节练习) → pages/chapterExercise/index (章节列表)
+    // - type == 8 (试卷) → pages/test/exam (试卷详情页)
+    final permissionStatus = dailyPractice.permissionStatus;
+
+    print(
+      '📚 每日一测点击: goodsId=$goodsId, '
+      'permissionStatus=$permissionStatus, '
+      'professionalId=$professionalId',
     );
+
+    // 未购买 (permission_status != '1')
+    if (permissionStatus != '1') {
+      // 跳转到商品详情页
+      // 对应小程序: Line 125-128
+      context.push(
+        AppRoutes.goodsDetail,
+        extra: {
+          'product_id': goodsId,
+          'professional_id': professionalId,
+        },
+      );
+    } else {
+      // 已购买 (permission_status == '1')
+      // ✅ 每日一练通常是 type=8 试卷类型，跳转到试卷详情页
+      // 对应小程序: pages/test/exam.vue
+      print('✅ 每日一测已购买 → 跳转到试卷详情页 (TestExamPage)');
+      context.push(
+        AppRoutes.testExam,
+        extra: {
+          'id': goodsId,
+          'professional_id': professionalId,
+        },
+      );
+    }
+  }
+
+  /// 处理章节练习点击
+  /// 对应小程序: src/modules/jintiku/components/commen/index-nav.vue Line 110-135
+  void _handleChapterPractice(BuildContext context) {
+    final state = ref.read(questionBankProvider);
+    final chapterExercise = state.chapterExercise;
+
+    if (chapterExercise == null) {
+      EasyLoading.showInfo('暂无章节练习数据');
+      return;
+    }
+
+    // 获取当前专业ID
+    final authState = ref.read(authProvider);
+    final currentMajor = authState.currentMajor;
+    final professionalId = currentMajor?.majorId;
+
+    if (professionalId == null || professionalId.isEmpty) {
+      EasyLoading.showInfo('请先选择专业');
+      return;
+    }
+
+    final goodsId = chapterExercise.id;
+    if (goodsId.isEmpty || goodsId == '0') {
+      EasyLoading.showInfo('暂无免费章节练习！');
+      return;
+    }
+
+    // ✅ 根据小程序逻辑: index-nav.vue Line 110-135
+    final permissionStatus = chapterExercise.permissionStatus;
+    final questionNumber = chapterExercise.questionNumber;
+
+    print(
+      '📚 章节练习点击: goodsId=$goodsId, '
+      'permissionStatus=$permissionStatus, '
+      'professionalId=$professionalId',
+    );
+
+    // 未购买 (permission_status != '1')
+    if (permissionStatus != '1') {
+      // 跳转到商品详情页
+      // 对应小程序: index-nav.vue Line 125-128
+      print('❌ 章节练习未购买 → 跳转到商品详情页 (GoodsDetailPage)');
+      context.push(
+        AppRoutes.goodsDetail,
+        extra: {
+          'product_id': goodsId,
+          'professional_id': professionalId,
+        },
+      );
+    } else {
+      // 已购买 (permission_status == '1')
+      // ✅ 章节练习是 type=18 类型，跳转到章节列表页
+      // 对应小程序: pages/chapterExercise/index (index-nav.vue Line 131-134)
+      print(
+        '✅ 章节练习已购买 → 跳转到章节列表页 (ChapterExercise) '
+        'goodsId=$goodsId, total=$questionNumber',
+      );
+      context.push(
+        AppRoutes.chapterExercise,
+        extra: {
+          'professional_id': professionalId,
+          'goods_id': goodsId,
+          'total': questionNumber,
+          'isfree': 1,
+        },
+      );
+    }
   }
 }

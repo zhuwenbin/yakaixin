@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_radius.dart';
 import '../../models/goods_model.dart';
 
 /// 课程卡片组件（网课/直播）
@@ -20,26 +25,26 @@ class CourseCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        margin: EdgeInsets.only(bottom: 12.h),
-        padding: EdgeInsets.all(12.w),
+        margin: EdgeInsets.only(bottom: AppSpacing.mdV),
+        padding: AppSpacing.allMd,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(10.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: AppColors.cardShadowLight,
               blurRadius: 1.r,
-              offset: Offset(0, 1),
+              offset: const Offset(0, 1),
             ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: AppColors.cardShadowMedium,
               blurRadius: 4.r,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: AppColors.cardShadowDark,
               blurRadius: 8.r,
-              offset: Offset(0, 8),
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -64,19 +69,12 @@ class CourseCard extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 课程类型图标 (对应小程序 course-type 组件)
-        // 总是显示，因为 computeShopType() 会返回默认值
         _buildCourseTypeIcon(),
         SizedBox(width: 6.w),
         Expanded(
           child: Text(
             goods.name ?? '未命名课程',
-            style: TextStyle(
-              fontSize: 17.sp,
-              fontWeight: FontWeight.w500,
-              color: Colors.black,
-              height: 1.4,
-            ),
+            style: AppTextStyles.courseTitle,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -132,13 +130,13 @@ class CourseCard extends StatelessWidget {
           width: 56.w,
           height: 28.h,
           decoration: BoxDecoration(
-            color: Color(0xFFE3EBFF),
-            borderRadius: BorderRadius.circular(4.r),
+            color: AppColors.courseTagBg,
+            borderRadius: AppRadius.radiusXs,
           ),
           child: Icon(
             Icons.image_not_supported,
             size: 16.w,
-            color: Colors.grey,
+            color: AppColors.textHint,
           ),
         );
       },
@@ -148,35 +146,31 @@ class CourseCard extends StatelessWidget {
   /// 标签
   Widget _buildTags() {
     return Wrap(
-      spacing: 8.w,
+      spacing: AppSpacing.sm,
       children: [
         if (goods.teachingTypeName != null)
           Container(
             padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
             decoration: BoxDecoration(
-              color: Color(0xFFE3EBFF),
+              color: AppColors.courseTagBg,
               borderRadius: BorderRadius.circular(2.r),
             ),
             child: Text(
               goods.teachingTypeName!,
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: Color(0xFF2E68FF),
-              ),
+              style: AppTextStyles.courseTag,
             ),
           ),
         if (goods.serviceTypeName != null)
           Container(
             padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
             decoration: BoxDecoration(
-              color: Color(0xFFF5F5F5),
+              color: AppColors.card,
               borderRadius: BorderRadius.circular(2.r),
             ),
             child: Text(
               goods.serviceTypeName!,
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: Colors.black,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textPrimary,
               ),
             ),
           ),
@@ -189,7 +183,7 @@ class CourseCard extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        SizedBox(),
+        const SizedBox(),
         if (goods.permissionStatus == '2' && 
             goods.salePrice != null && 
             goods.salePrice!.isNotEmpty)
@@ -197,22 +191,8 @@ class CourseCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(
-                '¥',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFFFF7600),
-                ),
-              ),
-              Text(
-                '${goods.salePrice}',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFFFF7600),
-                ),
-              ),
+              Text('¥', style: AppTextStyles.coursePriceSymbol),
+              Text('${goods.salePrice}', style: AppTextStyles.coursePriceNumber),
             ],
           ),
       ],
@@ -222,9 +202,9 @@ class CourseCard extends StatelessWidget {
   /// 底部信息
   Widget _buildBottomInfo() {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border(
-          top: BorderSide(color: Color(0xFFE5E5E5), width: 1),
+          top: BorderSide(color: AppColors.border, width: 1),
         ),
       ),
       padding: EdgeInsets.only(top: 6.5.h),
@@ -234,19 +214,13 @@ class CourseCard extends StatelessWidget {
           Flexible(
             child: Text(
               goods.newTypeName ?? '',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: Color(0xA603203D),
-              ),
+              style: AppTextStyles.courseSecondary,
               overflow: TextOverflow.ellipsis,
             ),
           ),
           Text(
             '${goods.studentNum ?? 0}人购买',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Color(0xA603203D),
-            ),
+            style: AppTextStyles.courseSecondary,
           ),
         ],
       ),

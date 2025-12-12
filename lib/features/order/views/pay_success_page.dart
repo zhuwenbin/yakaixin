@@ -6,6 +6,7 @@ import '../../../app/routes/app_routes.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
 import '../../main/main_tab_page.dart';
+import '../../../../app/config/api_config.dart';
 
 /// 支付成功页面
 /// 对应小程序: pages/order/paySuccess.vue
@@ -30,22 +31,22 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
   String _qrcodeUrl = '';
 
   // ✅ 对应小程序 Line 40-56: qrcodeList
-  static const List<Map<String, dynamic>> _qrcodeList = [
+  static final List<Map<String, dynamic>> _qrcodeList = [
     {
       'keys': ['口腔'],
-      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/60dc174341121431254320_b597430dda7e46cc7fe564a6aa6416a.png'
+      'src': 'public/60dc174341121431254320_b597430dda7e46cc7fe564a6aa6416a.png'
     },
     {
       'keys': ['临床', '乡村'],
-      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/WechatIMG357.jpg'
+      'src': 'WechatIMG357.jpg'
     },
     {
       'keys': ['中医', '护士', '药师', '西医', '中西医'],
-      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/WechatIMG357.jpg'
+      'src': 'WechatIMG357.jpg'
     },
   ];
 
-  static const String _defaultQrcode = 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/2ec4174341105901736218_tongyongma.png';
+  static const String _defaultQrcodePath = 'public/2ec4174341105901736218_tongyongma.png';
 
   @override
   void initState() {
@@ -68,7 +69,7 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
     }
     
     // 默认使用通用二维码
-    _qrcodeUrl = _defaultQrcode;
+    String qrcodePath = _defaultQrcodePath;
     
     // 根据专业名称匹配二维码
     for (var item in _qrcodeList) {
@@ -76,13 +77,16 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
       for (var key in keys) {
         // ✅ 对应小程序 Line 70-73: 使用正则匹配
         if (majorName.contains(key)) {
-          setState(() {
-            _qrcodeUrl = item['src'];
-          });
+          qrcodePath = item['src'];
           break;
         }
       }
     }
+    
+    // 拼接完整URL
+    setState(() {
+      _qrcodeUrl = ApiConfig.completeImageUrl(qrcodePath);
+    });
   }
 
   @override
@@ -176,7 +180,7 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
             shape: BoxShape.circle,
           ),
           child: Image.network(
-            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/26e2174185623886722986_%E7%BC%96%E7%BB%84%2013%402x.png',
+            ApiConfig.completeImageUrl('public/26e2174185623886722986_%E7%BC%96%E7%BB%84%2013%402x.png'),
             width: 64.w, // ✅ 128rpx / 2
             height: 64.h,
             fit: BoxFit.contain,
@@ -208,11 +212,11 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
     return Container(
       width: 155.w, // ✅ 310rpx / 2
       height: 155.h, // ✅ 310rpx / 2
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         // ✅ 对应小程序 Line 192: background-image
         image: DecorationImage(
           image: NetworkImage(
-            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/46c2174185637060211201_%E5%BD%A2%E7%8A%B6%E7%BB%93%E5%90%88%402x.png',
+            ApiConfig.completeImageUrl('public/46c2174185637060211201_%E5%BD%A2%E7%8A%B6%E7%BB%93%E5%90%88%402x.png'),
           ),
           fit: BoxFit.contain, // ✅ 使用 contain 而不是 cover
         ),

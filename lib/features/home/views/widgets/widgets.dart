@@ -4,3 +4,6 @@ export 'goods_card.dart';
 export 'course_card.dart';
 export 'home_tab_bar.dart';
 export 'section_title.dart';
+export 'seckill_banner.dart';
+export 'home_header.dart';
+export 'home_content.dart';

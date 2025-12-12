@@ -68,6 +68,46 @@ Map<String, dynamic> _$$ChapterModelImplToJson(_$ChapterModelImpl instance) =>
       'correct_rate': const DoubleConverter().toJson(instance.correctRate),
     };
 
+_$ChapterExerciseModelImpl _$$ChapterExerciseModelImplFromJson(
+        Map<String, dynamic> json) =>
+    _$ChapterExerciseModelImpl(
+      id: json['id'] == null
+          ? ''
+          : const StringConverter().fromJson(json['id']),
+      name: json['name'] == null
+          ? '章节练习'
+          : const StringConverter().fromJson(json['name']),
+      permissionStatus: json['permission_status'] == null
+          ? '2'
+          : const StringConverter().fromJson(json['permission_status']),
+      questionNumber: json['question_num'] == null
+          ? 0
+          : const IntConverter().fromJson(json['question_num']),
+      doQuestionNum: json['do_question_num'] == null
+          ? 0
+          : const IntConverter().fromJson(json['do_question_num']),
+      year: json['year'] == null
+          ? ''
+          : const StringConverter().fromJson(json['year']),
+      professionalId: json['professional_id'] == null
+          ? ''
+          : const StringConverter().fromJson(json['professional_id']),
+    );
+
+Map<String, dynamic> _$$ChapterExerciseModelImplToJson(
+        _$ChapterExerciseModelImpl instance) =>
+    <String, dynamic>{
+      'id': const StringConverter().toJson(instance.id),
+      'name': const StringConverter().toJson(instance.name),
+      'permission_status':
+          const StringConverter().toJson(instance.permissionStatus),
+      'question_num': const IntConverter().toJson(instance.questionNumber),
+      'do_question_num': const IntConverter().toJson(instance.doQuestionNum),
+      'year': const StringConverter().toJson(instance.year),
+      'professional_id':
+          const StringConverter().toJson(instance.professionalId),
+    };
+
 _$PurchasedGoodsModelImpl _$$PurchasedGoodsModelImplFromJson(
         Map<String, dynamic> json) =>
     _$PurchasedGoodsModelImpl(
@@ -83,6 +123,34 @@ _$PurchasedGoodsModelImpl _$$PurchasedGoodsModelImplFromJson(
       questionCount: json['question_count'] == null
           ? 0
           : const IntConverter().fromJson(json['question_count']),
+      type: json['type'] == null
+          ? ''
+          : const StringConverter().fromJson(json['type']),
+      detailsType: json['details_type'] == null
+          ? ''
+          : const StringConverter().fromJson(json['details_type']),
+      dataType: json['data_type'] == null
+          ? ''
+          : const StringConverter().fromJson(json['data_type']),
+      permissionStatus: json['permission_status'] == null
+          ? '1'
+          : const StringConverter().fromJson(json['permission_status']),
+      recitationQuestionModel: json['recitation_question_model'] == null
+          ? ''
+          : const StringConverter().fromJson(json['recitation_question_model']),
+      professionalId: json['professional_id'] == null
+          ? ''
+          : const StringConverter().fromJson(json['professional_id']),
+      validityStartDate:
+          const StringConverter().fromJson(json['validity_start_date']),
+      validityEndDate:
+          const StringConverter().fromJson(json['validity_end_date']),
+      createdAt: const StringConverter().fromJson(json['created_at']),
+      numText: const StringConverter().fromJson(json['num_text']),
+      tikuGoodsDetails: json['tiku_goods_details'] == null
+          ? null
+          : TikuGoodsDetailsModel.fromJson(
+              json['tiku_goods_details'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$$PurchasedGoodsModelImplToJson(
@@ -93,6 +161,56 @@ Map<String, dynamic> _$$PurchasedGoodsModelImplToJson(
       'material_cover_path':
           const StringConverter().toJson(instance.materialCoverPath),
       'question_count': const IntConverter().toJson(instance.questionCount),
+      'type': const StringConverter().toJson(instance.type),
+      'details_type': const StringConverter().toJson(instance.detailsType),
+      'data_type': const StringConverter().toJson(instance.dataType),
+      'permission_status':
+          const StringConverter().toJson(instance.permissionStatus),
+      'recitation_question_model':
+          const StringConverter().toJson(instance.recitationQuestionModel),
+      'professional_id':
+          const StringConverter().toJson(instance.professionalId),
+      'validity_start_date': _$JsonConverterToJson<dynamic, String>(
+          instance.validityStartDate, const StringConverter().toJson),
+      'validity_end_date': _$JsonConverterToJson<dynamic, String>(
+          instance.validityEndDate, const StringConverter().toJson),
+      'created_at': _$JsonConverterToJson<dynamic, String>(
+          instance.createdAt, const StringConverter().toJson),
+      'num_text': _$JsonConverterToJson<dynamic, String>(
+          instance.numText, const StringConverter().toJson),
+      'tiku_goods_details': instance.tikuGoodsDetails,
+    };
+
+Json? _$JsonConverterToJson<Json, Value>(
+  Value? value,
+  Json? Function(Value value) toJson,
+) =>
+    value == null ? null : toJson(value);
+
+_$TikuGoodsDetailsModelImpl _$$TikuGoodsDetailsModelImplFromJson(
+        Map<String, dynamic> json) =>
+    _$TikuGoodsDetailsModelImpl(
+      questionNum: json['question_num'] == null
+          ? 0
+          : const IntConverter().fromJson(json['question_num']),
+      paperNum: json['paper_num'] == null
+          ? 0
+          : const IntConverter().fromJson(json['paper_num']),
+      examRoundNum: json['exam_round_num'] == null
+          ? 0
+          : const IntConverter().fromJson(json['exam_round_num']),
+      examTime: json['exam_time'] == null
+          ? ''
+          : const StringConverter().fromJson(json['exam_time']),
+    );
+
+Map<String, dynamic> _$$TikuGoodsDetailsModelImplToJson(
+        _$TikuGoodsDetailsModelImpl instance) =>
+    <String, dynamic>{
+      'question_num': const IntConverter().toJson(instance.questionNum),
+      'paper_num': const IntConverter().toJson(instance.paperNum),
+      'exam_round_num': const IntConverter().toJson(instance.examRoundNum),
+      'exam_time': const StringConverter().toJson(instance.examTime),
     };
 
 _$DailyPracticeModelImpl _$$DailyPracticeModelImplFromJson(
@@ -104,12 +222,24 @@ _$DailyPracticeModelImpl _$$DailyPracticeModelImplFromJson(
       name: json['name'] == null
           ? '每日30题'
           : const StringConverter().fromJson(json['name']),
+      permissionStatus: json['permission_status'] == null
+          ? '2'
+          : const StringConverter().fromJson(json['permission_status']),
+      questionNumber: json['question_num'] == null
+          ? 30
+          : const IntConverter().fromJson(json['question_num']),
       totalQuestions: json['total_questions'] == null
           ? 30
           : const IntConverter().fromJson(json['total_questions']),
       doneQuestions: json['done_questions'] == null
           ? 0
           : const IntConverter().fromJson(json['done_questions']),
+      year: json['year'] == null
+          ? ''
+          : const StringConverter().fromJson(json['year']),
+      professionalId: json['professional_id'] == null
+          ? ''
+          : const StringConverter().fromJson(json['professional_id']),
     );
 
 Map<String, dynamic> _$$DailyPracticeModelImplToJson(
@@ -117,8 +247,14 @@ Map<String, dynamic> _$$DailyPracticeModelImplToJson(
     <String, dynamic>{
       'id': const StringConverter().toJson(instance.id),
       'name': const StringConverter().toJson(instance.name),
+      'permission_status':
+          const StringConverter().toJson(instance.permissionStatus),
+      'question_num': const IntConverter().toJson(instance.questionNumber),
       'total_questions': const IntConverter().toJson(instance.totalQuestions),
       'done_questions': const IntConverter().toJson(instance.doneQuestions),
+      'year': const StringConverter().toJson(instance.year),
+      'professional_id':
+          const StringConverter().toJson(instance.professionalId),
     };
 
 _$SkillMockModelImpl _$$SkillMockModelImplFromJson(Map<String, dynamic> json) =>

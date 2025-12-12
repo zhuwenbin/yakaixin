@@ -9,7 +9,8 @@ import 'core/storage/storage_service.dart';
 import 'core/widgets/loading_hud.dart';
 import 'core/widgets/network_debug_overlay.dart';
 import 'core/network/dio_client.dart';
-import 'core/payment/payment_service.dart';
+import 'core/config/debug_config.dart';
+import 'features/payment/services/unified_payment_service.dart';
 import 'app/routes/app_router.dart';
 import 'app/constants/app_constants.dart';
 import 'app/config/api_config.dart';
@@ -17,46 +18,26 @@ import 'app/config/api_config.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // 初始化SharedPreferences
+  // ✅ 1. 初始化 SharedPreferences
   final prefs = await SharedPreferences.getInstance();
   final storage = StorageService(prefs);
   
-  // ✅ 优化 3: 初始化 ApiConfig，从本地存储恢复环境
+  // ✅ 2. 初始化 ApiConfig
   ApiConfig.init(storage);
   
-  // 初始化中文日期格式化
+  // ✅ 3. 初始化中文日期格式
   await initializeDateFormatting('zh_CN', null);
   
-  // 初始化微信SDK
-  await PaymentService.initWechat();
+  // ✅ 4. 初始化统一支付服务（微信 + iOS内购）
+  // 注意：这里不能使用ref，所以先跳过
+  // 初始化会在首次使用时自动执行
+  
   print('🚀 应用初始化完成');
-  print('🚀 应用名称: ${AppConstants.appName}');
-  print('🚀 应用版本: ${AppConstants.appVersion}');
-  print('🌐 当前环境: ${ApiConfig.currentEnv}');
-  print('🌐 接口地址: ${ApiConfig.baseUrl}');
   
-  // ⚠️ 调试：打印所有已保存的用户信息
-  print('\n================================');
-  print('💾 [已保存数据] 开始检查本地存储...');
-  print('================================');
-  
-  final token = storage.getString('token');
-  final studentId = storage.getString('student_id');
-  final userInfo = storage.getJson('user_info');  // ✅ 修复: user_info 带下划线
-  final majorInfo = storage.getJson('major_info');  // ✅ 修复: major_info 带下划线
-  final currentMajorId = storage.getString('current_major_id');  // ✅ 修复: current_major_id 带下划线
-  
-  print('🔑 [Token] ${token ?? '未登录'}');
-  print('👤 [StudentId] ${studentId ?? 'null'}');
-  print('👥 [UserInfo] $userInfo');
-  print('🎯 [MajorInfo] $majorInfo');
-  print('🎯 [CurrentMajorId] ${currentMajorId ?? 'null'}');
-  print('================================\n');
-  
+  // ✅ 5. 启动应用（传递 storage override）
   runApp(
     ProviderScope(
       overrides: [
-        // 初始化StorageService
         storageServiceProvider.overrideWithValue(storage),
       ],
       child: const MyApp(),

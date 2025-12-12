@@ -1,0 +1,373 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:yakaixin_app/core/network/dio_client.dart';
+import 'package:yakaixin_app/features/exam/models/question_model.dart';
+import 'package:yakaixin_app/features/exam/services/exam_service.dart';
+
+part 'examinationing_provider.freezed.dart';
+part 'examinationing_provider.g.dart';
+
+/// 答题页面状态
+@freezed
+class ExaminationingState with _$ExaminationingState {
+  const factory ExaminationingState({
+    /// 试题列表
+    @Default([]) List<QuestionModel> questions,
+
+    /// 考试信息
+    ExamInfoModel? examInfo,
+
+    /// 当前题目索引
+    @Default(0) int currentIndex,
+
+    /// 剩余时间（秒）
+    @Default(0) int remainingTime,
+
+    /// 是否正在加载
+    @Default(false) bool isLoading,
+
+    /// 错误信息
+    String? error,
+
+    /// 是否已交卷
+    @Default(false) bool isSubmitted,
+  }) = _ExaminationingState;
+}
+
+/// 答题页面Provider
+///
+/// 对应小程序: examinationing.vue
+/// 提供试题加载、答题、交卷等功能
+@riverpod
+class ExaminationingNotifier extends _$ExaminationingNotifier {
+  late Timer? _timer;
+
+  @override
+  ExaminationingState build() {
+    _timer = null;
+    return const ExaminationingState();
+  }
+
+  /// 加载试题
+  /// 对应小程序: examinationing.vue Line 519-523
+  Future<void> loadQuestions({
+    required String examinationId,
+    required String examinationSessionId,
+    required String professionalId,
+    required String paperVersionId,
+    required String type,
+    int? timeLimit, // ✅ 添加可选的考试时长参数（秒）
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      // 1. 获取试题列表
+      final examService = ref.read(examServiceProvider);
+      final questions = await examService.getQuestionList(
+        examinationId: examinationId,
+        examinationSessionId: examinationSessionId,
+        professionalId: professionalId,
+        paperVersionId: paperVersionId,
+        type: type,
+      );
+
+      // 2. 处理试题编号（对应小程序的setQuestionLists方法）
+      final processedQuestions = _processQuestions(questions);
+
+      // 3. 获取考试信息（时间、状态）
+      final examInfo = await examService.getStudentExamInfo(
+        examId: examinationId,
+        examRoundId: examinationSessionId,
+      );
+
+      // 4. 计算剩余时间
+      // ✅ 修复：优先使用 API 返回的时间，如果为空则使用传入的 timeLimit
+      final remainingTime = _calculateRemainingTime(examInfo, timeLimit);
+
+      state = state.copyWith(
+        questions: processedQuestions,
+        examInfo: examInfo,
+        remainingTime: remainingTime,
+        isLoading: false,
+      );
+
+      // 5. 启动倒计时
+      _startTimer();
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  /// 处理试题，添加题号
+  List<QuestionModel> _processQuestions(List<QuestionModel> questions) {
+    int questionNumber = 1;
+    return questions.map((question) {
+      return question.copyWith(questionNumber: questionNumber++);
+    }).toList();
+  }
+
+  /// 计算剩余时间（秒）
+  /// 对应小程序: examinationing.vue Line 566-590
+  ///
+  /// ✅ 修复逻辑：
+  /// 1. 优先使用 API 返回的 endTime - currentTime
+  /// 2. 如果 endTime 为空，使用传入的 timeLimit（对应小程序 Line 536: this.time = e.time * 1）
+  int _calculateRemainingTime(ExamInfoModel examInfo, int? timeLimit) {
+    // 1. 尝试使用 API 返回的时间
+    if (examInfo.endTime != null &&
+        examInfo.endTime!.isNotEmpty &&
+        examInfo.currentTime != null &&
+        examInfo.currentTime!.isNotEmpty) {
+      try {
+        print(
+          '🕒 [倾计时] endTime: ${examInfo.endTime}, currentTime: ${examInfo.currentTime}',
+        );
+        final endTime = DateTime.parse(examInfo.endTime!);
+        final currentTime = DateTime.parse(examInfo.currentTime!);
+
+        final diff = endTime.difference(currentTime);
+        final seconds = diff.inSeconds > 0 ? diff.inSeconds : 0;
+        print('✅ [倾计时] 使用API时间，剩余时间: $seconds 秒 (${diff.inMinutes} 分钟)');
+        return seconds;
+      } catch (e) {
+        print('❌ [倾计时] 解析时间错误: $e');
+        // 继续尝试 fallback
+      }
+    }
+
+    // 2. Fallback: 使用传入的考试时长（对应小程序逻辑）
+    if (timeLimit != null && timeLimit > 0) {
+      print(
+        '✅ [倾计时] API未返回有效时间，使用传入的 timeLimit: $timeLimit 秒 (${timeLimit ~/ 60} 分钟)',
+      );
+      return timeLimit;
+    }
+
+    // 3. 最后尝试使用 duration 字段
+    if (examInfo.duration != null) {
+      try {
+        final duration = int.parse(examInfo.duration.toString());
+        if (duration > 0) {
+          print('✅ [倾计时] 使用 duration 字段: $duration 秒');
+          return duration;
+        }
+      } catch (e) {
+        print('⚠️ [倾计时] duration 解析失败: $e');
+      }
+    }
+
+    print('⚠️ [倾计时] 所有方法都无法获取有效时间，返回0');
+    return 0;
+  }
+
+  /// 启动倒计时
+  /// 对应小程序: examinationing.vue Line 213-252
+  void _startTimer() {
+    _timer?.cancel();
+
+    print('🚀 [倒计时] 启动倒计时，当前剩余: ${state.remainingTime} 秒');
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (state.remainingTime > 0 && !state.isSubmitted) {
+        state = state.copyWith(remainingTime: state.remainingTime - 1);
+        // 每10秒打印一次，避免日志过多
+        if (state.remainingTime % 10 == 0) {
+          print('⏱️ [倒计时] 剩余: ${state.remainingTime} 秒');
+        }
+      } else {
+        print(
+          '⏹️ [倒计时] 停止，剩余: ${state.remainingTime} 秒, 已交卷: ${state.isSubmitted}',
+        );
+        timer.cancel();
+      }
+    });
+  }
+
+  /// 切换到指定题目
+  /// 对应小程序: answer-sheet.vue 答题卡点击事件
+  void goToQuestion(int index) {
+    if (index >= 0 && index < state.questions.length) {
+      state = state.copyWith(currentIndex: index);
+    }
+  }
+
+  /// 下一题
+  void nextQuestion() {
+    if (state.currentIndex < state.questions.length - 1) {
+      state = state.copyWith(currentIndex: state.currentIndex + 1);
+    }
+  }
+
+  /// 上一题
+  void previousQuestion() {
+    if (state.currentIndex > 0) {
+      state = state.copyWith(currentIndex: state.currentIndex - 1);
+    }
+  }
+
+  /// 选择答案（单选/多选/判断）
+  /// 对应小程序: question-answer.vue 选项点击事件
+  void selectAnswer(List<String> selectedOptions) {
+    final updatedQuestions = [...state.questions];
+    final currentQuestion = updatedQuestions[state.currentIndex];
+
+    // 更新子题的选中答案
+    final updatedStemList = currentQuestion.stemList.map((stem) {
+      return stem.copyWith(selected: selectedOptions);
+    }).toList();
+
+    // 更新题目
+    updatedQuestions[state.currentIndex] = currentQuestion.copyWith(
+      stemList: updatedStemList,
+      userOption: selectedOptions.join(','),
+    );
+
+    state = state.copyWith(questions: updatedQuestions);
+  }
+
+  /// 标疑
+  /// 对应小程序: examinationing.vue Line 525-542
+  void toggleDoubt() {
+    final updatedQuestions = [...state.questions];
+    final currentQuestion = updatedQuestions[state.currentIndex];
+
+    updatedQuestions[state.currentIndex] = currentQuestion.copyWith(
+      doubt: !currentQuestion.doubt,
+    );
+
+    state = state.copyWith(questions: updatedQuestions);
+  }
+
+  /// 检查是否所有题目都已答
+  bool get isAllAnswered {
+    return state.questions.every(
+      (q) => q.userOption != null && q.userOption!.isNotEmpty,
+    );
+  }
+
+  /// 获取未答题数量
+  int get unansweredCount {
+    return state.questions
+        .where((q) => q.userOption == null || q.userOption!.isEmpty)
+        .length;
+  }
+
+  /// 提交答案（交卷）
+  /// 对应小程序: examinationing.vue Line 390-455
+  /// 对应小程序: test.vue Line 376-450
+  Future<void> submitAnswers({
+    required String goodsId,
+    required String orderId,
+    required String productId,
+    required String professionalId,
+    required String type,
+    required String userId, // ⚠️ 新增：用户ID
+    required String studentId, // ⚠️ 新增：学生ID
+    required int totalTime,
+  }) async {
+    if (state.isSubmitted) {
+      return;
+    }
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      // 1. 计算耗时（对应小程序 Line 410: parseInt(this.examTime - this.time)）
+      final costTime = totalTime - state.remainingTime;
+      final finalCostTime = costTime > 0 ? costTime : 1; // ✅ 对应小程序 Line 411-413
+
+      // 2. 构建答案数据（对应小程序 Line 417-431 / test.vue Line 404-419）
+      // ⚠️ 关键修复：提交时必须使用 id 字段（对应小程序 item.id，即 question_version_id）
+      // question_id 字段（如 582238836886474787）只是数据库引用，不用于提交
+      final questionInfo = state.questions.map((question) {
+        // ✅ 提交参数使用 id 字段（即 question_version_id，如 582238838496170019）
+        final questionId = question.id;
+
+        return {
+          'question_id': questionId,
+          'user_option': question.stemList.map((stem) {
+            // ✅ answer 必须是字符串数组（对应小程序 Line 423-427 / test.vue Line 410-415）
+
+            final answer = stem.selected.map((item) {
+              // ✅ 填空题（type 8/9/10）：替换换行符为 <br/>
+              if (question.type == '8' ||
+                  question.type == '9' ||
+                  question.type == '10') {
+                return item.replaceAll('\n', '<br/>');
+              }
+              // ✅ 选择题：确保是字符串（对应小程序 String(jtem)）
+              return item.toString();
+            }).toList();
+
+            return {
+              'sub_question_id':
+                  stem.id, // ✅ 对应小程序 res.id (Line 422 / test.vue Line 409)
+              'answer': answer, // ✅ 字符串数组（对应小程序）
+            };
+          }).toList(),
+        };
+      }).toList();
+
+      // 3. 提交答案（包含所有必填参数）
+      final examService = ref.read(examServiceProvider);
+
+      // ✅ 调试日志：打印 question_info JSON 格式（分段打印避免截断）
+      final questionInfoJson = jsonEncode(questionInfo);
+      print('📋 [question_info] 题目总数: ${questionInfo.length}');
+      print('📋 [question_info] JSON长度: ${questionInfoJson.length} 字符');
+
+      // 打印前3个问题的详细格式
+      for (int i = 0; i < questionInfo.length && i < 3; i++) {
+        print('📋 [question_info] 第${i + 1}题:');
+        print(jsonEncode(questionInfo[i]));
+      }
+
+      // 如果超过3题，只打印最后一题
+      if (questionInfo.length > 3) {
+        print('📋 [question_info] ... 中间省略 ${questionInfo.length - 4} 题 ...');
+        print('📋 [question_info] 最后一题:');
+        print(jsonEncode(questionInfo.last));
+      }
+
+      // ✅ 提交答案（完全对照抓包curl）
+      await examService.submitAnswer(
+        productId: productId,
+        professionalId: professionalId,
+        costTime: finalCostTime,
+        type: type,
+        questionInfo: questionInfoJson,
+        goodsId: goodsId,
+        orderId: orderId,
+        userId: userId,
+        studentId: studentId,
+      );
+
+      // 4. 停止计时器
+      _timer?.cancel();
+
+      state = state.copyWith(isSubmitted: true, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+
+      // ✅ 2秒后自动清除错误状态，防止反复弹出
+      Future.delayed(const Duration(seconds: 2), () {
+        if (state.error == e.toString()) {
+          state = state.copyWith(error: null);
+        }
+      });
+    }
+  }
+
+  /// 释放资源
+  void dispose() {
+    _timer?.cancel();
+  }
+}
+
+/// ExamService Provider
+final examServiceProvider = Provider<ExamService>((ref) {
+  return ExamService(ref.read(dioClientProvider));
+});

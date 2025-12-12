@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../app/config/api_config.dart';
 import '../../../core/utils/safe_type_converter.dart';
 import '../models/goods_detail_model.dart';
 import '../services/goods_service.dart';
@@ -87,8 +88,7 @@ class GoodsDetailNotifier extends _$GoodsDetailNotifier {
     // 4. ✅ 处理封面路径为空的情况
     // 对应小程序 Line 485-492
     if (coverPath == null || coverPath.isEmpty) {
-      coverPath =
-          'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixinshare.png';
+      coverPath = 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixinshare.png';
     }
 
     return detail.copyWith(

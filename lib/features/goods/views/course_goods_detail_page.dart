@@ -6,10 +6,16 @@ import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../app/constants/storage_keys.dart';
 import '../../../core/storage/storage_service.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/utils/safe_type_converter.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import '../../order/providers/order_provider.dart';
+import '../../order/providers/payment_provider.dart';
 import '../../home/services/goods_service.dart';
 import '../../home/models/goods_model.dart';
+import '../../main/main_tab_page.dart';
 
 /// 课程商品详情页 - 对应小程序 course/courseDetail.vue
 /// 功能:展示课程介绍、课程大纲、购买入口
@@ -188,24 +194,36 @@ class _CourseGoodsDetailPageState
         statusBarBrightness: Brightness.light,
       ),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         appBar: AppBar(
           title: const Text('课程详情'),
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.surface,
           elevation: 0,
-          foregroundColor: Colors.black,
+          foregroundColor: AppColors.textPrimary,
         ),
         body: Stack(
           children: [
             if (_isLoading)
-              const Center(child: CircularProgressIndicator())
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(),
+                    SizedBox(height: AppSpacing.mdV),
+                    Text('加载中...', style: AppTextStyles.bodyMedium),
+                  ],
+                ),
+              )
             else if (_errorMessage != null)
               _buildError()
             else if (_goodsDetail != null)
               _buildBody()
             else
-              const Center(child: Text('暂无数据')),
-            if (!_isLoading && _goodsDetail?.permissionStatus == '2') _buildBottomBar(),
+              Center(
+                child: Text('暂无数据', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint)),
+              ),
+            // ✅ 已购买(permissionStatus='1')显示"去学习"，未购买(permissionStatus='2')显示"立即报名"
+            if (!_isLoading && _goodsDetail != null) _buildBottomBar(),
           ],
         ),
       ),
@@ -217,16 +235,19 @@ class _CourseGoodsDetailPageState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 64.sp, color: Colors.grey),
-          SizedBox(height: 16.h),
+          Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
+          SizedBox(height: AppSpacing.mdV),
           Text(
             _errorMessage ?? '加载失败',
-            style: TextStyle(fontSize: 14.sp, color: Colors.grey),
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: AppSpacing.mdV),
           ElevatedButton(
             onPressed: _loadGoodsDetail,
-            child: const Text('重试'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+            child: Text('重试', style: AppTextStyles.buttonMedium),
           ),
         ],
       ),
@@ -235,7 +256,7 @@ class _CourseGoodsDetailPageState
 
   Widget _buildBody() {
     return Container(
-      color: const Color(0xFFF5F6FA),
+      color: AppColors.background,
       child: CustomScrollView(
         slivers: [
           _buildCoverImage(), // ✅ 封面图放在最顶部
@@ -263,20 +284,20 @@ class _CourseGoodsDetailPageState
           children: [
             // ✅ 背景图片
             Positioned.fill(
-              child: coverPath != null && coverPath.isNotEmpty
+              child: coverPath.isNotEmpty
                   ? Image.network(
                       coverPath,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          color: const Color(0xFFE5E5E5),
-                          child: Icon(Icons.image, size: 60.sp, color: Colors.grey),
+                          color: AppColors.card,
+                          child: Icon(Icons.image, size: 60.sp, color: AppColors.textHint),
                         );
                       },
                     )
                   : Container(
-                      color: const Color(0xFFE5E5E5),
-                      child: Icon(Icons.image, size: 60.sp, color: Colors.grey),
+                      color: AppColors.card,
+                      child: Icon(Icons.image, size: 60.sp, color: AppColors.textHint),
                     ),
             ),
             // ✅ 底部圆角遮罩（.fake-bar）
@@ -285,12 +306,12 @@ class _CourseGoodsDetailPageState
               left: 0,
               right: 0,
               child: Container(
-                height: 15.h, // 30rpx ÷ 2 = 15.h
+                height: 15.h,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(15.r),
-                    topRight: Radius.circular(15.r),
+                    topLeft: Radius.circular(AppRadius.lg),
+                    topRight: Radius.circular(AppRadius.lg),
                   ),
                 ),
               ),
@@ -305,20 +326,20 @@ class _CourseGoodsDetailPageState
   Widget _buildCard() {
     return SliverToBoxAdapter(
       child: Container(
-        color: Colors.white,
-        padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+        color: AppColors.surface,
+        padding: EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.mdV),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildTitle(),
-            SizedBox(height: 12.h),
+            SizedBox(height: AppSpacing.smV),
             _buildTags(),
             if (_goodsDetail?.validityStartDateVal != null &&
                 !_goodsDetail!.validityStartDateVal!.contains('0001')) ...[
-              SizedBox(height: 12.h),
+              SizedBox(height: AppSpacing.smV),
               _buildValidityTime(),
             ],
-            SizedBox(height: 16.h),
+            SizedBox(height: AppSpacing.mdV),
             _buildBottomInfo(),
           ],
         ),
@@ -337,12 +358,7 @@ class _CourseGoodsDetailPageState
         Expanded(
           child: Text(
             _goodsDetail?.name ?? '',
-            style: TextStyle(
-              fontSize: 17.sp,
-              fontWeight: FontWeight.w500,
-              color: Colors.black,
-              height: 1.4,
-            ),
+            style: AppTextStyles.courseTitle,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -393,19 +409,19 @@ class _CourseGoodsDetailPageState
 
   Widget _buildTags() {
     return Wrap(
-      spacing: 8.w,
+      spacing: AppSpacing.sm,
       children: [
         if (_goodsDetail?.teachingTypeName != null)
           _buildTag(
             _goodsDetail!.teachingTypeName!,
-            const Color(0xFFE3EBFF),
-            const Color(0xFF2E68FF),
+            AppColors.courseTagBg,
+            AppColors.courseTagText,
           ),
         if (_goodsDetail?.serviceTypeName != null)
           _buildTag(
             _goodsDetail!.serviceTypeName!,
-            const Color(0xFFF5F5F5),
-            Colors.black,
+            AppColors.card,
+            AppColors.textPrimary,
           ),
       ],
     );
@@ -413,17 +429,14 @@ class _CourseGoodsDetailPageState
 
   Widget _buildTag(String text, Color bgColor, Color textColor) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4.h),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(2.r),
+        borderRadius: BorderRadius.circular(AppRadius.xs),
       ),
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: 12.sp,
-          color: textColor,
-        ),
+        style: AppTextStyles.labelMedium.copyWith(color: textColor),
       ),
     );
   }
@@ -434,10 +447,7 @@ class _CourseGoodsDetailPageState
     
     return Text(
       '有效时间: ${startDate ?? ''} - ${endDate ?? ''}',
-      style: TextStyle(
-        fontSize: 12.sp,
-        color: const Color(0xFF999999),
-      ),
+      style: AppTextStyles.labelMedium.copyWith(color: AppColors.textHint),
     );
   }
 
@@ -459,7 +469,7 @@ class _CourseGoodsDetailPageState
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFFFF6600),
+                  color: AppColors.coursePrice,
                 ),
               ),
               Text(
@@ -467,7 +477,7 @@ class _CourseGoodsDetailPageState
                 style: TextStyle(
                   fontSize: 22.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFFF6600),
+                  color: AppColors.coursePrice,
                 ),
               ),
             ],
@@ -476,10 +486,7 @@ class _CourseGoodsDetailPageState
           const SizedBox.shrink(),
         Text(
           '${studentNum ?? 0}人购买',
-          style: TextStyle(
-            fontSize: 12.sp,
-            color: const Color(0xFF999999),
-          ),
+          style: AppTextStyles.labelMedium.copyWith(color: AppColors.textHint),
         ),
       ],
     );
@@ -492,12 +499,12 @@ class _CourseGoodsDetailPageState
 
     return SliverToBoxAdapter(
       child: Container(
-        margin: EdgeInsets.only(top: 16.h), // 小程序: 32rpx
-        height: 60.h, // 小程序: 120rpx
+        margin: EdgeInsets.only(top: AppSpacing.mdV),
+        height: 60.h,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r), // 小程序: 40rpx
+            topLeft: Radius.circular(20.r),
             topRight: Radius.circular(20.r),
           ),
         ),
@@ -524,8 +531,8 @@ class _CourseGoodsDetailPageState
                             fontWeight:
                                 isActive ? FontWeight.w600 : FontWeight.w400,
                             color: isActive
-                                ? const Color(0xFF2F69FF)
-                                : const Color(0xFF999999),
+                                ? AppColors.primary
+                                : AppColors.textHint,
                           ),
                         ),
                         if (tab['hasIcon'] == true) ...[
@@ -534,21 +541,21 @@ class _CourseGoodsDetailPageState
                             Icons.play_circle,
                             size: 16.sp,
                             color: isActive
-                                ? const Color(0xFF2F69FF)
-                                : const Color(0xFF999999),
+                                ? AppColors.primary
+                                : AppColors.textHint,
                           ),
                         ],
                       ],
                     ),
                     SizedBox(height: 3.h),
                     Container(
-                      height: 3.h, // 小程序: 6rpx
-                      width: 40.w, // 小程序: 80rpx
+                      height: 3.h,
+                      width: 40.w,
                       decoration: BoxDecoration(
                         color: isActive
-                            ? const Color(0xFF1469FF) // 小程序: rgba(20, 105, 255, 1)
+                            ? AppColors.primary
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(2.r), // 小程序: 4rpx
+                        borderRadius: BorderRadius.circular(2.r),
                       ),
                     ),
                   ],
@@ -582,9 +589,9 @@ class _CourseGoodsDetailPageState
     
     return SliverToBoxAdapter(
       child: Container(
-        color: Colors.white,
-        margin: EdgeInsets.only(top: 8.h),
-        child: introPath != null && introPath.isNotEmpty
+        color: AppColors.surface,
+        margin: EdgeInsets.only(top: AppSpacing.smV),
+        child: introPath.isNotEmpty
             ? Image.network(
                 introPath,
                 width: double.infinity,
@@ -595,10 +602,7 @@ class _CourseGoodsDetailPageState
                     alignment: Alignment.center,
                     child: Text(
                       '暂无课程介绍',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: const Color(0xFF999999),
-                      ),
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
                     ),
                   );
                 },
@@ -608,10 +612,7 @@ class _CourseGoodsDetailPageState
                 alignment: Alignment.center,
                 child: Text(
                   '暂无课程介绍',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: const Color(0xFF999999),
-                  ),
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
                 ),
               ),
       ),
@@ -622,19 +623,16 @@ class _CourseGoodsDetailPageState
   Widget _buildCourseOutline() {
     return SliverToBoxAdapter(
       child: Container(
-        color: Colors.white,
-        margin: EdgeInsets.only(top: 8.h),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+        color: AppColors.surface,
+        margin: EdgeInsets.only(top: AppSpacing.smV),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.smV),
         child: _courseList.isEmpty
             ? Container(
                 height: 200.h,
                 alignment: Alignment.center,
                 child: Text(
                   '暂无课程大纲',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: const Color(0xFF999999),
-                  ),
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
                 ),
               )
             : Column(
@@ -654,11 +652,7 @@ class _CourseGoodsDetailPageState
         children: [
           Text(
             course['name'] ?? '',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF262629),
-            ),
+            style: AppTextStyles.heading4.copyWith(color: AppColors.textPrimary),
           ),
           SizedBox(height: 12.h),
           ...((course['chapterData'] as List?) ?? []).map((chapter) {
@@ -692,22 +686,19 @@ class _CourseGoodsDetailPageState
                     style: TextStyle(
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF262629),
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
                 Text(
                   '${subs.length}节',
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    color: const Color(0xFF999999),
-                  ),
+                  style: AppTextStyles.labelMedium.copyWith(color: AppColors.textHint),
                 ),
-                SizedBox(width: 8.w),
+                SizedBox(width: AppSpacing.sm),
                 Icon(
                   isExpand ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                   size: 20.sp,
-                  color: const Color(0xFF999999),
+                  color: AppColors.textHint,
                 ),
               ],
             ),
@@ -735,7 +726,7 @@ class _CourseGoodsDetailPageState
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: const Color(0xFFF4F5F5),
+            color: AppColors.divider,
             width: 1,
           ),
         ),
@@ -748,7 +739,7 @@ class _CourseGoodsDetailPageState
             width: 1.5,
             height: 12,
             decoration: BoxDecoration(
-              color: const Color(0xFF3B7BFB),
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(1),
             ),
           ),
@@ -759,7 +750,7 @@ class _CourseGoodsDetailPageState
               name,
               style: TextStyle(
                 fontSize: 16.sp,
-                color: const Color(0xFF5B6E81),
+                color: AppColors.textSecondary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -767,22 +758,19 @@ class _CourseGoodsDetailPageState
           ),
           // 试听按钮
           if (canTrial)
-            SizedBox(width: 8.w),
+            SizedBox(width: AppSpacing.sm),
           if (canTrial)
             GestureDetector(
               onTap: () => _onTrialListen(section),
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEAF4FF),
+                  color: AppColors.courseTagBg,
                   borderRadius: BorderRadius.circular(18.r),
                 ),
                 child: Text(
                   '开始试听',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: const Color(0xFF3B7BFB),
-                  ),
+                  style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary),
                 ),
               ),
             ),
@@ -801,14 +789,14 @@ class _CourseGoodsDetailPageState
       left: 0,
       right: 0,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 10.h), // 小程序: 20rpx 0
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.smV),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08), // 小程序: rgba(0, 0, 0, 0.08)
-              blurRadius: 6, // 小程序: 12rpx
-              offset: const Offset(0, -2), // 小程序: -4rpx
+              color: AppColors.cardShadowLight,
+              blurRadius: 6,
+              offset: const Offset(0, -2),
             ),
           ],
         ),
@@ -816,23 +804,23 @@ class _CourseGoodsDetailPageState
           top: false,
           child: Center(
             child: ElevatedButton(
-              onPressed: isPurchased ? _onGoCourse : _onPurchase,
+
+              // onPressed: isPurchased ? _onGoCourse : _onPurchase,
+             onPressed: _onPurchase,
+
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3B7BFB), // 小程序: #3B7BFB
-                foregroundColor: Colors.white,
-                minimumSize: Size(238.w, 40.h), // 小程序: 476rpx × 80rpx
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.textWhite,
+                minimumSize: Size(238.w, 40.h),
                 padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.r), // 小程序: 40rpx
+                  borderRadius: BorderRadius.circular(20.r),
                 ),
                 elevation: 0,
               ),
               child: Text(
                 isPurchased ? '去学习' : '立即报名',
-                style: TextStyle(
-                  fontSize: 14.sp, // 小程序: 28rpx
-                  fontWeight: FontWeight.w500,
-                ),
+                style: AppTextStyles.buttonMedium,
               ),
             ),
           ),
@@ -901,116 +889,103 @@ class _CourseGoodsDetailPageState
     }
   }
 
-  /// 报名/购买流程 - 对应小程序 getOrder 方法 (Line 417-476)
-  /// ✅ MVVM架构: View层调用ViewModel方法，不包含业务逻辑
-  /// 流程:
-  ///   1. 创建订单 (POST /c/order/v2)
-  ///   2. 判断金额:
-  ///      - > 0 元: 跳转支付页面
-  ///      - = 0 元: 直接跳转支付成功页
+  /// 报名/购买流程 - 使用统一支付入口
+  /// 对应小程序 getOrder 方法 (Line 417-476)
   Future<void> _onPurchase() async {
+    // 1. 准备参数
+    final goodsId = SafeTypeConverter.toSafeString(_goodsDetail?.goodsId, defaultValue: '');
+    if (goodsId.isEmpty) {
+      EasyLoading.showError('商品ID不能为空');
+      return;
+    }
+    
+    final salePrice = _goodsDetail?.salePrice ?? '0';
+    final payableAmount = double.tryParse(salePrice) ?? 0.0;
+    
+    final goodsMonthsPriceId = SafeTypeConverter.toSafeString(
+      _goodsDetail?.goodsMonthsPriceId,
+      defaultValue: '',
+    );
+    final monthsInt = SafeTypeConverter.toInt(_goodsDetail?.month);
+    
+    // 2. 🎯 调用统一支付入口
     try {
-      EasyLoading.show(status: '创建订单中...');
+      EasyLoading.show(status: '正在处理订单...');
       
-      // 1. ✅ 获取商品信息 - 安全转换
-      final goodsId = _goodsDetail?.goodsId?.toString() ?? '';
-      final salePrice = _goodsDetail?.salePrice ?? '0';
-      final payableAmount = double.tryParse(salePrice) ?? 0.0;
-      
-      // ✅ 对应小程序: goods_months_price_id 和 month
-      final goodsMonthsPriceId = _goodsDetail?.goodsMonthsPriceId?.toString() ?? '';
-      final months = _goodsDetail?.month?.toString() ?? '';
-      
-      // ✅ 对应小程序 Line 420: let student_id = uni.getStorageSync('__xingyun_userinfo__').student_id
-      // 从Storage读取用户信息
-      final storage = ref.read(storageServiceProvider);
-      final userInfoJson = storage.getJson(StorageKeys.userInfo);
-      final studentId = userInfoJson?['student_id']?.toString() ?? '';
-      
-      // ✅ 对应小程序 Line 447-448: employee_id
-      final employeeId = '508948528815416786';
-      
-      // ✅ 验证必要参数
-      if (goodsId.isEmpty) {
-        EasyLoading.showError('商品ID不能为空');
-        return;
-      }
-      
-      if (studentId.isEmpty) {
-        EasyLoading.showError('请先登录');
-        return;
-      }
-      
-      print('📦 开始报名流程:');
-      print('   商品ID: $goodsId');
-      print('   应付金额: $payableAmount');
-      print('   商品月份价格ID: $goodsMonthsPriceId');
-      print('   月份: $months');
-      print('   学员ID: $studentId');
-      print('   员工ID: $employeeId');
-      
-      // 2. ✅ 调用ViewModel创建订单
-      final result = await ref.read(orderNotifierProvider.notifier).createOrder(
+      final result = await ref.read(paymentProvider.notifier).startPayment(
         goodsId: goodsId,
         goodsMonthsPriceId: goodsMonthsPriceId,
-        months: months,
+        months: monthsInt,
         payableAmount: payableAmount,
-        studentId: studentId,
-        employeeId: employeeId,
       );
       
       EasyLoading.dismiss();
+      if (!mounted) return;
       
-      // 3. ✅ 处理业务结果 (View层只负责UI导航)
-      // 对应小程序 Line 458-472
-      result.when(
-        needPayment: (orderId, flowId) {
-          // ✅ 对应小程序 Line 458-463: if (Number(payable_amount) > 0)
-          print('💰 需要支付,订单ID: $orderId, 流水ID: $flowId');
-          if (mounted) {
-            // TODO: 跳转支付页面
-            context.push(
-              '/payment',
-              extra: {
-                'order_id': orderId,
-                'flow_id': flowId,
-                'goods_id': goodsId,
-              },
-            );
-          }
-        },
-        freeOrder: (orderId) {
-          // ✅ 对应小程序 Line 464-472: else (0元课)
-          // this.$xh.push('jintiku', `pages/order/paySuccess?goods_id=..&professional_id_name=..&isLearnButton=1`)
-          print('🎉 0元课程,直接跳转成功页，订单ID: $orderId');
-          if (mounted) {
-            final professionalIdName = _goodsDetail?.professionalIdName?.toString() ?? '';
-            context.push(
-              AppRoutes.paySuccess,  // ✅ 使用正确的路由常量
-              extra: {
-                'goods_id': goodsId,
-                'professional_id_name': professionalIdName,
-                'isLearnButton': 1,
-              },
-            );
-          }
-        },
-        error: (message) {
-          // ✅ 错误处理
-          print('❌ 创建订单失败: $message');
-          EasyLoading.showError('创建订单失败: $message');
-        },
-      );
+      // 3. 处理支付结果
+      if (result.isFreeOrder) {
+        // ✅ 0元课：刷新页面 + 跳转支付成功页
+        await _loadGoodsDetail();
+        
+        final professionalIdName = SafeTypeConverter.toSafeString(
+          _goodsDetail?.professionalIdName,
+          defaultValue: '',
+        );
+        
+        if (mounted) {
+          context.push(AppRoutes.paySuccess, extra: {
+            'goods_id': goodsId,
+            'professional_id_name': professionalIdName,
+          });
+        }
+      } else if (!result.isFreeOrder && result.isSuccess) {
+        // ✅ 非0元课：跳转确认支付页，携带订单信息和回调参数
+        final professionalIdName = SafeTypeConverter.toSafeString(
+          _goodsDetail?.professionalIdName,
+          defaultValue: '',
+        );
+        
+        // 🔄 方案2：使用路由返回值监听支付结果
+        final paymentResult = await context.push<bool>(
+          AppRoutes.confirmPayment,
+          extra: {
+            'order_id': result.orderId!,
+            'flow_id': result.flowId!,
+            'goods_id': result.goodsId!,
+            'finance_body_id': result.financeBodyId ?? '',  // ✅ 财务主体ID
+            'goods_name': _goodsDetail?.name ?? '课程',
+            'payable_amount': result.payableAmount!,
+            'refresh_goods_id': goodsId,  // 用于回调刷新
+            'professional_id_name': professionalIdName,
+          },
+        );
+        
+        // 🔄 支付成功后刷新页面
+        if (paymentResult == true && mounted) {
+          print('\n🔄 支付成功，刷新课程详情页...');
+          await _loadGoodsDetail();
+          EasyLoading.showSuccess('购买成功');
+        }
+      } else {
+        // ❌ 下订单失败：当前页提示
+        EasyLoading.showError(result.errorMessage ?? '订单创建失败');
+      }
     } catch (e) {
       EasyLoading.dismiss();
-      print('❌ 报名失败: $e');
-      EasyLoading.showError('报名失败: $e');
+      EasyLoading.showError('订单异常: $e');
     }
   }
 
 
+  /// 去学习
+  /// ✅ 返回主页面并切换到课程 Tab（索引 2）
+  /// 参考: pay_success_page.dart Line 327-334
   void _onGoCourse() {
-    // 已购买-跳转学习中心
-    context.go(AppRoutes.studyIndex);
+    if (mounted) {
+      // 1. 设置 Tab 索引为课程页（索引 2）
+      ref.read(mainTabIndexProvider.notifier).state = 2;
+      // 2. 返回主 Tab 页面
+      context.go(AppRoutes.mainTab);
+    }
   }
 }

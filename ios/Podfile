@@ -1,5 +1,6 @@
-# Uncomment this line to define a global platform for your project
-# platform :ios, '13.0'
+source 'https://github.com/CocoaPods/Specs.git'
+#source 'https://git2.baijiashilian.com/open-ios/specs.git'
+platform :ios, '15.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -28,16 +29,29 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 flutter_ios_podfile_setup
 
 target 'Runner' do
-  use_frameworks!
-
+  use_frameworks! :linkage => :static
+  use_modular_headers!
+  
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-  target 'RunnerTests' do
-    inherit! :search_paths
-  end
+#  
+#  pod 'Alamofire', '~> 5.9.0'
+#  pod "BJVideoPlayerUI", :path => '/Users/fanyi/Documents/develop/develop/BJVideoPlayerUI'
+#  pod "BJPlaybackUI", :path => '/Users/fanyi/Documents/develop/develop/BJPlaybackUI'
+#  pod "BJPlayerUIBase", :path => '/Users/fanyi/Documents/develop/develop/BJPlayerUIBase'
+#  pod 'BJVideoPlayerCore',                :path => '/Users/fanyi/Documents/develop/develop/BJVideoPlayerCore'
+#  pod 'BJLiveBase',                       :path => '/Users/fanyi/Documents/develop/develop/BJLiveBase'
+#  pod 'BJSwiftBase',                       :path => '/Users/fanyi/Documents/develop/develop/BJLiveBase'
+
 end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'YES'
+      if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 15.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      end
+    end
     flutter_additional_ios_build_settings(target)
   end
 end

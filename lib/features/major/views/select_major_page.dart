@@ -7,6 +7,7 @@ import '../../../core/utils/toast_util.dart';
 import '../../../core/widgets/loading_hud.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/major_provider.dart';
+import '../../../../app/config/api_config.dart';
 
 /// 选择专业页面
 /// 对应小程序: src/modules/jintiku/pages/major/index.vue
@@ -50,7 +51,7 @@ class _SelectMajorPageState extends ConsumerState<SelectMajorPage> {
         decoration: BoxDecoration(
           image: DecorationImage(
             image: NetworkImage(
-              'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/16696400618188716166964006181894592_backThree.png',
+              ApiConfig.completeImageUrl('public/16696400618188716166964006181894592_backThree.png'),
             ),
             fit: BoxFit.cover,
           ),
@@ -186,7 +187,7 @@ class _SelectMajorPageState extends ConsumerState<SelectMajorPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.network(
-                  'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/1669641564098755c166964156409840548_left.png',
+                  ApiConfig.completeImageUrl('public/1669641564098755c166964156409840548_left.png'),
                   width: 16.w,
                   height: 16.w,
                 ),

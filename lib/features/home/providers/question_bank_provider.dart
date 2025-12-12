@@ -24,6 +24,9 @@ class QuestionBankState with _$QuestionBankState {
     @Default([]) List<ChapterModel> chapters,
     @Default(false) bool isLoadingChapters,
 
+    // 章节练习（大卡片，对应小程序 index-nav.vue）
+    ChapterExerciseModel? chapterExercise,
+
     // 已购商品
     @Default([]) List<PurchasedGoodsModel> purchasedGoods,
     @Default(false) bool isLoadingPurchased,
@@ -78,6 +81,7 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
       await Future.wait([
         _loadLearningData(majorId),
         _loadChapters(majorId),
+        _loadChapterExercise(majorId), // ✅ 加载章节练习
         _loadPurchasedGoods(majorId),
         _loadDailyPractice(majorId),
         _loadSkillMock(majorId),
@@ -132,8 +136,41 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
     }
   }
 
+  /// 加载章节练习（大卡片）
+  /// 对应小程序: src/modules/jintiku/components/commen/index-nav.vue Line 268-282
+  Future<void> _loadChapterExercise(String majorId) async {
+    print('📚 [QuestionBankProvider] 开始加载章节练习: majorId=$majorId');
+    state = state.copyWith(isLoadingChapters: true);
+
+    try {
+      // ✅ 使用正确的 ChapterService.getChapterExercise 方法
+      final service = _ref.read(chapterServiceProvider);
+      print('🔧 [QuestionBankProvider] ChapterService实例已获取，调用getChapterExercise...');
+      
+      final chapterExercise = await service.getChapterExercise(
+        professionalId: majorId,
+      );
+
+      print('📦 [QuestionBankProvider] getChapterExercise返回结果: ${chapterExercise != null ? "有数据" : "null"}');
+      
+      state = state.copyWith(chapterExercise: chapterExercise);
+      
+      if (chapterExercise != null) {
+        print('✅ [QuestionBankProvider] 章节练习加载成功: id=${chapterExercise.id}, name=${chapterExercise.name}, questionNumber=${chapterExercise.questionNumber}, doQuestionNum=${chapterExercise.doQuestionNum}, permissionStatus=${chapterExercise.permissionStatus}');
+      } else {
+        print('⚠️ [QuestionBankProvider] 没有章节练习数据（接口返回null）');
+      }
+    } catch (e, stackTrace) {
+      print('❌ [QuestionBankProvider] 加载章节练习失败: $e');
+      print('❌ [QuestionBankProvider] 堆栈: $stackTrace');
+      // 章节练习失败不影响整体页面
+      state = state.copyWith(chapterExercise: null);
+    }
+  }
+
   /// 加载已购商品
   Future<void> _loadPurchasedGoods(String majorId) async {
+    print('📚 [题库Provider] 开始加载已购试题: majorId=$majorId');
     state = state.copyWith(isLoadingPurchased: true);
 
     try {
@@ -145,18 +182,61 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
         isBuyed: 1, // 已购买
       );
 
+      print('📚 [题库Provider] API返回商品数量: ${response.list.length}');
+      
+      if (response.list.isNotEmpty) {
+        print('📚 [题库Provider] 前3个商品:');
+        for (var i = 0; i < response.list.length && i < 3; i++) {
+          final goods = response.list[i];
+          print('  [$i] ${goods.name}, permission_status=${goods.permissionStatus}, type=${goods.type}');
+        }
+      }
+
       // ✅ 将 GoodsModel 转换为 PurchasedGoodsModel
       final purchasedGoods = response.list.map((goods) {
-        return PurchasedGoodsModel(
-          id: goods.goodsId?.toString() ?? '',
-          name: goods.name ?? '',
-          materialCoverPath: goods.materialCoverPath ?? '',
-          questionCount:
-              int.tryParse(
-                goods.tikuGoodsDetails?.questionNum?.toString() ?? '0',
-              ) ??
-              0,
-        );
+        // ✅ 计算 num_text（对应小程序 Line 275-328）
+        String numText = '';
+        if (goods.tikuGoodsDetails != null) {
+          final details = goods.tikuGoodsDetails!;
+          final type = goods.type?.toString() ?? '';
+          if (type == '8') {
+            // 试卷：显示份数
+            numText = '共${details.paperNum}份';
+          } else if (type == '10') {
+            // 模考：显示轮数
+            numText = '共${details.examRoundNum}轮';
+          } else {
+            // 题库：显示题数
+            numText = '共${details.questionNum}题';
+          }
+        }
+
+        // ✅ 构造JSON数据，然后使用fromJson转换（利用Freezed的转换器）
+        final json = <String, dynamic>{
+          'id': goods.goodsId?.toString() ?? '',
+          'name': goods.name ?? '',
+          'material_cover_path': goods.materialCoverPath ?? '',
+          'question_count': goods.tikuGoodsDetails?.questionNum ?? 0,
+          'type': goods.type?.toString() ?? '',
+          'details_type': goods.detailsType?.toString() ?? '',
+          'data_type': goods.dataType?.toString() ?? '',
+          'permission_status': goods.permissionStatus?.toString() ?? '1',
+          'recitation_question_model': goods.recitationQuestionModel?.toString() ?? '',
+          'professional_id': majorId,
+          'validity_start_date': goods.validityStartDate,
+          'validity_end_date': goods.validityEndDate,
+          'created_at': null,
+          'num_text': numText.isNotEmpty ? numText : null,
+          if (goods.tikuGoodsDetails != null)
+            'tiku_goods_details': {
+              'question_num': goods.tikuGoodsDetails!.questionNum ?? 0,
+              'paper_num': goods.tikuGoodsDetails!.paperNum ?? 0,
+              'exam_round_num': goods.tikuGoodsDetails!.examRoundNum ?? 0,
+              'exam_time': goods.tikuGoodsDetails!.examTime ?? '',
+            },
+        };
+
+        return PurchasedGoodsModel.fromJson(json);
       }).toList();
 
       state = state.copyWith(

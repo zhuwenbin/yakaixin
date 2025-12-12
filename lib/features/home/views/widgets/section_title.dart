@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../../app/config/api_config.dart';
 
 /// 区域标题组件
 /// 对应小程序: .title
@@ -17,7 +18,7 @@ class SectionTitle extends StatelessWidget {
     return Row(
       children: [
         CachedNetworkImage(
-          imageUrl: 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/title-icon.png',
+          imageUrl: ApiConfig.completeImageUrl('title-icon.png'),
           width: 15.w,
           height: 15.w,
           fit: BoxFit.contain,

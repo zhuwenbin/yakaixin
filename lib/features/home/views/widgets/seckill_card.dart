@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_radius.dart';
 import '../../models/goods_model.dart';
 import 'countdown_timer.dart';
+import '../../../../../app/config/api_config.dart';
 
 /// 秒杀卡片组件
 /// 对应小程序: examination-test-item (seckill模式)
@@ -20,24 +26,24 @@ class SeckillCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       child: GestureDetector(
         onTap: onTap,
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
+          padding: EdgeInsets.fromLTRB(AppSpacing.md, 12.h, AppSpacing.md, 0),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFFBF1FF), Color(0xFFD8F0FF)],
+            gradient: const LinearGradient(
+              colors: [AppColors.seckillGradientStart, AppColors.seckillGradientEnd],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: AppRadius.radiusLg,
             boxShadow: [
               BoxShadow(
-                color: Color(0x0F1B2637),
+                color: AppColors.seckillShadow,
                 blurRadius: 15.r,
-                offset: Offset(0, 0),
+                offset: const Offset(0, 0),
               ),
             ],
           ),
@@ -63,12 +69,7 @@ class SeckillCard extends StatelessWidget {
         Expanded(
           child: Text(
             goods.name ?? '未命名商品',
-            style: TextStyle(
-              fontSize: 17.sp,
-              fontWeight: FontWeight.w500,
-              color: Colors.black,
-              height: 1.4,
-            ),
+            style: AppTextStyles.courseTitle,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -91,16 +92,11 @@ class SeckillCard extends StatelessWidget {
                     children: [
                       Text(
                         '${goods.originalPrice}',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFFA3A3A3),
-                          decoration: TextDecoration.lineThrough,
-                        ),
+                        style: AppTextStyles.seckillOriginalPrice,
                       ),
-                      SizedBox(width: 8.w),
+                      SizedBox(width: AppSpacing.sm),
                       CachedNetworkImage(
-                        imageUrl: 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/92ac17422896646546913_miaoshajia.png',
+                        imageUrl: ApiConfig.completeImageUrl('public/92ac17422896646546913_miaoshajia.png'),
                         width: 35.w,
                         height: 15.h,
                         errorWidget: (context, error, stackTrace) => const SizedBox.shrink(),
@@ -113,22 +109,8 @@ class SeckillCard extends StatelessWidget {
                     textBaseline: TextBaseline.alphabetic,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        '¥',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFFD845A6),
-                        ),
-                      ),
-                      Text(
-                        '${goods.salePrice}',
-                        style: TextStyle(
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFFD845A6),
-                        ),
-                      ),
+                      Text('¥', style: AppTextStyles.seckillPriceSymbol),
+                      Text('${goods.salePrice}', style: AppTextStyles.seckillPriceNumber),
                     ],
                   ),
               ],
@@ -150,23 +132,19 @@ class SeckillCard extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.h),
               decoration: BoxDecoration(
-                color: Color(0xFFFFD27C),
-                borderRadius: BorderRadius.circular(8.r),
+                color: AppColors.seckillTagBg,
+                borderRadius: AppRadius.radiusSm,
               ),
               child: RichText(
                 text: TextSpan(
-                  style: TextStyle(
-                    fontSize: 10.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
+                  style: AppTextStyles.seckillTagText,
                   children: [
-                    TextSpan(text: '共 '),
+                    const TextSpan(text: '共 '),
                     TextSpan(
                       text: '${goods.tikuGoodsDetails!.questionNum}',
-                      style: TextStyle(color: Colors.red),
+                      style: const TextStyle(color: AppColors.seckillTagText),
                     ),
-                    TextSpan(text: ' 题'),
+                    const TextSpan(text: ' 题'),
                   ],
                 ),
               ),
@@ -175,16 +153,14 @@ class SeckillCard extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.h),
               decoration: BoxDecoration(
-                border: Border.all(color: Color(0xFF4981D7), width: 1.5.w),
-                borderRadius: BorderRadius.circular(4.r),
+                border: Border.all(color: AppColors.tikuTagBorder, width: 1.5.w),
+                borderRadius: BorderRadius.circular(AppRadius.xs),
                 color: Colors.transparent,
               ),
               child: Text(
                 goods.validityDay == '0' ? '永久' : '${goods.validityDay}个月',
-                style: TextStyle(
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF4981D7),
+                style: AppTextStyles.tikuTag.copyWith(
+                  color: AppColors.tikuTagBorder,
                 ),
               ),
             ),
@@ -225,8 +201,8 @@ class SeckillCard extends StatelessWidget {
                     height: 40.h,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: const NetworkImage(
-                          'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/5e91174186068572265789_daojishiback.png',
+                        image: NetworkImage(
+                          ApiConfig.completeImageUrl('public/5e91174186068572265789_daojishiback.png'),
                         ),
                         fit: BoxFit.cover,
                         onError: (_, __) {},
@@ -249,12 +225,7 @@ class SeckillCard extends StatelessWidget {
                           children: [
                             Text(
                               '秒杀倒计时',
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w400,
-                                color: const Color(0xFF082980),
-                                letterSpacing: 6.w,
-                              ),
+                              style: AppTextStyles.seckillCountdown,
                             ),
                             SizedBox(width: 10.w),
                             // ✅ 接入真实倒计时组件

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/config/debug_config.dart';
 
 /// 设置页面 - 对应小程序 userInfo/set.vue
 /// 功能：章节练习设置、隐私协议、用户协议、退出登录
@@ -70,6 +72,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ 监听调试工具开关状态
+    final isDebugEnabled = ref.watch(debugToolsEnabledProvider);
+    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -85,6 +90,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             onTap: _showQuestionNumberDialog,
           ),
           _buildSettingItem(
+            title: '修改密码',
+            onTap: () {
+              context.push(AppRoutes.changePassword);
+            },
+          ),
+          _buildSettingItem(
             title: '隐私协议',
             onTap: () {
               context.push(AppRoutes.privacyPolicy);
@@ -96,10 +107,94 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               context.push(AppRoutes.userServiceAgreement);
             },
           ),
+          
+          // ✅ Debug 模式下显示调试工具开关
+          if (kDebugMode) ...[
+            SizedBox(height: 20.h),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '🔧 开发者工具',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  _buildDebugSwitchItem(
+                    title: '调试框架显示',
+                    subtitle: '关闭后隐藏网络调试悬浮窗（用于截图）',
+                    value: isDebugEnabled,
+                    onChanged: (value) {
+                      ref.read(debugToolsEnabledProvider.notifier).state = value;
+                    },
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 20.h),
+          ],
+          
           _buildSettingItem(
             title: '退出登录',
             onTap: _logout,
             showArrow: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDebugSwitchItem({
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFEEEEEE), width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: const Color(0xFF161F30),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: const Color(0xFF787E8F),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: Colors.green,
           ),
         ],
       ),

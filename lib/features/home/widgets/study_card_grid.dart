@@ -1,42 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
-/// 学习卡片网格
-/// 对应小程序: 绝密押题、科目模考、模拟考试、学习报告
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_radius.dart';
+
+/// 学习卡片网格（绝密押题、科目模考、模拟考试、学习报告）
 class StudyCardGrid extends StatelessWidget {
-  final Function(int index)? onCardTap;
+  final List<StudyCardData> cards;
 
   const StudyCardGrid({
     super.key,
-    this.onCardTap,
+    required this.cards,
   });
 
   @override
   Widget build(BuildContext context) {
-    final cards = [
-      {
-        'title': '绝密押题',
-        'subtitle': '名师密押 考后即焚',
-        'imageUrl': 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/predictIcon.png',
-      },
-      {
-        'title': '科目模考',
-        'subtitle': '查漏补缺 直击重点',
-        'imageUrl': 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/test-icon.png',
-      },
-      {
-        'title': '模拟考试',
-        'subtitle': '全真模拟 还原考场',
-        'imageUrl': 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/exam-icon.png',
-      },
-      {
-        'title': '学习报告',
-        'subtitle': '实时学习情况',
-        'imageUrl': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/col-4.png',
-      },
-    ];
-
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 12.w),
       child: GridView.builder(
@@ -53,10 +33,10 @@ class StudyCardGrid extends StatelessWidget {
         itemBuilder: (context, index) {
           final card = cards[index];
           return _StudyCard(
-            title: card['title'] as String,
-            subtitle: card['subtitle'] as String,
-            imageUrl: card['imageUrl'] as String,
-            onTap: () => onCardTap?.call(index),
+            title: card.title,
+            subtitle: card.subtitle,
+            imageUrl: card.imageUrl,
+            onTap: card.onTap,
           );
         },
       ),
@@ -64,18 +44,33 @@ class StudyCardGrid extends StatelessWidget {
   }
 }
 
+/// 学习卡片数据模型
+class StudyCardData {
+  final String title;
+  final String subtitle;
+  final String imageUrl;
+  final VoidCallback onTap;
+
+  const StudyCardData({
+    required this.title,
+    required this.subtitle,
+    required this.imageUrl,
+    required this.onTap,
+  });
+}
+
 /// 学习卡片单项
 class _StudyCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String imageUrl;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
   const _StudyCard({
     required this.title,
     required this.subtitle,
     required this.imageUrl,
-    this.onTap,
+    required this.onTap,
   });
 
   @override
@@ -83,33 +78,26 @@ class _StudyCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(16.w),
+        padding: AppSpacing.allMd,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          color: AppColors.surface,
+          borderRadius: AppRadius.radiusLg,
         ),
         child: Row(
           children: [
-            // 图标
-            CachedNetworkImage(
-              imageUrl: imageUrl,
+            Image.network(
+              imageUrl,
               width: 30.w,
               height: 30.w,
-              errorWidget: (context, url, error) => Icon(
-                Icons.image,
-                size: 30.w,
-                color: const Color(0xFFCCCCCC),
-              ),
+              errorBuilder: (context, error, stackTrace) {
+                return Icon(
+                  Icons.image,
+                  size: 30.w,
+                  color: AppColors.textDisabled,
+                );
+              },
             ),
             SizedBox(width: 12.w),
-            // 文字
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,18 +105,16 @@ class _StudyCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 16.sp,
+                    style: AppTextStyles.labelLarge.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF333333),
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   SizedBox(height: 4.h),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: const Color(0xFF999999),
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: AppColors.textHint,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_radius.dart';
 // import 已移除 - 现在使用API调用，MockInterceptor会自动处理Mock数据
 
 /// 收藏页面
@@ -30,11 +34,11 @@ class _CollectPageState extends ConsumerState<CollectPage> {
     final groupedQuestions = _groupQuestionsByType(filteredQuestions);
 
     return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('收藏'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.textPrimary,
         elevation: 0,
       ),
       body: Column(
@@ -63,8 +67,8 @@ class _CollectPageState extends ConsumerState<CollectPage> {
   /// 构建筛选栏
   Widget _buildFilterBar() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      color: Colors.white,
+      padding: AppSpacing.horizontalMd.add(EdgeInsets.symmetric(vertical: 12.h)),
+      color: AppColors.surface,
       child: Row(
         children: [
           // 题型筛选
@@ -94,24 +98,21 @@ class _CollectPageState extends ConsumerState<CollectPage> {
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 8.h),
         decoration: BoxDecoration(
-          color: Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(6.r),
+          color: AppColors.background,
+          borderRadius: AppRadius.radiusSm,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               label,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Color(0xFF333333),
-              ),
+              style: AppTextStyles.bodyMedium,
             ),
             SizedBox(width: 4.w),
             Icon(
               Icons.keyboard_arrow_down,
               size: 16.sp,
-              color: Color(0xFF666666),
+              color: AppColors.textSecondary,
             ),
           ],
         ),
@@ -129,11 +130,7 @@ class _CollectPageState extends ConsumerState<CollectPage> {
           padding: EdgeInsets.symmetric(vertical: 12.h),
           child: Text(
             '$typeName题型',
-            style: TextStyle(
-              fontSize: 15.sp,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF333333),
-            ),
+            style: AppTextStyles.heading4,
           ),
         ),
         // 题目列表
@@ -156,8 +153,8 @@ class _CollectPageState extends ConsumerState<CollectPage> {
         margin: EdgeInsets.only(bottom: 12.h),
         padding: EdgeInsets.all(14.w),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8.r),
+          color: AppColors.surface,
+          borderRadius: AppRadius.radiusSm,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,11 +162,7 @@ class _CollectPageState extends ConsumerState<CollectPage> {
             // 题目内容
             Text(
               question['question'] as String,
-              style: TextStyle(
-                fontSize: 15.sp,
-                color: Color(0xFF333333),
-                height: 1.5,
-              ),
+              style: AppTextStyles.bodyMedium.copyWith(height: 1.5),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -180,10 +173,7 @@ class _CollectPageState extends ConsumerState<CollectPage> {
                 // 时间
                 Text(
                   (question['created_at'] as String).substring(0, 16),
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Color(0xFF999999),
-                  ),
+                  style: AppTextStyles.labelMedium,
                 ),
                 Spacer(),
                 // 难易度
@@ -195,8 +185,8 @@ class _CollectPageState extends ConsumerState<CollectPage> {
                         Icons.star,
                         size: 14.sp,
                         color: index < (question['level'] as int)
-                            ? Color(0xFFFFA726)
-                            : Color(0xFFE0E0E0),
+                            ? AppColors.warning
+                            : AppColors.border,
                       ),
                     );
                   }),
@@ -218,14 +208,13 @@ class _CollectPageState extends ConsumerState<CollectPage> {
           Icon(
             Icons.favorite_border,
             size: 80.sp,
-            color: Color(0xFFE0E0E0),
+            color: AppColors.border,
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: AppSpacing.mdV),
           Text(
             '没有任何收藏呢~',
-            style: TextStyle(
-              fontSize: 15.sp,
-              color: Color(0xFF999999),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textHint,
             ),
           ),
         ],
@@ -243,7 +232,7 @@ class _CollectPageState extends ConsumerState<CollectPage> {
       builder: (context) {
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
           ),
           child: SafeArea(
@@ -252,13 +241,10 @@ class _CollectPageState extends ConsumerState<CollectPage> {
               children: [
                 // 标题
                 Padding(
-                  padding: EdgeInsets.all(16.w),
+                  padding: AppSpacing.allMd,
                   child: Text(
                     '选择题型',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: AppTextStyles.heading4,
                   ),
                 ),
                 Divider(height: 1),
@@ -273,23 +259,20 @@ class _CollectPageState extends ConsumerState<CollectPage> {
                     },
                     child: Container(
                       width: double.infinity,
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                      padding: AppSpacing.horizontalMd.add(EdgeInsets.symmetric(vertical: 14.h)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             type,
-                            style: TextStyle(
-                              fontSize: 15.sp,
-                              color: Color(0xFF333333),
-                            ),
+                            style: AppTextStyles.bodyMedium,
                           ),
                           if ((type == '全部' && _selectedQuestionType.isEmpty) ||
                               type == _selectedQuestionType)
                             Icon(
                               Icons.check,
                               size: 20.sp,
-                              color: Color(0xFF4A90E2),
+                              color: AppColors.primary,
                             ),
                         ],
                       ),
@@ -315,7 +298,7 @@ class _CollectPageState extends ConsumerState<CollectPage> {
       builder: (context) {
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
           ),
           child: SafeArea(
@@ -324,13 +307,10 @@ class _CollectPageState extends ConsumerState<CollectPage> {
               children: [
                 // 标题
                 Padding(
-                  padding: EdgeInsets.all(16.w),
+                  padding: AppSpacing.allMd,
                   child: Text(
                     '选择时间范围',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: AppTextStyles.heading4,
                   ),
                 ),
                 Divider(height: 1),
@@ -345,22 +325,19 @@ class _CollectPageState extends ConsumerState<CollectPage> {
                     },
                     child: Container(
                       width: double.infinity,
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                      padding: AppSpacing.horizontalMd.add(EdgeInsets.symmetric(vertical: 14.h)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             range,
-                            style: TextStyle(
-                              fontSize: 15.sp,
-                              color: Color(0xFF333333),
-                            ),
+                            style: AppTextStyles.bodyMedium,
                           ),
                           if (range == _selectedTimeRange)
                             Icon(
                               Icons.check,
                               size: 20.sp,
-                              color: Color(0xFF4A90E2),
+                              color: AppColors.primary,
                             ),
                         ],
                       ),

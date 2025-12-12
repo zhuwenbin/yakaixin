@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:go_router/go_router.dart';
 import '../models/order_model.dart';
 import '../providers/order_provider.dart';
+import '../providers/payment_provider.dart';
+import '../../../app/routes/app_routes.dart';
+import '../../../../app/config/api_config.dart';
 
 /// 我的订单页面
 /// 对应小程序: src/modules/jintiku/pages/test/order.vue
@@ -180,7 +185,7 @@ class _OrderListViewState extends ConsumerState<_OrderListView> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image.network(
-            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/16954369620338446169543696203498545_%E7%BC%96%E7%BB%84%402x%20(4).png',
+            ApiConfig.completeImageUrl('public/16954369620338446169543696203498545_%E7%BC%96%E7%BB%84%402x%20(4).png'),
             width: 114.w,
             height: 90.h,
             errorBuilder: (context, error, stack) => Icon(
@@ -205,13 +210,13 @@ class _OrderListViewState extends ConsumerState<_OrderListView> {
 
 /// 订单项组件
 /// 对应小程序: order-list.vue 的 .item 样式
-class _OrderItem extends StatelessWidget {
+class _OrderItem extends ConsumerWidget {
   final OrderModel order;
 
   const _OrderItem({required this.order});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
@@ -243,7 +248,7 @@ class _OrderItem extends StatelessWidget {
           // 价格信息
           _buildPriceInfo(),
           // 操作按钮（待支付订单）
-          if (order.status == '1') _buildActionButtons(context),
+          if (order.status == '1') _buildActionButtons(context, ref, order),
         ],
       ),
     );
@@ -258,7 +263,7 @@ class _OrderItem extends StatelessWidget {
       decoration: BoxDecoration(
         image: DecorationImage(
           image: NetworkImage(
-            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/4d97173977183148137274_timeback.png',
+            ApiConfig.completeImageUrl('public/4d97173977183148137274_timeback.png'),
           ),
           fit: BoxFit.cover,
         ),
@@ -464,17 +469,14 @@ class _OrderItem extends StatelessWidget {
   }
 
   /// 构建操作按钮
-  Widget _buildActionButtons(BuildContext context) {
+  Widget _buildActionButtons(BuildContext context, WidgetRef ref, OrderModel order) {
     return Padding(
       padding: EdgeInsets.only(bottom: 16.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           GestureDetector(
-            onTap: () {
-              // TODO: 实现支付功能
-              EasyLoading.showInfo('支付功能开发中');
-            },
+            onTap: () => _handleOrderPayment(context, ref, order),
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
               decoration: BoxDecoration(
@@ -493,5 +495,91 @@ class _OrderItem extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// 处理订单支付
+  /// 对应小程序: order-list.vue Line 224-261 (getPayModeListNew)
+  /// 
+  /// 关键：
+  /// - ❌ 不再创建订单（订单已存在）
+  /// - ✅ 直接使用订单中的 orderId 和 flowId 继续支付
+  /// - ✅ orderId 回退逻辑: order.orderId ?? order.id（对应小程序 Line 233）
+  void _handleOrderPayment(BuildContext context, WidgetRef ref, OrderModel order) async {
+    try {
+      print('\n💳 ========== 订单支付调试 ==========');
+      print('📦 订单原始数据:');
+      print('   order.id: ${order.id}');
+      print('   order.orderId: ${order.orderId}');
+      print('   order.flowId: ${order.flowId}');
+      print('   order.goodsId: ${order.goodsId}');
+      print('   order.status: ${order.status} (${order.statusName})');
+      print('   order.payableAmount: ${order.payableAmount}');
+      
+      // ✅ 使用回退逻辑获取orderId（对应小程序 obj.order_id || obj.id）
+      // ⚠️ 注意：order.orderId 可能是 0（而不是 null），所以需要额外判断
+      final orderIdDynamic = (order.orderId == null || order.orderId.toString() == '0') 
+          ? order.id 
+          : order.orderId;
+      final orderId = orderIdDynamic?.toString() ?? '';
+      
+      final flowId = order.flowId?.toString() ?? '';
+      final goodsId = order.goodsId?.toString() ?? '';
+      final amount = double.tryParse(order.payableAmount) ?? 0.0;
+
+      print('\n🔄 处理后的数据:');
+      print('   orderId: $orderId (来源: ${order.orderId != null && order.orderId.toString() != "0" ? "order_id" : "id"})');
+      print('   flowId: $flowId');
+      print('   goodsId: $goodsId');
+      print('   amount: $amount');
+
+      // ✅ 检查订单ID
+      if (orderId.isEmpty || orderId == '0') {
+        print('❌ 错误: 订单ID为空或0');
+        EasyLoading.showError('订单ID不能为空');
+        return;
+      }
+
+      // ⚠️ flowId检查 - 可能某些订单没有flow_id（已完成的订单）
+      if (flowId.isEmpty || flowId == '0') {
+        print('❌ 错误: 流水ID为空或0（该订单可能已完成或未生成流水）');
+        EasyLoading.showError('该订单无法支付，流水ID不存在');
+        return;
+      }
+
+      print('\n✅ 参数校验通过，准备支付...');
+
+      // ✅ 0元订单直接跳转成功页
+      if (amount == 0) {
+        context.push(
+          AppRoutes.paySuccess,
+          extra: {
+            'goods_id': goodsId,
+            'order_id': orderId,
+            'isLearnButton': 1,
+          },
+        );
+        return;
+      }
+
+      // ✅ 直接跳转到确认付款页面（不需要预先获取支付参数）
+      if (context.mounted) {
+        print('\n🚀 跳转到确认付款页面...');
+        
+        context.push(AppRoutes.confirmPayment, extra: {
+          'goods_id': goodsId,
+          'goods_name': order.goodsName,
+          'goods_months_price_id': null,
+          'months': 0, // TODO: 从订单中获取
+          'payable_amount': amount,
+          'order_id': orderId,  // ✅ 传递订单ID
+          'flow_id': flowId,    // ✅ 传递流水ID
+          'finance_body_id': '',  // ✅ 继续支付时暂无finance_body_id，后台会根据订单查询
+        });
+      }
+    } catch (e) {
+      EasyLoading.dismiss();
+      EasyLoading.showError('支付失败: $e');
+      print('❌ 订单支付失败: $e');
+    }
   }
 }

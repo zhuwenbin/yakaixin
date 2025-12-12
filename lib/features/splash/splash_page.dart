@@ -2,12 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../auth/views/login_page.dart';
 import '../auth/providers/auth_provider.dart';
 import '../main/main_tab_page.dart';
 import '../../app/routes/app_routes.dart';
+import '../../app/config/api_config.dart';
+import '../../app/constants/app_constants.dart';
+import '../../core/storage/storage_service.dart';
+import '../payment/services/wechat_payment_service.dart';
+import '../payment/services/unified_payment_service.dart';
 
-/// 启动页 - 检查登录状态
+/// 启动页 - 执行初始化 + 检查登录状态
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
@@ -19,79 +26,44 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
+    _initialize();
   }
 
-  Future<void> _checkLoginStatus() async {
-    // 等待Provider初始化完成(从Storage加载用户信息)
-    await Future.delayed(const Duration(milliseconds: 500));
-    
-    if (!mounted) return;
+  Future<void> _initialize() async {
+    try {
+      // ✅ 等待 500ms（确保原生启动页显示）
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      if (!mounted) return;
 
-    final isLoggedIn = ref.read(authProvider).isLoggedIn;
+      // ✅ 初始化支付服务（包含内购产品列表加载）
+      print('\n💳 初始化支付服务...');
+      final paymentService = ref.read(unifiedPaymentServiceProvider);
+      await paymentService.initialize();
+      print('✅ 支付服务初始化完成\n');
+      
+      // ✅ 检查登录状态
+      final isLoggedIn = ref.read(authProvider).isLoggedIn;
 
-    // 根据登录状态跳转 - 使用go_router统一路由
-    if (isLoggedIn) {
-      // 跳转到TabBar首页
-      context.go(AppRoutes.mainTab);
-    } else {
-      // 跳转到登录页
-      context.go(AppRoutes.loginCenter);
+      // ✅ 跳转页面
+      if (isLoggedIn) {
+        context.go(AppRoutes.mainTab);
+      } else {
+        context.go(AppRoutes.loginCenter);
+      }
+    } catch (e) {
+      print('❌ 检查登录状态失败: $e');
+      if (mounted) {
+        context.go(AppRoutes.loginCenter);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.blue,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Logo
-            Container(
-              width: 120.w,
-              height: 120.w,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.school,
-                size: 60.sp,
-                color: Colors.blue,
-              ),
-            ),
-            SizedBox(height: 30.h),
-            Text(
-              '牙开心题库',
-              style: TextStyle(
-                fontSize: 28.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(height: 10.h),
-            Text(
-              '专业的医学考试题库',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Colors.white70,
-              ),
-            ),
-            SizedBox(height: 50.h),
-            // 加载指示器
-            SizedBox(
-              width: 30.w,
-              height: 30.w,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ),
+    // ✅ 空白页面，不显示任何内容（只显示原生启动页）
+    return const Scaffold(
+      backgroundColor: Colors.transparent,
     );
   }
 }

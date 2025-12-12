@@ -10,12 +10,12 @@ class AppConstants {
   static const String appVersion = '1.4.14';
   
   /// 应用包名 (iOS Bundle ID / Android Package Name)
-  static const String appPackageName = 'com.yakaixin.app';
+  static const String appPackageName = 'com.yakaixin.yakaixin.android';
   
   // ==================== 微信配置 ====================
   
   /// 微信开放平台 APP_ID (用于微信支付、分享等功能)
-  static const String wechatAppId = 'wx832d03ed24df9a75';
+  static const String wechatAppId = 'wx8e6a5efdf07a69cb';
   
   /// 微信小程序原始ID (用于跳转小程序等)
   static const String wechatMiniProgramAppId = 'wxf787cf63760d80a0';

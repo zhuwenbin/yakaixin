@@ -115,29 +115,52 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       LoadingHUD.dismiss();
       ToastUtil.success('登录成功');
-    } catch (e) {
+    } on Exception catch (e) {
+      // ✅ Service层的Exception
       state = state.copyWith(isLoading: false);
       LoadingHUD.dismiss();
-      ToastUtil.error(e.toString());
+      final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      ToastUtil.error(errorMsg);
+      print('⚠️ [验证码登录] 向用户显示错误: $errorMsg');
+      rethrow;
+    } catch (e) {
+      // 其他未预期错误
+      state = state.copyWith(isLoading: false);
+      LoadingHUD.dismiss();
+      ToastUtil.error('登录失败，请稍后重试');
+      print('❌ [验证码登录] 未预期错误: $e');
       rethrow;
     }
   }
 
   /// 发送验证码
-  Future<void> sendVerifyCode(String phone) async {
+  /// 
+  /// [phone] 手机号
+  /// [scene] 场景类型：2-登录, 3-修改密码
+  Future<void> sendVerifyCode(String phone, {int scene = 2}) async {
     try {
       LoadingHUD.show('发送中...');
-      await _authService.sendVerifyCode(phone: phone);
+      await _authService.sendVerifyCode(phone: phone, scene: scene);
       LoadingHUD.dismiss();
       ToastUtil.success('验证码已发送');
-    } catch (e) {
+    } on Exception catch (e) {
+      // ✅ Service层已经处理了Exception，直接显示错误信息
       LoadingHUD.dismiss();
-      ToastUtil.error(e.toString());
+      final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      ToastUtil.error(errorMsg);
+      print('⚠️ [发送验证码] 向用户显示错误: $errorMsg');
+      rethrow;
+    } catch (e) {
+      // 其他未预期错误
+      LoadingHUD.dismiss();
+      ToastUtil.error('发送失败，请稍后重试');
+      print('❌ [发送验证码] 未预期错误: $e');
       rethrow;
     }
   }
 
-  /// 手机号登录 (用于测试,小程序主要用微信登录)
+  /// 密码登录
+  /// 对应后台新接口: POST /c/student/login
   Future<void> loginWithPhone({
     required String account,
     required String password,
@@ -147,9 +170,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: true);
       LoadingHUD.show('登录中...');
 
-      // 使用固定的wxopenid (测试用)
-      final response = await _authService.login(
-        wxopenid: 'test_wxopenid',
+      // ✅ 使用新的密码登录接口
+      final response = await _authService.loginWithPassword(
         account: account,
         password: password,
         majorId: majorId,
@@ -160,10 +182,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       LoadingHUD.dismiss();
       ToastUtil.success('登录成功');
-    } catch (e) {
+    } on Exception catch (e) {
+      // ✅ Service层的Exception
       state = state.copyWith(isLoading: false);
       LoadingHUD.dismiss();
-      ToastUtil.error(e.toString());
+      final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      ToastUtil.error(errorMsg);
+      print('⚠️ [密码登录] 向用户显示错误: $errorMsg');
+      rethrow;
+    } catch (e) {
+      // 其他未预期错误
+      state = state.copyWith(isLoading: false);
+      LoadingHUD.dismiss();
+      ToastUtil.error('登录失败，请稍后重试');
+      print('❌ [密码登录] 未预期错误: $e');
       rethrow;
     }
   }
@@ -310,6 +342,50 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     // 9. 活动记录 (TODO: 如需要)
     // 对应小程序: store/index.js:169-188 (activateuserRecord, shareRecord)
+  }
+  
+  /// 重置密码
+  Future<void> resetPassword({
+    required String phone,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      LoadingHUD.show('重置中...');
+      await _authService.resetPassword(
+        phone: phone,
+        code: code,
+        newPassword: newPassword,
+      );
+      LoadingHUD.dismiss();
+      ToastUtil.success('密码重置成功');
+    } catch (e) {
+      LoadingHUD.dismiss();
+      ToastUtil.error(e.toString());
+      rethrow;
+    }
+  }
+  
+  /// 修改密码（通过验证码）
+  Future<void> changePassword({
+    required String phone,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      LoadingHUD.show('修改中...');
+      await _authService.changePassword(
+        phone: phone,
+        code: code,
+        newPassword: newPassword,
+      );
+      LoadingHUD.dismiss();
+      ToastUtil.success('密码修改成功');
+    } catch (e) {
+      LoadingHUD.dismiss();
+      ToastUtil.error(e.toString());
+      rethrow;
+    }
   }
 
   /// ✅ Mock 数据登录 - 调试模式，直接使用 Mock 数据

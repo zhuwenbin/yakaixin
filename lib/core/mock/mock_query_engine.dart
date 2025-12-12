@@ -39,6 +39,24 @@ class MockQueryEngine {
     QueryConfig? config,
   ) {
     return data.where((item) {
+      // ✅ 特殊处理: is_buyed 参数（根据 permission_status 筛选）
+      if (queryParams.containsKey('is_buyed')) {
+        final isBuyed = queryParams['is_buyed']?.toString();
+        final permissionStatus = item['permission_status']?.toString() ?? '';
+        
+        if (isBuyed == '1') {
+          // is_buyed=1 表示已购买，permission_status 应该为 '1'
+          if (permissionStatus != '1') {
+            return false;
+          }
+        } else if (isBuyed == '0') {
+          // is_buyed=0 表示未购买，permission_status 应该为 '2'
+          if (permissionStatus != '2') {
+            return false;
+          }
+        }
+      }
+
       // 遍历所有查询参数
       for (final entry in queryParams.entries) {
         final paramKey = entry.key;
@@ -170,7 +188,8 @@ class MockQueryEngine {
       // 分页和排序
       'page', 'page_size', 'pageSize', 'sort', 'order',
       // 业务标识参数（不用于筛选）
-      'shelf_platform_id', 'professional_id', 'is_buyed',
+      'shelf_platform_id', 'professional_id',
+      // ⚠️ is_buyed 已在 _filterByParams 中特殊处理，不能添加到此列表
       'platform_id', 'merchant_id', 'brand_id', 'channel_id', 'extend_uid',
       // 用户相关参数（不用于筛选）
       'user_id', 'student_id',

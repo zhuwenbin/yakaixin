@@ -102,9 +102,18 @@ mixin _$GoodsModel {
       throw _privateConstructorUsedError; // ✅ 商品月份价格ID (小程序Line 428)
   @JsonKey(name: 'month')
   String? get month => throw _privateConstructorUsedError; // ✅ 月份 (小程序Line 429)
+  @JsonKey(name: 'professional_id')
+  dynamic get professionalId =>
+      throw _privateConstructorUsedError; // ✅ 专业ID (小程序Line 129, 195)
   @JsonKey(name: 'professional_id_name')
   String? get professionalIdName =>
       throw _privateConstructorUsedError; // ✅ 专业ID名称 (小程序Line 470)
+  @JsonKey(name: 'year')
+  String? get year =>
+      throw _privateConstructorUsedError; // ✅ 年份 (小程序Line 17, 190)
+  @JsonKey(name: 'permission_operation_type')
+  dynamic get permissionOperationType =>
+      throw _privateConstructorUsedError; // ✅ 权限操作类型 (小程序Line 195)
   @JsonKey(name: 'tiku_goods_details')
   TikuGoodsDetails? get tikuGoodsDetails =>
       throw _privateConstructorUsedError; // 题库商品详情
@@ -161,7 +170,11 @@ abstract class $GoodsModelCopyWith<$Res> {
       dynamic recitationQuestionModel,
       @JsonKey(name: 'goods_months_price_id') String? goodsMonthsPriceId,
       @JsonKey(name: 'month') String? month,
+      @JsonKey(name: 'professional_id') dynamic professionalId,
       @JsonKey(name: 'professional_id_name') String? professionalIdName,
+      @JsonKey(name: 'year') String? year,
+      @JsonKey(name: 'permission_operation_type')
+      dynamic permissionOperationType,
       @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails,
       @JsonKey(name: 'detail_package_goods')
       List<Map<String, dynamic>>? detailPackageGoods,
@@ -216,7 +229,10 @@ class _$GoodsModelCopyWithImpl<$Res, $Val extends GoodsModel>
     Object? recitationQuestionModel = freezed,
     Object? goodsMonthsPriceId = freezed,
     Object? month = freezed,
+    Object? professionalId = freezed,
     Object? professionalIdName = freezed,
+    Object? year = freezed,
+    Object? permissionOperationType = freezed,
     Object? tikuGoodsDetails = freezed,
     Object? detailPackageGoods = freezed,
     Object? permissionOrderId = freezed,
@@ -354,10 +370,22 @@ class _$GoodsModelCopyWithImpl<$Res, $Val extends GoodsModel>
           ? _value.month
           : month // ignore: cast_nullable_to_non_nullable
               as String?,
+      professionalId: freezed == professionalId
+          ? _value.professionalId
+          : professionalId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       professionalIdName: freezed == professionalIdName
           ? _value.professionalIdName
           : professionalIdName // ignore: cast_nullable_to_non_nullable
               as String?,
+      year: freezed == year
+          ? _value.year
+          : year // ignore: cast_nullable_to_non_nullable
+              as String?,
+      permissionOperationType: freezed == permissionOperationType
+          ? _value.permissionOperationType
+          : permissionOperationType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       tikuGoodsDetails: freezed == tikuGoodsDetails
           ? _value.tikuGoodsDetails
           : tikuGoodsDetails // ignore: cast_nullable_to_non_nullable
@@ -429,7 +457,11 @@ abstract class _$$GoodsModelImplCopyWith<$Res>
       dynamic recitationQuestionModel,
       @JsonKey(name: 'goods_months_price_id') String? goodsMonthsPriceId,
       @JsonKey(name: 'month') String? month,
+      @JsonKey(name: 'professional_id') dynamic professionalId,
       @JsonKey(name: 'professional_id_name') String? professionalIdName,
+      @JsonKey(name: 'year') String? year,
+      @JsonKey(name: 'permission_operation_type')
+      dynamic permissionOperationType,
       @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails,
       @JsonKey(name: 'detail_package_goods')
       List<Map<String, dynamic>>? detailPackageGoods,
@@ -483,7 +515,10 @@ class __$$GoodsModelImplCopyWithImpl<$Res>
     Object? recitationQuestionModel = freezed,
     Object? goodsMonthsPriceId = freezed,
     Object? month = freezed,
+    Object? professionalId = freezed,
     Object? professionalIdName = freezed,
+    Object? year = freezed,
+    Object? permissionOperationType = freezed,
     Object? tikuGoodsDetails = freezed,
     Object? detailPackageGoods = freezed,
     Object? permissionOrderId = freezed,
@@ -621,10 +656,22 @@ class __$$GoodsModelImplCopyWithImpl<$Res>
           ? _value.month
           : month // ignore: cast_nullable_to_non_nullable
               as String?,
+      professionalId: freezed == professionalId
+          ? _value.professionalId
+          : professionalId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       professionalIdName: freezed == professionalIdName
           ? _value.professionalIdName
           : professionalIdName // ignore: cast_nullable_to_non_nullable
               as String?,
+      year: freezed == year
+          ? _value.year
+          : year // ignore: cast_nullable_to_non_nullable
+              as String?,
+      permissionOperationType: freezed == permissionOperationType
+          ? _value.permissionOperationType
+          : permissionOperationType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       tikuGoodsDetails: freezed == tikuGoodsDetails
           ? _value.tikuGoodsDetails
           : tikuGoodsDetails // ignore: cast_nullable_to_non_nullable
@@ -678,7 +725,10 @@ class _$GoodsModelImpl implements _GoodsModel {
       @JsonKey(name: 'recitation_question_model') this.recitationQuestionModel,
       @JsonKey(name: 'goods_months_price_id') this.goodsMonthsPriceId,
       @JsonKey(name: 'month') this.month,
+      @JsonKey(name: 'professional_id') this.professionalId,
       @JsonKey(name: 'professional_id_name') this.professionalIdName,
+      @JsonKey(name: 'year') this.year,
+      @JsonKey(name: 'permission_operation_type') this.permissionOperationType,
       @JsonKey(name: 'tiku_goods_details') this.tikuGoodsDetails,
       @JsonKey(name: 'detail_package_goods')
       final List<Map<String, dynamic>>? detailPackageGoods,
@@ -828,9 +878,21 @@ class _$GoodsModelImpl implements _GoodsModel {
   final String? month;
 // ✅ 月份 (小程序Line 429)
   @override
+  @JsonKey(name: 'professional_id')
+  final dynamic professionalId;
+// ✅ 专业ID (小程序Line 129, 195)
+  @override
   @JsonKey(name: 'professional_id_name')
   final String? professionalIdName;
 // ✅ 专业ID名称 (小程序Line 470)
+  @override
+  @JsonKey(name: 'year')
+  final String? year;
+// ✅ 年份 (小程序Line 17, 190)
+  @override
+  @JsonKey(name: 'permission_operation_type')
+  final dynamic permissionOperationType;
+// ✅ 权限操作类型 (小程序Line 195)
   @override
   @JsonKey(name: 'tiku_goods_details')
   final TikuGoodsDetails? tikuGoodsDetails;
@@ -855,7 +917,7 @@ class _$GoodsModelImpl implements _GoodsModel {
 
   @override
   String toString() {
-    return 'GoodsModel(goodsId: $goodsId, name: $name, materialCoverPath: $materialCoverPath, materialIntroPath: $materialIntroPath, type: $type, typeName: $typeName, detailsType: $detailsType, dataType: $dataType, salePrice: $salePrice, originalPrice: $originalPrice, permissionStatus: $permissionStatus, isHomepageRecommend: $isHomepageRecommend, seckillCountdown: $seckillCountdown, teachingType: $teachingType, teachingTypeName: $teachingTypeName, businessType: $businessType, isRecommend: $isRecommend, teacherData: $teacherData, questionNumber: $questionNumber, totalClassHour: $totalClassHour, validityType: $validityType, validityDay: $validityDay, validityStartDate: $validityStartDate, validityStartDateVal: $validityStartDateVal, validityEndDate: $validityEndDate, validityEndDateVal: $validityEndDateVal, serviceTypeName: $serviceTypeName, newTypeName: $newTypeName, studentNum: $studentNum, shopType: $shopType, recitationQuestionModel: $recitationQuestionModel, goodsMonthsPriceId: $goodsMonthsPriceId, month: $month, professionalIdName: $professionalIdName, tikuGoodsDetails: $tikuGoodsDetails, detailPackageGoods: $detailPackageGoods, permissionOrderId: $permissionOrderId)';
+    return 'GoodsModel(goodsId: $goodsId, name: $name, materialCoverPath: $materialCoverPath, materialIntroPath: $materialIntroPath, type: $type, typeName: $typeName, detailsType: $detailsType, dataType: $dataType, salePrice: $salePrice, originalPrice: $originalPrice, permissionStatus: $permissionStatus, isHomepageRecommend: $isHomepageRecommend, seckillCountdown: $seckillCountdown, teachingType: $teachingType, teachingTypeName: $teachingTypeName, businessType: $businessType, isRecommend: $isRecommend, teacherData: $teacherData, questionNumber: $questionNumber, totalClassHour: $totalClassHour, validityType: $validityType, validityDay: $validityDay, validityStartDate: $validityStartDate, validityStartDateVal: $validityStartDateVal, validityEndDate: $validityEndDate, validityEndDateVal: $validityEndDateVal, serviceTypeName: $serviceTypeName, newTypeName: $newTypeName, studentNum: $studentNum, shopType: $shopType, recitationQuestionModel: $recitationQuestionModel, goodsMonthsPriceId: $goodsMonthsPriceId, month: $month, professionalId: $professionalId, professionalIdName: $professionalIdName, year: $year, permissionOperationType: $permissionOperationType, tikuGoodsDetails: $tikuGoodsDetails, detailPackageGoods: $detailPackageGoods, permissionOrderId: $permissionOrderId)';
   }
 
   @override
@@ -924,8 +986,13 @@ class _$GoodsModelImpl implements _GoodsModel {
             (identical(other.goodsMonthsPriceId, goodsMonthsPriceId) ||
                 other.goodsMonthsPriceId == goodsMonthsPriceId) &&
             (identical(other.month, month) || other.month == month) &&
+            const DeepCollectionEquality()
+                .equals(other.professionalId, professionalId) &&
             (identical(other.professionalIdName, professionalIdName) ||
                 other.professionalIdName == professionalIdName) &&
+            (identical(other.year, year) || other.year == year) &&
+            const DeepCollectionEquality().equals(
+                other.permissionOperationType, permissionOperationType) &&
             (identical(other.tikuGoodsDetails, tikuGoodsDetails) ||
                 other.tikuGoodsDetails == tikuGoodsDetails) &&
             const DeepCollectionEquality()
@@ -971,7 +1038,10 @@ class _$GoodsModelImpl implements _GoodsModel {
         const DeepCollectionEquality().hash(recitationQuestionModel),
         goodsMonthsPriceId,
         month,
+        const DeepCollectionEquality().hash(professionalId),
         professionalIdName,
+        year,
+        const DeepCollectionEquality().hash(permissionOperationType),
         tikuGoodsDetails,
         const DeepCollectionEquality().hash(_detailPackageGoods),
         const DeepCollectionEquality().hash(permissionOrderId)
@@ -1028,7 +1098,11 @@ abstract class _GoodsModel implements GoodsModel {
       final dynamic recitationQuestionModel,
       @JsonKey(name: 'goods_months_price_id') final String? goodsMonthsPriceId,
       @JsonKey(name: 'month') final String? month,
+      @JsonKey(name: 'professional_id') final dynamic professionalId,
       @JsonKey(name: 'professional_id_name') final String? professionalIdName,
+      @JsonKey(name: 'year') final String? year,
+      @JsonKey(name: 'permission_operation_type')
+      final dynamic permissionOperationType,
       @JsonKey(name: 'tiku_goods_details')
       final TikuGoodsDetails? tikuGoodsDetails,
       @JsonKey(name: 'detail_package_goods')
@@ -1139,9 +1213,18 @@ abstract class _GoodsModel implements GoodsModel {
   @JsonKey(name: 'month')
   String? get month;
   @override // ✅ 月份 (小程序Line 429)
+  @JsonKey(name: 'professional_id')
+  dynamic get professionalId;
+  @override // ✅ 专业ID (小程序Line 129, 195)
   @JsonKey(name: 'professional_id_name')
   String? get professionalIdName;
   @override // ✅ 专业ID名称 (小程序Line 470)
+  @JsonKey(name: 'year')
+  String? get year;
+  @override // ✅ 年份 (小程序Line 17, 190)
+  @JsonKey(name: 'permission_operation_type')
+  dynamic get permissionOperationType;
+  @override // ✅ 权限操作类型 (小程序Line 195)
   @JsonKey(name: 'tiku_goods_details')
   TikuGoodsDetails? get tikuGoodsDetails;
   @override // 题库商品详情

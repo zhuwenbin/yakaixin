@@ -43,7 +43,10 @@ _$GoodsModelImpl _$$GoodsModelImplFromJson(Map<String, dynamic> json) =>
       recitationQuestionModel: json['recitation_question_model'],
       goodsMonthsPriceId: json['goods_months_price_id'] as String?,
       month: json['month'] as String?,
+      professionalId: json['professional_id'],
       professionalIdName: json['professional_id_name'] as String?,
+      year: json['year'] as String?,
+      permissionOperationType: json['permission_operation_type'],
       tikuGoodsDetails: json['tiku_goods_details'] == null
           ? null
           : TikuGoodsDetails.fromJson(
@@ -89,7 +92,10 @@ Map<String, dynamic> _$$GoodsModelImplToJson(_$GoodsModelImpl instance) =>
       'recitation_question_model': instance.recitationQuestionModel,
       'goods_months_price_id': instance.goodsMonthsPriceId,
       'month': instance.month,
+      'professional_id': instance.professionalId,
       'professional_id_name': instance.professionalIdName,
+      'year': instance.year,
+      'permission_operation_type': instance.permissionOperationType,
       'tiku_goods_details': instance.tikuGoodsDetails,
       'detail_package_goods': instance.detailPackageGoods,
       'permission_order_id': instance.permissionOrderId,

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_radius.dart';
+
 /// 首页Tab切换栏
 /// 对应小程序: .tabs
 class HomeTabBar extends StatelessWidget {
@@ -26,7 +31,7 @@ class HomeTabBar extends StatelessWidget {
             final isActive = index == activeIndex;
             return Padding(
               padding: EdgeInsets.only(
-                right: index == tabs.length - 1 ? 0 : 20.w,
+                right: index == tabs.length - 1 ? 0 : AppSpacing.md,
               ),
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
@@ -49,20 +54,20 @@ class HomeTabBar extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: AppTextStyles.bodyMedium.copyWith(
             fontSize: isActive ? 18.sp : 16.sp,
             fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-            color: isActive ? Colors.black : const Color(0xFF666666),
+            color: isActive ? AppColors.textPrimary : AppColors.tabInactiveText,
           ),
         ),
         if (isActive) ...[
-          SizedBox(height: 4.h),
+          SizedBox(height: AppSpacing.xsV),
           Container(
             width: 40.w,
             height: 4.h,
             decoration: BoxDecoration(
-              color: const Color(0xFF018BFF),
-              borderRadius: BorderRadius.circular(4.r),
+              color: AppColors.tabIndicator,
+              borderRadius: AppRadius.radiusXs,
             ),
           ),
         ],

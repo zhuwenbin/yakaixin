@@ -20,7 +20,10 @@ mixin _$QuestionBankState {
   LearningDataModel? get learningData => throw _privateConstructorUsedError;
   bool get isLoadingLearning => throw _privateConstructorUsedError; // 章节数据
   List<ChapterModel> get chapters => throw _privateConstructorUsedError;
-  bool get isLoadingChapters => throw _privateConstructorUsedError; // 已购商品
+  bool get isLoadingChapters =>
+      throw _privateConstructorUsedError; // 章节练习（大卡片，对应小程序 index-nav.vue）
+  ChapterExerciseModel? get chapterExercise =>
+      throw _privateConstructorUsedError; // 已购商品
   List<PurchasedGoodsModel> get purchasedGoods =>
       throw _privateConstructorUsedError;
   bool get isLoadingPurchased => throw _privateConstructorUsedError; // 每日一测
@@ -48,6 +51,7 @@ abstract class $QuestionBankStateCopyWith<$Res> {
       bool isLoadingLearning,
       List<ChapterModel> chapters,
       bool isLoadingChapters,
+      ChapterExerciseModel? chapterExercise,
       List<PurchasedGoodsModel> purchasedGoods,
       bool isLoadingPurchased,
       DailyPracticeModel? dailyPractice,
@@ -58,6 +62,7 @@ abstract class $QuestionBankStateCopyWith<$Res> {
       String? successMessage});
 
   $LearningDataModelCopyWith<$Res>? get learningData;
+  $ChapterExerciseModelCopyWith<$Res>? get chapterExercise;
   $DailyPracticeModelCopyWith<$Res>? get dailyPractice;
   $SkillMockModelCopyWith<$Res>? get skillMock;
 }
@@ -79,6 +84,7 @@ class _$QuestionBankStateCopyWithImpl<$Res, $Val extends QuestionBankState>
     Object? isLoadingLearning = null,
     Object? chapters = null,
     Object? isLoadingChapters = null,
+    Object? chapterExercise = freezed,
     Object? purchasedGoods = null,
     Object? isLoadingPurchased = null,
     Object? dailyPractice = freezed,
@@ -105,6 +111,10 @@ class _$QuestionBankStateCopyWithImpl<$Res, $Val extends QuestionBankState>
           ? _value.isLoadingChapters
           : isLoadingChapters // ignore: cast_nullable_to_non_nullable
               as bool,
+      chapterExercise: freezed == chapterExercise
+          ? _value.chapterExercise
+          : chapterExercise // ignore: cast_nullable_to_non_nullable
+              as ChapterExerciseModel?,
       purchasedGoods: null == purchasedGoods
           ? _value.purchasedGoods
           : purchasedGoods // ignore: cast_nullable_to_non_nullable
@@ -154,6 +164,19 @@ class _$QuestionBankStateCopyWithImpl<$Res, $Val extends QuestionBankState>
 
   @override
   @pragma('vm:prefer-inline')
+  $ChapterExerciseModelCopyWith<$Res>? get chapterExercise {
+    if (_value.chapterExercise == null) {
+      return null;
+    }
+
+    return $ChapterExerciseModelCopyWith<$Res>(_value.chapterExercise!,
+        (value) {
+      return _then(_value.copyWith(chapterExercise: value) as $Val);
+    });
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
   $DailyPracticeModelCopyWith<$Res>? get dailyPractice {
     if (_value.dailyPractice == null) {
       return null;
@@ -190,6 +213,7 @@ abstract class _$$QuestionBankStateImplCopyWith<$Res>
       bool isLoadingLearning,
       List<ChapterModel> chapters,
       bool isLoadingChapters,
+      ChapterExerciseModel? chapterExercise,
       List<PurchasedGoodsModel> purchasedGoods,
       bool isLoadingPurchased,
       DailyPracticeModel? dailyPractice,
@@ -201,6 +225,8 @@ abstract class _$$QuestionBankStateImplCopyWith<$Res>
 
   @override
   $LearningDataModelCopyWith<$Res>? get learningData;
+  @override
+  $ChapterExerciseModelCopyWith<$Res>? get chapterExercise;
   @override
   $DailyPracticeModelCopyWith<$Res>? get dailyPractice;
   @override
@@ -222,6 +248,7 @@ class __$$QuestionBankStateImplCopyWithImpl<$Res>
     Object? isLoadingLearning = null,
     Object? chapters = null,
     Object? isLoadingChapters = null,
+    Object? chapterExercise = freezed,
     Object? purchasedGoods = null,
     Object? isLoadingPurchased = null,
     Object? dailyPractice = freezed,
@@ -248,6 +275,10 @@ class __$$QuestionBankStateImplCopyWithImpl<$Res>
           ? _value.isLoadingChapters
           : isLoadingChapters // ignore: cast_nullable_to_non_nullable
               as bool,
+      chapterExercise: freezed == chapterExercise
+          ? _value.chapterExercise
+          : chapterExercise // ignore: cast_nullable_to_non_nullable
+              as ChapterExerciseModel?,
       purchasedGoods: null == purchasedGoods
           ? _value._purchasedGoods
           : purchasedGoods // ignore: cast_nullable_to_non_nullable
@@ -292,6 +323,7 @@ class _$QuestionBankStateImpl implements _QuestionBankState {
       this.isLoadingLearning = false,
       final List<ChapterModel> chapters = const [],
       this.isLoadingChapters = false,
+      this.chapterExercise,
       final List<PurchasedGoodsModel> purchasedGoods = const [],
       this.isLoadingPurchased = false,
       this.dailyPractice,
@@ -323,6 +355,9 @@ class _$QuestionBankStateImpl implements _QuestionBankState {
   @override
   @JsonKey()
   final bool isLoadingChapters;
+// 章节练习（大卡片，对应小程序 index-nav.vue）
+  @override
+  final ChapterExerciseModel? chapterExercise;
 // 已购商品
   final List<PurchasedGoodsModel> _purchasedGoods;
 // 已购商品
@@ -357,7 +392,7 @@ class _$QuestionBankStateImpl implements _QuestionBankState {
 
   @override
   String toString() {
-    return 'QuestionBankState(learningData: $learningData, isLoadingLearning: $isLoadingLearning, chapters: $chapters, isLoadingChapters: $isLoadingChapters, purchasedGoods: $purchasedGoods, isLoadingPurchased: $isLoadingPurchased, dailyPractice: $dailyPractice, skillMock: $skillMock, error: $error, errorType: $errorType, checkInSuccess: $checkInSuccess, successMessage: $successMessage)';
+    return 'QuestionBankState(learningData: $learningData, isLoadingLearning: $isLoadingLearning, chapters: $chapters, isLoadingChapters: $isLoadingChapters, chapterExercise: $chapterExercise, purchasedGoods: $purchasedGoods, isLoadingPurchased: $isLoadingPurchased, dailyPractice: $dailyPractice, skillMock: $skillMock, error: $error, errorType: $errorType, checkInSuccess: $checkInSuccess, successMessage: $successMessage)';
   }
 
   @override
@@ -372,6 +407,8 @@ class _$QuestionBankStateImpl implements _QuestionBankState {
             const DeepCollectionEquality().equals(other._chapters, _chapters) &&
             (identical(other.isLoadingChapters, isLoadingChapters) ||
                 other.isLoadingChapters == isLoadingChapters) &&
+            (identical(other.chapterExercise, chapterExercise) ||
+                other.chapterExercise == chapterExercise) &&
             const DeepCollectionEquality()
                 .equals(other._purchasedGoods, _purchasedGoods) &&
             (identical(other.isLoadingPurchased, isLoadingPurchased) ||
@@ -396,6 +433,7 @@ class _$QuestionBankStateImpl implements _QuestionBankState {
       isLoadingLearning,
       const DeepCollectionEquality().hash(_chapters),
       isLoadingChapters,
+      chapterExercise,
       const DeepCollectionEquality().hash(_purchasedGoods),
       isLoadingPurchased,
       dailyPractice,
@@ -419,6 +457,7 @@ abstract class _QuestionBankState implements QuestionBankState {
       final bool isLoadingLearning,
       final List<ChapterModel> chapters,
       final bool isLoadingChapters,
+      final ChapterExerciseModel? chapterExercise,
       final List<PurchasedGoodsModel> purchasedGoods,
       final bool isLoadingPurchased,
       final DailyPracticeModel? dailyPractice,
@@ -436,6 +475,8 @@ abstract class _QuestionBankState implements QuestionBankState {
   List<ChapterModel> get chapters;
   @override
   bool get isLoadingChapters;
+  @override // 章节练习（大卡片，对应小程序 index-nav.vue）
+  ChapterExerciseModel? get chapterExercise;
   @override // 已购商品
   List<PurchasedGoodsModel> get purchasedGoods;
   @override

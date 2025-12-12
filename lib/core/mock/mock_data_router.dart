@@ -273,15 +273,13 @@ class MockDataRouter {
               "id": "1",
               "name": "张医生",
               "title": "主任医师",
-              "avatar":
-                  "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/avatar1.png",
+              "avatar": "avatar1.png",
             },
             {
               "id": "2",
               "name": "李医生",
               "title": "副主任医师",
-              "avatar":
-                  "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/avatar2.png",
+              "avatar": "avatar2.png",
             },
           ],
         },
@@ -321,8 +319,7 @@ class MockDataRouter {
               "id": "3",
               "name": "王老师",
               "title": "高级讲师",
-              "avatar":
-                  "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/avatar3.png",
+              "avatar": "avatar3.png",
             },
           ],
         },
@@ -355,8 +352,7 @@ class MockDataRouter {
               "id": "4",
               "name": "赵老师",
               "title": "临床导师",
-              "avatar":
-                  "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/avatar4.png",
+              "avatar": "avatar4.png",
             },
           ],
         },
@@ -396,8 +392,7 @@ class MockDataRouter {
               "id": "5",
               "name": "钱老师",
               "title": "教授",
-              "avatar":
-                  "https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/avatar5.png",
+              "avatar": "avatar5.png",
             },
           ],
         },

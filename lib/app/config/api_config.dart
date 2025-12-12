@@ -101,6 +101,11 @@ class ApiConfig {
   
   // 货架平台ID (对应小程序 shelf_platform_id)
   static const String shelfPlatformId = '480130129201204499';
+
+  // 百家云sdkkey
+  static const String bjySdkKey = 'mXy/RjqsfDrfO6HYYyKYk3ItmQQ9G78lE8kqUoYao++M8T1HRsLt7khc0xHnR3NCStuV145xzEoLK5RkS8TQOdJHdENz';
+  // 百家云 partnerid
+  static const String bjyPartnerId = '508948528815416786';
   
   // 超时配置
   static const Duration connectTimeout = Duration(seconds: 30);
@@ -110,9 +115,13 @@ class ApiConfig {
   // 版本号 (对应小程序 version)
   static const String version = '1.4.14';
   
-  // ✅ OSS配置 (对应小程序 VUE_APP_YAKAIXIN_BASEOSSURL)
-  // 用于拼接完整的图片URL
+  // ✅ OSS配置
+  // 新OSS (对应小程序 VUE_APP_YAKAIXIN_BASEOSSURL)
   static const String ossBaseUrl = 'https://yakaixin.oss-cn-beijing.aliyuncs.com/';
+  
+  // 旧OSS (对应小程序 VUE_APP_BASEOSSURL)
+  // ⚠️ 已废弃，请使用 ossBaseUrl
+  static const String legacyOssUrl = 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/';
   
   /// 拼接完整的图片URL
   /// 对应小程序: utils/index.js Line 615-616 completePathNew()
@@ -126,7 +135,16 @@ class ApiConfig {
       return path;
     }
     
-    // 拼接OSS基础URL
+    // 拼接OSS基础URL (使用新OSS)
     return ossBaseUrl + path;
+  }
+  
+  /// 转换旧OSS URL为新OSS URL
+  /// 用于兼容历史数据中的旧域名
+  static String convertLegacyOssUrl(String url) {
+    if (url.contains(legacyOssUrl)) {
+      return url.replaceFirst(legacyOssUrl, ossBaseUrl);
+    }
+    return url;
   }
 }

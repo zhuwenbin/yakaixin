@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/utils/safe_type_converter.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../order/providers/payment_provider.dart';
 import '../providers/goods_detail_provider.dart';
 import '../models/goods_detail_model.dart';
 
@@ -30,6 +36,9 @@ class GoodsDetailPage extends ConsumerStatefulWidget {
 }
 
 class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
+  // ✅ 防止重复点击（对应小程序 Line 510-515）
+  bool _isPurchasing = false;
+  
   @override
   void initState() {
     super.initState();
@@ -46,9 +55,10 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
     final state = ref.watch(goodsDetailNotifierProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('商品详情'),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
       ),
       body: state.isLoading
@@ -70,9 +80,9 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16.h),
-          Text('加载中...', style: TextStyle(fontSize: 14.sp)),
+          const CircularProgressIndicator(),
+          SizedBox(height: AppSpacing.mdV),
+          Text('加载中...', style: AppTextStyles.bodyMedium),
         ],
       ),
     );
@@ -82,18 +92,18 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   Widget _buildError(String error) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(50.h),
+        padding: AppSpacing.allXl,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64.sp, color: Colors.red.shade300),
-            SizedBox(height: 16.h),
+            Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
+            SizedBox(height: AppSpacing.mdV),
             Text(
               error,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14.sp, color: Colors.grey.shade600),
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
             ),
-            SizedBox(height: 24.h),
+            SizedBox(height: AppSpacing.lgV),
             ElevatedButton.icon(
               onPressed: () {
                 final goodsId = widget.goodsId ?? widget.productId;
@@ -104,7 +114,7 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                 }
               },
               icon: Icon(Icons.refresh, size: 18.sp),
-              label: Text('重试', style: TextStyle(fontSize: 14.sp)),
+              label: Text('重试', style: AppTextStyles.buttonMedium),
             ),
           ],
         ),
@@ -118,9 +128,9 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inbox_outlined, size: 64.sp, color: Colors.grey.shade300),
-          SizedBox(height: 16.h),
-          Text('暂无数据', style: TextStyle(fontSize: 14.sp)),
+          Icon(Icons.inbox_outlined, size: 64.sp, color: AppColors.textHint),
+          SizedBox(height: AppSpacing.mdV),
+          Text('暂无数据', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint)),
         ],
       ),
     );
@@ -150,7 +160,7 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
 
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: AppColors.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -169,16 +179,24 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   }
 
   /// 封面图片
+  /// 对应小程序: .swiper-image (Line 8)
+  /// ⚠️ 注意：封面路径已在 provider 中处理（路径互换、默认图片）
   Widget _buildCoverImage(GoodsDetailModel detail) {
+    final coverPath = detail.materialCoverPath ?? '';
+    
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: CachedNetworkImage(
-        imageUrl: detail.materialCoverPath ?? '',
+        imageUrl: coverPath,
         fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          color: AppColors.card,
+          child: const Center(child: CircularProgressIndicator()),
+        ),
         errorWidget: (context, error, stackTrace) {
           return Container(
-            color: Colors.grey.shade200,
-            child: Icon(Icons.image, size: 50.sp, color: Colors.grey.shade400),
+            color: AppColors.card,
+            child: Icon(Icons.image, size: 50.sp, color: AppColors.textHint),
           );
         },
       ),
@@ -197,10 +215,10 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
     final discountPrice = originalPrice - salePrice;
 
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: AppSpacing.allMd,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
+          colors: [AppColors.error, AppColors.secondary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -213,21 +231,17 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
             children: [
               Text(
                 '题库秒杀',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+                style: AppTextStyles.heading3.copyWith(color: AppColors.textWhite),
               ),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(4.r),
+                  color: AppColors.maskLight,
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
                 ),
                 child: Text(
                   '限时秒杀',
-                  style: TextStyle(fontSize: 12.sp, color: Colors.white),
+                  style: AppTextStyles.labelMedium.copyWith(color: AppColors.textWhite),
                 ),
               ),
             ],
@@ -280,20 +294,16 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   Widget _buildInfoBox(GoodsDetailModel detail, int selectedIndex) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(16.w),
+      padding: AppSpacing.allMd,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 商品名称
           Text(
             detail.name ?? '',
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
+            style: AppTextStyles.heading3,
           ),
-          SizedBox(height: 12.h),
+          SizedBox(height: AppSpacing.smV),
           // 标签（题目数量、年份等）
           Wrap(
             spacing: 12.w,
@@ -306,15 +316,15 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
           ),
           // 提示信息
           if (detail.tipsText.isNotEmpty) ...[
-            SizedBox(height: 8.h),
+            SizedBox(height: AppSpacing.smV),
             Text(
               detail.tipsText,
-              style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600),
+              style: AppTextStyles.labelLarge.copyWith(color: AppColors.textSecondary),
             ),
           ],
-          SizedBox(height: 16.h),
-          Divider(height: 1, color: Colors.grey.shade300),
-          SizedBox(height: 16.h),
+          SizedBox(height: AppSpacing.mdV),
+          Divider(height: 1, color: AppColors.divider),
+          SizedBox(height: AppSpacing.mdV),
           // 有效期选择
           _buildPriceOptions(detail, selectedIndex),
         ],
@@ -326,12 +336,12 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: Color(0xFFEFF4FF),
-        borderRadius: BorderRadius.circular(4.r),
+        color: AppColors.courseTagBg,
+        borderRadius: BorderRadius.circular(AppRadius.xs),
       ),
       child: Text(
         text,
-        style: TextStyle(fontSize: 12.sp, color: Color(0xFF2E68FF)),
+        style: AppTextStyles.courseTag,
       ),
     );
   }
@@ -346,13 +356,9 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
       children: [
         Text(
           '选择有效期',
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
+          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
         ),
-        SizedBox(height: 12.h),
+        SizedBox(height: AppSpacing.smV),
         Wrap(
           spacing: 12.w,
           runSpacing: 12.h,
@@ -370,20 +376,18 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                 decoration: BoxDecoration(
-                  color: isSelected ? Color(0xFF2E68FF) : Colors.white,
+                  color: isSelected ? AppColors.primary : AppColors.surface,
                   border: Border.all(
-                    color: isSelected
-                        ? Color(0xFF2E68FF)
-                        : Colors.grey.shade300,
+                    color: isSelected ? AppColors.primary : AppColors.border,
                     width: 1.5,
                   ),
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: Text(
                   '有效期 ${price.validityText}',
                   style: TextStyle(
                     fontSize: 14.sp,
-                    color: isSelected ? Colors.white : Colors.black87,
+                    color: isSelected ? AppColors.textWhite : AppColors.textPrimary,
                     fontWeight: isSelected
                         ? FontWeight.w500
                         : FontWeight.normal,
@@ -418,31 +422,31 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(16.w),
-      color: Color(0xFFF5F5F5),
+      padding: AppSpacing.allMd,
+      color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.star, size: 20.sp, color: Color(0xFF2E68FF)),
-              SizedBox(width: 8.w),
+              Icon(Icons.star, size: 20.sp, color: AppColors.primary),
+              SizedBox(width: AppSpacing.sm),
               Text(
                 '本题库共有 $questionNum 道题',
-                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
+                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
               ),
             ],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: AppSpacing.mdV),
           Container(
-            padding: EdgeInsets.all(16.w),
+            padding: AppSpacing.allMd,
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8.r),
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: Text(
               '章节列表功能开发中...',
-              style: TextStyle(fontSize: 14.sp, color: Colors.grey.shade600),
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
             ),
           ),
         ],
@@ -452,24 +456,32 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
 
   /// 商品介绍长图
   /// 对应小程序: detail.vue Line 86-91
+  /// ⚠️ 注意：介绍路径已在 provider 中处理（路径互换）
   Widget _buildIntroImage(GoodsDetailModel detail) {
-    if (detail.materialIntroPath == null || detail.materialIntroPath!.isEmpty) {
+    final introPath = detail.materialIntroPath ?? '';
+    
+    if (introPath.isEmpty) {
       return const SizedBox.shrink();
     }
 
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: AppColors.surface,
       child: CachedNetworkImage(
-        imageUrl: detail.materialIntroPath!,
+        imageUrl: introPath,
         fit: BoxFit.fitWidth,
+        placeholder: (context, url) => Container(
+          height: 200.h,
+          alignment: Alignment.center,
+          child: const CircularProgressIndicator(),
+        ),
         errorWidget: (context, error, stackTrace) {
           return Container(
-            padding: EdgeInsets.all(50.h),
+            padding: AppSpacing.allXl,
             child: Center(
               child: Text(
                 '商品介绍加载失败',
-                style: TextStyle(fontSize: 14.sp, color: Colors.grey),
+                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
               ),
             ),
           );
@@ -484,16 +496,24 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
     if (detail.prices.isEmpty) return const SizedBox.shrink();
 
     final selectedPrice = detail.prices[selectedIndex];
-    final isNotPurchased = detail.permissionStatus == '2';
+    final permissionStatus = SafeTypeConverter.toSafeString(detail.permissionStatus);
+    final isNotPurchased = permissionStatus == '2';
+    
+    // 🔍 调试日志：打印购买状态
+    print('\n🔍 底部栏渲染状态：');
+    print('   permission_status: $permissionStatus (1=已购买, 2=未购买)');
+    print('   isNotPurchased: $isNotPurchased');
+    print('   商品类型: ${detail.type}');
+    print('   按钮文字: ${isNotPurchased ? "立即购买" : _getActionButtonText(detail)}');
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            offset: Offset(0, -2),
+            color: AppColors.cardShadowLight,
+            offset: const Offset(0, -2),
             blurRadius: 8,
           ),
         ],
@@ -516,7 +536,7 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                           '¥',
                           style: TextStyle(
                             fontSize: 16.sp,
-                            color: Color(0xFFFF5E00),
+                            color: AppColors.tikuPrice,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -524,7 +544,7 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                           selectedPrice.salePrice ?? '0.00',
                           style: TextStyle(
                             fontSize: 24.sp,
-                            color: Color(0xFFFF5E00),
+                            color: AppColors.tikuPrice,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -533,22 +553,22 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                   ],
                 ),
               ),
-              SizedBox(width: 16.w),
+              SizedBox(width: AppSpacing.md),
               ElevatedButton(
                 onPressed: () => _handlePurchase(detail, selectedPrice),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF2E68FF),
+                  backgroundColor: AppColors.primary,
                   padding: EdgeInsets.symmetric(
                     horizontal: 40.w,
                     vertical: 14.h,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24.r),
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
                   ),
                 ),
                 child: Text(
                   '立即购买',
-                  style: TextStyle(fontSize: 16.sp, color: Colors.white),
+                  style: AppTextStyles.buttonLarge,
                 ),
               ),
             ] else ...[
@@ -557,15 +577,15 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                 child: ElevatedButton(
                   onPressed: () => _handleStartPractice(detail),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF2E68FF),
+                    backgroundColor: AppColors.primary,
                     padding: EdgeInsets.symmetric(vertical: 14.h),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24.r),
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
                     ),
                   ),
                   child: Text(
                     _getActionButtonText(detail),
-                    style: TextStyle(fontSize: 16.sp, color: Colors.white),
+                    style: AppTextStyles.buttonLarge,
                   ),
                 ),
               ),
@@ -586,25 +606,145 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
     }
   }
 
-  /// 处理购买
-  /// 对应小程序: detail.vue Line 509-580
-  void _handlePurchase(GoodsDetailModel detail, GoodsPriceModel selectedPrice) {
-    // TODO: 实现购买流程
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('购买功能开发中...')));
+  /// 处理购买 - 调用统一支付模块
+  /// 对应小程序: detail.vue Line 509-583
+  Future<void> _handlePurchase(GoodsDetailModel detail, GoodsPriceModel selectedPrice) async {
+    // ✅ 防止重复点击（对应小程序 Line 510-518）
+    if (_isPurchasing) {
+      EasyLoading.showInfo('请勿重复点击');
+      return;
+    }
+    
+    final goodsId = SafeTypeConverter.toSafeString(detail.goodsId, defaultValue: '');
+    if (goodsId.isEmpty) {
+      EasyLoading.showError('商品ID不能为空');
+      return;
+    }
+
+    // ✅ 对应小程序 Line 534-536：价格套餐参数
+    final goodsMonthsPriceId = SafeTypeConverter.toSafeString(
+      selectedPrice.goodsMonthsPriceId,
+      defaultValue: '',
+    );
+    final months = SafeTypeConverter.toInt(selectedPrice.month);
+    final salePriceStr = SafeTypeConverter.toSafeString(
+      selectedPrice.salePrice,
+      defaultValue: '0',
+    );
+    final salePrice = double.tryParse(salePriceStr) ?? 0.0;
+
+    try {
+      // 设置锁定状态
+      setState(() => _isPurchasing = true);
+      
+      EasyLoading.show(status: '正在处理订单...');
+      
+      // 🎯 调用统一支付入口
+      final paymentNotifier = ref.read(paymentProvider.notifier);
+      final result = await paymentNotifier.startPayment(
+        goodsId: goodsId,
+        goodsMonthsPriceId: goodsMonthsPriceId,
+        months: months,
+        payableAmount: salePrice,
+      );
+      
+      EasyLoading.dismiss();
+      
+      if (!mounted) return;
+
+      // 处理支付结果
+      if (result.isFreeOrder) {
+        // ✅ 0元课成功（对应小程序 Line 574-580）
+        // 1. 刷新商品详情（获取最新购买状态）
+        final refreshGoodsId = widget.goodsId ?? widget.productId;
+        if (refreshGoodsId != null) {
+          await ref.read(goodsDetailNotifierProvider.notifier).refresh(refreshGoodsId);
+        }
+        
+        // 2. 跳转支付成功页
+        final professionalIdName = SafeTypeConverter.toSafeString(
+          detail.professionalIdName,
+          defaultValue: '',
+        );
+        context.push(AppRoutes.paySuccess, extra: {
+          'goods_id': goodsId,
+          'professional_id_name': professionalIdName,
+        });
+      } else if (!result.isFreeOrder && result.isSuccess) {
+        // ✅ 非0元课：跳转确认支付页（对应小程序 Line 569-573）
+        final professionalIdName = SafeTypeConverter.toSafeString(
+          detail.professionalIdName,
+          defaultValue: '',
+        );
+        
+        // 🔄 使用 await 等待支付结果（方案2：路由返回值）
+        final paymentResult = await context.push<Map<String, dynamic>>(
+          AppRoutes.confirmPayment,
+          extra: {
+            'order_id': result.orderId!,
+            'flow_id': result.flowId!,
+            'goods_id': result.goodsId!,
+            'finance_body_id': result.financeBodyId ?? '',  // ✅ 财务主体ID
+            'goods_name': detail.name ?? '商品',
+            'payable_amount': result.payableAmount!,
+            'refresh_goods_id': goodsId,  // 传递当前商品ID，用于刷新
+            'professional_id_name': professionalIdName,
+          },
+        );
+        
+        // 🔄 支付成功回调：刷新商品详情（对应小程序 Line 639: this.getGoodsDetail()）
+        if (paymentResult != null && paymentResult['success'] == true) {
+          print('\n🔄 支付成功回调，刷新商品详情...');
+          final refreshGoodsId = paymentResult['refresh_goods_id'] as String? ?? goodsId;
+          await ref.read(goodsDetailNotifierProvider.notifier).refresh(refreshGoodsId);
+          print('✅ 商品详情已刷新，按钮状态已更新为"去学习"');
+        }
+      } else {
+        // ❌ 下订单失败
+        EasyLoading.showError(result.errorMessage ?? '订单创建失败');
+      }
+    } catch (e) {
+      EasyLoading.dismiss();
+      EasyLoading.showError('订单异常: $e');
+    } finally {
+      // ✅ 3秒后解锁（对应小程序 Line 511-514）
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() => _isPurchasing = false);
+        }
+      });
+    }
   }
 
   /// 处理开始练习
   /// 对应小程序: detail.vue Line 339-366
   void _handleStartPractice(GoodsDetailModel detail) {
+    print('\n📚 点击了「立即测试」按钮');
+    
+    // ✅ 检查购买状态（对应小程序 Line 344）
+    final permissionStatus = SafeTypeConverter.toSafeString(detail.permissionStatus);
+    print('   权限状态: $permissionStatus (1=已购买, 2=未购买)');
+    
+    if (permissionStatus != '1') {
+      print('   ❌ 未购买，无法跳转');
+      EasyLoading.showInfo('请先购买课程');
+      return;
+    }
+    
     final major = ref.read(currentMajorProvider);
     final goodsId = detail.goodsId?.toString();
     final professionalId = major?.majorId.toString();
     final typeInt = SafeTypeConverter.toInt(detail.type);
+    
+    print('   商品ID: $goodsId');
+    print('   专业ID: $professionalId');
+    print('   类型: $typeInt (18=章节练习, 8=试卷, 10=模考)');
 
-    // type == 18: 章节练习
+    // type == 18: 章节练习（对应小程序 Line 345-351）
     if (typeInt == 18) {
+      final url = '/chapterList?professional_id=$professionalId&goods_id=$goodsId&total=${detail.tikuGoodsDetails?.questionNum}';
+      print('   ✅ 跳转到章节练习: $url');
+      
       context.push(
         AppRoutes.chapterList,
         extra: {
@@ -616,8 +756,11 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
       return;
     }
 
-    // type == 10: 模考
+    // type == 10: 模考（对应小程序 Line 353-360）
     if (typeInt == 10) {
+      final url = '/examInfo?product_id=$goodsId&title=${detail.name}&page=home';
+      print('   ✅ 跳转到模考: $url');
+      
       context.push(
         AppRoutes.examInfo,
         extra: {'product_id': goodsId, 'title': detail.name, 'page': 'home'},
@@ -625,8 +768,11 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
       return;
     }
 
-    // type == 8: 试卷
+    // type == 8: 试卷（对应小程序 Line 361-364）
     if (typeInt == 8) {
+      final url = '/testExam?id=$goodsId';
+      print('   ✅ 跳转到试卷: $url');
+      
       context.push(
         AppRoutes.testExam,
         extra: {
@@ -636,5 +782,9 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
       );
       return;
     }
+    
+    // 未知类型
+    print('   ❌ 未知商品类型: $typeInt');
+    EasyLoading.showInfo('不支持的商品类型');
   }
 }

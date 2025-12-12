@@ -24,6 +24,12 @@ class AppRoutes {
 
   /// P1-3 选择专业
   static const String selectMajor = '/select-major';
+  
+  /// P1-4 忘记密码
+  static const String forgetPassword = '/forget-password';
+  
+  /// P1-5 修改密码
+  static const String changePassword = '/change-password';
 
   // ===== F2. 题库练习模块 =====
 
@@ -31,7 +37,9 @@ class AppRoutes {
   static const String home = '/';
 
   /// P2-2 章节练习 - 章节列表
-  static const String chapterList = '/chapter-list';
+  /// 对应小程序: pages/chapterExercise/index
+  static const String chapterExercise = '/chapter-list';
+  static const String chapterList = '/chapter-list'; // 别名，兼容旧代码
 
   /// P2-3 章节详情 - 章节题目列表
   static const String chapterDetail = '/chapter-detail';
@@ -196,6 +204,11 @@ class AppRoutes {
 
   /// P9-3 打开APP - 跳转APP
   static const String openApp = '/open-app';
+
+  // ===== F10. 支付模块 =====
+
+  /// P10-3 确认付款 - 确认订单页面
+  static const String confirmPayment = '/confirm-payment';
 
   // ===== 主框架 =====
 

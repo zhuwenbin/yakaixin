@@ -6,6 +6,8 @@ import 'package:yakaixin_app/app/routes/app_routes.dart';
 import '../providers/course_detail_provider.dart';
 import '../models/course_detail_model.dart';
 import '../../../core/utils/safe_type_converter.dart';
+import '../../../../app/config/api_config.dart';
+import '../helpers/course_navigation_helper.dart';
 
 /// 学习课程详情页面 - 对应小程序 study/detail/index.vue
 /// 功能：显示课程信息、学习进度、课程列表
@@ -263,7 +265,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
         children: [
           // ✅ 使用图片图标（与小程序一致）
           Image.network(
-            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/5022173314276286241077_播放.png',
+            ApiConfig.completeImageUrl('public/5022173314276286241077_播放.png'),
             width: 20.w,
             height: 20.w,
             errorBuilder: (_, __, ___) => Icon(
@@ -492,11 +494,11 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
     );
   }
 
-  void _goLookCourse(
+  Future<void> _goLookCourse(
     String lessonId,
     String teachingType,
     Map<String, dynamic> lesson,
-  ) {
+  ) async {
     // ✅ 对应小程序 goLookCourse 方法
     // teaching_type: "1"=直播, "3"=录播
 
@@ -579,41 +581,49 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
     print('==========================================\n');
 
     if (teachingType == '3') {
-      // 录播 - 跳转录播页面
-      context.push(
-        AppRoutes.videoIndex,
-        extra: {
-          'lesson_id': lessonId,
-          'goods_id': widget.goodsId,
-          'order_id': widget.orderId,
-          'goods_pid': widget.goodsPid,
-          'system_id': lesson['system_id']?.toString(),
-          'name': lesson['lesson_name']?.toString(),
-          'filter_goods_id': classItem.classId, // ✅ 对应小程序 filter_goods_id
-          'class_id': classItem.classId, // ✅ 对应小程序 class_id
-          'chapter_data': chapterData, // ✅ 新增：直接传递章节数据
-        },
+      // ✅ 录播课程 - 调用 CourseNavigationHelper（与小程序一致）
+      debugPrint('📹 [课程详情] 录播课程，调用导航辅助类');
+      await CourseNavigationHelper.navigateToLesson(
+        context: context,
+        ref: ref,
+        lessonId: lessonId,
+        lessonName: lesson['lesson_name']?.toString() ?? '录播',
+        teachingType: teachingType,
       );
     } else if (teachingType == '1') {
-      // 直播 - 跳转直播页面
-      context.push(
-        AppRoutes.liveIndex,
-        extra: {
-          'lesson_id': lessonId,
-          'filter_goods_id': classItem.classId,
-          'class_id': classItem.classId,
-        },
+      // ✅ 直播课程 - 调用 CourseNavigationHelper（与小程序一致）
+      debugPrint('📺 [课程详情] 直播课程，调用导航辅助类');
+      await CourseNavigationHelper.navigateToLesson(
+        context: context,
+        ref: ref,
+        lessonId: lessonId,
+        lessonName: lesson['lesson_name']?.toString() ?? '直播',
+        teachingType: teachingType,
       );
     }
   }
 
+  /// 跳转到课前测/课后测答题页面
+  /// 
+  /// 对应小程序：pages/answertest/answer
+  /// Flutter页面：ExaminationingPage
   void _goAnswer(Map<String, dynamic> lesson, Map<String, dynamic> btn) {
+    debugPrint('📝 [课程详情] 跳转课前测/课后测');
+    debugPrint('  课节: ${lesson['lesson_name']}');
+    debugPrint('  测评: ${btn['name']}');
+    debugPrint('  paper_version_id: ${btn['paper_version_id']}');
+    debugPrint('  evaluation_type_id: ${btn['id']}');
+    
     context.push(
-      AppRoutes.makeQuestion,
+      AppRoutes.examinationing,  // ✅ 修正：使用正确的路由
       extra: {
-        'paper_version_id': btn['paper_version_id'],
-        'evaluation_type_id': btn['id'],
-        'lesson_id': lesson['lesson_id'],
+        'paper_version_id': btn['paper_version_id'] ?? '',
+        'evaluation_type_id': btn['id'] ?? '',  // ✅ 测评类型ID（课前测、课后测等）
+        'professional_id': btn['professional_id'] ?? '',
+        'goods_id': widget.goodsId,  // ✅ 从页面属性获取
+        'order_id': widget.orderId,  // ✅ 从页面属性获取
+        'title': btn['name'] ?? '',  // ✅ 测评名称作为标题
+        'type': '',  // ✅ 空字符串表示课程测评
       },
     );
   }

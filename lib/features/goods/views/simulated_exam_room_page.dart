@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:go_router/go_router.dart';
+import '../../../app/routes/app_routes.dart';
 import '../providers/simulated_exam_room_provider.dart';
 import '../models/goods_detail_model.dart';
 
@@ -340,18 +343,31 @@ class _SimulatedExamRoomPageState extends ConsumerState<SimulatedExamRoomPage> {
   /// 处理进入考场（对应小程序 Line 348-358）
   void _handleEnterExamRoom(GoodsDetailModel detail, bool isPurchased) {
     if (!isPurchased) {
-      // 未购买 - 显示购买弹窗（对应小程序 Line 350-351）
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('购买功能开发中...')));
+      // 未购买 - 跳转到商品详情页（报名页）
+      // 对应小程序: 显示购买弹窗（Line 350-351）
+      final goodsId = detail.goodsId?.toString() ?? '';
+      if (goodsId.isEmpty) {
+        EasyLoading.showError('商品ID不能为空');
+        return;
+      }
+
+      context.push(
+        AppRoutes.courseGoodsDetail,
+        extra: {'goods_id': goodsId},
+      );
     } else {
-      // 已购买 - 显示选择考试科目弹窗（对应小程序 Line 353-356）
-      // TODO: 实现考试科目选择弹窗
-      // 需要调用 getExaminfoDetail 接口获取 exam_rounds
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('考试列表功能开发中...\n需要接口: /c/tiku/mockexam/examinfo'),
-        ),
+      // 已购买 - 跳转考试详情页
+      // 对应小程序: 显示选择考试科目弹窗（Line 353-356）
+      final goodsId = detail.goodsId?.toString() ?? '';
+      final title = detail.name ?? '模拟考试';
+      
+      context.push(
+        AppRoutes.examInfo,
+        extra: {
+          'product_id': goodsId,
+          'title': title,
+          'page': 'goods_detail',
+        },
       );
     }
   }

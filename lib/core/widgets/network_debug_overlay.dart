@@ -4,11 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:convert';
+import 'dart:io';
 import '../network/network_log_model.dart';
 import '../network/network_logger_interceptor.dart';
 import '../network/dio_client.dart';
 import '../network/mock_interceptor.dart';
 import '../../app/config/api_config.dart';
+import '../config/debug_config.dart';
+import '../../features/payment/providers/iap_debug_provider.dart';
 
 /// 网络调试悬浮窗
 /// 功能:
@@ -42,6 +45,9 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
 
   // 当前显示详情的日志
   NetworkLogModel? _selectedLog;
+  
+  // 是否显示内购调试页面
+  bool _showingIAPDebug = false;
 
   @override
   void initState() {
@@ -62,9 +68,16 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
     final logs = ref.watch(networkLogsProvider);
     // ✅ 从全局 Provider 读取 Mock 状态
     final isMockEnabled = ref.watch(mockEnabledProvider);
+    // ✅ 监听调试工具全局开关
+    final isDebugEnabled = ref.watch(debugToolsEnabledProvider);
 
     // 在 Debug 模式下才显示悬浮按钮
     if (!kDebugMode) {
+      return widget.child;
+    }
+    
+    // ✅ 如果调试工具被关闭，只显示主内容
+    if (!isDebugEnabled) {
       return widget.child;
     }
 
@@ -116,6 +129,10 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
         // 请求详情弹窗
         if (_selectedLog != null)
           Positioned.fill(child: _buildLogDetailOverlay(_selectedLog!)),
+        
+        // 内购调试页面
+        if (_showingIAPDebug && Platform.isIOS)
+          Positioned.fill(child: _buildIAPDebugOverlay()),
       ],
     );
   }
@@ -177,6 +194,27 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                     ),
                   ),
                   const Spacer(),
+                  // 💳 内购调试按钮（仅iOS显示）
+                  if (Platform.isIOS)
+                    IconButton(
+                      icon: Icon(
+                        Icons.receipt_long,
+                        color: Colors.green.shade300,
+                        size: 20.sp,
+                      ),
+                      onPressed: _showIAPDebug,
+                      tooltip: '内购调试',
+                    ),
+                  // 调试工具全局开关（眼睛图标）
+                  IconButton(
+                    icon: Icon(
+                      Icons.visibility,
+                      color: Colors.green,
+                      size: 20.sp,
+                    ),
+                    onPressed: _toggleDebugTools,
+                    tooltip: '隐藏调试工具（用于截图）',
+                  ),
                   // Mock 开关
                   IconButton(
                     icon: Icon(
@@ -307,6 +345,19 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
     );
   }
 
+  /// 切换调试工具显示状态
+  void _toggleDebugTools() {
+    final currentState = ref.read(debugToolsEnabledProvider);
+    ref.read(debugToolsEnabledProvider.notifier).state = !currentState;
+    
+    // 关闭所有弹窗
+    setState(() {
+      _isExpanded = false;
+      _showingEnvSelector = false;
+      _selectedLog = null;
+    });
+  }
+  
   /// 切换 Mock 开关
   void _toggleMock() {
     // ✅ 直接更新全局 Mock 状态，不再使用局部状态
@@ -788,9 +839,19 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
     if (log.headers != null && log.headers!.isNotEmpty) {
       log.headers!.forEach((key, value) {
         // 跳过某些自动添加的头
-        if (key.toLowerCase() != 'content-length' &&
-            key.toLowerCase() != 'host') {
-          buffer.write(' \\\n  -H "$key: $value"');
+        final keyLower = key.toLowerCase();
+        if (keyLower != 'content-length' && keyLower != 'host') {
+          // ✅ GET 请求跳过 content-type（除非是特殊类型）
+          if (log.method == 'GET' && keyLower == 'content-type') {
+            final valueStr = value.toString().toLowerCase();
+            // 只有非默认的 content-type 才保留
+            if (valueStr != 'application/x-www-form-urlencoded' &&
+                valueStr != 'application/json') {
+              buffer.write(' \\\n  -H "$key: $value"');
+            }
+          } else {
+            buffer.write(' \\\n  -H "$key: $value"');
+          }
         }
       });
     }
@@ -798,19 +859,30 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
     // 请求体
     if (log.requestData != null) {
       String data;
+      
+      // 处理不同类型的请求数据
       if (log.requestData is Map || log.requestData is List) {
+        // JSON 对象或数组
         try {
           data = jsonEncode(log.requestData);
         } catch (e) {
           data = log.requestData.toString();
         }
+      } else if (log.requestData is String) {
+        // 字符串类型
+        data = log.requestData as String;
       } else {
+        // 其他类型，转成字符串
         data = log.requestData.toString();
       }
 
-      // 转义特殊字符
-      data = data.replaceAll('"', '\\"').replaceAll('\$', '\\\$');
-      buffer.write(' \\\n  -d "$data"');
+      // ✅ 检查数据是否为空或无效
+      if (data.isNotEmpty && data != 'null' && data != '{}' && data != '[]') {
+        // ✅ 使用单引号包裹 JSON，避免转义内部双引号
+        // 转义策略：将 ' 替换为 '\'' （结束单引号 -> 转义单引号 -> 开始单引号）
+        data = data.replaceAll("'", r"'\''" );
+        buffer.write(" \\\n  -d '$data'");
+      }
     }
 
     return buffer.toString();
@@ -961,6 +1033,281 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
     if (duration.inMilliseconds < 500) return Colors.green;
     if (duration.inMilliseconds < 2000) return Colors.orange;
     return Colors.red;
+  }
+  
+  /// 显示内购调试页面
+  void _showIAPDebug() {
+    setState(() {
+      _showingIAPDebug = true;
+    });
+  }
+  
+  /// 构建内购调试覆盖层
+  Widget _buildIAPDebugOverlay() {
+    final iapData = ref.watch(iapDebugDataProvider);
+    
+    return Material(
+      color: Colors.black.withOpacity(0.95),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // 标题栏
+            Container(
+              height: 50.h,
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              color: Colors.black,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.receipt_long,
+                    color: Colors.green.shade300,
+                    size: 20.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '内购调试',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: Icon(Icons.close, color: Colors.white, size: 20.sp),
+                    onPressed: () {
+                      setState(() {
+                        _showingIAPDebug = false;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+            
+            // 内容区
+            Expanded(
+              child: iapData == null
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64.sp,
+                            color: Colors.white30,
+                          ),
+                          SizedBox(height: 16.h),
+                          Text(
+                            '暂无内购数据',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            '请先进行一次内购支付',
+                            style: TextStyle(
+                              color: Colors.white38,
+                              fontSize: 12.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : _buildIAPDebugContent(iapData),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// 构建内购调试内容
+  Widget _buildIAPDebugContent(IAPDebugData data) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 基本信息
+          _buildIAPSection(
+            '💳 基本信息',
+            [
+              _buildIAPInfoRow('产品ID', data.productID),
+              _buildIAPInfoRow('交易ID', data.purchaseID ?? '无'),
+              _buildIAPInfoRow('交易时间', data.transactionDate ?? '无'),
+              _buildIAPInfoRow(
+                '状态',
+                data.statusName,
+                valueColor: _parseColor(data.statusColor),
+              ),
+              _buildIAPInfoRow(
+                '验证时间',
+                '${data.timestamp.year}-${data.timestamp.month.toString().padLeft(2, '0')}-${data.timestamp.day.toString().padLeft(2, '0')} '
+                '${data.timestamp.hour.toString().padLeft(2, '0')}:${data.timestamp.minute.toString().padLeft(2, '0')}:${data.timestamp.second.toString().padLeft(2, '0')}',
+              ),
+            ],
+          ),
+          
+          // 票据数据
+          _buildIAPSection(
+            '🎫 票据数据 (Base64)',
+            [
+              _buildCopyableText(
+                data.receiptData,
+                maxLines: 8,
+              ),
+            ],
+          ),
+          
+          // 本地验证数据
+          if (data.localVerificationData.isNotEmpty)
+            _buildIAPSection(
+              '🔐 本地验证数据',
+              [
+                _buildCopyableText(
+                  data.localVerificationData,
+                  maxLines: 5,
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+  
+  /// 构建内购调试区域
+  Widget _buildIAPSection(String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 14.sp,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          ),
+        ),
+        SizedBox(height: 16.h),
+      ],
+    );
+  }
+  
+  /// 构建内购信息行
+  Widget _buildIAPInfoRow(String label, String value, {Color? valueColor}) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80.w,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12.sp,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: valueColor ?? Colors.white,
+                fontSize: 12.sp,
+                fontWeight: valueColor != null ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// 构建可复制的文本
+  Widget _buildCopyableText(String text, {int maxLines = 3}) {
+    return GestureDetector(
+      onLongPress: () {
+        Clipboard.setData(ClipboardData(text: text));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('已复制到剪贴板'),
+            duration: Duration(seconds: 1),
+            backgroundColor: Colors.green,
+          ),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(8.w),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(4.r),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.copy,
+                  size: 14.sp,
+                  color: Colors.white38,
+                ),
+                SizedBox(width: 4.w),
+                Text(
+                  '长按复制',
+                  style: TextStyle(
+                    color: Colors.white38,
+                    fontSize: 10.sp,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              text,
+              style: TextStyle(
+                color: Colors.greenAccent,
+                fontSize: 11.sp,
+                fontFamily: 'monospace',
+              ),
+              maxLines: maxLines,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// 解析颜色字符串
+  Color _parseColor(String colorStr) {
+    try {
+      return Color(
+        int.parse(colorStr.replaceFirst('#', '0xFF')),
+      );
+    } catch (e) {
+      return Colors.white;
+    }
   }
 }
 

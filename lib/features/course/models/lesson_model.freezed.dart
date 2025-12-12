@@ -28,6 +28,9 @@ mixin _$LessonModel {
   String? get lessonName => throw _privateConstructorUsedError;
   @JsonKey(name: 'start_time')
   String? get startTime => throw _privateConstructorUsedError;
+  @JsonKey(name: 'teaching_type')
+  dynamic get teachingType =>
+      throw _privateConstructorUsedError; // ✅ 授课类型: 1-直播, 2-面授, 3-录播
   @JsonKey(name: 'teaching_type_name')
   String? get teachingTypeName => throw _privateConstructorUsedError;
   @JsonKey(name: 'resource_document')
@@ -53,6 +56,7 @@ abstract class $LessonModelCopyWith<$Res> {
       @JsonKey(name: 'lesson_num') String? lessonNum,
       @JsonKey(name: 'lesson_name') String? lessonName,
       @JsonKey(name: 'start_time') String? startTime,
+      @JsonKey(name: 'teaching_type') dynamic teachingType,
       @JsonKey(name: 'teaching_type_name') String? teachingTypeName,
       @JsonKey(name: 'resource_document') List<dynamic> resourceDocument,
       @JsonKey(name: 'evaluation_type')
@@ -76,6 +80,7 @@ class _$LessonModelCopyWithImpl<$Res, $Val extends LessonModel>
     Object? lessonNum = freezed,
     Object? lessonName = freezed,
     Object? startTime = freezed,
+    Object? teachingType = freezed,
     Object? teachingTypeName = freezed,
     Object? resourceDocument = null,
     Object? evaluationType = null,
@@ -97,6 +102,10 @@ class _$LessonModelCopyWithImpl<$Res, $Val extends LessonModel>
           ? _value.startTime
           : startTime // ignore: cast_nullable_to_non_nullable
               as String?,
+      teachingType: freezed == teachingType
+          ? _value.teachingType
+          : teachingType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       teachingTypeName: freezed == teachingTypeName
           ? _value.teachingTypeName
           : teachingTypeName // ignore: cast_nullable_to_non_nullable
@@ -126,6 +135,7 @@ abstract class _$$LessonModelImplCopyWith<$Res>
       @JsonKey(name: 'lesson_num') String? lessonNum,
       @JsonKey(name: 'lesson_name') String? lessonName,
       @JsonKey(name: 'start_time') String? startTime,
+      @JsonKey(name: 'teaching_type') dynamic teachingType,
       @JsonKey(name: 'teaching_type_name') String? teachingTypeName,
       @JsonKey(name: 'resource_document') List<dynamic> resourceDocument,
       @JsonKey(name: 'evaluation_type')
@@ -147,6 +157,7 @@ class __$$LessonModelImplCopyWithImpl<$Res>
     Object? lessonNum = freezed,
     Object? lessonName = freezed,
     Object? startTime = freezed,
+    Object? teachingType = freezed,
     Object? teachingTypeName = freezed,
     Object? resourceDocument = null,
     Object? evaluationType = null,
@@ -168,6 +179,10 @@ class __$$LessonModelImplCopyWithImpl<$Res>
           ? _value.startTime
           : startTime // ignore: cast_nullable_to_non_nullable
               as String?,
+      teachingType: freezed == teachingType
+          ? _value.teachingType
+          : teachingType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       teachingTypeName: freezed == teachingTypeName
           ? _value.teachingTypeName
           : teachingTypeName // ignore: cast_nullable_to_non_nullable
@@ -192,6 +207,7 @@ class _$LessonModelImpl implements _LessonModel {
       @JsonKey(name: 'lesson_num') this.lessonNum,
       @JsonKey(name: 'lesson_name') this.lessonName,
       @JsonKey(name: 'start_time') this.startTime,
+      @JsonKey(name: 'teaching_type') this.teachingType,
       @JsonKey(name: 'teaching_type_name') this.teachingTypeName,
       @JsonKey(name: 'resource_document')
       final List<dynamic> resourceDocument = const [],
@@ -216,6 +232,10 @@ class _$LessonModelImpl implements _LessonModel {
   @JsonKey(name: 'start_time')
   final String? startTime;
   @override
+  @JsonKey(name: 'teaching_type')
+  final dynamic teachingType;
+// ✅ 授课类型: 1-直播, 2-面授, 3-录播
+  @override
   @JsonKey(name: 'teaching_type_name')
   final String? teachingTypeName;
   final List<dynamic> _resourceDocument;
@@ -239,7 +259,7 @@ class _$LessonModelImpl implements _LessonModel {
 
   @override
   String toString() {
-    return 'LessonModel(lessonId: $lessonId, lessonNum: $lessonNum, lessonName: $lessonName, startTime: $startTime, teachingTypeName: $teachingTypeName, resourceDocument: $resourceDocument, evaluationType: $evaluationType)';
+    return 'LessonModel(lessonId: $lessonId, lessonNum: $lessonNum, lessonName: $lessonName, startTime: $startTime, teachingType: $teachingType, teachingTypeName: $teachingTypeName, resourceDocument: $resourceDocument, evaluationType: $evaluationType)';
   }
 
   @override
@@ -255,6 +275,8 @@ class _$LessonModelImpl implements _LessonModel {
                 other.lessonName == lessonName) &&
             (identical(other.startTime, startTime) ||
                 other.startTime == startTime) &&
+            const DeepCollectionEquality()
+                .equals(other.teachingType, teachingType) &&
             (identical(other.teachingTypeName, teachingTypeName) ||
                 other.teachingTypeName == teachingTypeName) &&
             const DeepCollectionEquality()
@@ -271,6 +293,7 @@ class _$LessonModelImpl implements _LessonModel {
       lessonNum,
       lessonName,
       startTime,
+      const DeepCollectionEquality().hash(teachingType),
       teachingTypeName,
       const DeepCollectionEquality().hash(_resourceDocument),
       const DeepCollectionEquality().hash(_evaluationType));
@@ -295,6 +318,7 @@ abstract class _LessonModel implements LessonModel {
       @JsonKey(name: 'lesson_num') final String? lessonNum,
       @JsonKey(name: 'lesson_name') final String? lessonName,
       @JsonKey(name: 'start_time') final String? startTime,
+      @JsonKey(name: 'teaching_type') final dynamic teachingType,
       @JsonKey(name: 'teaching_type_name') final String? teachingTypeName,
       @JsonKey(name: 'resource_document') final List<dynamic> resourceDocument,
       @JsonKey(name: 'evaluation_type')
@@ -316,6 +340,9 @@ abstract class _LessonModel implements LessonModel {
   @JsonKey(name: 'start_time')
   String? get startTime;
   @override
+  @JsonKey(name: 'teaching_type')
+  dynamic get teachingType;
+  @override // ✅ 授课类型: 1-直播, 2-面授, 3-录播
   @JsonKey(name: 'teaching_type_name')
   String? get teachingTypeName;
   @override

@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../../../app/config/api_config.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/utils/safe_type_converter.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../models/goods_model.dart';
 import '../services/goods_service.dart';
@@ -98,8 +100,9 @@ class HomeNotifier extends StateNotifier<HomeState> {
       // ⚠️ 注意: permission_status='2' 表示未购买，'1'表示已购买
 
       final recommendList = questionBankList.where((e) {
-        final isRecommend = e.isHomepageRecommend?.toString() == '1' || e.isHomepageRecommend == 1;
-        final isNotBought = e.permissionStatus == '2'; // ✅ 未购买商品才显示在秒杀区
+        // ✅ 使用 SafeTypeConverter 处理 dynamic 类型
+        final isRecommend = SafeTypeConverter.toInt(e.isHomepageRecommend) == 1;
+        final isNotBought = e.permissionStatus == '2';
         
         return isRecommend && isNotBought;
       }).toList();
@@ -132,21 +135,17 @@ class HomeNotifier extends StateNotifier<HomeState> {
   
   /// 增强课程数据
   /// 对应小程序 brushing.vue Line 274-356 的数据处理逻辑
-  /// 
-  /// 处理内容：
-  /// 1. new_type_name: 根据 type 计算类型名称（试卷/章节练习/套餐）
-  /// 2. shop_type: 计算商店类型（推荐/好课/课程类型）
-  /// 3. showTeacherData: 只显示前4个教师
+  /// ✅ 使用 SafeTypeConverter 确保类型安全
   List<GoodsModel> _enhanceCourseData(List<GoodsModel> list) {
     return list.map((item) {
       // 1. ✅ 计算 new_type_name（对应小程序 Line 274-286）
       String newTypeName = '';
-      final typeStr = item.type?.toString() ?? '';
-      if (typeStr == '8') {
+      final typeInt = SafeTypeConverter.toInt(item.type);
+      if (typeInt == 8) {
         newTypeName = '试卷';
-      } else if (typeStr == '18') {
+      } else if (typeInt == 18) {
         newTypeName = '章节练习';
-      } else if (typeStr == '3' || typeStr == '2') {
+      } else if (typeInt == 3 || typeInt == 2) {
         newTypeName = '套餐';
       }
       
