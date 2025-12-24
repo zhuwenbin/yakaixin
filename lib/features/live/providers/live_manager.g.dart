@@ -6,7 +6,7 @@ part of 'live_manager.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$liveManagerHash() => r'18932f4cbe00230d84261500c6e781d56d72fa6c';
+String _$liveManagerHash() => r'c6ac7092c7617ba15e9ac8eec1eefac26eb0ae30';
 
 /// 直播管理器 - 管理百家云直播的核心逻辑
 ///

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../core/widgets/common_state_widget.dart';
 import '../providers/simulated_exam_room_provider.dart';
 import '../models/goods_detail_model.dart';
 
@@ -63,35 +64,20 @@ class _SimulatedExamRoomPageState extends ConsumerState<SimulatedExamRoomPage> {
   }
 
   Widget _buildError(String error) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(50.h),
-        child: Column(
-          children: [
-            Icon(Icons.error_outline, size: 64.sp, color: Colors.red.shade300),
-            SizedBox(height: 16.h),
-            Text(error, textAlign: TextAlign.center),
-            SizedBox(height: 24.h),
-            ElevatedButton(
-              onPressed: () {
-                if (widget.productId != null) {
-                  ref
-                      .read(simulatedExamRoomNotifierProvider.notifier)
-                      .refresh(widget.productId!);
-                }
-              },
-              child: Text('重试'),
-            ),
-          ],
-        ),
-      ),
+    return CommonStateWidget.loadError(
+      message: error,
+      onRetry: () {
+        if (widget.productId != null) {
+          ref
+              .read(simulatedExamRoomNotifierProvider.notifier)
+              .refresh(widget.productId!);
+        }
+      },
     );
   }
 
   Widget _buildEmpty() {
-    return Center(
-      child: Text('暂无数据', style: TextStyle(fontSize: 14.sp)),
-    );
+    return CommonStateWidget.empty();
   }
 
   /// 主内容（对应小程序 Line 2-76）

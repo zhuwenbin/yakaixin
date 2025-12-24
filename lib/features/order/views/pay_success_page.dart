@@ -31,22 +31,23 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
   String _qrcodeUrl = '';
 
   // ✅ 对应小程序 Line 40-56: qrcodeList
+  // ⚠️ 使用完整URL，与小程序保持一致
   static final List<Map<String, dynamic>> _qrcodeList = [
     {
       'keys': ['口腔'],
-      'src': 'public/60dc174341121431254320_b597430dda7e46cc7fe564a6aa6416a.png'
+      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/60dc174341121431254320_b597430dda7e46cc7fe564a6aa6416a.png'
     },
     {
       'keys': ['临床', '乡村'],
-      'src': 'WechatIMG357.jpg'
+      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/WechatIMG357.jpg'
     },
     {
       'keys': ['中医', '护士', '药师', '西医', '中西医'],
-      'src': 'WechatIMG357.jpg'
+      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/WechatIMG357.jpg'
     },
   ];
 
-  static const String _defaultQrcodePath = 'public/2ec4174341105901736218_tongyongma.png';
+  static const String _defaultQrcodePath = 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/2ec4174341105901736218_tongyongma.png';
 
   @override
   void initState() {
@@ -83,9 +84,9 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
       }
     }
     
-    // 拼接完整URL
+    // ✅ 对应小程序 Line 68-76: 直接使用完整URL，不需要拼接
     setState(() {
-      _qrcodeUrl = ApiConfig.completeImageUrl(qrcodePath);
+      _qrcodeUrl = qrcodePath;
     });
   }
 
@@ -179,8 +180,10 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
             color: Colors.white,
             shape: BoxShape.circle,
           ),
+          // ✅ 对应小程序 Line 6-8: 成功图标
+          // ⚠️ 使用完整URL，与小程序保持一致
           child: Image.network(
-            ApiConfig.completeImageUrl('public/26e2174185623886722986_%E7%BC%96%E7%BB%84%2013%402x.png'),
+            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/26e2174185623886722986_%E7%BC%96%E7%BB%84%2013%402x.png',
             width: 64.w, // ✅ 128rpx / 2
             height: 64.h,
             fit: BoxFit.contain,
@@ -214,9 +217,10 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
       height: 155.h, // ✅ 310rpx / 2
       decoration: BoxDecoration(
         // ✅ 对应小程序 Line 192: background-image
+        // ⚠️ 使用完整URL，与小程序保持一致
         image: DecorationImage(
           image: NetworkImage(
-            ApiConfig.completeImageUrl('public/46c2174185637060211201_%E5%BD%A2%E7%8A%B6%E7%BB%93%E5%90%88%402x.png'),
+            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/46c2174185637060211201_%E5%BD%A2%E7%8A%B6%E7%BB%93%E5%90%88%402x.png',
           ),
           fit: BoxFit.contain, // ✅ 使用 contain 而不是 cover
         ),

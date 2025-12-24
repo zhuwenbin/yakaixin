@@ -127,7 +127,13 @@ class _ConfirmPaymentPageState extends ConsumerState<ConfirmPaymentPage> {
           return;
         }
       } else if (Platform.isAndroid) {
-        // 🤖 Android: 使用微信支付
+        // 🤖 Android: 提示支付功能开发中
+        print('\n🤖 ========== Android支付 ==========');
+        EasyLoading.showInfo('支付功能开发中');
+        setState(() => _isPaying = false);
+        return;
+        
+        /* ⚠️ 以下Android微信支付代码暂时注释，待开发完成后启用
         print('\n🤖 ========== Android微信支付 ==========');
         
         // 步骤1: 获取微信支付参数
@@ -173,6 +179,7 @@ class _ConfirmPaymentPageState extends ConsumerState<ConfirmPaymentPage> {
           EasyLoading.showError(result.errorMessage ?? '支付失败');
           return;
         }
+        */
       } else {
         EasyLoading.showError('不支持的平台');
         return;
@@ -220,36 +227,62 @@ class _ConfirmPaymentPageState extends ConsumerState<ConfirmPaymentPage> {
       ),
       body: Stack(
         children: [
-          Column(
-            children: [
-              _buildOrderInfo(),
-              const Spacer(),
-              _buildPayButton(),
-              SizedBox(height: 32.h),
-            ],
+          SingleChildScrollView(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              children: [
+                _buildOrderInfo(),
+                SizedBox(height: 16.h),
+                _buildPaymentMethod(),
+                SizedBox(height: 100.h), // 给底部按钮留出空间
+              ],
+            ),
           ),
-          // 🧪 调试悬浮按钮（仅Debug模式显示）
-          if (kDebugMode && Platform.isIOS)
-            _buildDebugFloatingButton(),
+          // 底部按钮固定在底部
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              color: Colors.white,
+              padding: EdgeInsets.only(
+                left: 16.w,
+                right: 16.w,
+                top: 12.h,
+                bottom: 32.h,
+              ),
+              child: _buildPayButton(),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  /// 订单信息
+  /// 订单信息（卡片样式）
   Widget _buildOrderInfo() {
     return Container(
-      color: Colors.white,
-      padding: AppSpacing.allMd,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('订单信息', style: AppTextStyles.heading4),
           SizedBox(height: 16.h),
           _buildInfoRow('商品名称', widget.goodsName),
-          SizedBox(height: 8.h),
+          SizedBox(height: 12.h),
           _buildInfoRow('订单ID', widget.orderId),
-          SizedBox(height: 8.h),
+          SizedBox(height: 12.h),
           _buildInfoRow(
             '应付金额',
             '¥${widget.payableAmount.toStringAsFixed(2)}',
@@ -276,16 +309,68 @@ class _ConfirmPaymentPageState extends ConsumerState<ConfirmPaymentPage> {
     );
   }
 
+  /// 支付方式（不可选择，卡片样式）
+  /// 对应小程序: secretRealDetail.vue Line 78-89
+  Widget _buildPaymentMethod() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(16.w),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // 左侧：微信支付图标+文字
+          Row(
+            children: [
+              // 微信支付图标
+              Image.asset(
+                'assets/images/wechat_pay_icon.png',
+                width: 24.w,
+                height: 24.w,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.payment,
+                    size: 24.w,
+                    color: AppColors.primary,
+                  );
+                },
+              ),
+              SizedBox(width: 12.w),
+              Text(
+                Platform.isIOS ? 'Apple内购' : '微信支付',
+                style: AppTextStyles.bodyMedium,
+              ),
+            ],
+          ),
+          // 右侧：选中图标（固定选中，不可点击）
+          Icon(
+            Icons.check_circle,
+            color: AppColors.primary,
+            size: 22.w,
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 支付按钮
   Widget _buildPayButton() {
-    return Container(
-      margin: AppSpacing.horizontalMd,
+    return SizedBox(
       width: double.infinity,
+      height: 48.h,
       child: ElevatedButton(
         onPressed: _isPaying ? null : _handlePayment,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          padding: EdgeInsets.symmetric(vertical: 14.h),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.r),
           ),
@@ -293,70 +378,12 @@ class _ConfirmPaymentPageState extends ConsumerState<ConfirmPaymentPage> {
         child: Text(
           _isPaying 
               ? '支付中...' 
-              : Platform.isIOS 
-                  ? 'Apple Pay' 
-                  : '微信支付',
+              : '确认支付',
           style: AppTextStyles.buttonLarge,
         ),
       ),
     );
   }
   
-  /// 🧪 调试悬浮按钮（仅Debug模式显示）
-  Widget _buildDebugFloatingButton() {
-    return Positioned(
-      right: 16.w,
-      bottom: 120.h,
-      child: FloatingActionButton.extended(
-        onPressed: () async {
-          // 显示确认对话框
-          final confirmed = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('🧪 调试功能'),
-              content: const Text(
-                '清除购买记录\n\n'
-                '注意：由于苹果服务器会记住沙盒账号的购买记录，'
-                '此操作只能清除本地待处理的交易。\n\n'
-                '如仍然无法购买，请：\n'
-                '1. 退出当前沙盒账号\n'
-                '2. 创建并登录新的沙盒账号',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('取消'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('确定'),
-                ),
-              ],
-            ),
-          );
-          
-          if (confirmed == true) {
-            EasyLoading.show(status: '正在清除...');
-            
-            try {
-              final iapService = ref.read(iapServiceProvider);
-              await iapService.debugClearAllPurchases();
-              
-              EasyLoading.dismiss();
-              EasyLoading.showSuccess('已清除本地记录\n请重启应用');
-            } catch (e) {
-              EasyLoading.dismiss();
-              EasyLoading.showError('清除失败: $e');
-            }
-          }
-        },
-        backgroundColor: Colors.orange,
-        icon: const Icon(Icons.bug_report, color: Colors.white),
-        label: Text(
-          '清除购买',
-          style: TextStyle(color: Colors.white, fontSize: 12.sp),
-        ),
-      ),
-    );
-  }
+  
 }

@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/utils/error_message_mapper.dart';
 import '../services/order_service.dart';
 import '../models/create_order_request.dart';
 import '../models/order_model.dart';
@@ -100,12 +102,22 @@ class OrderNotifier extends _$OrderNotifier {
           orderId: response.orderId,
         );
       }
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '创建订单失败';
       state = state.copyWith(
         isCreatingOrder: false,
-        error: e.toString(),
+        error: errorMsg,
       );
-      return CreateOrderResult.error(e.toString());
+      return CreateOrderResult.error(errorMsg);
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      const errorMsg = '创建订单失败，请稍后重试';
+      state = state.copyWith(
+        isCreatingOrder: false,
+        error: errorMsg,
+      );
+      return CreateOrderResult.error(errorMsg);
     }
   }
 
@@ -159,10 +171,19 @@ class OrderNotifier extends _$OrderNotifier {
       final detail = await service.getPayModeDetail(wechatPayMode['id'] as String);
 
       return detail['id']?.toString();
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '获取支付方式失败';
       state = state.copyWith(
         isLoadingPayModes: false,
-        error: e.toString(),
+        error: errorMsg,
+      );
+      return null;
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(
+        isLoadingPayModes: false,
+        error: '获取支付方式失败',
       );
       return null;
     }
@@ -191,10 +212,19 @@ class OrderNotifier extends _$OrderNotifier {
       state = state.copyWith(isPaying: false);
 
       return payData;
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '支付失败';
       state = state.copyWith(
         isPaying: false,
-        error: e.toString(),
+        error: errorMsg,
+      );
+      return null;
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(
+        isPaying: false,
+        error: '支付失败，请稍后重试',
       );
       return null;
     }
@@ -255,9 +285,14 @@ class OrderList extends _$OrderList {
       }
       
       return response.list;
+    } on DioException catch (e) {
+      print('❌ [订单列表] 加载失败 (DioException): $e');
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载订单列表失败';
+      throw Exception(errorMsg);
     } catch (e) {
       print('❌ [订单列表] 加载失败: $e');
-      throw Exception('加载订单列表失败: $e');
+      throw Exception('加载订单列表失败，请稍后重试');
     }
   }
 

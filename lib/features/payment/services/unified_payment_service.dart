@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'wechat_payment_service.dart';
+import 'wechat_payment_service.dart' as wechat;
 import 'iap_service.dart';
 import '../models/wechat_pay_params_model.dart';
+import '../../order/providers/payment_provider.dart' show PaymentResult;
 
 /// 统一支付服务
 /// 
@@ -12,7 +13,7 @@ import '../models/wechat_pay_params_model.dart';
 /// 
 /// 注意：本项目不支持余额充值模式
 class UnifiedPaymentService {
-  final WechatPaymentService _wechatPayment;
+  final wechat.WechatPaymentService _wechatPayment;
   final IAPService _iapService;
 
   UnifiedPaymentService(this._wechatPayment, this._iapService);
@@ -67,18 +68,22 @@ class UnifiedPaymentService {
           },
         );
         
-        // 💡 iOS内购是异步模式，这里返回“请求已发送”
+        // 💡 iOS内购是异步模式，这里立即返回成功状态
         // 真正的结果将通过 onResult 回调通知UI
-        return PaymentResult.succeeded();
+        return const PaymentResult(
+          isSuccess: true,
+          isFreeOrder: false,
+        );
       } else if (Platform.isAndroid) {
         // Android: 使用微信支付
         print('\n🤖 ========== Android微信支付 ==========');
         
         if (wechatParams == null) {
-          return PaymentResult.failed('缺少微信支付参数');
+          return const PaymentResult.error('缺少微信支付参数');
         }
         
-        return await _wechatPayment.requestPayment(
+        // Android微信支付需要转换返回类型
+        final wechatResult = await _wechatPayment.requestPayment(
           appId: wechatParams.appId,
           partnerId: wechatParams.partnerId,
           prepayId: wechatParams.prepayId,
@@ -87,12 +92,24 @@ class UnifiedPaymentService {
           timeStamp: wechatParams.timeStamp,
           sign: wechatParams.sign,
         );
+        
+        // 转换wechat.PaymentResult到PaymentResult
+        if (wechatResult.success) {
+          return const PaymentResult(
+            isSuccess: true,
+            isFreeOrder: false,
+          );
+        } else {
+          return PaymentResult.error(
+            wechatResult.errorMessage ?? '微信支付失败',
+          );
+        }
       } else {
-        return PaymentResult.failed('不支持的平台');
+        return const PaymentResult.error('不支持的平台');
       }
     } catch (e) {
-      print('❌ 支付失败: $e');
-      return PaymentResult.failed(e.toString());
+      print('❌ 支付异常: $e');
+      return PaymentResult.error(e.toString());
     }
   }
 
@@ -116,7 +133,7 @@ class UnifiedPaymentService {
 /// UnifiedPaymentService Provider
 final unifiedPaymentServiceProvider = Provider<UnifiedPaymentService>((ref) {
   return UnifiedPaymentService(
-    ref.read(wechatPaymentServiceProvider),
+    ref.read(wechat.wechatPaymentServiceProvider),
     ref.read(iapServiceProvider),
   );
 });

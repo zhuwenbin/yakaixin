@@ -62,60 +62,51 @@ class SeckillCard extends StatelessWidget {
   }
 
   /// 头部：商品名称 + 价格
+  /// ✅ 标题一行，价格一行右对齐
   Widget _buildHeader() {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Text(
-            goods.name ?? '未命名商品',
-            style: AppTextStyles.courseTitle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+        // 标题行
+        Text(
+          goods.name ?? '',
+          style: AppTextStyles.courseTitle,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(width: 12.w),
-        Flexible(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.topRight,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (goods.originalPrice != null && 
-                    goods.originalPrice.toString().isNotEmpty)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${goods.originalPrice}',
-                        style: AppTextStyles.seckillOriginalPrice,
-                      ),
-                      SizedBox(width: AppSpacing.sm),
-                      CachedNetworkImage(
-                        imageUrl: ApiConfig.completeImageUrl('public/92ac17422896646546913_miaoshajia.png'),
-                        width: 35.w,
-                        height: 15.h,
-                        errorWidget: (context, error, stackTrace) => const SizedBox.shrink(),
-                      ),
-                    ],
-                  ),
-                if (goods.salePrice != null && goods.salePrice!.isNotEmpty)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('¥', style: AppTextStyles.seckillPriceSymbol),
-                      Text('${goods.salePrice}', style: AppTextStyles.seckillPriceNumber),
-                    ],
-                  ),
-              ],
-            ),
-          ),
+        SizedBox(height: 8.h),
+        // 价格行（右对齐）
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            if (goods.originalPrice != null && 
+                goods.originalPrice.toString().isNotEmpty) ...[
+              Text(
+                '${goods.originalPrice}',
+                style: AppTextStyles.seckillOriginalPrice,
+              ),
+              // SizedBox(width: AppSpacing.xs),
+              CachedNetworkImage(
+                imageUrl: ApiConfig.completeImageUrl('public/92ac17422896646546913_miaoshajia.png'),
+                width: 35.w,
+                height: 15.h,
+                errorWidget: (context, error, stackTrace) => const SizedBox.shrink(),
+              ),
+              // SizedBox(width: AppSpacing.sm),
+            ],
+            if (goods.salePrice != null && goods.salePrice!.isNotEmpty)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('¥', style: AppTextStyles.seckillPriceSymbol),
+                  Text('${goods.salePrice}', style: AppTextStyles.seckillPriceNumber),
+                ],
+              ),
+          ],
         ),
       ],
     );
@@ -171,6 +162,7 @@ class SeckillCard extends StatelessWidget {
 
   /// 倒计时区域
   /// 对应小程序: .bottom-time (L71-76)
+  /// ⚠️ 暂时隐藏倒计时显示
   Widget _buildCountdown() {
     // ✅ 从 Mock 数据读取倒计时秒数 (seckill_countdown 字段)
     // 如果没有设置,默认 8小时 = 28800秒
@@ -181,6 +173,10 @@ class SeckillCard extends StatelessWidget {
 
     // print('🕒 秒杀倒计时: $countdownSeconds 秒 (商品ID: ${goods.goodsId})');
 
+    // ⚠️ 暂时隐藏倒计时，返回空 Widget
+    return const SizedBox.shrink();
+
+    /* ⚠️ 以下代码暂时注释，不要删除
     return SizedBox(
       height: 40.h,
       child: Align(
@@ -248,5 +244,6 @@ class SeckillCard extends StatelessWidget {
         ),
       ),
     );
+    */
   }
 }

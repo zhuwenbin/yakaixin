@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:yakaixin_app/core/theme/app_colors.dart';
 import 'package:yakaixin_app/core/theme/app_text_styles.dart';
 import 'package:yakaixin_app/core/utils/safe_type_converter.dart';
+import 'package:yakaixin_app/core/widgets/common_state_widget.dart';
 import 'package:yakaixin_app/app/routes/app_routes.dart';
 import 'package:yakaixin_app/features/exam/providers/test_exam_provider.dart';
 import 'package:yakaixin_app/features/exam/models/paper_model.dart';
@@ -544,30 +545,15 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
   }
 
   Widget _buildError(String error) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
-          SizedBox(height: 16.h),
-          Text(
-            error,
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 24.h),
-          ElevatedButton(
-            onPressed: () {
-              if (widget.id != null) {
-                ref
-                    .read(testExamNotifierProvider.notifier)
-                    .loadExamData(goodsId: widget.id!);
-              }
-            },
-            child: const Text('重试'),
-          ),
-        ],
-      ),
+    return CommonStateWidget.loadError(
+      message: error,
+      onRetry: () {
+        if (widget.id != null) {
+          ref
+              .read(testExamNotifierProvider.notifier)
+              .loadExamData(goodsId: widget.id!);
+        }
+      },
     );
   }
 
@@ -629,18 +615,8 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
   }
 
   Widget _buildEmpty() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.inbox_outlined, size: 64.sp, color: AppColors.textHint),
-          SizedBox(height: 16.h),
-          Text(
-            '暂无试卷数据',
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
-          ),
-        ],
-      ),
+    return CommonStateWidget.empty(
+      message: '暂无试卷数据',
     );
   }
 }

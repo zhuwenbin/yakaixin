@@ -175,6 +175,9 @@ class AppRoutes {
   /// P6-6 用户协议
   static const String userServiceAgreement = '/user-service-agreement';
 
+  /// P6-7 关于我们
+  static const String aboutUs = '/about-us';
+
   // ===== F7. 错题本模块 =====
 
   /// P7-1 错题本 - 错题列表

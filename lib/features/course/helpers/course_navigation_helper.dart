@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -41,6 +42,11 @@ class CourseNavigationHelper {
   /// - lessonId: 课节ID
   /// - lessonName: 课节名称（用于显示AppBar标题）
   /// - teachingType: 教学类型（"1": 直播, "3": 录播）
+  /// - classId: 班级ID（可选，用于签到接口）
+  /// - chapterData: 章节数据（可选，用于显示目录）
+  /// - goodsId: 商品ID（可选）
+  /// - orderId: 订单ID（可选）
+  /// - systemId: 系统ID（可选，用于讲义）
   /// 
   /// 返回:
   /// - Future<void>
@@ -50,6 +56,11 @@ class CourseNavigationHelper {
     required String lessonId,
     required String lessonName,
     required String teachingType,
+    String? classId, // ✅ 新增参数：班级ID（用于签到）
+    List<Map<String, dynamic>>? chapterData, // ✅ 章节数据
+    String? goodsId, // ✅ 商品ID
+    String? orderId, // ✅ 订单ID
+    String? systemId, // ✅ 系统ID
   }) async {
     try {
       EasyLoading.show(status: '加载中...');
@@ -57,36 +68,23 @@ class CourseNavigationHelper {
 
       // ✅ 录播课程（teaching_type == "3"）
       if (teachingType == '3') {
-        debugPrint('📹 [课程跳转] 录播课程，调用 playbackPath 接口');
+        debugPrint('📹 [课程跳转] 录播课程，跳转到视频播放页（VideoIndexPage）');
         
-        // 1. 调用 playbackPath 接口获取视频地址
-        final response = await dio.get(
-          '/c/study/learning/playbackPath',
-          queryParameters: {'lesson_id': lessonId},
-        );
-
+        // ✅ 直接跳转到视频播放页面，让VideoIndexPage自己调用接口获取视频地址
+        // 对应小程序: pages/study/newVideo/index
         EasyLoading.dismiss();
-
-        if (response.data['code'] != 100000) {
-          throw Exception(response.data['msg']?.first ?? '获取录播地址失败');
-        }
-
-        final data = response.data['data'];
-        if (data == null || data['path'] == null) {
-          throw Exception('录播数据为空');
-        }
-
-        final videoUrl = data['path'].toString();
-        debugPrint('📹 [课程跳转] 录播地址: $videoUrl');
-
-        // 2. 跳转到视频播放页面（WebView播放）
+        
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => LivePlayerPage(
+            builder: (context) => VideoIndexPage(
               lessonId: lessonId,
-              liveUrl: videoUrl,
-              lessonName: lessonName,
+              name: lessonName,
+              classId: classId, // ✅ 传递 classId（用于签到）
+              chapterData: chapterData, // ✅ 传递章节数据（用于显示目录）
+              goodsId: goodsId, // ✅ 传递商品ID
+              orderId: orderId, // ✅ 传递订单ID
+              systemId: systemId, // ✅ 传递系统ID（用于讲义）
             ),
           ),
         );
@@ -163,11 +161,18 @@ class CourseNavigationHelper {
       EasyLoading.dismiss();
       debugPrint('⚠️ [课程跳转] 未知课程类型，teaching_type: $teachingType');
       
+    } on DioException catch (e) {
+      EasyLoading.dismiss();
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载失败，请稍后重试';
+      debugPrint('❌ [课程跳转] 跳转失败: $errorMsg');
+      
+      EasyLoading.showError(errorMsg);
     } catch (e) {
       EasyLoading.dismiss();
-      debugPrint('❌ [课程跳转] 跳转失败: $e');
+      debugPrint('❌ [课程跳转] 未预期错误: $e');
       
-      EasyLoading.showError('加载失败：${e.toString()}');
+      EasyLoading.showError('加载失败，请稍后重试');
     }
   }
 

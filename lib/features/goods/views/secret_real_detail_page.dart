@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/utils/safe_type_converter.dart';
+import '../../../core/payment/payment_flow_manager.dart';
+import '../../../core/widgets/common_state_widget.dart';
 import '../providers/secret_real_detail_provider.dart';
 import '../models/goods_detail_model.dart';
 
@@ -79,38 +83,20 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
   }
 
   Widget _buildError(String error) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(50.h),
-        child: Column(
-          children: [
-            Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
-            SizedBox(height: AppSpacing.mdV),
-            Text(error, textAlign: TextAlign.center),
-            SizedBox(height: AppSpacing.lgV),
-            ElevatedButton(
-              onPressed: () {
-                if (widget.productId != null) {
-                  ref
-                      .read(secretRealDetailNotifierProvider.notifier)
-                      .refresh(widget.productId!);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-              ),
-              child: Text('重试', style: AppTextStyles.buttonMedium),
-            ),
-          ],
-        ),
-      ),
+    return CommonStateWidget.loadError(
+      message: error,
+      onRetry: () {
+        if (widget.productId != null) {
+          ref
+              .read(secretRealDetailNotifierProvider.notifier)
+              .refresh(widget.productId!);
+        }
+      },
     );
   }
 
   Widget _buildEmpty() {
-    return Center(
-      child: Text('暂无数据', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint)),
-    );
+    return CommonStateWidget.empty();
   }
 
   Widget _buildContent(GoodsDetailModel detail) {
@@ -222,10 +208,10 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
             _buildInfoRow('正确率', '$accuracyRate%'),
             SizedBox(height: AppSpacing.mdV),
             _buildInfoRowWithAction('错题', '查看错题', () {
-              // TODO: 跳转错题本（对应小程序 Line 221-230）
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('错题本功能开发中...')));
+              // // TODO: 跳转错题本（对应小程序 Line 221-230）
+              // ScaffoldMessenger.of(
+              //   context,
+              // ).showSnackBar(SnackBar(content: Text('错题本功能开发中...')));
             }),
             SizedBox(height: AppSpacing.mdV),
             _buildInfoRow('题库到期时间', examTime),
@@ -328,10 +314,58 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
         },
       );
     } else {
-      // 未购买 - 显示购买弹窗（对应小程序 Line 218，54-98）
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('购买功能开发中...')));
+      // 未购买 - 调用下单流程
+      // 对应小程序: secretRealDetail.vue Line 218, 532-608
+      _startPurchaseFlow(detail);
     }
+  }
+
+  /// 开始购买流程（使用统一支付管理器）
+  /// 对应小程序: secretRealDetail.vue Line 532-674
+  Future<void> _startPurchaseFlow(GoodsDetailModel detail) async {
+    // ✅ 获取选中的价格信息
+    // 注意：秘卷真题页面暂时使用第一个价格（小程序逻辑）
+    final selectedIndex = 0;
+    if (detail.prices.isEmpty || selectedIndex >= detail.prices.length) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('价格信息异常')),
+        );
+      }
+      return;
+    }
+
+    final selectedPrice = detail.prices[selectedIndex];
+    final payableAmount = double.tryParse(selectedPrice.salePrice ?? '0') ?? 0;
+    final goodsId = SafeTypeConverter.toSafeString(detail.goodsId);
+    final months = SafeTypeConverter.toSafeString(selectedPrice.month, defaultValue: '0');
+    final goodsMonthsPriceId = selectedPrice.goodsMonthsPriceId ?? '';
+
+    print('\n🛒 [秘卷真题] 开始下单:');
+    print('   商品ID: $goodsId');
+    print('   月数: $months');
+    print('   应付金额: ¥$payableAmount');
+
+    // ✅ 使用统一支付流程管理器
+    await context.startPayment(
+      ref: ref,
+      goodsId: goodsId,
+      goodsMonthsPriceId: goodsMonthsPriceId,
+      months: months,
+      payableAmount: payableAmount,
+      goodsName: detail.name ?? '秘卷真题',
+      professionalIdName: detail.professionalIdName,
+      refreshGoodsId: goodsId,
+      isLearnButton: 1,  // 支付成功页显示"去学习"按钮
+      onSuccess: () {
+        // 支付成功回调：刷新商品详情
+        print('✅ [秘卷真题] 支付成功，刷新商品详情');
+        ref.read(secretRealDetailNotifierProvider.notifier).refresh(goodsId);
+      },
+      onError: (error) {
+        // 支付失败回调
+        print('❌ [秘卷真题] 支付失败: $error');
+      },
+    );
   }
 }

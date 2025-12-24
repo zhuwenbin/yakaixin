@@ -128,7 +128,7 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
       // ✅ 创建WebView Controller
       _webViewController = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setBackgroundColor(Colors.black)
+        ..setBackgroundColor(const Color(0xFFF5F5F5)) // ✅ 浅灰色背景（更美观）
         ..setNavigationDelegate(
           NavigationDelegate(
             onPageStarted: (String url) {

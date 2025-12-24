@@ -24,48 +24,49 @@ class DailyPracticeCard extends StatelessWidget {
         children: [
           const SectionTitle(title: '每日一测'),
           SizedBox(height: 12.h),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 40.h),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFEBF8FF), Color(0xFFFFFFFF)],
-                stops: [0.0, 0.4],
-              ),
+          Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(16.r),
+            child: InkWell(
+              onTap: onTap,
               borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // 标题
-                Text(
-                  dailyPractice.name,
-                  style: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF161F30),
-                    height: 1.0,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 40.h),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFEBF8FF), Color(0xFFFFFFFF)],
+                    stops: [0.0, 0.4],
                   ),
+                  borderRadius: BorderRadius.circular(16.r),
                 ),
-                // 立即刷题按钮
-                Container(
-                  width: 100.w,
-                  height: 35.h,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFFFF860E), Color(0xFFFF6912)],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // 标题
+                    Text(
+                      dailyPractice.name,
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF161F30),
+                        height: 1.0,
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(35.r),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: onTap,
-                      borderRadius: BorderRadius.circular(35.r),
+                    // 立即刷题按钮
+                    Container(
+                      width: 100.w,
+                      height: 35.h,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFFFF860E), Color(0xFFFF6912)],
+                        ),
+                        borderRadius: BorderRadius.circular(35.r),
+                      ),
                       child: Center(
                         child: Text(
                           '立即刷题',
@@ -77,9 +78,9 @@ class DailyPracticeCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],

@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/utils/error_message_mapper.dart';
 import '../../goods/models/goods_detail_model.dart';
 import '../../goods/services/goods_service.dart';
 
@@ -32,9 +34,15 @@ class SimulatedExamRoomNotifier extends _$SimulatedExamRoomNotifier {
       final detail = await service.getGoodsDetail(goodsId: productId);
 
       state = state.copyWith(goodsDetail: detail, isLoading: false);
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载失败，请稍后重试';
+      print('❌ [模拟考场] 加载失败: $errorMsg');
+      state = state.copyWith(isLoading: false, error: errorMsg);
     } catch (e) {
-      print('❌ [模拟考场] 加载失败: $e');
-      state = state.copyWith(isLoading: false, error: e.toString());
+      // ✅ 兜底：未预期的错误
+      print('❌ [模拟考场] 未预期错误: $e');
+      state = state.copyWith(isLoading: false, error: '加载失败，请稍后重试');
     }
   }
 

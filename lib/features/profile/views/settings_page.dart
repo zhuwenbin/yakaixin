@@ -107,6 +107,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               context.push(AppRoutes.userServiceAgreement);
             },
           ),
+          _buildSettingItem(
+            title: '关于我们',
+            onTap: () {
+              context.push(AppRoutes.aboutUs);
+            },
+          ),
           
           // ✅ Debug 模式下显示调试工具开关
           if (kDebugMode) ...[

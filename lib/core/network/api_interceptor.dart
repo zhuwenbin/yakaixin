@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../app/config/api_config.dart';
 import '../../app/constants/storage_keys.dart';
 import '../storage/storage_service.dart';
+import '../utils/error_message_mapper.dart';
 
 /// API拦截器
 /// 对应小程序: src/api/request.js, src/modules/jintiku/utils/request.js
@@ -233,20 +234,37 @@ class ApiInterceptor extends Interceptor {
   }
 
   /// 提取错误消息
-  /// msg可能是字符串或数组
+  /// msg可能是字符串或数组，也可能是空值
+  /// 
+  /// 示例:
+  /// - msg: "账号密码不匹配" → "账号密码不匹配"
+  /// - msg: ["手机号格式错误", "验证码错误"] → "手机号格式错误, 验证码错误"
+  /// - msg: null → "哎呦,出错啦~~"
+  /// - msg: "" → "哎呦,出错啦~~"
   String _extractErrorMessage(dynamic msg) {
     if (msg == null) return '哎呦,出错啦~~';
     
     if (msg is String) {
-      return msg.isEmpty ? '哎呦,出错啦~~' : msg;
+      return msg.trim().isEmpty ? '哎呦,出错啦~~' : msg.trim();
     }
     
     if (msg is List) {
       if (msg.isEmpty) return '哎呦,出错啦~~';
-      return msg.join(', ');
+      
+      // ✅ 过滤空字符串后拼接
+      final nonEmptyMessages = msg
+          .where((item) => item != null && item.toString().trim().isNotEmpty)
+          .map((item) => item.toString().trim())
+          .toList();
+      
+      if (nonEmptyMessages.isEmpty) return '哎呦,出错啦~~';
+      
+      return nonEmptyMessages.join(', ');
     }
     
-    return '哎呦,出错啦~~';
+    // ✅ 其他类型（如Map、int等）转为字符串
+    final strMsg = msg.toString().trim();
+    return strMsg.isEmpty ? '哎呦,出错啦~~' : strMsg;
   }
 
   @override
@@ -259,47 +277,18 @@ class ApiInterceptor extends Interceptor {
     print('❌ [响应数据] ${err.response?.data}');
     print('❌ [响应状态码] ${err.response?.statusCode}');
 
-    // 网络错误统一提示: "哎呦,出错啦~~" (对应小程序)
-    String errorMessage = '哎呦,出错啦~~';
+    // ✅ 使用 ErrorMessageMapper 将错误转换为用户友好提示
+    final userFriendlyMessage = ErrorMessageMapper.mapDioException(err);
     
-    switch (err.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-        errorMessage = '网络超时,请稍后重试';
-        break;
-      case DioExceptionType.badResponse:
-        if (err.response?.statusCode == 401) {
-          errorMessage = '未授权,请登录';
-          _handleLoginExpired();
-        } else if (err.response?.statusCode == 404) {
-          errorMessage = '请求的资源不存在';
-        } else if (err.response?.statusCode == 500) {
-          errorMessage = '服务器错误';
-        } else {
-          // 尝试从响应中获取错误信息
-          if (err.response?.data is Map) {
-            final data = err.response!.data as Map<String, dynamic>;
-            errorMessage = data['message'] ?? data['msg'] ?? errorMessage;
-          }
-        }
-        break;
-      case DioExceptionType.cancel:
-        errorMessage = '请求已取消';
-        break;
-      case DioExceptionType.unknown:
-        if (err.error != null && err.error.toString().contains('SocketException')) {
-          errorMessage = '网络连接失败,请检查网络';
-        }
-        break;
-      default:
-        break;
+    // ✅ 特殊处理：401 登录失效
+    if (err.response?.statusCode == 401 || err.type == DioExceptionType.badResponse && err.response?.statusCode == 401) {
+      _handleLoginExpired();
     }
 
-    // 创建新的DioException,包含处理后的错误信息
+    // 创建新的DioException,包含用户友好的错误信息
     final newError = DioException(
       requestOptions: err.requestOptions,
-      error: errorMessage,
+      error: userFriendlyMessage,
       type: err.type,
       response: err.response,
     );

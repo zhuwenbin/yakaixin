@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/utils/error_message_mapper.dart';
 import '../models/wrong_question_model.dart';
 import '../services/wrong_book_service.dart';
 
@@ -69,10 +71,18 @@ class WrongBookNotifier extends _$WrongBookNotifier {
         fallibleQuestions: _flattenGroups(results[2].groups),
         isLoading: false,
       );
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载错题失败';
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: errorMsg,
+      );
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(
+        isLoading: false,
+        error: '加载错题失败，请稍后重试',
       );
     }
   }
@@ -100,8 +110,13 @@ class WrongBookNotifier extends _$WrongBookNotifier {
           state = state.copyWith(fallibleQuestions: _flattenGroups(response.groups));
           break;
       }
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '刷新失败';
+      state = state.copyWith(error: errorMsg);
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(error: '刷新失败，请稍后重试');
     }
   }
 
@@ -146,8 +161,14 @@ class WrongBookNotifier extends _$WrongBookNotifier {
         isMarked,
         markTab: markTab,
       );
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '标记操作失败';
+      state = state.copyWith(error: errorMsg);
+      rethrow;
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(error: '标记操作失败');
       rethrow;
     }
   }
@@ -166,8 +187,14 @@ class WrongBookNotifier extends _$WrongBookNotifier {
 
       // 从本地移除
       _removeQuestionFromLists(wrongAnswerBookId);
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '移除失败';
+      state = state.copyWith(error: errorMsg);
+      rethrow;
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(error: '移除失败，请稍后重试');
       rethrow;
     }
   }

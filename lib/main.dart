@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -17,6 +18,14 @@ import 'app/config/api_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // ✅ 默认锁定竖屏方向
+  // ⚠️ 注意：Chewie 播放器会在全屏时自动切换为横屏，退出全屏时恢复竖屏
+  // 这个设置只是默认值，不会阻止视频全屏时的横屏切换
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   
   // ✅ 1. 初始化 SharedPreferences
   final prefs = await SharedPreferences.getInstance();

@@ -8,6 +8,7 @@ import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crypto/crypto.dart';
+import 'package:flutter_html/flutter_html.dart';
 import '../services/video_service.dart';
 import '../../../core/utils/safe_type_converter.dart';
 import '../../../core/storage/storage_service.dart';
@@ -58,6 +59,7 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
   String _currentLessonId = '';
   String? _goodsId;
   String? _filterGoodsId; // ✅ 实际用于获取目录的ID
+  bool _hasSignedIn = false; // ✅ 防止重复签到标志
 
   @override
   void initState() {
@@ -297,47 +299,61 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
   }
 
   /// 初始化视频播放器
+  /// 参考 Chewie 官方示例：https://github.com/fluttercommunity/chewie
   Future<void> _initVideoPlayer(String url, double initialTime) async {
     try {
-      // ✅ 使用管理器初始化 video_player
       debugPrint('🎬 [视频播放] 开始初始化播放器');
-      _videoPlayerController = await VideoPlayerManager.instance.initVideoPlayer(url);
       
-      // 释放旧的 chewie 控制器
+      // 1. 初始化 VideoPlayerController
+      _videoPlayerController = await VideoPlayerManager.instance.initVideoPlayer(url);
+      await _videoPlayerController!.initialize();
+      
+      // 2. 释放旧的 Chewie Controller
       _chewieController?.dispose();
 
+      // 3. 创建 ChewieController（官方推荐配置）
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController!,
         autoPlay: true,
         looping: false,
-        aspectRatio: 16 / 9,
+        // ✅ 使用视频原始宽高比（关键！）
+        aspectRatio: _videoPlayerController!.value.aspectRatio,
         allowFullScreen: true,
         allowMuting: true,
         showControls: true,
         startAt: Duration(seconds: initialTime.toInt()),
-        // ✅ 添加黑色占位符（加载时显示）
+        // ✅ Material 风格控制条
+        materialProgressColors: ChewieProgressColors(
+          playedColor: const Color(0xFF3B7BFB),
+          handleColor: const Color(0xFF3B7BFB),
+          backgroundColor: Colors.grey.shade300,
+          bufferedColor: Colors.grey.shade400,
+        ),
+        // ✅ 占位符
         placeholder: Container(
           color: Colors.black,
           child: const Center(
-            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+            child: CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 3,
+            ),
           ),
         ),
-        // ✅ 完善全屏逻辑
-        deviceOrientationsAfterFullScreen: [
-          DeviceOrientation.portraitUp,
-          DeviceOrientation.portraitDown,
-        ],
-        deviceOrientationsOnEnterFullScreen: [
-          DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight,
-        ],
-        systemOverlaysAfterFullScreen: SystemUiOverlay.values,
+        // ✅ 错误处理
+        errorBuilder: (context, errorMessage) {
+          return Center(
+            child: Text(
+              '视频加载失败: $errorMessage',
+              style: const TextStyle(color: Colors.white),
+            ),
+          );
+        },
       );
 
-      // 监听播放进度
+      // 4. 监听播放进度
       _videoPlayerController!.addListener(_onVideoProgress);
 
-      // 启动定时器保存进度
+      // 5. 启动定时器保存进度
       _progressTimer?.cancel();
       _progressTimer = Timer.periodic(const Duration(seconds: 5), (_) {
         _saveProgress();
@@ -348,35 +364,62 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
       }
       
       debugPrint('✅ [视频播放] 播放器初始化成功');
+      debugPrint('📐 [视频比例] ${_videoPlayerController!.value.aspectRatio}');
       
     } catch (e) {
       debugPrint('❌ [视频播放] 初始化失败: $e');
       
-      // 如果是冲突异常，显示友好的错误信息
+      String errorMessage = '视频加载失败';
+      
+      // ✅ 检查错误类型，提供更友好的提示
+      final errorString = e.toString().toLowerCase();
+      
       if (e is VideoPlayerConflictException) {
-        if (mounted) {
-          setState(() {
-            _error = '播放器冲突：${e.message}';
-          });
-        }
-        
-        // 显示提示
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.message),
-              duration: const Duration(seconds: 5),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        errorMessage = '播放器冲突：${e.message}';
+      } else if (errorString.contains('mediacodec') ||
+          errorString.contains('exoplaybackexception') ||
+          errorString.contains('videorenderer')) {
+        // ✅ MediaCodec 错误（硬件解码器不支持）
+        errorMessage = '设备不支持该视频格式，请尝试：\n'
+            '1. 更新系统到最新版本\n'
+            '2. 重启应用后重试\n'
+            '3. 联系客服获取帮助';
+      } else if (errorString.contains('timeout') || errorString.contains('超时')) {
+        errorMessage = '视频加载超时，请检查网络连接';
+      } else if (errorString.contains('network') || errorString.contains('网络')) {
+        errorMessage = '网络连接失败，请检查网络设置';
       } else {
-        rethrow;
+        errorMessage = '视频加载失败：${e.toString()}';
+      }
+      
+      if (mounted) {
+        setState(() {
+          _error = errorMessage;
+        });
+      }
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 5),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: '重试',
+              textColor: Colors.white,
+              onPressed: () {
+                // ✅ 重试加载
+                _loadVideoData();
+              },
+            ),
+          ),
+        );
       }
     }
   }
 
   /// 视频进度监听
+  /// 对应小程序: newVideo.vue onTimeUpdate() + videoNearEnd()
   void _onVideoProgress() {
     if (_videoPlayerController != null &&
         _videoPlayerController!.value.isInitialized) {
@@ -385,6 +428,54 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
       if ((newTime - _currentTime).abs() > 1) {
         _currentTime = newTime;
       }
+      
+      // ✅ 视频快结束时签到（对应小程序 videoNearEnd）
+      // 小程序逻辑：Line 180-204
+      final duration = _videoPlayerController!.value.duration.inSeconds.toDouble();
+      final position = _videoPlayerController!.value.position.inSeconds.toDouble();
+      
+      // ✅ 剩余30秒时签到（只签到一次，防止重复调用）
+      if (!_hasSignedIn && duration > 0 && (duration - position) <= 30) {
+        _hasSignedIn = true; // ✅ 标记已签到
+        _performClassSignin();
+      }
+    }
+  }
+  
+  /// 执行课程签到
+  /// 对应小程序: newVideo.vue videoNearEnd() Line 180-204
+  Future<void> _performClassSignin() async {
+    if (_currentLessonId.isEmpty) {
+      debugPrint('⚠️ [课程签到] 课节ID为空，跳过签到');
+      return;
+    }
+    
+    try {
+      final storage = ref.read(storageServiceProvider);
+      final userInfo = storage.getJson(StorageKeys.userInfo);
+      final studentId = userInfo?['student_id']?.toString() ?? '';
+      
+      if (studentId.isEmpty) {
+        debugPrint('⚠️ [课程签到] 学生ID为空，跳过签到');
+        return;
+      }
+      
+      debugPrint('📝 [课程签到] 视频快结束，开始签到...');
+      debugPrint('   lesson_id: $_currentLessonId');
+      debugPrint('   class_id: ${widget.classId}');
+      debugPrint('   student_id: $studentId');
+      
+      final videoService = ref.read(videoServiceProvider);
+      await videoService.classSignin(
+        lessonId: _currentLessonId,
+        classId: widget.classId, // ✅ 使用从上一页传入的 classId
+        studentId: studentId,
+      );
+      
+      debugPrint('✅ [课程签到] 签到请求已发送');
+    } catch (e) {
+      debugPrint('❌ [课程签到] 签到失败: $e');
+      // ✅ 签到失败不影响视频播放
     }
   }
 
@@ -477,8 +568,12 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
 
     final systemId = section['system_id']?.toString() ?? '';
 
+    // ✅ 重置签到标志（切换课节时重置）
+    _hasSignedIn = false;
+
     // ✅ 优化策略：先显示loading，后台释放
     final oldChewieController = _chewieController;
+    final oldVideoPlayerController = _videoPlayerController;
 
     // ✅ 1. 立即更新UI状态，显示黑色背景
     setState(() {
@@ -489,10 +584,19 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
     });
 
     // ✅ 2. 异步释放旧控制器（不阻塞UI）
-    Future.microtask(() {
-      oldChewieController?.dispose();
-      // ✅ 使用管理器释放 video_player
-      VideoPlayerManager.instance.disposeVideoPlayer();
+    Future.microtask(() async {
+      try {
+        // ✅ 先暂停播放，防止 dispose 后计时器仍然触发
+        await oldVideoPlayerController?.pause();
+        // ✅ 稍微延迟，确保计时器停止
+        await Future.delayed(const Duration(milliseconds: 100));
+        // ✅ 释放 Chewie
+        oldChewieController?.dispose();
+        // ✅ 使用管理器释放 video_player
+        VideoPlayerManager.instance.disposeVideoPlayer();
+      } catch (e) {
+        debugPrint('⚠️ [视频切换] 释放旧控制器失败: $e');
+      }
     });
 
     // ✅ 3. 后台加载讲义
@@ -514,24 +618,40 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
         foregroundColor: Colors.black,
         elevation: 0,
       ),
+      // ✅ 不使用 SafeArea，让 Chewie 全屏时自动占满整个屏幕
       body: _error != null ? _buildError() : _buildContent(),
     );
   }
 
   Widget _buildError() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
-          SizedBox(height: 16.h),
-          Text(
-            _error ?? '加载失败',
-            style: TextStyle(fontSize: 14.sp, color: Colors.red),
-          ),
-          SizedBox(height: 16.h),
-          ElevatedButton(onPressed: _loadVideoData, child: const Text('重试')),
-        ],
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 32.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
+            SizedBox(height: 16.h),
+            Text(
+              _error ?? '加载失败',
+              style: TextStyle(fontSize: 14.sp, color: Colors.red),
+              textAlign: TextAlign.center,
+              maxLines: 10,
+              overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(height: 24.h),
+            ElevatedButton(
+              onPressed: () {
+                // ✅ 清除错误状态后重试
+                setState(() {
+                  _error = null;
+                });
+                _loadVideoData();
+              },
+              child: const Text('重试'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -539,17 +659,21 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
   Widget _buildContent() {
     return Column(
       children: [
-        // ✅ 视频播放器区域（加载中显示占位符）
+        // ✅ 视频播放器区域（官方推荐：AspectRatio 包裹）
         AspectRatio(
           aspectRatio: 16 / 9,
-          child: _chewieController != null
-              ? Chewie(controller: _chewieController!)
-              : Container(
-                  color: Colors.black,
-                  child: const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+          child: Container(
+            color: Colors.black,
+            child: _chewieController != null &&
+                    _chewieController!.videoPlayerController.value.isInitialized
+                ? Chewie(controller: _chewieController!)
+                : const Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 3,
+                    ),
                   ),
-                ),
+          ),
         ),
         // 课程标题
         _buildTitle(),
@@ -578,7 +702,15 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
 
   Widget _buildTabBar() {
     return Container(
-      color: Colors.white,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: Color(0xFFE5E5E5),
+            width: 1,
+          ),
+        ),
+      ),
       child: Row(children: [_buildTabItem(1, '目录'), _buildTabItem(2, '讲义')]),
     );
   }
@@ -782,12 +914,101 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
       );
     }
 
-    // TODO: 使用webview或html渲染器显示HTML内容
+    // ✅ 使用 flutter_html 渲染 HTML 内容（参考小程序 v-html）
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.w),
-      child: Text(
-        _handoutContent,
-        style: TextStyle(fontSize: 14.sp, color: const Color(0xFF262629)),
+      child: Html(
+        data: _handoutContent,
+        style: {
+          // 全局样式
+          "*": Style(
+            fontSize: FontSize(14.sp),
+            color: const Color(0xFF262629),
+            lineHeight: const LineHeight(1.6),
+          ),
+          // 段落样式
+          "p": Style(
+            margin: Margins.only(bottom: 12.h),
+          ),
+          // 标题样式
+          "h1": Style(
+            fontSize: FontSize(20.sp),
+            fontWeight: FontWeight.bold,
+            margin: Margins.only(bottom: 16.h, top: 16.h),
+          ),
+          "h2": Style(
+            fontSize: FontSize(18.sp),
+            fontWeight: FontWeight.bold,
+            margin: Margins.only(bottom: 14.h, top: 14.h),
+          ),
+          "h3": Style(
+            fontSize: FontSize(16.sp),
+            fontWeight: FontWeight.w600,
+            margin: Margins.only(bottom: 12.h, top: 12.h),
+          ),
+          // 列表样式
+          "ul": Style(
+            padding: HtmlPaddings.only(left: 20.w),
+            margin: Margins.only(bottom: 12.h),
+          ),
+          "ol": Style(
+            padding: HtmlPaddings.only(left: 20.w),
+            margin: Margins.only(bottom: 12.h),
+          ),
+          "li": Style(
+            margin: Margins.only(bottom: 6.h),
+          ),
+          // 图片样式
+          "img": Style(
+            width: Width.auto(),
+            margin: Margins.symmetric(vertical: 10.h),
+          ),
+          // 代码样式
+          "code": Style(
+            backgroundColor: const Color(0xFFF5F5F5),
+            padding: HtmlPaddings.symmetric(horizontal: 4.w, vertical: 2.h),
+            fontFamily: 'monospace',
+          ),
+          "pre": Style(
+            backgroundColor: const Color(0xFFF5F5F5),
+            padding: HtmlPaddings.all(12.w),
+            margin: Margins.only(bottom: 12.h),
+          ),
+          // 引用样式
+          "blockquote": Style(
+            border: const Border(
+              left: BorderSide(color: Color(0xFF3B7BFB), width: 4),
+            ),
+            padding: HtmlPaddings.only(left: 12.w),
+            margin: Margins.only(bottom: 12.h),
+            backgroundColor: const Color(0xFFF8F8F8),
+          ),
+          // 表格样式
+          "table": Style(
+            border: const Border.fromBorderSide(
+              BorderSide(color: Color(0xFFE5E5E5), width: 1),
+            ),
+            margin: Margins.only(bottom: 12.h),
+          ),
+          "th": Style(
+            padding: HtmlPaddings.all(8.w),
+            backgroundColor: const Color(0xFFF5F5F5),
+            fontWeight: FontWeight.bold,
+          ),
+          "td": Style(
+            padding: HtmlPaddings.all(8.w),
+            border: const Border.fromBorderSide(
+              BorderSide(color: Color(0xFFE5E5E5), width: 1),
+            ),
+          ),
+        },
+        // ✅ 链接处理
+        onLinkTap: (url, attributes, element) {
+          if (url != null) {
+            debugPrint('[讲义] 点击链接: $url');
+            // TODO: 使用 url_launcher 打开链接
+          }
+        },
       ),
     );
   }

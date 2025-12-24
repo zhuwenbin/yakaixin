@@ -185,9 +185,10 @@ class _PurchasedItem extends StatelessWidget {
             ),
             
             // ✅ 开考时间（对应小程序 Line 12-15）
+            // 小程序逻辑：if (info.type == 10) { system_id_name = `开考时间:${info.tiku_goods_details.exam_time}` }
             SizedBox(height: 20.h), // 对应小程序 40rpx/2=20
             Text(
-              '开考时间:${goods.createdAt ?? "-"}',
+              '开考时间:${goods.tikuGoodsDetails?.examTime ?? "-"}',
               style: TextStyle(
                 fontSize: 12.sp, // 对应小程序 24rpx/2=12
                 color: const Color(0xFF777777), // 对应小程序 Line 440

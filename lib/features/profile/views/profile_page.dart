@@ -265,14 +265,14 @@ class ProfilePage extends ConsumerWidget {
   /// 构建功能列表
   Widget _buildMenuList(BuildContext context, WidgetRef ref) {
     final menuItems = [
-      {
-        'icon': ApiConfig.completeImageUrl('wallet.png'),
-        'title': '我的余额',
-        'onTap': () {
-          // 跳转到余额页面
-          context.push('/balance');
-        },
-      },
+      // {
+      //   'icon': ApiConfig.completeImageUrl('wallet.png'),
+      //   'title': '我的余额',
+      //   'onTap': () {
+      //     // 跳转到余额页面
+      //     context.push('/balance');
+      //   },
+      // },
       {
         'icon': ApiConfig.completeImageUrl('file.png'),
         'title': '我的订单',

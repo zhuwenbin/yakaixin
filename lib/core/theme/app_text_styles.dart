@@ -141,14 +141,14 @@ class AppTextStyles {
   
   /// 秒杀价格数字 - 20sp, 粗体, 粉红
   static TextStyle seckillPriceNumber = TextStyle(
-    fontSize: 20.sp,
+    fontSize: 14.sp,
     fontWeight: FontWeight.w800,
     color: AppColors.seckillPrice,
   );
   
   /// 秒杀原价 - 16sp, 粗体, 灰色, 删除线
   static TextStyle seckillOriginalPrice = TextStyle(
-    fontSize: 16.sp,
+    fontSize: 12.sp,
     fontWeight: FontWeight.w800,
     color: Color(0xFFA3A3A3),
     decoration: TextDecoration.lineThrough,

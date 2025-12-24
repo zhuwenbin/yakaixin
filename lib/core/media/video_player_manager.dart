@@ -43,7 +43,9 @@ class VideoPlayerManager {
   /// 初始化 video_player
   /// 
   /// 确保百家云未运行后才能初始化
-  Future<VideoPlayerController> initVideoPlayer(String url) async {
+  /// 
+  /// [retryCount] 重试次数，默认 0（不重试）
+  Future<VideoPlayerController> initVideoPlayer(String url, {int retryCount = 0}) async {
     // 等待之前的操作完成
     await _lock.future;
     
@@ -61,6 +63,9 @@ class VideoPlayerManager {
       
       debugPrint('🎬 [VideoPlayerManager] 开始初始化 video_player');
       debugPrint('📹 [VideoPlayerManager] URL: $url');
+      if (retryCount > 0) {
+        debugPrint('🔄 [VideoPlayerManager] 重试次数: $retryCount');
+      }
       
       // ✅ 彻底释放旧实例
       await _disposeVideoPlayerInternal();
@@ -70,8 +75,16 @@ class VideoPlayerManager {
         Uri.parse(url),
       );
       
-      // ✅ 初始化
-      await _videoPlayerController!.initialize();
+      // ✅ 初始化（带超时处理）
+      await _videoPlayerController!.initialize().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw TimeoutException(
+            '视频初始化超时，请检查网络连接或视频地址',
+            const Duration(seconds: 30),
+          );
+        },
+      );
       
       debugPrint('✅ [VideoPlayerManager] video_player 初始化成功');
       
@@ -79,6 +92,21 @@ class VideoPlayerManager {
       
     } catch (e) {
       debugPrint('❌ [VideoPlayerManager] 初始化失败: $e');
+      
+      // ✅ 检查是否是 MediaCodec 错误（硬件解码器不支持）
+      final errorString = e.toString().toLowerCase();
+      final isMediaCodecError = errorString.contains('mediacodec') ||
+          errorString.contains('exoplaybackexception') ||
+          errorString.contains('videorenderer');
+      
+      if (isMediaCodecError && retryCount < 2) {
+        debugPrint('⚠️ [VideoPlayerManager] 检测到解码器错误，尝试重试...');
+        await _disposeVideoPlayerInternal();
+        // ⚠️ 等待一段时间后重试
+        await Future.delayed(const Duration(milliseconds: 500));
+        return initVideoPlayer(url, retryCount: retryCount + 1);
+      }
+      
       await _disposeVideoPlayerInternal();
       rethrow;
     } finally {

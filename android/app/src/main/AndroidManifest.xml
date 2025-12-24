@@ -1,14 +1,36 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 微信SDK所需权限 -->
+    <!-- ============ 基础网络权限 ============ -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    
+    <!-- ============ 存储权限 ============ -->
+    <!-- Android 12 及以下：使用传统存储权限 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="32" />
+    <!-- Android 13+：使用细化的媒体权限 -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    
+    <!-- ============ 相机权限 ============ -->
+    <!-- 用于拍照功能（纠错、个人信息编辑） -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    
+    <!-- ============ 麦克风权限 ============ -->
+    <!-- 用于直播功能 -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    
+    <!-- ============ 视频播放硬件特性 ============ -->
+    <uses-feature android:name="android.hardware.video.output" android:required="false" />
+    <uses-feature android:name="android.software.video.decoder" android:required="false" />
+    <!-- 相机硬件特性（可选，不强制要求） -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
     
     <application
-        android:label="yakaixin_app"
+        android:label="牙开心学堂"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -19,7 +41,9 @@
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="portrait"
+            android:usesCleartextTraffic="true">
             <!-- Specifies an Android theme to apply to this Activity as soon as
                  the Android process has started. This theme is visible to the user
                  while the Flutter UI initializes. After that, this theme continues

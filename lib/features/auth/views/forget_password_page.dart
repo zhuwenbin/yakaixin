@@ -120,14 +120,19 @@ class _ForgetPasswordPageState extends ConsumerState<ForgetPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('忘记密码'),
+    return GestureDetector(
+      // ✅ 点击空白区域隐藏键盘
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SafeArea(
+        appBar: AppBar(
+          title: const Text('忘记密码'),
+          backgroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: SafeArea(
         child: SingleChildScrollView(
           padding: AppSpacing.allMd,
           child: Form(
@@ -249,7 +254,7 @@ class _ForgetPasswordPageState extends ConsumerState<ForgetPasswordPage> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   /// 通用输入框

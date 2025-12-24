@@ -75,13 +75,34 @@ class StudyCalendarCard extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _StatItem(label: '坚持打卡', value: '$checkinNum', unit: '天'),
+        _StatItem(label: '累计坚持天数', value: '$checkinNum', unit: '天'),
         _buildDivider(),
-        _StatItem(label: '做题总数', value: '$totalNum', unit: '题'),
+        _StatItem(label: '考试倒计时天数', value: _calculateCountdown(), unit: '天'),
         _buildDivider(),
-        _StatItem(label: '正确率', value: correctRate, unit: '%'),
+        _ThirdStatItem(totalNum: totalNum, correctRate: correctRate),
       ],
     );
+  }
+
+  /// 计算考试倒计时天数
+  /// 目标日期：每年8月22日
+  /// 如果今年的8月22日已过，则计算到明年8月22日的天数
+  String _calculateCountdown() {
+    final today = DateTime.now();
+    final currentYear = today.year;
+    
+    // 创建今年的8月22日
+    var targetDate = DateTime(currentYear, 8, 22);
+    
+    // 如果今年的8月22日已经过了，就设置为明年的8月22日
+    if (today.isAfter(targetDate)) {
+      targetDate = DateTime(currentYear + 1, 8, 22);
+    }
+    
+    // 计算天数差
+    final daysDiff = targetDate.difference(today).inDays;
+    
+    return daysDiff.toString();
   }
 
   Widget _buildDivider() {
@@ -174,7 +195,7 @@ class StudyCalendarCard extends StatelessWidget {
   }
 }
 
-/// 统计项组件
+/// 统计项组件（前两项）
 class _StatItem extends StatelessWidget {
   final String label;
   final String value;
@@ -215,6 +236,41 @@ class _StatItem extends StatelessWidget {
         Text(
           label,
           style: AppTextStyles.labelMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 第三项统计组件（做题数/正确率）
+class _ThirdStatItem extends StatelessWidget {
+  final int totalNum;
+  final String correctRate;
+
+  const _ThirdStatItem({
+    required this.totalNum,
+    required this.correctRate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '做题数:$totalNum',
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Text(
+          '正确率:$correctRate%',
+          style: TextStyle(
+            fontSize: 13.sp,
             color: AppColors.textSecondary,
           ),
         ),

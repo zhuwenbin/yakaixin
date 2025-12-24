@@ -353,6 +353,8 @@ class IAPService {
           receiptData: receiptData,
           orderId: _currentOrderId!,
           financeBodyId: _currentFinanceBodyId!,  // ✅ 使用财务主体ID
+          productId: purchaseDetails.productID,  // ✅ 当前购买的产品ID
+          transactionId: purchaseDetails.purchaseID ?? '',  // ✅ 当前交易ID
         );
         
         if (!verifyResult['success']) {
@@ -452,6 +454,8 @@ class IAPService {
               receiptData: receiptData,
               orderId: orderId,
               financeBodyId: financeBodyId,  // ✅ 使用缓存中的财务主体ID
+              productId: productId,  // ✅ 产品ID
+              transactionId: transactionId,  // ✅ 交易ID
             );
             
             if (!verifyResult['success']) {
@@ -490,11 +494,15 @@ class IAPService {
     required String receiptData,
     required String orderId,
     required String financeBodyId,  // ✅ 财务主体ID
+    required String productId,  // ✅ 产品ID
+    required String transactionId,  // ✅ 交易ID
   }) async {
     try {
       debugPrint('后台验证：开始');
       debugPrint('流水ID: $orderId');
       debugPrint('财务主体ID: $financeBodyId');
+      debugPrint('产品ID: $productId');
+      debugPrint('交易ID: $transactionId');
       debugPrint('票据数据长度: ${receiptData.length} 字符');
       
       final response = await _dioClient.post(
@@ -503,6 +511,8 @@ class IAPService {
           'receipt_data': receiptData,
           'flow_id': int.tryParse(orderId) ?? 0,  // ✅ 流水ID
           'finance_body_id': int.tryParse(financeBodyId) ?? 0,  // ✅ 财务主体ID
+          'product_id': productId,  // ✅ 当前购买的产品ID
+          'transaction_id': transactionId,  // ✅ 当前交易ID
         },
         options: Options(
           contentType: Headers.jsonContentType,

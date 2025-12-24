@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/my_course_provider.dart';
 import '../../main/main_tab_page.dart';
 import '../../../../app/config/api_config.dart';
+import '../../../core/widgets/common_state_widget.dart';
 import '../widgets/course_item_card.dart';
 
 /// 我的课程页面 - 对应小程序 study/myCourse/index.vue
@@ -132,24 +133,9 @@ class _MyCoursePageState extends ConsumerState<MyCoursePage> {
     }
 
     if (state.error != null && state.courseList.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
-            SizedBox(height: 16.h),
-            Text(
-              state.error ?? '加载失败',
-              style: TextStyle(fontSize: 14.sp, color: Colors.red),
-            ),
-            SizedBox(height: 16.h),
-            ElevatedButton(
-              onPressed: () =>
-                  ref.read(myCourseNotifierProvider.notifier).refresh(),
-              child: const Text('重试'),
-            ),
-          ],
-        ),
+      return CommonStateWidget.loadError(
+        message: state.error!,
+        onRetry: () => ref.read(myCourseNotifierProvider.notifier).refresh(),
       );
     }
 
@@ -185,56 +171,15 @@ class _MyCoursePageState extends ConsumerState<MyCoursePage> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.network(
-            ApiConfig.completeImageUrl(
-              'public/4045173295663081752515_8b3592c2dcddcac66af8ddd46abbbf1b74efa19fac63-AlBs3V_fw1200%402x.png',
-            ),
-            width: 156.w,
-            height: 102.h,
-            errorBuilder: (_, __, ___) => Icon(
-              Icons.school_outlined,
-              size: 80.sp,
-              color: Colors.grey[300],
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            '未找到符合的学习内容',
-            style: TextStyle(fontSize: 12.sp, color: const Color(0xFF999999)),
-          ),
-          SizedBox(height: 32.h),
-          GestureDetector(
-            onTap: () {
-              // ✅ 修复：返回MainTabBar并切换到“课程”Tab（index=2）
-              // MainTabPage的Tab索引：0=首页, 1=题库, 2=课程, 3=我的
-              context.go('/main-tab');
-              // 切换到课程Tab
-              ref.read(mainTabIndexProvider.notifier).state = 2;
-            },
-            child: Container(
-              width: 122.w,
-              height: 34.h,
-              decoration: BoxDecoration(
-                color: const Color(0xFF018CFF),
-                borderRadius: BorderRadius.circular(22.r),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                '我要去选课',
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return CommonStateWidget.noCourse(
+      message: '未找到符合的学习内容',
+      onAction: () {
+        // ✅ 修复：返回MainTabBar并切换到“课程”Tab（index=2）
+        // MainTabPage的Tab索引：0=首页, 1=题库, 2=课程, 3=我的
+        context.go('/main-tab');
+        // 切换到课程Tab
+        ref.read(mainTabIndexProvider.notifier).state = 2;
+      },
     );
   }
 }

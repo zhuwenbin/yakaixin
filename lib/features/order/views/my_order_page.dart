@@ -10,6 +10,8 @@ import '../providers/order_provider.dart';
 import '../providers/payment_provider.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../../app/config/api_config.dart';
+import '../../../core/widgets/common_state_widget.dart';
+import '../../../core/utils/error_message_mapper.dart';
 
 /// 我的订单页面
 /// 对应小程序: src/modules/jintiku/pages/test/order.vue
@@ -170,9 +172,18 @@ class _OrderListViewState extends ConsumerState<_OrderListView> {
           );
         },
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Text('加载失败: $error'),
-        ),
+        error: (error, stack) {
+          // ✅ 使用统一的错误信息提取工具
+          final errorMessage = ErrorMessageMapper.extractUserFriendlyMessage(
+            error,
+            '加载订单列表失败',
+          );
+          
+          return CommonStateWidget.loadError(
+            message: errorMessage,
+            onRetry: () => ref.read(orderListProvider(widget.status).notifier).refresh(),
+          );
+        },
       ),
     );
   }
@@ -180,31 +191,7 @@ class _OrderListViewState extends ConsumerState<_OrderListView> {
   /// 构建空视图
   /// 对应小程序: .not_data 样式
   Widget _buildEmptyView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.network(
-            ApiConfig.completeImageUrl('public/16954369620338446169543696203498545_%E7%BC%96%E7%BB%84%402x%20(4).png'),
-            width: 114.w,
-            height: 90.h,
-            errorBuilder: (context, error, stack) => Icon(
-              Icons.inbox,
-              size: 64.sp,
-              color: Colors.grey,
-            ),
-          ),
-          SizedBox(height: 20.h),
-          Text(
-            '暂无订单！',
-            style: TextStyle(
-              fontSize: 13.sp,
-              color: Color(0xFFCCCCCC),
-            ),
-          ),
-        ],
-      ),
-    );
+    return CommonStateWidget.noOrder();
   }
 }
 

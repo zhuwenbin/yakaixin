@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../services/my_course_service.dart';
@@ -76,11 +77,20 @@ class MyCourseNotifier extends _$MyCourseNotifier {
           isLoading: false,
         );
       }
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载失败，请稍后重试';
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,
-        error: e.toString(),
+        error: errorMsg,
+      );
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(
+        isLoading: false,
+        isLoadingMore: false,
+        error: '加载失败，请稍后重试',
       );
     }
   }

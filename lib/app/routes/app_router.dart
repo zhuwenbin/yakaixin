@@ -16,6 +16,10 @@ import '../../features/question_bank/views/chapter_list_page.dart';
 import '../../features/question_bank/views/make_question_page.dart';
 import '../../features/question_bank/views/wrong_book_page.dart';
 import '../../features/collection/views/collection_page.dart';
+import '../../features/collection/views/collection_detail_page.dart';
+import '../../features/question_bank/views/wrong_book_detail_page.dart';
+import '../../features/wrong_book/models/wrong_question_model.dart';
+import '../../features/collection/models/collection_question_model.dart';
 import '../../features/challenge/views/challenge_index_page.dart';
 import '../../features/challenge/views/level_list_page.dart';
 import '../../features/challenge/views/challenge_practise_page.dart';
@@ -54,6 +58,7 @@ import '../../features/profile/views/settings_page.dart';
 import '../../features/profile/views/report_center_page.dart';
 import '../../features/profile/views/privacy_policy_page.dart';
 import '../../features/profile/views/user_service_agreement_page.dart';
+import '../../features/profile/views/about_us_page.dart';
 import '../../features/activity/views/code_receive_page.dart';
 import '../../features/activity/views/app_upload_page.dart';
 import '../../features/activity/views/open_app_page.dart';
@@ -84,7 +89,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == AppRoutes.h5Login ||
           state.matchedLocation == AppRoutes.forgetPassword ||  // ✅ 忘记密码
           state.matchedLocation == AppRoutes.changePassword ||  // ✅ 修改密码
-          state.matchedLocation == AppRoutes.selectMajor;       // ✅ 选择专业
+          state.matchedLocation == AppRoutes.selectMajor ||     // ✅ 选择专业
+          state.matchedLocation == AppRoutes.privacyPolicy ||   // ✅ 隐私政策
+          state.matchedLocation == AppRoutes.userServiceAgreement ||  // ✅ 用户服务协议
+          state.matchedLocation == AppRoutes.aboutUs;  // ✅ 关于我们
 
       // 如果在启动页，不拦截
       if (state.matchedLocation == AppRoutes.splash) {
@@ -156,8 +164,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.chapterDetail,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
-          // TODO: 实现ChapterDetailPage
-          return const Placeholder();
+          // ✅ 章节详情直接跳转到做题页（与小程序逻辑一致）
+          return MakeQuestionPage(extra: extra);
         },
       ),
       GoRoute(
@@ -171,8 +179,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.lookAnalysis,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
-          // TODO: 实现LookAnalysisPage（或与MakeQuestionPage合并）
-          return const Placeholder();
+          // ✅ 查看解析模式：跳转到做题页并传递 is_look_analysis 参数
+          final newExtra = Map<String, dynamic>.from(extra ?? {});
+          newExtra['is_look_analysis'] = true;
+          return MakeQuestionPage(extra: newExtra);
         },
       ),
       GoRoute(
@@ -504,6 +514,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.userServiceAgreement,
         builder: (context, state) => const UserServiceAgreementPage(),
       ),
+      GoRoute(
+        path: AppRoutes.aboutUs,
+        builder: (context, state) => const AboutUsPage(),
+      ),
 
       // ===== F7. 错题本模块 =====
       GoRoute(
@@ -514,8 +528,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.wrongBookDetail,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
-          // TODO: 实现错题详情页（或直接使用MakeQuestionPage）
-          return const Placeholder();
+          // ✅ 使用已实现的错题详情页
+          final questions = extra?['questions'] as List<WrongQuestionModel>?;
+          if (questions == null || questions.isEmpty) {
+            return const Scaffold(
+              body: Center(child: Text('暂无错题数据')),
+            );
+          }
+          return WrongBookDetailPage(
+            questions: questions,
+            initialIndex: extra?['initial_index'] as int? ?? 0,
+            isReview: extra?['is_review'] as bool? ?? false,
+          );
         },
       ),
 
@@ -528,8 +552,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.collectDetail,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
-          // TODO: 实现收藏详情页（或直接使用MakeQuestionPage）
-          return const Placeholder();
+          // ✅ 使用已实现的收藏详情页
+          final questions = extra?['questions'] as List<CollectionQuestionModel>?;
+          if (questions == null || questions.isEmpty) {
+            return const Scaffold(
+              body: Center(child: Text('暂无收藏数据')),
+            );
+          }
+          return CollectionDetailPage(
+            questions: questions,
+            initialIndex: extra?['initial_index'] as int? ?? 0,
+          );
         },
       ),
       GoRoute(

@@ -120,14 +120,19 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('修改密码'),
+    return GestureDetector(
+      // ✅ 点击空白区域隐藏键盘
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SafeArea(
+        appBar: AppBar(
+          title: const Text('修改密码'),
+          backgroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: SafeArea(
         child: SingleChildScrollView(
           padding: AppSpacing.allMd,
           child: Form(
@@ -258,7 +263,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   /// 普通输入框

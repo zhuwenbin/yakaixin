@@ -4,9 +4,11 @@
     <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <!-- Show a splash screen on the activity. Automatically removed when
              the Flutter engine draws its first frame -->
-        <item name="android:windowBackground">@drawable/launch_background</item>
+        <!-- ✅ 直接使用整张图片作为背景，让系统自动拉伸铺满屏幕 -->
+        <item name="android:windowBackground">@drawable/background</item>
         <item name="android:forceDarkAllowed">false</item>
-        <item name="android:windowFullscreen">false</item>
+        <!-- ✅ 启动图全屏显示，隐藏状态栏和导航栏 -->
+        <item name="android:windowFullscreen">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">false</item>
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>

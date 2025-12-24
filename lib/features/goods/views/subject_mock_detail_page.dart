@@ -5,8 +5,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/subject_mock_detail_provider.dart';
 import '../models/goods_detail_model.dart';
-import '../../order/providers/payment_provider.dart';
 import '../../../core/utils/safe_type_converter.dart';
+import '../../../core/payment/payment_flow_manager.dart';
+import '../../../core/widgets/common_state_widget.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../app/config/api_config.dart';
 import '../../../core/theme/app_colors.dart';
@@ -54,10 +55,19 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
       body: state.isLoading
           ? _buildLoading()
           : state.error != null
-          ? _buildError(state.error!)
+          ? CommonStateWidget.loadError(
+              message: state.error!,
+              onRetry: () {
+                if (widget.productId != null) {
+                  ref
+                      .read(subjectMockDetailNotifierProvider.notifier)
+                      .refresh(widget.productId!);
+                }
+              },
+            )
           : state.goodsDetail != null
           ? _buildContent(state.goodsDetail!)
-          : _buildEmpty(),
+          : CommonStateWidget.empty(),
       bottomNavigationBar: state.goodsDetail != null
           ? _buildBottomBar(state.goodsDetail!)
           : null,
@@ -74,38 +84,6 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
           Text('加载中...', style: AppTextStyles.bodyMedium),
         ],
       ),
-    );
-  }
-
-  Widget _buildError(String error) {
-    return Center(
-      child: Padding(
-        padding: AppSpacing.allXl,
-        child: Column(
-          children: [
-            Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
-            SizedBox(height: AppSpacing.mdV),
-            Text(error, textAlign: TextAlign.center, style: AppTextStyles.bodyMedium),
-            SizedBox(height: AppSpacing.lgV),
-            ElevatedButton(
-              onPressed: () {
-                if (widget.productId != null) {
-                  ref
-                      .read(subjectMockDetailNotifierProvider.notifier)
-                      .refresh(widget.productId!);
-                }
-              },
-              child: Text('重试', style: AppTextStyles.buttonMedium),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmpty() {
-    return Center(
-      child: Text('暂无数据', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint)),
     );
   }
 
@@ -270,7 +248,7 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
     );
   }
 
-  /// 处理购买 - 使用统一支付入口
+  /// 处理购买（使用统一支付管理器）
   /// ✅ 对应小程序 Line 451-526: getOrder() - 下单后跳转支付
   Future<void> _handlePurchase(
     BuildContext context,
@@ -285,7 +263,7 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
       return;
     }
 
-    // 1. 准备参数
+    // 准备参数
     final goodsId = SafeTypeConverter.toSafeString(detail.goodsId, defaultValue: '');
     if (goodsId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -298,7 +276,7 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
       currentPrice.goodsMonthsPriceId,
       defaultValue: '',
     );
-    final months = SafeTypeConverter.toInt(currentPrice.month);
+    final months = SafeTypeConverter.toSafeString(currentPrice.month, defaultValue: '0');
     final salePriceStr = SafeTypeConverter.toSafeString(
       currentPrice.salePrice,
       defaultValue: '0',
@@ -312,71 +290,27 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
       return;
     }
 
-    // 2. 🎯 调用统一支付入口
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('正在处理订单...')),
-      );
-      
-      final result = await ref.read(paymentProvider.notifier).startPayment(
-        goodsId: goodsId,
-        goodsMonthsPriceId: goodsMonthsPriceId,
-        months: months,
-        payableAmount: salePrice,
-      );
-      
-      if (!context.mounted) return;
-      
-      // 3. 处理支付结果
-      if (result.isFreeOrder) {
-        // ✅ 0元课：跳转支付成功页
-        context.push(AppRoutes.paySuccess, extra: {
-          'goods_id': goodsId,
-          'professional_id_name': detail.professionalIdName,
-        });
-      } else if (!result.isFreeOrder && result.isSuccess) {
-        // ✅ 非0元课：跳转确认支付页，携带订单信息
-        final professionalIdName = SafeTypeConverter.toSafeString(
-          detail.professionalIdName,
-          defaultValue: '',
-        );
-        
-        // 🔄 使用路由返回值监听支付结果
-        final paymentResult = await context.push<bool>(
-          AppRoutes.confirmPayment,
-          extra: {
-            'order_id': result.orderId!,
-            'flow_id': result.flowId!,
-            'goods_id': result.goodsId!,
-            'finance_body_id': result.financeBodyId ?? '',  // ✅ 财务主体ID
-            'goods_name': detail.name ?? '科目模考',
-            'payable_amount': result.payableAmount!,
-            'refresh_goods_id': goodsId,
-            'professional_id_name': professionalIdName,
-          },
-        );
-        
-        // 🔄 支付成功后刷新页面（TODO: 实现页面刷新逻辑）
-        if (paymentResult == true && context.mounted) {
-          print('\n🔄 支付成功，刷新科目模考详情页...');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('购买成功')),
-          );
-          // TODO: 调用页面刷新方法
-        }
-      } else {
-        // ❌ 下订单失败：当前页提示
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.errorMessage ?? '订单创建失败')),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('订单异常: $e')),
-        );
-      }
-    }
+    // ✅ 使用统一支付流程管理器
+    await context.startPayment(
+      ref: ref,
+      goodsId: goodsId,
+      goodsMonthsPriceId: goodsMonthsPriceId,
+      months: months,
+      payableAmount: salePrice,
+      goodsName: detail.name ?? '科目模考',
+      professionalIdName: detail.professionalIdName,
+      refreshGoodsId: goodsId,
+      isLearnButton: 0,  // 支付成功页显示"开始测验"按钮
+      onSuccess: () {
+        // 支付成功：刷新商品详情
+        print('✅ [科目模考] 支付成功，刷新商品详情');
+        ref.read(subjectMockDetailNotifierProvider.notifier).refresh(goodsId);
+      },
+      onError: (error) {
+        // 支付失败：显示错误
+        print('❌ [科目模考] 支付失败: $error');
+      },
+    );
   }
 
   /// 处理开始练习

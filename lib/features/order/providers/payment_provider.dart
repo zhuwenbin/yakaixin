@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
+import '../../../core/utils/error_message_mapper.dart';
 import '../../payment/models/wechat_pay_params_model.dart';
 
 part 'payment_provider.g.dart';
@@ -130,15 +131,12 @@ class Payment extends _$Payment {
       print('   类型: ${e.type}');
       print('   消息: ${e.message}');
       print('   状态码: ${e.response?.statusCode}');
-      print('   响应头: ${e.response?.headers}');
-      print('   响应数据: ${e.response?.data}');
-      if (e.response?.data != null) {
-        print('   响应内容类型: ${e.response?.data.runtimeType}');
-      }
-      throw Exception('网络请求失败: ${e.response?.statusCode} - ${e.response?.data}');
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '网络请求失败';
+      throw Exception(errorMsg);
     } catch (e) {
       print('💳 创建订单异常: $e');
-      throw Exception('创建订单失败: $e');
+      throw Exception('创建订单失败，请稍后重试');
     }
   }
 
@@ -349,9 +347,19 @@ class Payment extends _$Payment {
         payableAmount: payableAmount,
         financeBodyId: financeBodyId,  // ✅ 传递财务主体ID
       );
+    } on DioException catch (e) {
+      print('\n❌ 下订单失败(DioException): $e');
+      // ✅ 使用拦截器处理好的友好信息
+      final errorMsg = e.error?.toString() ?? '下订单失败，请稍后重试';
+      return PaymentResult.error(errorMsg);
+    } on Exception catch (e) {
+      print('\n❌ 下订单失败(Exception): $e');
+      // ✅ Service层抛出的业务异常
+      final errorMsg = ErrorMessageMapper.mapException(e);
+      return PaymentResult.error(errorMsg);
     } catch (e) {
-      print('\n❌ 下订单失败: $e');
-      return PaymentResult.error(e.toString());
+      print('\n❌ 下订单失败(未预期错误): $e');
+      return PaymentResult.error('下订单失败，请稍后重试');
     }
   }
   
@@ -382,8 +390,16 @@ class Payment extends _$Payment {
         payableAmount: payableAmount,
         financeBodyId: '',  // ✅ 继续支付时暂无finance_body_id
       );
+    } on DioException catch (e) {
+      // ✅ 使用拦截器处理好的友好信息
+      final errorMsg = e.error?.toString() ?? '继续支付失败，请稍后重试';
+      return PaymentResult.error(errorMsg);
+    } on Exception catch (e) {
+      // ✅ Service层抛出的业务异常
+      final errorMsg = ErrorMessageMapper.mapException(e);
+      return PaymentResult.error(errorMsg);
     } catch (e) {
-      return PaymentResult.error(e.toString());
+      return PaymentResult.error('继续支付失败，请稍后重试');
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/course_detail_model.dart';
@@ -73,10 +74,15 @@ class CourseDetailNotifier extends _$CourseDetailNotifier {
         recentlyData: recentlyData,
         isLoading: false,
       );
+    } on DioException catch (e) {
+      print('❌ [课程详情页] 加载失败 (DioException): $e');
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载课程失败';
+      state = state.copyWith(isLoading: false, error: errorMsg);
     } catch (e, stackTrace) {
       print('❌ [课程详情页] 加载失败: $e');
       print('堆栈: $stackTrace');
-      state = state.copyWith(isLoading: false, error: '加载失败: $e');
+      state = state.copyWith(isLoading: false, error: '加载课程失败，请稍后重试');
     }
   }
 

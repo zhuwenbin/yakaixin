@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/utils/toast_util.dart';
 import '../../../core/widgets/loading_hud.dart';
@@ -344,9 +345,15 @@ class _SelectMajorPageState extends ConsumerState<SelectMajorPage> {
         // 从登录进入，跳转到首页
         context.go(AppRoutes.home);
       }
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
       LoadingHUD.dismiss();
-      ToastUtil.error(e.toString());
+      final errorMsg = e.error?.toString() ?? '保存失败，请稍后重试';
+      ToastUtil.error(errorMsg);
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      LoadingHUD.dismiss();
+      ToastUtil.error('保存失败，请稍后重试');
     }
   }
 }

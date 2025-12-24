@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
-import '../../../app/constants/storage_keys.dart';
-import '../../../core/storage/storage_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/utils/safe_type_converter.dart';
+import '../../../core/utils/error_message_mapper.dart';
+import '../../../core/payment/payment_flow_manager.dart';
+import '../../../core/widgets/common_state_widget.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import '../../order/providers/payment_provider.dart';
 import '../../home/services/goods_service.dart';
 import '../../home/models/goods_model.dart';
 import '../../main/main_tab_page.dart';
+import '../../../core/storage/storage_service.dart';
+import '../../../app/constants/storage_keys.dart';
 
 /// 课程商品详情页 - 对应小程序 course/courseDetail.vue
 /// 功能:展示课程介绍、课程大纲、购买入口
@@ -110,9 +113,18 @@ class _CourseGoodsDetailPageState
           await _loadChapterData(course);
         }
       }
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载课程失败';
+      setState(() {
+        _errorMessage = errorMsg;
+        _isLoading = false;
+      });
+      print('❌ 加载商品详情失败 (DioException): $e');
+      EasyLoading.showError(errorMsg);
     } catch (e) {
       setState(() {
-        _errorMessage = '加载失败: $e';
+        _errorMessage = '加载课程失败，请稍后重试';
         _isLoading = false;
       });
       print('❌ 加载商品详情失败: $e');
@@ -215,41 +227,20 @@ class _CourseGoodsDetailPageState
                 ),
               )
             else if (_errorMessage != null)
-              _buildError()
+              CommonStateWidget.loadError(
+                message: _errorMessage!,
+                onRetry: _loadGoodsDetail,
+              )
             else if (_goodsDetail != null)
               _buildBody()
             else
-              Center(
-                child: Text('暂无数据', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint)),
+              CommonStateWidget.empty(
+                message: '暂无数据',
               ),
             // ✅ 已购买(permissionStatus='1')显示"去学习"，未购买(permissionStatus='2')显示"立即报名"
             if (!_isLoading && _goodsDetail != null) _buildBottomBar(),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildError() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
-          SizedBox(height: AppSpacing.mdV),
-          Text(
-            _errorMessage ?? '加载失败',
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-          ),
-          SizedBox(height: AppSpacing.mdV),
-          ElevatedButton(
-            onPressed: _loadGoodsDetail,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
-            child: Text('重试', style: AppTextStyles.buttonMedium),
-          ),
-        ],
       ),
     );
   }
@@ -889,10 +880,10 @@ class _CourseGoodsDetailPageState
     }
   }
 
-  /// 报名/购买流程 - 使用统一支付入口
+  /// 报名/购买流程（使用统一支付管理器）
   /// 对应小程序 getOrder 方法 (Line 417-476)
   Future<void> _onPurchase() async {
-    // 1. 准备参数
+    // 准备参数
     final goodsId = SafeTypeConverter.toSafeString(_goodsDetail?.goodsId, defaultValue: '');
     if (goodsId.isEmpty) {
       EasyLoading.showError('商品ID不能为空');
@@ -901,79 +892,34 @@ class _CourseGoodsDetailPageState
     
     final salePrice = _goodsDetail?.salePrice ?? '0';
     final payableAmount = double.tryParse(salePrice) ?? 0.0;
-    
     final goodsMonthsPriceId = SafeTypeConverter.toSafeString(
       _goodsDetail?.goodsMonthsPriceId,
       defaultValue: '',
     );
-    final monthsInt = SafeTypeConverter.toInt(_goodsDetail?.month);
+    final months = SafeTypeConverter.toSafeString(_goodsDetail?.month, defaultValue: '0');
     
-    // 2. 🎯 调用统一支付入口
-    try {
-      EasyLoading.show(status: '正在处理订单...');
-      
-      final result = await ref.read(paymentProvider.notifier).startPayment(
-        goodsId: goodsId,
-        goodsMonthsPriceId: goodsMonthsPriceId,
-        months: monthsInt,
-        payableAmount: payableAmount,
-      );
-      
-      EasyLoading.dismiss();
-      if (!mounted) return;
-      
-      // 3. 处理支付结果
-      if (result.isFreeOrder) {
-        // ✅ 0元课：刷新页面 + 跳转支付成功页
+    // ✅ 使用统一支付流程管理器
+    await context.startPayment(
+      ref: ref,
+      goodsId: goodsId,
+      goodsMonthsPriceId: goodsMonthsPriceId,
+      months: months,
+      payableAmount: payableAmount,
+      goodsName: _goodsDetail?.name ?? '课程',
+      professionalIdName: _goodsDetail?.professionalIdName,
+      refreshGoodsId: goodsId,
+      isLearnButton: 0,  // 支付成功页显示"开始测验"按钮
+      onSuccess: () async {
+        // 支付成功：刷新商品详情
+        print('✅ [课程商品] 支付成功，刷新商品详情');
         await _loadGoodsDetail();
-        
-        final professionalIdName = SafeTypeConverter.toSafeString(
-          _goodsDetail?.professionalIdName,
-          defaultValue: '',
-        );
-        
-        if (mounted) {
-          context.push(AppRoutes.paySuccess, extra: {
-            'goods_id': goodsId,
-            'professional_id_name': professionalIdName,
-          });
-        }
-      } else if (!result.isFreeOrder && result.isSuccess) {
-        // ✅ 非0元课：跳转确认支付页，携带订单信息和回调参数
-        final professionalIdName = SafeTypeConverter.toSafeString(
-          _goodsDetail?.professionalIdName,
-          defaultValue: '',
-        );
-        
-        // 🔄 方案2：使用路由返回值监听支付结果
-        final paymentResult = await context.push<bool>(
-          AppRoutes.confirmPayment,
-          extra: {
-            'order_id': result.orderId!,
-            'flow_id': result.flowId!,
-            'goods_id': result.goodsId!,
-            'finance_body_id': result.financeBodyId ?? '',  // ✅ 财务主体ID
-            'goods_name': _goodsDetail?.name ?? '课程',
-            'payable_amount': result.payableAmount!,
-            'refresh_goods_id': goodsId,  // 用于回调刷新
-            'professional_id_name': professionalIdName,
-          },
-        );
-        
-        // 🔄 支付成功后刷新页面
-        if (paymentResult == true && mounted) {
-          print('\n🔄 支付成功，刷新课程详情页...');
-          await _loadGoodsDetail();
-          EasyLoading.showSuccess('购买成功');
-        }
-      } else {
-        // ❌ 下订单失败：当前页提示
-        EasyLoading.showError(result.errorMessage ?? '订单创建失败');
-      }
-    } catch (e) {
-      EasyLoading.dismiss();
-      EasyLoading.showError('订单异常: $e');
-    }
+        EasyLoading.showSuccess('购买成功');
+      },
+      onError: (error) {
+        // 支付失败：显示错误
+        print('❌ [课程商品] 支付失败: $error');
+      },
+    );
   }
 
 

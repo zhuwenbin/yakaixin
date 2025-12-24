@@ -630,6 +630,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       }
     }
   }
+
   /// 对应小程序: daily-nav.vue Line 112-136
   void _handleDailyPractice(BuildContext context) {
     final state = ref.read(questionBankProvider);
@@ -656,40 +657,38 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       return;
     }
 
-    // ✅ 根据小程序逻辑: daily-nav.vue Line 123-135
-    // 注意：小程序中每日一练和章节练习用同一个组件，但根据 type 跳转不同页面：
-    // - type == 18 (章节练习) → pages/chapterExercise/index (章节列表)
-    // - type == 8 (试卷) → pages/test/exam (试卷详情页)
     final permissionStatus = dailyPractice.permissionStatus;
 
-    print(
-      '📚 每日一测点击: goodsId=$goodsId, '
-      'permissionStatus=$permissionStatus, '
-      'professionalId=$professionalId',
+    // ⚠️ 详细调试日志
+    debugPrint('\n' + '=' * 50);
+    debugPrint('📚 每日一测点击事件调试信息');
+    debugPrint('=' * 50);
+    debugPrint('goodsId: $goodsId');
+    debugPrint('professionalId: $professionalId');
+    debugPrint(
+      'permissionStatus: $permissionStatus (类型: ${permissionStatus.runtimeType})',
     );
+    debugPrint('permissionStatus == "1": ${permissionStatus == '1'}');
+    debugPrint('permissionStatus != "1": ${permissionStatus != '1'}');
+    debugPrint('dailyPractice完整数据: $dailyPractice');
+    debugPrint('=' * 50 + '\n');
 
     // 未购买 (permission_status != '1')
     if (permissionStatus != '1') {
       // 跳转到商品详情页
-      // 对应小程序: Line 125-128
+      debugPrint('❌ 未购买 → 跳转到商品详情页 (GoodsDetailPage)');
       context.push(
         AppRoutes.goodsDetail,
-        extra: {
-          'product_id': goodsId,
-          'professional_id': professionalId,
-        },
+        extra: {'product_id': goodsId, 'professional_id': professionalId},
       );
     } else {
       // 已购买 (permission_status == '1')
-      // ✅ 每日一练通常是 type=8 试卷类型，跳转到试卷详情页
-      // 对应小程序: pages/test/exam.vue
-      print('✅ 每日一测已购买 → 跳转到试卷详情页 (TestExamPage)');
+      // ✅ 对应小程序: daily-nav-two.vue Line 248-251 (goDetailPage方法)
+      // 每日一练 details_type=='1' 已购买 → pages/test/exam (试卷详情页)
+      debugPrint('✅ 已购买 → 跳转到试卷详情页 (TestExamPage)');
       context.push(
         AppRoutes.testExam,
-        extra: {
-          'id': goodsId,
-          'professional_id': professionalId,
-        },
+        extra: {'id': goodsId, 'professional_id': professionalId},
       );
     }
   }
@@ -725,11 +724,17 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
     final permissionStatus = chapterExercise.permissionStatus;
     final questionNumber = chapterExercise.questionNumber;
 
-    print(
-      '📚 章节练习点击: goodsId=$goodsId, '
-      'permissionStatus=$permissionStatus, '
-      'professionalId=$professionalId',
+    // ⚠️ 详细调试日志
+    debugPrint('\n' + '=' * 50);
+    debugPrint('📚 章节练习点击事件调试信息');
+    debugPrint('=' * 50);
+    debugPrint('goodsId: $goodsId');
+    debugPrint('professionalId: $professionalId');
+    debugPrint(
+      'permissionStatus: $permissionStatus (类型: ${permissionStatus.runtimeType})',
     );
+    debugPrint('questionNumber: $questionNumber');
+    debugPrint('=' * 50 + '\n');
 
     // 未购买 (permission_status != '1')
     if (permissionStatus != '1') {
@@ -738,10 +743,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       print('❌ 章节练习未购买 → 跳转到商品详情页 (GoodsDetailPage)');
       context.push(
         AppRoutes.goodsDetail,
-        extra: {
-          'product_id': goodsId,
-          'professional_id': professionalId,
-        },
+        extra: {'product_id': goodsId, 'professional_id': professionalId},
       );
     } else {
       // 已购买 (permission_status == '1')

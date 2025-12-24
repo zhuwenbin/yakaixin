@@ -290,10 +290,35 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
           GestureDetector(
             onTap: () {
               if (recentlyData.lessonId != null) {
-                _goLookCourse(recentlyData.lessonId!, '3', {
-                  'lesson_id': recentlyData.lessonId,
-                  'lesson_name': recentlyData.lessonName,
-                });
+                // ✅ 修复：从课程列表中查找对应的课节，获取真实的 teaching_type
+                final classList = ref.read(courseDetailNotifierProvider).classList;
+                Map<String, dynamic>? targetLesson;
+                String teachingType = '3'; // 默认录播
+                
+                // 遍历所有班级，查找对应的课节
+                for (final classItem in classList) {
+                  final lessons = classItem.lessons ?? [];
+                  final found = lessons.firstWhere(
+                    (lesson) => lesson['lesson_id'] == recentlyData.lessonId,
+                    orElse: () => {},
+                  );
+                  if (found.isNotEmpty) {
+                    targetLesson = found;
+                    teachingType = classItem.teachingType ?? '3';
+                    debugPrint('✅ [继续学习] 找到对应课节，teaching_type: $teachingType');
+                    break;
+                  }
+                }
+                
+                if (targetLesson == null) {
+                  debugPrint('⚠️ [继续学习] 未找到对应课节，使用默认 teaching_type=3');
+                  targetLesson = {
+                    'lesson_id': recentlyData.lessonId,
+                    'lesson_name': recentlyData.lessonName,
+                  };
+                }
+                
+                _goLookCourse(recentlyData.lessonId!, teachingType, targetLesson);
               }
             },
             child: Container(
@@ -589,6 +614,11 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
         lessonId: lessonId,
         lessonName: lesson['lesson_name']?.toString() ?? '录播',
         teachingType: teachingType,
+        classId: classItem.classId, // ✅ 传递 classId（用于签到）
+        chapterData: chapterData, // ✅ 传递章节数据（用于显示目录）
+        goodsId: widget.goodsId, // ✅ 传递商品ID
+        orderId: widget.orderId, // ✅ 传递订单ID
+        systemId: lesson['system_id']?.toString(), // ✅ 传递系统ID（用于讲义）
       );
     } else if (teachingType == '1') {
       // ✅ 直播课程 - 调用 CourseNavigationHelper（与小程序一致）
@@ -599,6 +629,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
         lessonId: lessonId,
         lessonName: lesson['lesson_name']?.toString() ?? '直播',
         teachingType: teachingType,
+        classId: classItem.classId, // ✅ 传递 classId（用于签到）
       );
     }
   }

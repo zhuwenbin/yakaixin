@@ -36,11 +36,11 @@ class _SplashPageState extends ConsumerState<SplashPage> {
       
       if (!mounted) return;
 
-      // ✅ 初始化支付服务（包含内购产品列表加载）
-      print('\n💳 初始化支付服务...');
-      final paymentService = ref.read(unifiedPaymentServiceProvider);
-      await paymentService.initialize();
-      print('✅ 支付服务初始化完成\n');
+      // // ✅ 初始化支付服务（包含内购产品列表加载）
+      // print('\n💳 初始化支付服务...');
+      // final paymentService = ref.read(unifiedPaymentServiceProvider);
+      // await paymentService.initialize();
+      // print('✅ 支付服务初始化完成\n');
       
       // ✅ 检查登录状态
       final isLoggedIn = ref.read(authProvider).isLoggedIn;
@@ -61,9 +61,11 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ 空白页面，不显示任何内容（只显示原生启动页）
+    // ✅ 空白页面，不显示任何内容（依赖原生启动页）
+    // 注意：真机运行时原生启动页会正常显示
+    // 热重启时可能看到短暂空白，这是正常现象
     return const Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,  // 白色背景避免闪烁
     );
   }
 }

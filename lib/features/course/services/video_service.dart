@@ -133,6 +133,53 @@ class VideoService {
       studentId: studentId,
     );
   }
+  
+  /// 课程签到（视频快结束时调用）
+  /// API: /c/goods/v2/class/signin
+  /// 对应小程序: classSignin (newVideo.vue Line 198-203)
+  /// 
+  /// 参数：
+  /// - lessonId: 课节ID
+  /// - classId: 班级ID
+  /// - studentId: 学生ID
+  /// - mode: 模式 (1=正常签到)
+  /// - status: 状态 (1=已签到)
+  /// - isAudition: 是否试听 (2=不是试听)
+  Future<void> classSignin({
+    required String lessonId,
+    String? classId,
+    required String studentId,
+  }) async {
+    try {
+      final response = await _dioClient.post(
+        '/c/goods/v2/class/signin',
+        data: {
+          'lesson_id': lessonId,
+          'class_id': classId ?? '',
+          'student_id': studentId,
+          'mode': 1,
+          'status': 1,
+          'is_audition': 2,
+          'lat': '0.00',
+          'lng': '0.00',
+        },
+      );
+
+      print('\n========== ✅ [课程签到] API响应 ==========');
+      print('📍 请求参数: lesson_id=$lessonId, class_id=$classId, student_id=$studentId');
+      print('📦 响应数据: ${response.data}');
+      print('=========================================\n');
+
+      if (response.data['code'] == 100000) {
+        print('✅ [课程签到] 签到成功');
+      } else {
+        print('⚠️ [课程签到] 签到失败: ${response.data['msg']}');
+      }
+    } catch (e) {
+      print('❌ [课程签到] 网络请求失败: $e');
+      // ✅ 不抛出异常，签到失败不影响视频播放
+    }
+  }
 }
 
 /// Provider

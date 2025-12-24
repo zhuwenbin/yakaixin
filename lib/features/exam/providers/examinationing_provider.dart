@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:yakaixin_app/core/network/dio_client.dart';
+import 'package:yakaixin_app/core/utils/error_message_mapper.dart';
 import 'package:yakaixin_app/features/exam/models/question_model.dart';
 import 'package:yakaixin_app/features/exam/services/exam_service.dart';
 
@@ -96,8 +98,13 @@ class ExaminationingNotifier extends _$ExaminationingNotifier {
 
       // 5. 启动倒计时
       _startTimer();
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载试题失败，请稍后重试';
+      state = state.copyWith(isLoading: false, error: errorMsg);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(isLoading: false, error: '加载试题失败，请稍后重试');
     }
   }
 
@@ -349,12 +356,25 @@ class ExaminationingNotifier extends _$ExaminationingNotifier {
       _timer?.cancel();
 
       state = state.copyWith(isSubmitted: true, isLoading: false);
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '提交失败，请稍后重试';
+      state = state.copyWith(isLoading: false, error: errorMsg);
 
       // ✅ 2秒后自动清除错误状态，防止反复弹出
       Future.delayed(const Duration(seconds: 2), () {
-        if (state.error == e.toString()) {
+        if (state.error == errorMsg) {
+          state = state.copyWith(error: null);
+        }
+      });
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      const errorMsg = '提交失败，请稍后重试';
+      state = state.copyWith(isLoading: false, error: errorMsg);
+
+      // ✅ 2秒后自动清除错误状态，防止反复弹出
+      Future.delayed(const Duration(seconds: 2), () {
+        if (state.error == errorMsg) {
           state = state.copyWith(error: null);
         }
       });

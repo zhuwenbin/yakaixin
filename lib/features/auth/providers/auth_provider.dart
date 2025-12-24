@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yakaixin_app/core/utils/error_message_mapper.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
 import '../../../core/widgets/loading_hud.dart';
@@ -116,10 +118,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       LoadingHUD.dismiss();
       ToastUtil.success('登录成功');
     } on Exception catch (e) {
-      // ✅ Service层的Exception
+      // ✅ Service层的Exception（已包含用户友好信息）
       state = state.copyWith(isLoading: false);
       LoadingHUD.dismiss();
-      final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      final errorMsg = ErrorMessageMapper.mapException(e);
       ToastUtil.error(errorMsg);
       print('⚠️ [验证码登录] 向用户显示错误: $errorMsg');
       rethrow;
@@ -146,7 +148,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } on Exception catch (e) {
       // ✅ Service层已经处理了Exception，直接显示错误信息
       LoadingHUD.dismiss();
-      final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      final errorMsg = ErrorMessageMapper.mapException(e);
       ToastUtil.error(errorMsg);
       print('⚠️ [发送验证码] 向用户显示错误: $errorMsg');
       rethrow;
@@ -183,10 +185,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       LoadingHUD.dismiss();
       ToastUtil.success('登录成功');
     } on Exception catch (e) {
-      // ✅ Service层的Exception
+      // ✅ Service层的Exception（已包含用户友好信息）
       state = state.copyWith(isLoading: false);
       LoadingHUD.dismiss();
-      final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      final errorMsg = ErrorMessageMapper.mapException(e);
       ToastUtil.error(errorMsg);
       print('⚠️ [密码登录] 向用户显示错误: $errorMsg');
       rethrow;
@@ -359,9 +361,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       LoadingHUD.dismiss();
       ToastUtil.success('密码重置成功');
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
       LoadingHUD.dismiss();
-      ToastUtil.error(e.toString());
+      final errorMsg = e.error?.toString() ?? '重置失败，请稍后重试';
+      ToastUtil.error(errorMsg);
+      rethrow;
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      LoadingHUD.dismiss();
+      ToastUtil.error('重置失败，请稍后重试');
       rethrow;
     }
   }
@@ -381,9 +390,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       LoadingHUD.dismiss();
       ToastUtil.success('密码修改成功');
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
       LoadingHUD.dismiss();
-      ToastUtil.error(e.toString());
+      final errorMsg = e.error?.toString() ?? '修改失败，请稍后重试';
+      ToastUtil.error(errorMsg);
+      rethrow;
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      LoadingHUD.dismiss();
+      ToastUtil.error('修改失败，请稍后重试');
       rethrow;
     }
   }
@@ -492,10 +508,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       LoadingHUD.dismiss();
       ToastUtil.success('登录成功');
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
       state = state.copyWith(isLoading: false);
       LoadingHUD.dismiss();
-      ToastUtil.error(e.toString());
+      final errorMsg = e.error?.toString() ?? '登录失败，请稍后重试';
+      ToastUtil.error(errorMsg);
+      rethrow;
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(isLoading: false);
+      LoadingHUD.dismiss();
+      ToastUtil.error('登录失败，请稍后重试');
       rethrow;
     }
   }

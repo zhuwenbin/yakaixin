@@ -1,10 +1,12 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:dio/dio.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../services/profile_service.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
 import '../../../app/config/api_config.dart';
+import '../../../core/utils/error_message_mapper.dart';
 
 part 'person_edit_provider.freezed.dart';
 part 'person_edit_provider.g.dart';
@@ -146,10 +148,19 @@ class PersonEditNotifier extends _$PersonEditNotifier {
 
       state = state.copyWith(isLoading: false);
       return true;
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '保存失败，请稍后重试';
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: errorMsg,
+      );
+      return false;
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(
+        isLoading: false,
+        error: '保存失败，请稍后重试',
       );
       return false;
     }

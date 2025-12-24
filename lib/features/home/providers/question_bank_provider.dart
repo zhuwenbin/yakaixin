@@ -1,5 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../../core/utils/error_message_mapper.dart';
+import '../../../app/config/api_config.dart';
 import '../models/question_bank_model.dart';
 import '../services/learning_service.dart';
 import '../services/chapter_service.dart';
@@ -87,9 +90,15 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
         _loadSkillMock(majorId),
       ]);
       print('✅ [QuestionBankProvider] 所有数据加载完成');
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '数据加载失败，请稍后重试';
+      print('❌ [QuestionBankProvider] 数据加载失败: $errorMsg');
+      state = state.copyWith(error: errorMsg, errorType: ErrorType.network);
     } catch (e) {
-      print('❌ [QuestionBankProvider] 数据加载失败: $e');
-      state = state.copyWith(error: '数据加载失败', errorType: ErrorType.network);
+      // ✅ 兜底：未预期的错误
+      print('❌ [QuestionBankProvider] 未预期错误: $e');
+      state = state.copyWith(error: '数据加载失败，请稍后重试', errorType: ErrorType.network);
     }
   }
 
@@ -108,10 +117,19 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
         learningData: learningData,
         isLoadingLearning: false,
       );
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载学习数据失败';
       state = state.copyWith(
         isLoadingLearning: false,
-        error: e.toString(),
+        error: errorMsg,
+        errorType: ErrorType.network,
+      );
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(
+        isLoadingLearning: false,
+        error: '加载学习数据失败',
         errorType: ErrorType.network,
       );
     }
@@ -127,10 +145,19 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
       final chapters = await service.getChapterList(professionalId: majorId);
 
       state = state.copyWith(chapters: chapters, isLoadingChapters: false);
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载章节失败';
       state = state.copyWith(
         isLoadingChapters: false,
-        error: e.toString(),
+        error: errorMsg,
+        errorType: ErrorType.network,
+      );
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(
+        isLoadingChapters: false,
+        error: '加载章节失败',
         errorType: ErrorType.network,
       );
     }
@@ -176,7 +203,10 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
     try {
       // ✅ 使用真实的 GoodsService
       final service = _ref.read(goodsServiceProvider);
+      // ✅ 修复：添加 shelf_platform_id 参数，与小程序保持一致
+      // 对应小程序: index.vue Line 291-296
       final response = await service.getGoodsList(
+        shelfPlatformId: ApiConfig.shelfPlatformId, // ✅ 新增：平台ID筛选
         professionalId: majorId,
         type: '10,8', // 模拟考试、试卷
         isBuyed: 1, // 已购买
@@ -243,10 +273,19 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
         purchasedGoods: purchasedGoods,
         isLoadingPurchased: false,
       );
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载失败，请稍后重试';
       state = state.copyWith(
         isLoadingPurchased: false,
-        error: e.toString(),
+        error: errorMsg,
+        errorType: ErrorType.network,
+      );
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(
+        isLoadingPurchased: false,
+        error: '加载失败，请稍后重试',
         errorType: ErrorType.network,
       );
     }
@@ -267,6 +306,7 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
         final dailyPractice = DailyPracticeModel(
           id: goods.goodsId?.toString() ?? '',
           name: goods.name ?? '每日一练',
+          permissionStatus: goods.permissionStatus ?? '2', // ✅ 传递权限状态
           totalQuestions:
               int.tryParse(
                 goods.tikuGoodsDetails?.questionNum?.toString() ?? '30',
@@ -332,10 +372,19 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
       await _loadLearningData(majorId);
 
       state = state.copyWith(checkInSuccess: true, successMessage: '打卡成功');
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '打卡失败，请稍后重试';
       state = state.copyWith(
         isLoadingLearning: false,
-        error: e.toString(),
+        error: errorMsg,
+        errorType: ErrorType.network,
+      );
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(
+        isLoadingLearning: false,
+        error: '打卡失败，请稍后重试',
         errorType: ErrorType.network,
       );
     }

@@ -9,7 +9,7 @@ class AppColors {
   // ============ 主色调 ============
 
   /// 主色 - 蓝色 #2E68FF
-  static const Color primary = Color(0xFF2E68FF);
+  static const Color primary = Color(0xFFFF6B35);
 
   /// 主色 - 渐变起始色
   static const Color primaryGradientStart = Color(0xFF2E68FF);

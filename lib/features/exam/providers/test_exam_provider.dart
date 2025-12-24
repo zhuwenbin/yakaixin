@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:yakaixin_app/core/network/dio_client.dart';
+import 'package:yakaixin_app/core/utils/error_message_mapper.dart';
 import 'package:yakaixin_app/core/utils/safe_type_converter.dart';
 import 'package:yakaixin_app/features/exam/models/paper_model.dart';
 import 'package:yakaixin_app/features/exam/services/exam_service.dart';
@@ -85,9 +87,15 @@ class TestExamNotifier extends _$TestExamNotifier {
 
       state = state.copyWith(isLoading: false);
       print('\n✅ [TestExamProvider] loadExamData 完成\n');
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载失败，请稍后重试';
+      print('\n❌ [TestExamProvider] loadExamData 失败: $errorMsg\n');
+      state = state.copyWith(isLoading: false, error: errorMsg);
     } catch (e) {
-      print('\n❌ [TestExamProvider] loadExamData 失败: $e\n');
-      state = state.copyWith(isLoading: false, error: e.toString());
+      // ✅ 兜底：未预期的错误
+      print('\n❌ [TestExamProvider] loadExamData 未预期错误: $e\n');
+      state = state.copyWith(isLoading: false, error: '加载失败，请稍后重试');
     }
   }
 

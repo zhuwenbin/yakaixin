@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/storage/storage_service.dart';
+import '../../../core/utils/error_message_mapper.dart';
 import '../../../app/constants/storage_keys.dart';
 import '../../../core/network/dio_client.dart';
 import '../../auth/models/user_model.dart'; // 导入 MajorModel
@@ -66,9 +68,18 @@ class MajorNotifier extends StateNotifier<MajorState> {
         majors: data,
         isLoading: false,
       );
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载专业列表失败';
       state = state.copyWith(
-        error: e.toString(),
+        error: errorMsg,
+        isLoading: false,
+      );
+      rethrow;
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(
+        error: '加载专业列表失败',
         isLoading: false,
       );
       rethrow;

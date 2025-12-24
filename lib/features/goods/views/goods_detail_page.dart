@@ -10,6 +10,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/widgets/common_state_widget.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../order/providers/payment_provider.dart';
 import '../providers/goods_detail_provider.dart';
@@ -90,35 +91,14 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
 
   /// 构建错误状态
   Widget _buildError(String error) {
-    return Center(
-      child: Padding(
-        padding: AppSpacing.allXl,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
-            SizedBox(height: AppSpacing.mdV),
-            Text(
-              error,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-            ),
-            SizedBox(height: AppSpacing.lgV),
-            ElevatedButton.icon(
-              onPressed: () {
-                final goodsId = widget.goodsId ?? widget.productId;
-                if (goodsId != null) {
-                  ref
-                      .read(goodsDetailNotifierProvider.notifier)
-                      .refresh(goodsId);
-                }
-              },
-              icon: Icon(Icons.refresh, size: 18.sp),
-              label: Text('重试', style: AppTextStyles.buttonMedium),
-            ),
-          ],
-        ),
-      ),
+    return CommonStateWidget.loadError(
+      message: error,
+      onRetry: () {
+        final goodsId = widget.goodsId ?? widget.productId;
+        if (goodsId != null) {
+          ref.read(goodsDetailNotifierProvider.notifier).refresh(goodsId);
+        }
+      },
     );
   }
 

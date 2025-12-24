@@ -1,5 +1,5 @@
 name: yakaixin_app
-description: "牙开心题库App - Flutter版"
+description: "牙开心学堂 - Flutter版"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -87,7 +87,7 @@ dependencies:
   # bjy_liveui_flutter: ^4.15.3
   
   # WebView（用于H5直播）
-  webview_flutter: ^4.4.2
+  webview_flutter: ^4.10.0
   
   # 视频播放器
   video_player: ^2.8.2
@@ -171,10 +171,22 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
+  # iOS 和 Android 普通图标
   image_path: "assets/images/app_icon.png"
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/images/app_icon.png"
-  remove_alpha_ios: true
+  
+  # Android 自适应图标配置（Android 8.0+）
+  # ✅ 如果图标被裁剪，需要使用以下两种方案之一：
+  # 
+  # 方案 1：使用表态图（如果 app_icon.png 是带背景的完整图标）
+  adaptive_icon_background: "assets/images/app_icon.png"  # 背景使用完整图标
+  # adaptive_icon_foreground 不设置，只显示背景
+  # 
+  # 方案 2：使用纯色背景 + 前景图（需要重新设计图标）
+  # adaptive_icon_background: "#FFFFFF"  # 背景色
+  # adaptive_icon_foreground: "assets/images/app_icon_foreground.png"  # 前景图（留安全边距）
+  
+  # iOS 配置
+  remove_alpha_ios: true  # 移除透明通道
 
 # ============ 启动页配置 ============
 flutter_native_splash:

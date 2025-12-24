@@ -1,9 +1,11 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:dio/dio.dart';
 import '../../../core/network/dio_client.dart';
 import '../models/learning_data_model.dart';
 import '../models/score_report_model.dart';
 import '../services/report_service.dart';
+import '../../../core/utils/error_message_mapper.dart';
 
 part 'report_provider.freezed.dart';
 part 'report_provider.g.dart';
@@ -60,10 +62,18 @@ class LearningData extends _$LearningData {
         data: data,
         isLoading: false,
       );
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载失败，请稍后重试';
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: errorMsg,
+      );
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(
+        isLoading: false,
+        error: '加载失败，请稍后重试',
       );
     }
   }
@@ -127,10 +137,18 @@ class ScoreReportNotifier extends _$ScoreReportNotifier {
         reports: reports,
         isLoading: false,
       );
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载失败，请稍后重试';
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: errorMsg,
+      );
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(
+        isLoading: false,
+        error: '加载失败，请稍后重试',
       );
     }
   }

@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:yakaixin_app/core/network/dio_client.dart';
+import 'package:yakaixin_app/core/utils/error_message_mapper.dart';
 import '../models/collection_question_model.dart';
 import '../services/collection_service.dart';
 
@@ -113,11 +115,20 @@ class CollectionNotifier extends _$CollectionNotifier {
         total: response.total,
         hasMore: updatedList.length < response.total,
       );
-    } catch (e) {
+    } on DioException catch (e) {
+      // ✅ 使用拦截器已处理好的用户友好错误信息
+      final errorMsg = e.error?.toString() ?? '加载失败，请稍后重试';
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,
-        error: e.toString(),
+        error: errorMsg,
+      );
+    } catch (e) {
+      // ✅ 兜底：未预期的错误
+      state = state.copyWith(
+        isLoading: false,
+        isLoadingMore: false,
+        error: '加载失败，请稍后重试',
       );
     }
   }

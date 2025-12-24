@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yakaixin_app/core/theme/app_colors.dart';
 import 'package:yakaixin_app/core/theme/app_text_styles.dart';
 import 'package:yakaixin_app/core/theme/app_spacing.dart';
+import 'package:yakaixin_app/core/widgets/common_state_widget.dart';
 import '../models/collection_question_model.dart';
 import '../providers/collection_provider.dart';
 import '../widgets/question_type_selector.dart';
@@ -321,33 +322,12 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
 
   /// 错误状态
   Widget _buildError(String error) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            '加载失败',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            error,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textHint,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          ElevatedButton(
-            onPressed: () {
-              ref.read(collectionNotifierProvider.notifier)
-                  .loadCollections(refresh: true);
-            },
-            child: const Text('重试'),
-          ),
-        ],
-      ),
+    return CommonStateWidget.loadError(
+      message: error,
+      onRetry: () {
+        ref.read(collectionNotifierProvider.notifier)
+            .loadCollections(refresh: true);
+      },
     );
   }
 }
