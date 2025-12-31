@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../app/routes/app_routes.dart';
 import '../../../../app/config/api_config.dart';
@@ -154,7 +153,7 @@ class CourseItemCard extends StatelessWidget {
                       ),
                     ),
                   SizedBox(height: 16.h),
-                  // ✅ 教师列表（对应小程序 Line 39-49）
+                  // ✅ 教师列表（对应小程序 Line 39-49，一行显示两个）
                   if (teachers.isNotEmpty) _buildTeachersList(teachers),
                   SizedBox(height: 7.h),
                   // ✅ 操作按钮（evaluation_type）（对应小程序 Line 50-63）
@@ -169,76 +168,107 @@ class CourseItemCard extends StatelessWidget {
     );
   }
 
-  /// 教师列表
-  /// 对应小程序: course.vue Line 39-49
+  /// 教师列表（一行显示两个教师）
+  /// 对应小程序: course.vue Line 39-49, 248-290
+  /// 小程序使用: display: flex; justify-content: space-between; flex-wrap: wrap;
   Widget _buildTeachersList(List teachers) {
-    return Wrap(
-      spacing: 0,
-      runSpacing: 11.h,
-      children: teachers.map((teacher) {
-        final avatar = teacher['avatar']?.toString() ?? '';
-        final name = teacher['name']?.toString() ?? '';
-        final title = teacher['title']?.toString() ?? '';
-        final avatarUrl = avatar.isNotEmpty ? _completePath(avatar) : '';
+    // ✅ 将教师列表分组，每两个一组
+    final List<List<dynamic>> teacherGroups = [];
+    for (int i = 0; i < teachers.length; i += 2) {
+      if (i + 1 < teachers.length) {
+        teacherGroups.add([teachers[i], teachers[i + 1]]);
+      } else {
+        teacherGroups.add([teachers[i]]);
+      }
+    }
 
-        return Container(
-          width: double.infinity,
-          margin: EdgeInsets.only(bottom: 11.h),
+    return Column(
+      children: teacherGroups.map((group) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: 22.h), // ✅ 小程序22rpx ÷ 2 = 22.h（垂直间距）
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 头像
-              Container(
-                width: 40.w,
-                height: 40.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.green, width: 1.w),
-                ),
-                child: ClipOval(
-                  child: avatarUrl.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: avatarUrl,
-                          fit: BoxFit.cover,
-                          errorWidget: (_, __, ___) => Image.network(
-                            'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/teacher_avatar.png',
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : Image.network(
-                          'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/teacher_avatar.png',
-                          fit: BoxFit.cover,
-                        ),
-                ),
-              ),
-              SizedBox(width: 5.w),
-              // 姓名和职称
+              // ✅ 第一个教师
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF262629),
-                      ),
-                    ),
-                    SizedBox(height: 3.h),
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: const Color(0xFF262629).withOpacity(0.6),
-                      ),
-                    ),
-                  ],
-                ),
+                child: _buildTeacherItem(group[0]),
               ),
+              // ✅ 如果有第二个教师，显示第二个
+              if (group.length > 1) ...[
+                SizedBox(width: 12.w), // ✅ 两个教师之间的间距
+                Expanded(
+                  child: _buildTeacherItem(group[1]),
+                ),
+              ],
             ],
           ),
         );
       }).toList(),
+    );
+  }
+
+  /// 单个教师项
+  Widget _buildTeacherItem(dynamic teacher) {
+    final avatar = teacher['avatar']?.toString() ?? '';
+    final name = teacher['name']?.toString() ?? '';
+    final title = teacher['title']?.toString() ?? '';
+    final avatarUrl = avatar.isNotEmpty ? _completePath(avatar) : '';
+
+    return Row(
+      children: [
+        // 头像
+        Container(
+          width: 40.w, // ✅ 小程序80rpx ÷ 2 = 40.w
+          height: 40.w,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.green, width: 2.w), // ✅ 小程序2rpx ÷ 2 = 2.w
+          ),
+          child: ClipOval(
+            // ✅ 使用 Image.network 避免 iOS Release 模式 Content-Disposition 问题
+            child: Image.network(
+              avatarUrl.isNotEmpty
+                  ? avatarUrl
+                  : 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/teacher_avatar.png',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Image.network(
+                'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/teacher_avatar.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(width: 5.w), // ✅ 小程序10rpx ÷ 2 = 5.w
+        // 姓名和职称
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                name,
+                style: TextStyle(
+                  fontSize: 12.sp, // ✅ 小程序24rpx ÷ 2 = 12.sp
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF262629),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 3.h), // ✅ 小程序6rpx ÷ 2 = 3.h
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: const Color(0xFF262629).withOpacity(0.6), // ✅ 小程序rgba(38, 38, 41, 0.6)
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

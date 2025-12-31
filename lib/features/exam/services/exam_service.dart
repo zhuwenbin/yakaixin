@@ -4,6 +4,7 @@ import 'package:yakaixin_app/core/network/dio_client.dart';
 import 'package:yakaixin_app/features/exam/models/paper_model.dart';
 import 'package:yakaixin_app/features/exam/models/question_model.dart';
 import 'package:yakaixin_app/features/home/models/goods_model.dart';
+import 'package:yakaixin_app/features/model_exam/models/exam_info_detail_model.dart';
 
 /// 考试服务
 /// 对应小程序: pages/test/exam.vue 的 API 调用
@@ -344,6 +345,125 @@ class ExamService {
     } catch (e) {
       print('❌ 提交答案异常: $e');
       throw Exception('提交答案失败: $e');
+    }
+  }
+
+  /// 获取模考详情
+  /// 对应小程序: getExaminfoDetail (api/index.js Line 939-945)
+  /// 对应接口: GET /c/tiku/mockexam/examinfo
+  /// 对应小程序调用: examInfo.vue Line 210-232
+  Future<ExamInfoDetailModel> getExaminfoDetail({
+    required String productId,
+    String? mockExamId,
+    String? professionalId,
+  }) async {
+    try {
+      print('📡 [获取模考详情] 请求参数: product_id=$productId, mock_exam_id=$mockExamId, professional_id=$professionalId');
+      
+      final response = await _dioClient.get(
+        '/c/tiku/mockexam/examinfo',
+        queryParameters: {
+          'product_id': productId,
+          if (mockExamId != null) 'mock_exam_id': mockExamId,
+          if (professionalId != null && professionalId.isNotEmpty) 'professional_id': professionalId,
+        },
+      );
+
+      print('📡 [获取模考详情] 响应: ${response.data}');
+
+      if (response.data['code'] != 100000) {
+        final errorMsg = response.data['msg']?.first ?? '获取模考详情失败';
+        print('❌ [获取模考详情] 失败: $errorMsg');
+        throw Exception(errorMsg);
+      }
+
+      final data = response.data['data'];
+      if (data == null) {
+        throw Exception('模考详情数据为空');
+      }
+
+      if (data['mock_exam_details'] == null) {
+        throw Exception('该场模考暂无任何数据！');
+      }
+
+      print('✅ [获取模考详情] 成功');
+      return ExamInfoDetailModel.fromJson(data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      print('❌ [获取模考详情] 网络错误: ${e.message}');
+      throw Exception('网络请求失败: ${e.message}');
+    } catch (e) {
+      print('❌ [获取模考详情] 错误: $e');
+      throw Exception('获取模考详情失败: $e');
+    }
+  }
+
+  /// 模考报名
+  /// 对应小程序: mockexamSignup (api/index.js Line 947-953)
+  /// 对应接口: POST /c/tiku/mockexam/signup
+  /// 对应小程序调用: examInfo.vue Line 136-142
+  Future<void> mockexamSignup({
+    required String examId,
+  }) async {
+    try {
+      print('📡 [模考报名] 请求参数: exam_id=$examId');
+      
+      final response = await _dioClient.post(
+        '/c/tiku/mockexam/signup',
+        data: {
+          'exam_id': examId,
+        },
+      );
+
+      print('📡 [模考报名] 响应: ${response.data}');
+
+      if (response.data['code'] != 100000) {
+        final errorMsg = response.data['msg']?.first ?? '报名失败';
+        print('❌ [模考报名] 失败: $errorMsg');
+        throw Exception(errorMsg);
+      }
+
+      print('✅ [模考报名] 成功');
+    } on DioException catch (e) {
+      print('❌ [模考报名] 网络错误: ${e.message}');
+      throw Exception('网络请求失败: ${e.message}');
+    } catch (e) {
+      print('❌ [模考报名] 错误: $e');
+      throw Exception('报名失败: $e');
+    }
+  }
+
+  /// 补考报名
+  /// 对应小程序: makeupSignup (api/index.js Line 955-961)
+  /// 对应接口: POST /c/tiku/mockexam/makeup
+  /// 对应小程序调用: examInfo.vue Line 148-152 (已注释)
+  Future<void> makeupSignup({
+    required String examRoundId,
+  }) async {
+    try {
+      print('📡 [补考报名] 请求参数: exam_round_id=$examRoundId');
+      
+      final response = await _dioClient.post(
+        '/c/tiku/mockexam/makeup',
+        data: {
+          'exam_round_id': examRoundId,
+        },
+      );
+
+      print('📡 [补考报名] 响应: ${response.data}');
+
+      if (response.data['code'] != 100000) {
+        final errorMsg = response.data['msg']?.first ?? '补考报名失败';
+        print('❌ [补考报名] 失败: $errorMsg');
+        throw Exception(errorMsg);
+      }
+
+      print('✅ [补考报名] 成功');
+    } on DioException catch (e) {
+      print('❌ [补考报名] 网络错误: ${e.message}');
+      throw Exception('网络请求失败: ${e.message}');
+    } catch (e) {
+      print('❌ [补考报名] 错误: $e');
+      throw Exception('补考报名失败: $e');
     }
   }
 }

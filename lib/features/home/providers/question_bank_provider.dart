@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../../core/utils/error_message_mapper.dart';
 import '../../../app/config/api_config.dart';
 import '../models/question_bank_model.dart';
 import '../services/learning_service.dart';
@@ -98,7 +97,10 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
     } catch (e) {
       // ✅ 兜底：未预期的错误
       print('❌ [QuestionBankProvider] 未预期错误: $e');
-      state = state.copyWith(error: '数据加载失败，请稍后重试', errorType: ErrorType.network);
+      state = state.copyWith(
+        error: '数据加载失败，请稍后重试',
+        errorType: ErrorType.network,
+      );
     }
   }
 
@@ -172,18 +174,24 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
     try {
       // ✅ 使用正确的 ChapterService.getChapterExercise 方法
       final service = _ref.read(chapterServiceProvider);
-      print('🔧 [QuestionBankProvider] ChapterService实例已获取，调用getChapterExercise...');
-      
+      print(
+        '🔧 [QuestionBankProvider] ChapterService实例已获取，调用getChapterExercise...',
+      );
+
       final chapterExercise = await service.getChapterExercise(
         professionalId: majorId,
       );
 
-      print('📦 [QuestionBankProvider] getChapterExercise返回结果: ${chapterExercise != null ? "有数据" : "null"}');
-      
+      print(
+        '📦 [QuestionBankProvider] getChapterExercise返回结果: ${chapterExercise != null ? "有数据" : "null"}',
+      );
+
       state = state.copyWith(chapterExercise: chapterExercise);
-      
+
       if (chapterExercise != null) {
-        print('✅ [QuestionBankProvider] 章节练习加载成功: id=${chapterExercise.id}, name=${chapterExercise.name}, questionNumber=${chapterExercise.questionNumber}, doQuestionNum=${chapterExercise.doQuestionNum}, permissionStatus=${chapterExercise.permissionStatus}');
+        print(
+          '✅ [QuestionBankProvider] 章节练习加载成功: id=${chapterExercise.id}, name=${chapterExercise.name}, questionNumber=${chapterExercise.questionNumber}, doQuestionNum=${chapterExercise.doQuestionNum}, permissionStatus=${chapterExercise.permissionStatus}',
+        );
       } else {
         print('⚠️ [QuestionBankProvider] 没有章节练习数据（接口返回null）');
       }
@@ -213,31 +221,48 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
       );
 
       print('📚 [题库Provider] API返回商品数量: ${response.list.length}');
-      
+
       if (response.list.isNotEmpty) {
         print('📚 [题库Provider] 前3个商品:');
         for (var i = 0; i < response.list.length && i < 3; i++) {
           final goods = response.list[i];
-          print('  [$i] ${goods.name}, permission_status=${goods.permissionStatus}, type=${goods.type}');
+          print(
+            '  [$i] ${goods.name}, permission_status=${goods.permissionStatus}, type=${goods.type}',
+          );
         }
       }
 
       // ✅ 将 GoodsModel 转换为 PurchasedGoodsModel
       final purchasedGoods = response.list.map((goods) {
         // ✅ 计算 num_text（对应小程序 Line 275-328）
-        String numText = '';
+        // ⚠️ 注意：小程序中如果 tiku_goods_details 为 null 或相关字段为 0/不存在，num_text 可能为空
+        // 小程序 Line 9: v-if="info.num_text" - 只有当 num_text 存在且为真值时才显示
+        String? numText;
         if (goods.tikuGoodsDetails != null) {
           final details = goods.tikuGoodsDetails!;
           final type = goods.type?.toString() ?? '';
+
           if (type == '8') {
             // 试卷：显示份数
-            numText = '共${details.paperNum}份';
+            final paperNum = details.paperNum;
+            // ✅ 只有当 paperNum 存在且大于 0 时才设置 numText
+            if (paperNum != null && paperNum != 0) {
+              numText = '共${paperNum}份';
+            }
           } else if (type == '10') {
             // 模考：显示轮数
-            numText = '共${details.examRoundNum}轮';
+            final examRoundNum = details.examRoundNum;
+            // ✅ 只有当 examRoundNum 存在且大于 0 时才设置 numText
+            if (examRoundNum != null && examRoundNum != 0) {
+              numText = '共${examRoundNum}轮';
+            }
           } else {
             // 题库：显示题数
-            numText = '共${details.questionNum}题';
+            final questionNum = details.questionNum;
+            // ✅ 只有当 questionNum 存在且大于 0 时才设置 numText
+            if (questionNum != null && questionNum != 0) {
+              numText = '共${questionNum}题';
+            }
           }
         }
 
@@ -251,12 +276,14 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
           'details_type': goods.detailsType?.toString() ?? '',
           'data_type': goods.dataType?.toString() ?? '',
           'permission_status': goods.permissionStatus?.toString() ?? '1',
-          'recitation_question_model': goods.recitationQuestionModel?.toString() ?? '',
+          'recitation_question_model':
+              goods.recitationQuestionModel?.toString() ?? '',
           'professional_id': majorId,
           'validity_start_date': goods.validityStartDate,
           'validity_end_date': goods.validityEndDate,
-          'created_at': null,
-          'num_text': numText.isNotEmpty ? numText : null,
+          'created_at': goods.createdAt, // ✅ 从 GoodsModel 中获取 created_at（开考时间）
+          'num_text':
+              numText, // ✅ 如果值为 0 或不存在，numText 为 null，不显示标签（对应小程序 v-if="info.num_text"）
           if (goods.tikuGoodsDetails != null)
             'tiku_goods_details': {
               'question_num': goods.tikuGoodsDetails!.questionNum ?? 0,

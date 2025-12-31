@@ -137,58 +137,64 @@ class _PurchasedItem extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             
-            // ✅ 标签区域（对应小程序 Line 8-11）
-            SizedBox(height: 10.h), // 对应小程序 20rpx/2=10
+            // ✅ 标签区域（对应小程序 Line 8-11: .papaer-tag）
+            // 小程序：display: flex; flex-direction: row; margin-top: 20rpx;
+            SizedBox(height: 10.h), // 对应小程序 margin-top: 20rpx ÷ 2 = 10.h
             Row(
               children: [
                 // ✅ 题目数量标签（对应小程序 Line 9: plain-tag）
-                if (goods.numText != null)
+                // 小程序：v-if="info.num_text" - 只有当 num_text 存在时才显示
+                // 小程序样式：background-color: #E0F0FF; color: #4783DC; padding: 10rpx 20rpx; border-radius: 8rpx; font-size: 20rpx; margin-right: 12rpx;
+                if (goods.numText != null && goods.numText!.isNotEmpty)
                   Container(
+                    margin: EdgeInsets.only(right: 6.w), // ✅ 对应小程序 margin-right: 12rpx ÷ 2 = 6.w
                     padding: EdgeInsets.symmetric(
-                      horizontal: 10.w, // 对应小程序 20rpx/2=10
-                      vertical: 5.h, // 对应小程序 10rpx/2=5
+                      horizontal: 10.w, // ✅ 对应小程序 padding: 10rpx 20rpx ÷ 2 = 10.w
+                      vertical: 5.h, // ✅ 对应小程序 padding: 10rpx 20rpx ÷ 2 = 5.h
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE0F0FF), // 对应小程序 Line 381
-                      borderRadius: BorderRadius.circular(4.r), // 对应小程序 8rpx/2=4
+                      color: const Color(0xFFE0F0FF), // ✅ 对应小程序 background-color: #E0F0FF
+                      borderRadius: BorderRadius.circular(4.r), // ✅ 对应小程序 border-radius: 8rpx ÷ 2 = 4.r
                     ),
                     child: Text(
                       goods.numText!,
                       style: TextStyle(
-                        fontSize: 10.sp, // 对应小程序 20rpx/2=10
-                        color: const Color(0xFF4783DC), // 对应小程序 Line 382
+                        fontSize: 10.sp, // ✅ 对应小程序 font-size: 20rpx ÷ 2 = 10.sp
+                        color: const Color(0xFF4783DC), // ✅ 对应小程序 color: #4783DC
                       ),
                     ),
                   ),
                 
-                SizedBox(width: 6.w), // 对应小程序 12rpx/2=6
-                
                 // ✅ 有效期标签（对应小程序 Line 10: custom-tag）
+                // 小程序：总是显示（没有 v-if 条件）
+                // 小程序样式：background-color: #EDF1F2; color: #777777; padding: 10rpx 20rpx; border-radius: 8rpx; font-size: 20rpx; margin-right: 12rpx;
                 Container(
+                  margin: EdgeInsets.only(right: 6.w), // ✅ 对应小程序 margin-right: 12rpx ÷ 2 = 6.w
                   padding: EdgeInsets.symmetric(
-                    horizontal: 10.w, // 对应小程序 20rpx/2=10
-                    vertical: 5.h, // 对应小程序 10rpx/2=5
+                    horizontal: 10.w, // ✅ 对应小程序 padding: 10rpx 20rpx ÷ 2 = 10.w
+                    vertical: 5.h, // ✅ 对应小程序 padding: 10rpx 20rpx ÷ 2 = 5.h
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEDF1F2), // 对应小程序 Line 390
-                    borderRadius: BorderRadius.circular(4.r), // 对应小程序 8rpx/2=4
+                    color: const Color(0xFFEDF1F2), // ✅ 对应小程序 background-color: #EDF1F2
+                    borderRadius: BorderRadius.circular(4.r), // ✅ 对应小程序 border-radius: 8rpx ÷ 2 = 4.r
                   ),
                   child: Text(
                     _formatValidity(goods),
                     style: TextStyle(
-                      fontSize: 10.sp, // 对应小程序 20rpx/2=10
-                      color: const Color(0xFF777777), // 对应小程序 Line 391
+                      fontSize: 10.sp, // ✅ 对应小程序 font-size: 20rpx ÷ 2 = 10.sp
+                      color: const Color(0xFF777777), // ✅ 对应小程序 color: #777777
                     ),
                   ),
                 ),
               ],
             ),
             
-            // ✅ 开考时间（对应小程序 Line 12-15）
-            // 小程序逻辑：if (info.type == 10) { system_id_name = `开考时间:${info.tiku_goods_details.exam_time}` }
+            // ✅ 开考时间（对应小程序 Line 12-15: index-nav-item.vue）
+            // 小程序：开考时间:{{ formData.created_at }}
+            // ⚠️ 注意：已购试题使用 created_at，不是 tiku_goods_details.exam_time
             SizedBox(height: 20.h), // 对应小程序 40rpx/2=20
             Text(
-              '开考时间:${goods.tikuGoodsDetails?.examTime ?? "-"}',
+              '开考时间:${goods.createdAt ?? "不限"}',
               style: TextStyle(
                 fontSize: 12.sp, // 对应小程序 24rpx/2=12
                 color: const Color(0xFF777777), // 对应小程序 Line 440

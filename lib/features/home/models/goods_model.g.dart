@@ -42,7 +42,10 @@ _$GoodsModelImpl _$$GoodsModelImplFromJson(Map<String, dynamic> json) =>
       shopType: json['shop_type'] as String?,
       recitationQuestionModel: json['recitation_question_model'],
       goodsMonthsPriceId: json['goods_months_price_id'] as String?,
-      month: json['month'] as String?,
+      month: json['month'],
+      monthsPrices: (json['months_prices'] as List<dynamic>?)
+          ?.map((e) => e as Map<String, dynamic>)
+          .toList(),
       professionalId: json['professional_id'],
       professionalIdName: json['professional_id_name'] as String?,
       year: json['year'] as String?,
@@ -55,6 +58,8 @@ _$GoodsModelImpl _$$GoodsModelImplFromJson(Map<String, dynamic> json) =>
           ?.map((e) => e as Map<String, dynamic>)
           .toList(),
       permissionOrderId: json['permission_order_id'],
+      teachingSystem: json['teaching_system'] as Map<String, dynamic>?,
+      createdAt: json['created_at'] as String?,
     );
 
 Map<String, dynamic> _$$GoodsModelImplToJson(_$GoodsModelImpl instance) =>
@@ -92,6 +97,7 @@ Map<String, dynamic> _$$GoodsModelImplToJson(_$GoodsModelImpl instance) =>
       'recitation_question_model': instance.recitationQuestionModel,
       'goods_months_price_id': instance.goodsMonthsPriceId,
       'month': instance.month,
+      'months_prices': instance.monthsPrices,
       'professional_id': instance.professionalId,
       'professional_id_name': instance.professionalIdName,
       'year': instance.year,
@@ -99,6 +105,8 @@ Map<String, dynamic> _$$GoodsModelImplToJson(_$GoodsModelImpl instance) =>
       'tiku_goods_details': instance.tikuGoodsDetails,
       'detail_package_goods': instance.detailPackageGoods,
       'permission_order_id': instance.permissionOrderId,
+      'teaching_system': instance.teachingSystem,
+      'created_at': instance.createdAt,
     };
 
 _$TikuGoodsDetailsImpl _$$TikuGoodsDetailsImplFromJson(

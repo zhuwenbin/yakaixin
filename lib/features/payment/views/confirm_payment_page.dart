@@ -1,22 +1,16 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_spacing.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
-import '../models/wechat_pay_params_model.dart';
-import '../services/balance_service.dart';
 import '../services/unified_payment_service.dart';
 import '../services/wechat_payment_service.dart' as wechat_pay;
-import '../../order/providers/payment_provider.dart';
-import '../services/iap_service.dart';
 
 /// 确认付款页面
 /// 功能: 展示订单信息、支付
@@ -38,6 +32,7 @@ class ConfirmPaymentPage extends ConsumerStatefulWidget {
   final double payableAmount;   // 应付金额
   final String? refreshGoodsId; // ✅ 新增：支付成功后刷新的商品ID
   final String? professionalIdName; // ✅ 新增：跳转支付成功页用
+  final String? goodsType; // ✅ 新增：商品类型（从详情页传递，避免支付成功页再次调用API）
 
   const ConfirmPaymentPage({
     super.key,
@@ -49,6 +44,7 @@ class ConfirmPaymentPage extends ConsumerStatefulWidget {
     required this.payableAmount,
     this.refreshGoodsId,
     this.professionalIdName,
+    this.goodsType, // ✅ 新增：商品类型参数
   });
 
   @override
@@ -104,14 +100,16 @@ class _ConfirmPaymentPageState extends ConsumerState<ConfirmPaymentPage> {
           studentId: studentId,
           goodsName: widget.goodsName,
           onResult: (success, errorMessage) {
-            print('\n👉 收到内购结果回调');
-            print('   成功: $success');
-            print('   错误: $errorMessage');
-            
-            if (success) {
-              completer.complete(wechat_pay.PaymentResult.succeeded());
-            } else {
-              completer.complete(wechat_pay.PaymentResult.failed(errorMessage ?? '内购失败'));
+            if (!completer.isCompleted) {
+              print('\n👉 收到内购结果回调');
+              print('   成功: $success');
+              print('   错误: $errorMessage');
+              
+              if (success) {
+                completer.complete(wechat_pay.PaymentResult.succeeded());
+              } else {
+                completer.complete(wechat_pay.PaymentResult.failed(errorMessage ?? '内购失败'));
+              }
             }
           },
         );
@@ -120,10 +118,14 @@ class _ConfirmPaymentPageState extends ConsumerState<ConfirmPaymentPage> {
         print('   ⏳ 等待支付结果...');
         final result = await completer.future;
         
+        // 关闭 Loading
         EasyLoading.dismiss();
         
         if (!result.isSuccess) {
-          EasyLoading.showError(result.errorMessage ?? '支付失败');
+          EasyLoading.showError(
+            result.errorMessage ?? '支付失败',
+            duration: Duration(seconds: 3),
+          );
           return;
         }
       } else if (Platform.isAndroid) {
@@ -204,6 +206,7 @@ class _ConfirmPaymentPageState extends ConsumerState<ConfirmPaymentPage> {
         context.push('/pay-success', extra: {
           'goods_id': widget.goodsId,
           'professional_id_name': widget.professionalIdName ?? '',
+          'goods_type': widget.goodsType, // ✅ 传递商品类型，避免支付成功页再次调用API
         });
       }
     } catch (e) {

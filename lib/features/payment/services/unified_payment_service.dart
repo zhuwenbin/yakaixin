@@ -57,6 +57,7 @@ class UnifiedPaymentService {
         _iapService.purchase(
           orderId: flowId,  // ✅ 使用流水ID，不是订单ID
           goodsId: goodsId,
+          amount: amount,  // ✅ 商品价格（用于生成产品ID）
           financeBodyId: financeBodyId,  // ✅ 财务主体ID
           studentId: studentId,
           goodsName: goodsName,

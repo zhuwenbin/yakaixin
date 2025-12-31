@@ -32,6 +32,7 @@ import '../../features/exam_entry/views/exam_entry_detail_page.dart';
 import '../../features/exam_entry/views/exam_knack_page.dart';
 import '../../features/model_exam/views/model_exam_index_page.dart';
 import '../../features/model_exam/views/exam_info_page.dart';
+import '../../features/model_exam/views/exam_help_page.dart';
 import '../../features/exam/views/exam_notice_page.dart';
 import '../../features/goods/views/course_goods_detail_page.dart';
 import '../../features/exam/views/examinationing_page.dart';
@@ -269,6 +270,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: AppRoutes.examHelp,
+        builder: (context, state) => const ExamHelpPage(),
+      ),
+      GoRoute(
         path: AppRoutes.examNotice,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
@@ -485,6 +490,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             goodsId: extra?['goods_id'],
             professionalIdName: extra?['professional_id_name'],
             isLearnButton: extra?['isLearnButton'],
+            goodsType: extra?['goods_type'], // ✅ 新增：商品类型参数
           );
         },
       ),
@@ -608,6 +614,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             // ✅ 可选参数（用于回调刷新）
             refreshGoodsId: extra?['refresh_goods_id'] as String?,
             professionalIdName: extra?['professional_id_name'] as String?,
+            goodsType: extra?['goods_type'] as String?, // ✅ 新增：商品类型参数
           );
         },
       ),

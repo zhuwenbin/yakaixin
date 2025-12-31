@@ -85,14 +85,12 @@ class GoodsService {
   /// 参考: newVideo.vue Line 389-396 (视频播放页需要传 user_id + student_id)
   Future<GoodsDetailModel> getGoodsDetail({
     required String goodsId,
-    String? userId,        // ✅ 新增：用户ID
-    String? studentId,     // ✅ 新增：学生ID
+    String? userId, // ✅ 新增：用户ID
+    String? studentId, // ✅ 新增：学生ID
   }) async {
     try {
-      final queryParams = <String, dynamic>{
-        'goods_id': goodsId,
-      };
-      
+      final queryParams = <String, dynamic>{'goods_id': goodsId};
+
       // ✅ 小程序逻辑：视频播放页调用时需要传 user_id + student_id
       if (userId != null && userId.isNotEmpty) {
         queryParams['user_id'] = userId;
@@ -100,7 +98,7 @@ class GoodsService {
       if (studentId != null && studentId.isNotEmpty) {
         queryParams['student_id'] = studentId;
       }
-      
+
       final response = await _dioClient.get(
         '/c/goods/v2/detail',
         queryParameters: queryParams,

@@ -1,6 +1,5 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:yakaixin_app/core/utils/error_message_mapper.dart';
+import 'package:yakaixin_app/core/utils/error_handler.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
 import '../../../core/widgets/loading_hud.dart';
@@ -55,19 +54,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
     print('🔍 [启动恢复] 开始从本地存储恢复用户数据...');
     print('📦 [userJson] $userJson');
     print('📦 [majorJson] $majorJson');
-    print('🔑 [token] ${token != null ? "存在(${token.substring(0, 20)}...)" : "不存在"}');
+    print(
+      '🔑 [token] ${token != null ? "存在(${token.substring(0, 20)}...)" : "不存在"}',
+    );
 
     if (userJson != null && token != null) {
       try {
         final user = UserModel.fromJson({...userJson, 'token': token});
         MajorModel? major;
-        
+
         if (majorJson != null) {
           print('🎯 [专业恢复] majorJson存在，开始解析...');
           print('   - major_id类型: ${majorJson['major_id'].runtimeType}');
           print('   - major_id值: ${majorJson['major_id']}');
           print('   - major_name: ${majorJson['major_name']}');
-          
+
           major = MajorModel.fromJson(majorJson);
           print('✅ [专业恢复] 解析成功: ID=${major.majorId}, Name=${major.majorName}');
         } else {
@@ -79,7 +80,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           currentMajor: major,
           isLoggedIn: true,
         );
-        
+
         print('✅ [启动恢复] 用户数据恢复完成');
         print('   - 用户ID: ${user.studentId}');
         print('   - 专业ID: ${major?.majorId ?? "未设置"}');
@@ -117,26 +118,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       LoadingHUD.dismiss();
       ToastUtil.success('登录成功');
-    } on Exception catch (e) {
-      // ✅ Service层的Exception（已包含用户友好信息）
+    } catch (e) {
+      // ✅ 统一错误处理
       state = state.copyWith(isLoading: false);
       LoadingHUD.dismiss();
-      final errorMsg = ErrorMessageMapper.mapException(e);
+      final errorMsg = ErrorHandler.handle(e);
       ToastUtil.error(errorMsg);
       print('⚠️ [验证码登录] 向用户显示错误: $errorMsg');
-      rethrow;
-    } catch (e) {
-      // 其他未预期错误
-      state = state.copyWith(isLoading: false);
-      LoadingHUD.dismiss();
-      ToastUtil.error('登录失败，请稍后重试');
-      print('❌ [验证码登录] 未预期错误: $e');
       rethrow;
     }
   }
 
   /// 发送验证码
-  /// 
+  ///
   /// [phone] 手机号
   /// [scene] 场景类型：2-登录, 3-修改密码
   Future<void> sendVerifyCode(String phone, {int scene = 2}) async {
@@ -145,18 +139,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _authService.sendVerifyCode(phone: phone, scene: scene);
       LoadingHUD.dismiss();
       ToastUtil.success('验证码已发送');
-    } on Exception catch (e) {
-      // ✅ Service层已经处理了Exception，直接显示错误信息
+    } catch (e) {
+      // ✅ 统一错误处理
       LoadingHUD.dismiss();
-      final errorMsg = ErrorMessageMapper.mapException(e);
+      final errorMsg = ErrorHandler.handle(e);
       ToastUtil.error(errorMsg);
       print('⚠️ [发送验证码] 向用户显示错误: $errorMsg');
-      rethrow;
-    } catch (e) {
-      // 其他未预期错误
-      LoadingHUD.dismiss();
-      ToastUtil.error('发送失败，请稍后重试');
-      print('❌ [发送验证码] 未预期错误: $e');
       rethrow;
     }
   }
@@ -184,30 +172,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       LoadingHUD.dismiss();
       ToastUtil.success('登录成功');
-    } on Exception catch (e) {
-      // ✅ Service层的Exception（已包含用户友好信息）
+    } catch (e) {
+      // ✅ 统一错误处理
       state = state.copyWith(isLoading: false);
       LoadingHUD.dismiss();
-      final errorMsg = ErrorMessageMapper.mapException(e);
+      final errorMsg = ErrorHandler.handle(e);
       ToastUtil.error(errorMsg);
       print('⚠️ [密码登录] 向用户显示错误: $errorMsg');
-      rethrow;
-    } catch (e) {
-      // 其他未预期错误
-      state = state.copyWith(isLoading: false);
-      LoadingHUD.dismiss();
-      ToastUtil.error('登录失败，请稍后重试');
-      print('❌ [密码登录] 未预期错误: $e');
       rethrow;
     }
   }
 
   /// 登录成功通用处理逻辑
   /// 对应小程序: store/index.js:149-191 (LOGIN action)
-  Future<void> _handleLoginSuccess(
-    dynamic response,
-    String? phone,
-  ) async {
+  Future<void> _handleLoginSuccess(dynamic response, String? phone) async {
     // 1. 保存token
     await _storage.setString(StorageKeys.token, response.token);
 
@@ -238,11 +216,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       'is_new': response.isNew?.toString(),
     };
     await _storage.setJson(StorageKeys.userInfo, userJson);
-    
+
     // ✅ 同时单独保存 studentId，供 ApiInterceptor 使用
     await _storage.setString(StorageKeys.studentId, response.studentId);
     print('💾 [存储] 已保存 studentId: ${response.studentId}');
-    
+
     // ⚠️ 调试：验证保存是否成功
     final savedStudentId = _storage.getString(StorageKeys.studentId);
     final savedUserInfo = _storage.getJson(StorageKeys.userInfo);
@@ -252,11 +230,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // 4. 处理专业信息
     // 对应小程序: index/index.vue:607-608, 331-332, 423-424
     MajorModel? currentMajor;
-    
+
     print('\n🔍 [登录响应] 处理专业信息...');
-    print('📍 [response.majorId] ${response.majorId} (类型: ${response.majorId.runtimeType})');
+    print(
+      '📍 [response.majorId] ${response.majorId} (类型: ${response.majorId.runtimeType})',
+    );
     print('📍 [response.majorName] ${response.majorName}');
-    
+
     // ✅ 修复: majorId可能是String或int，需要安全判断
     bool hasMajorId = false;
     if (response.majorId != null) {
@@ -267,19 +247,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
         hasMajorId = majorIdStr.isNotEmpty && majorIdStr != '0';
       }
     }
-    
+
     if (hasMajorId && response.majorName != null) {
       // 有专业信息，保存
-      print('✅ [专业信息] 登录返回了有效专业ID: ${response.majorId}, 专业名: ${response.majorName}');
+      print(
+        '✅ [专业信息] 登录返回了有效专业ID: ${response.majorId}, 专业名: ${response.majorName}',
+      );
       final majorJson = {
         'major_id': response.majorId.toString(),
         'major_name': response.majorName!,
       };
       await _storage.setJson(StorageKeys.majorInfo, majorJson);
-      await _storage.setString(StorageKeys.currentMajorId, response.majorId.toString());
-      
+      await _storage.setString(
+        StorageKeys.currentMajorId,
+        response.majorId.toString(),
+      );
+
       print('💾 [存储] majorJson: $majorJson');
-      
+
       currentMajor = MajorModel(
         majorId: response.majorId.toString(),
         majorName: response.majorName!,
@@ -293,17 +278,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'major_name': '医学-口腔执业医师',
       };
       await _storage.setJson(StorageKeys.majorInfo, defaultMajorJson);
-      await _storage.setString(StorageKeys.currentMajorId, '524033912737962623');
-      
+      await _storage.setString(
+        StorageKeys.currentMajorId,
+        '524033912737962623',
+      );
+
       print('💾 [存储] defaultMajorJson: $defaultMajorJson');
-      
+
       currentMajor = MajorModel(
         majorId: '524033912737962623',
         majorName: '医学-口腔执业医师',
       );
     }
-    
-    print('✅ [专业信息] 最终currentMajor: ID=${currentMajor.majorId}, Name=${currentMajor.majorName}');
+
+    print(
+      '✅ [专业信息] 最终currentMajor: ID=${currentMajor.majorId}, Name=${currentMajor.majorName}',
+    );
     print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     // 5. 清除旧的答题缓存
@@ -345,7 +335,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // 9. 活动记录 (TODO: 如需要)
     // 对应小程序: store/index.js:169-188 (activateuserRecord, shareRecord)
   }
-  
+
   /// 重置密码
   Future<void> resetPassword({
     required String phone,
@@ -361,20 +351,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       LoadingHUD.dismiss();
       ToastUtil.success('密码重置成功');
-    } on DioException catch (e) {
-      // ✅ 使用拦截器已处理好的用户友好错误信息
-      LoadingHUD.dismiss();
-      final errorMsg = e.error?.toString() ?? '重置失败，请稍后重试';
-      ToastUtil.error(errorMsg);
-      rethrow;
     } catch (e) {
-      // ✅ 兜底：未预期的错误
+      // ✅ 统一错误处理
       LoadingHUD.dismiss();
-      ToastUtil.error('重置失败，请稍后重试');
+      final errorMsg = ErrorHandler.handle(e);
+      ToastUtil.error(errorMsg);
       rethrow;
     }
   }
-  
+
   /// 修改密码（通过验证码）
   Future<void> changePassword({
     required String phone,
@@ -390,16 +375,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       LoadingHUD.dismiss();
       ToastUtil.success('密码修改成功');
-    } on DioException catch (e) {
-      // ✅ 使用拦截器已处理好的用户友好错误信息
-      LoadingHUD.dismiss();
-      final errorMsg = e.error?.toString() ?? '修改失败，请稍后重试';
-      ToastUtil.error(errorMsg);
-      rethrow;
     } catch (e) {
-      // ✅ 兜底：未预期的错误
+      // ✅ 统一错误处理
       LoadingHUD.dismiss();
-      ToastUtil.error('修改失败，请稍后重试');
+      final errorMsg = ErrorHandler.handle(e);
+      ToastUtil.error(errorMsg);
       rethrow;
     }
   }
@@ -427,11 +407,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'phone': mockData['phone'],
       };
       await _storage.setJson(StorageKeys.userInfo, userJson);
-      
+
       // ✅ 同时单独保存 studentId
-      await _storage.setString(StorageKeys.studentId, mockData['student_id'] as String);
+      await _storage.setString(
+        StorageKeys.studentId,
+        mockData['student_id'] as String,
+      );
       print('💾 [Mock存储] 已保存 studentId: ${mockData['student_id']}');
-      
+
       // ⚠️ 调试：验证保存是否成功
       final savedStudentId = _storage.getString(StorageKeys.studentId);
       final savedUserInfo = _storage.getJson(StorageKeys.userInfo);
@@ -441,18 +424,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // 4. 处理专业信息
       final majorId = mockData['major_id']?.toString() ?? '524033912737962623';
       final majorName = mockData['major_name'] as String? ?? '医学-口腔执业医师';
-      
-      final majorJson = {
-        'major_id': majorId,
-        'major_name': majorName,
-      };
+
+      final majorJson = {'major_id': majorId, 'major_name': majorName};
       await _storage.setJson(StorageKeys.majorInfo, majorJson);
       await _storage.setString(StorageKeys.currentMajorId, majorId);
-      
-      final currentMajor = MajorModel(
-        majorId: majorId,
-        majorName: majorName,
-      );
+
+      final currentMajor = MajorModel(majorId: majorId, majorName: majorName);
 
       // 5. 清除旧的答题缓存
       await _storage.remove(StorageKeys.answersList);
@@ -508,18 +485,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       LoadingHUD.dismiss();
       ToastUtil.success('登录成功');
-    } on DioException catch (e) {
-      // ✅ 使用拦截器已处理好的用户友好错误信息
-      state = state.copyWith(isLoading: false);
-      LoadingHUD.dismiss();
-      final errorMsg = e.error?.toString() ?? '登录失败，请稍后重试';
-      ToastUtil.error(errorMsg);
-      rethrow;
     } catch (e) {
-      // ✅ 兜底：未预期的错误
+      // ✅ 统一错误处理
       state = state.copyWith(isLoading: false);
       LoadingHUD.dismiss();
-      ToastUtil.error('登录失败，请稍后重试');
+      final errorMsg = ErrorHandler.handle(e);
+      ToastUtil.error(errorMsg);
       rethrow;
     }
   }
@@ -528,7 +499,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> switchMajor(MajorModel major) async {
     await _storage.setJson(StorageKeys.majorInfo, major.toJson());
     await _storage.setString(StorageKeys.currentMajorId, major.majorId);
-    
+
     state = state.copyWith(currentMajor: major);
     ToastUtil.success('已切换到${major.majorName}');
   }

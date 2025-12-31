@@ -7,7 +7,7 @@ part of 'person_edit_provider.dart';
 // **************************************************************************
 
 String _$personEditNotifierHash() =>
-    r'07105aae3818194bda7e64567fb86a9d5de451ed';
+    r'01562f1864c21e2983c89baa61b40c31db57f9ea';
 
 /// 个人信息编辑 Provider
 /// 对应小程序: my/person.vue

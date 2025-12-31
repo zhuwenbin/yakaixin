@@ -7,7 +7,7 @@ part of 'course_detail_provider.dart';
 // **************************************************************************
 
 String _$courseDetailNotifierHash() =>
-    r'bd0e68392e595607e2a54717f075d63dde08bc03';
+    r'd23ba0ab88ae8a400a653cb3d578da8b499880a3';
 
 /// 学习课程详情 Provider
 ///

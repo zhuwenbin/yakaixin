@@ -46,6 +46,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   Widget build(BuildContext context) {
     // ✅ 通过 ref.watch 监听 ViewModel 状态
     final state = ref.watch(questionBankProvider);
+    final statusBarHeight = MediaQuery.of(context).padding.top;
 
     // ✅ 使用 ref.listen 处理副作用（Toast、导航等）
     ref.listen<QuestionBankState>(questionBankProvider, (previous, next) {
@@ -63,22 +64,70 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // ✅ 通过 ViewModel 处理业务逻辑
-          await ref.read(questionBankProvider.notifier).refresh();
-        },
-        child: Stack(
-          children: [
-            _buildGradientBackground(),
-            _buildContent(context, ref, state),
-          ],
-        ),
+      body: Stack(
+        children: [
+          _buildGradientBackground(),
+          _buildMainContent(context, ref, state, statusBarHeight),
+        ],
       ),
     );
   }
 
-  /// 渐变背景
+  /// 主内容区域
+  /// ✅ 修复：Header不再固定定位，而是作为ScrollView的第一个元素，跟随滚动
+  Widget _buildMainContent(
+    BuildContext context,
+    WidgetRef ref,
+    QuestionBankState state,
+    double statusBarHeight,
+  ) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        // ✅ 通过 ViewModel 处理业务逻辑
+        await ref.read(questionBankProvider.notifier).refresh();
+      },
+      child: CustomScrollView(
+        slivers: [
+          // ✅ 顶部状态栏占位
+          SliverToBoxAdapter(
+            child: SizedBox(height: statusBarHeight),
+          ),
+          // ✅ 专业选择栏（作为ScrollView的一部分，会跟随滚动）
+          SliverToBoxAdapter(
+            child: _buildScrollableHeader(context, ref),
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: 16.h)),
+          SliverToBoxAdapter(child: _buildStudyCalendar(state, ref)),
+          SliverToBoxAdapter(child: SizedBox(height: 16.h)),
+          SliverToBoxAdapter(child: _buildStudyCardGrid(context, ref)),
+          SliverToBoxAdapter(child: SizedBox(height: 16.h)),
+          // 每日一测
+          if (state.dailyPractice != null) ...[
+            SliverToBoxAdapter(
+              child: _buildDailyPractice(context, state.dailyPractice!),
+            ),
+            SliverToBoxAdapter(child: SizedBox(height: 16.h)),
+          ],
+          // 章节练习
+          SliverToBoxAdapter(child: _buildChapterPractice(state)),
+          SliverToBoxAdapter(child: SizedBox(height: 16.h)),
+          // 技能模拟
+          if (state.skillMock != null) ...[
+            SliverToBoxAdapter(
+              child: _buildSkillMockSection(context, state.skillMock!),
+            ),
+            SliverToBoxAdapter(child: SizedBox(height: 16.h)),
+          ],
+          // 已购试题
+          SliverToBoxAdapter(child: _buildPurchasedQuestions(state)),
+          SliverToBoxAdapter(child: SizedBox(height: 60.h)),
+        ],
+      ),
+    );
+  }
+
+  /// 渐变背景（绝对定位，不滚动）
+  /// 对应小程序: .backgroud-color-blue
   Widget _buildGradientBackground() {
     return Positioned(
       top: 0,
@@ -98,63 +147,31 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
     );
   }
 
-  /// 主内容
-  Widget _buildContent(
-    BuildContext context,
-    WidgetRef ref,
-    QuestionBankState state,
-  ) {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(child: _buildHeader(context, ref)),
-        SliverToBoxAdapter(child: _buildStudyCalendar(state, ref)),
-        SliverToBoxAdapter(child: SizedBox(height: 16.h)),
-        SliverToBoxAdapter(child: _buildStudyCardGrid(context, ref)),
-        SliverToBoxAdapter(child: SizedBox(height: 16.h)),
-        // 每日一测
-        if (state.dailyPractice != null) ...[
-          SliverToBoxAdapter(
-            child: _buildDailyPractice(context, state.dailyPractice!),
-          ),
-          SliverToBoxAdapter(child: SizedBox(height: 16.h)),
-        ],
-        // 章节练习
-        SliverToBoxAdapter(child: _buildChapterPractice(state)),
-        SliverToBoxAdapter(child: SizedBox(height: 16.h)),
-        // 技能模拟
-        if (state.skillMock != null) ...[
-          SliverToBoxAdapter(
-            child: _buildSkillMockSection(context, state.skillMock!),
-          ),
-          SliverToBoxAdapter(child: SizedBox(height: 16.h)),
-        ],
-        // 已购试题
-        SliverToBoxAdapter(child: _buildPurchasedQuestions(state)),
-        SliverToBoxAdapter(child: SizedBox(height: 60.h)),
-      ],
-    );
-  }
-
-  /// 顶部专业选择栏
-  Widget _buildHeader(BuildContext context, WidgetRef ref) {
-    // ✅ 从 majorProvider 读取当前专业信息
+  /// 可滚动的专业选择栏（跟随ScrollView滚动）
+  /// ✅ 修复：不再使用Positioned固定定位，改为普通Widget
+  /// 对应小程序: .header-box .header
+  Widget _buildScrollableHeader(BuildContext context, WidgetRef ref) {
     final majorInfo = ref.watch(currentMajorProvider);
     final majorName = majorInfo?.majorName ?? '选择专业';
 
-    return GestureDetector(
-      onTap: () {
-        // ✅ 打开专业选择弹窗(与首页保持一致)
-        showMajorSelector(
-          context,
-          onChanged: () {
-            // 专业变更后刷新题库数据
-            ref.read(questionBankProvider.notifier).loadAllData();
-          },
-        );
-      },
-      child: Container(
-        padding: EdgeInsets.only(top: 60.h, left: 24.w, bottom: 24.h),
+    return Container(
+      height: 48.h,
+      color: Colors.transparent, // ✅ 透明背景，让渐变背景显示
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      alignment: Alignment.centerLeft,
+      child: GestureDetector(
+        onTap: () {
+          showMajorSelector(
+            context,
+            onChanged: () {
+              // 专业变更后刷新题库数据
+              ref.read(questionBankProvider.notifier).loadAllData();
+            },
+          );
+        },
+        behavior: HitTestBehavior.opaque,
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               majorName,

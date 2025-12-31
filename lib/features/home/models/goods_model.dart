@@ -51,7 +51,9 @@ class GoodsModel with _$GoodsModel {
     dynamic recitationQuestionModel, // 背诵模式: 1=开启 2=关闭
     @JsonKey(name: 'goods_months_price_id')
     String? goodsMonthsPriceId, // ✅ 商品月份价格ID (小程序Line 428)
-    @JsonKey(name: 'month') String? month, // ✅ 月份 (小程序Line 429)
+    @JsonKey(name: 'month') dynamic month, // ✅ 月份 (小程序Line 429) - 可能是String或int
+    @JsonKey(name: 'months_prices')
+    List<Map<String, dynamic>>? monthsPrices, // ✅ 月份价格列表 (小程序Line 382-388)
     @JsonKey(name: 'professional_id')
     dynamic professionalId, // ✅ 专业ID (小程序Line 129, 195)
     @JsonKey(name: 'professional_id_name')
@@ -65,6 +67,10 @@ class GoodsModel with _$GoodsModel {
     List<Map<String, dynamic>>? detailPackageGoods, // ✅ 课程大纲数据
     @JsonKey(name: 'permission_order_id')
     dynamic permissionOrderId, // ✅ 权限订单ID (小程序Line 473: 为0表示未报名)
+    @JsonKey(name: 'teaching_system')
+    Map<String, dynamic>? teachingSystem, // ✅ 教学体系（用于显示 system_id_name）
+    @JsonKey(name: 'created_at')
+    String? createdAt, // ✅ 创建时间（开考时间，用于已购试题）
   }) = _GoodsModel;
 
   factory GoodsModel.fromJson(Map<String, dynamic> json) =>

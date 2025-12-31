@@ -23,7 +23,7 @@ final reportServiceProvider = AutoDisposeProvider<ReportService>.internal(
 );
 
 typedef ReportServiceRef = AutoDisposeProviderRef<ReportService>;
-String _$learningDataHash() => r'f9d1fd63bc627996c6061ce144be982b4e2be500';
+String _$learningDataHash() => r'f71335e5b4c6d416c22a69c573b8002e8de93b1a';
 
 /// 学习数据Provider
 /// 对应小程序: report.vue 学习数据Tab
@@ -42,7 +42,7 @@ final learningDataProvider =
 
 typedef _$LearningData = AutoDisposeNotifier<LearningDataState>;
 String _$scoreReportNotifierHash() =>
-    r'a74dad8205744807d7bea8e9c3b9cb806360f732';
+    r'76f6d93f70c87ec80dc87b08bcf61986139b19db';
 
 /// 成绩报告Provider
 /// 对应小程序: report.vue 成绩报告Tab

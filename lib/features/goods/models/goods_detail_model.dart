@@ -21,6 +21,8 @@ class GoodsDetailModel with _$GoodsDetailModel {
     @JsonKey(name: 'professional_id_name') String? professionalIdName,
     @JsonKey(name: 'year') String? year,
     @JsonKey(name: 'exam_title') String? examTitle,
+    @JsonKey(name: 'details_type')
+    dynamic detailsType, // ✅ 详情页类型: 1=经典, 2=真题(历年真题), 3=科目, 4=模拟
     @JsonKey(name: 'prices') @Default([]) List<GoodsPriceModel> prices,
     @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails,
     @JsonKey(name: 'teaching_system') TeachingSystem? teachingSystem,
@@ -30,6 +32,8 @@ class GoodsDetailModel with _$GoodsDetailModel {
     // ✅ 新增：套餐包含的商品列表
     @JsonKey(name: 'detail_package_goods')
     List<PackageGoodsModel>? detailPackageGoods,
+    // ✅ 新增：模拟考场统计信息（对应小程序 mkgoods_statistics）
+    @JsonKey(name: 'mkgoods_statistics') MockGoodsStatistics? mkgoodsStatistics,
   }) = _GoodsDetailModel;
 
   factory GoodsDetailModel.fromJson(Map<String, dynamic> json) =>
@@ -156,4 +160,21 @@ class PackageGoodsModel with _$PackageGoodsModel {
 
   factory PackageGoodsModel.fromJson(Map<String, dynamic> json) =>
       _$PackageGoodsModelFromJson(json);
+}
+
+/// 模拟考场统计信息
+/// 对应小程序: simulatedExamRoom.vue Line 233-236, 797-807
+@freezed
+class MockGoodsStatistics with _$MockGoodsStatistics {
+  const factory MockGoodsStatistics({
+    /// 考试时长（分钟）
+    @JsonKey(name: 'exam_duration') dynamic examDuration,
+    /// 满分
+    @JsonKey(name: 'full_mark_score') dynamic fullMarkScore,
+    /// 题型数量映射（如 {"A1": 97, "A2": 8, "共用题干题": 15, "共用选项题": 30}）
+    @JsonKey(name: 'type_count_map') Map<String, dynamic>? typeCountMap,
+  }) = _MockGoodsStatistics;
+
+  factory MockGoodsStatistics.fromJson(Map<String, dynamic> json) =>
+      _$MockGoodsStatisticsFromJson(json);
 }

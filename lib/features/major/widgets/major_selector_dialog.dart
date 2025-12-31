@@ -13,10 +13,15 @@ import '../services/major_service.dart';
 /// 对应小程序: components/select-major.vue
 class MajorSelectorDialog extends ConsumerStatefulWidget {
   final VoidCallback? onChanged;
+  /// 弹窗顶部偏移量（可选）
+  /// 如果不提供，则使用默认值（首页：statusBarHeight + 48.h + 1）
+  /// 题库页面需要传入按钮底部位置
+  final double? topOffset;
 
   const MajorSelectorDialog({
     super.key,
     this.onChanged,
+    this.topOffset,
   });
 
   @override
@@ -108,14 +113,22 @@ class _MajorSelectorDialogState extends ConsumerState<MajorSelectorDialog>
 
   @override
   Widget build(BuildContext context) {
+    // ✅ 计算弹窗顶部位置
+    // 如果提供了 topOffset，使用提供的值；否则使用默认值（首页的情况）
+    final dialogTop = widget.topOffset ?? () {
+      final statusBarHeight = MediaQuery.of(context).padding.top;
+      final headerHeight = statusBarHeight + 48.h;
+      // ✅ 添加1像素偏移，确保在小米真机上不覆盖按钮
+      return headerHeight + 1;
+    }();
 
     return GestureDetector(
       onTap: _close,
       child: Stack(
         children: [
-          // 遮罩从header下方开始
+          // ✅ 遮罩从按钮下方开始（headerHeight + 1）
           Positioned(
-            top: 48.h, // header高度
+            top: dialogTop,
             left: 0,
             right: 0,
             bottom: 0,
@@ -126,16 +139,15 @@ class _MajorSelectorDialogState extends ConsumerState<MajorSelectorDialog>
               ),
             ),
           ),
-          // 内容区域从header下方开始下拉
+          // ✅ 内容区域从按钮下方开始下拉（使用高度展开动画，与小程序一致）
           Positioned(
-            top: 48.h, // header高度
+            top: dialogTop,
             left: 0,
             right: 0,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: Offset(0, -1),
-                end: Offset.zero,
-              ).animate(_animation),
+            child: SizeTransition(
+              sizeFactor: _animation, // ✅ 高度展开动画（从0到1）
+              axis: Axis.vertical,
+              axisAlignment: -1.0, // 从顶部开始展开
               child: GestureDetector(
                 onTap: () {}, // 阻止点击事件冒泡
                 child: Container(
@@ -235,8 +247,9 @@ class _MajorSelectorDialogState extends ConsumerState<MajorSelectorDialog>
             child: Text(
               group.dataName,
               style: TextStyle(
-                fontSize: 12.sp,
-                color: const Color(0xFF03203D).withOpacity(0.65),
+                fontSize: 12.sp, // ✅ 小程序24rpx ÷ 2 = 12.sp
+                fontWeight: FontWeight.w400, // ✅ 小程序font-weight: 400
+                color: const Color(0xFF03203D).withOpacity(0.65), // ✅ 小程序rgba(3, 32, 61, 0.65)
               ),
             ),
           ),
@@ -274,8 +287,9 @@ class _MajorSelectorDialogState extends ConsumerState<MajorSelectorDialog>
         child: Text(
           item.dataName,
           style: TextStyle(
-            fontSize: 12.sp,
-            color: isActive ? const Color(0xFF2E68FF) : const Color(0xFF03203D),
+            fontSize: 12.sp, // ✅ 小程序24rpx ÷ 2 = 12.sp
+            fontWeight: FontWeight.w400, // ✅ 小程序font-weight: 400（常规）
+            color: isActive ? const Color(0xFF2E68FF) : const Color(0xFF03203D), // ✅ 小程序颜色
           ),
           textAlign: TextAlign.center,
           maxLines: 1,
@@ -345,13 +359,20 @@ class _MajorSelectorDialogState extends ConsumerState<MajorSelectorDialog>
 }
 
 /// 显示专业选择弹窗
+/// [topOffset] 弹窗顶部偏移量（可选）
+/// 如果不提供，则使用默认值（首页：statusBarHeight + 48.h + 1）
+/// 题库页面需要传入按钮底部位置
 Future<void> showMajorSelector(
   BuildContext context, {
   VoidCallback? onChanged,
+  double? topOffset,
 }) {
   return showDialog(
     context: context,
     barrierColor: Colors.transparent,
-    builder: (context) => MajorSelectorDialog(onChanged: onChanged),
+    builder: (context) => MajorSelectorDialog(
+      onChanged: onChanged,
+      topOffset: topOffset,
+    ),
   );
 }

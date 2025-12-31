@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
@@ -13,6 +13,7 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/widgets/common_state_widget.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../order/providers/payment_provider.dart';
+import '../../home/views/widgets/countdown_timer.dart';
 import '../providers/goods_detail_provider.dart';
 import '../models/goods_detail_model.dart';
 
@@ -39,7 +40,7 @@ class GoodsDetailPage extends ConsumerStatefulWidget {
 class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   // ✅ 防止重复点击（对应小程序 Line 510-515）
   bool _isPurchasing = false;
-  
+
   @override
   void initState() {
     super.initState();
@@ -110,7 +111,10 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
         children: [
           Icon(Icons.inbox_outlined, size: 64.sp, color: AppColors.textHint),
           SizedBox(height: AppSpacing.mdV),
-          Text('暂无数据', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint)),
+          Text(
+            '暂无数据',
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+          ),
         ],
       ),
     );
@@ -163,17 +167,25 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   /// ⚠️ 注意：封面路径已在 provider 中处理（路径互换、默认图片）
   Widget _buildCoverImage(GoodsDetailModel detail) {
     final coverPath = detail.materialCoverPath ?? '';
-    
+
+    // ✅ 调试日志：打印完整URL
+    print('🖼️ [商品详情页] 封面图片URL: $coverPath');
+
     return AspectRatio(
       aspectRatio: 16 / 9,
-      child: CachedNetworkImage(
-        imageUrl: coverPath,
+      // ✅ 使用 Image.network 避免 iOS Release 模式 Content-Disposition 问题
+      child: Image.network(
+        coverPath,
         fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          color: AppColors.card,
-          child: const Center(child: CircularProgressIndicator()),
-        ),
-        errorWidget: (context, error, stackTrace) {
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: AppColors.card,
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          print('❌ [商品详情页] 封面图片加载失败: $coverPath, error: $error');
           return Container(
             color: AppColors.card,
             child: Icon(Icons.image, size: 50.sp, color: AppColors.textHint),
@@ -184,7 +196,7 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   }
 
   /// 秒杀信息区
-  /// 对应小程序: detail.vue Line 10-44
+  /// 对应小程序: detail.vue Line 10-44, CSS Line 675-770
   Widget _buildSeckillArea(GoodsDetailModel detail, int selectedIndex) {
     if (detail.prices.isEmpty) return const SizedBox.shrink();
 
@@ -194,54 +206,154 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
         double.tryParse(selectedPrice.originalPrice ?? '0') ?? 0;
     final discountPrice = originalPrice - salePrice;
 
+    // ✅ 倒计时：8小时（28800秒）
+    const countdownSeconds = 8 * 60 * 60;
+
     return Container(
-      padding: AppSpacing.allMd,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.error, AppColors.secondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Column(
+      // ✅ 对应小程序 .seckill-box, CSS Line 675-679
+      // ⚠️ padding: 0 10px 10px 10px - px 单位，不需要除以 2
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+      // ✅ background-color: red
+      color: Colors.red,
+      // ✅ position: relative, overflow: hidden
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          // 秒杀标题和倒计时
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '题库秒杀',
-                style: AppTextStyles.heading3.copyWith(color: AppColors.textWhite),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: AppColors.maskLight,
-                  borderRadius: BorderRadius.circular(AppRadius.xs),
-                ),
-                child: Text(
-                  '限时秒杀',
-                  style: AppTextStyles.labelMedium.copyWith(color: AppColors.textWhite),
+          // ✅ 装饰圆 .tl (对应小程序 CSS Line 680-694)
+          // ⚠️ width: 87px, height: 77px, left: -10px, top: -10px - px 单位
+          Positioned(
+            left: -10, // left: -10px (px 单位)
+            top: -10, // top: -10px (px 单位)
+            child: Container(
+              width: 87, // width: 87px (px 单位)
+              height: 77, // height: 77px (px 单位)
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFFFF5D00), // #ff5d00
+                    const Color(0xFFFF5D00).withOpacity(0), // rgba(#ff5d00, 0)
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-          SizedBox(height: 12.h),
-          // 价格计算公式
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          // ✅ 装饰圆 .tr (对应小程序 CSS Line 695-707)
+          // ⚠️ width: 87px, height: 77px, right: -20px, top: -30px - px 单位
+          Positioned(
+            right: -20, // right: -20px (px 单位)
+            top: -30, // top: -30px (px 单位)
+            child: Container(
+              width: 87, // width: 87px (px 单位)
+              height: 77, // height: 77px (px 单位)
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFFFF5D00), // #ff5d00
+                    const Color(0xFFFF5D00).withOpacity(0), // rgba(#ff5d00, 0)
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // ✅ 内容层（z-index: 1）
+          Column(
             children: [
-              _buildPriceItem('秒杀价', salePrice),
-              Text(
-                ' = ',
-                style: TextStyle(fontSize: 16.sp, color: Colors.white),
+              // ✅ .t 部分 (对应小程序 CSS Line 745-769)
+              // ⚠️ height: 49px - px 单位，不需要除以 2
+              Container(
+                height: 49, // height: 49px (px 单位)
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                ), // padding: 0 10px (px 单位)
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // ✅ .l "题库秒杀" (对应小程序 CSS Line 752-760)
+                    // ⚠️ width: 37px, height: 39px, font-size: 14px, border-radius: 5px - px 单位
+                    Container(
+                      width: 37, // width: 37px (px 单位)
+                      height: 39, // height: 39px (px 单位)
+                      decoration: BoxDecoration(
+                        color: const Color(
+                          0xFFDF001A,
+                        ), // background-color: #df001a
+                        borderRadius: BorderRadius.circular(
+                          5,
+                        ), // border-radius: 5px (px 单位)
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '题库秒杀',
+                        style: const TextStyle(
+                          fontSize: 14, // font-size: 14px (px 单位)
+                          color: Colors.white, // color: #ffffff
+                        ),
+                      ),
+                    ),
+                    // ✅ .r 倒计时部分 (对应小程序 CSS Line 761-768)
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '限时秒杀',
+                          style: const TextStyle(
+                            fontSize: 12, // font-size: 12px (px 单位)
+                            color: Color(0xFFFED7C5), // color: #fed7c5
+                          ),
+                        ),
+                        const SizedBox(height: 2), // margin-bottom: 2px (px 单位)
+                        // ✅ 秒杀倒计时（对应小程序 count-down2.vue）
+                        // ⚠️ 注意：秒杀区域的倒计时样式与首页不同
+                        // 背景：白色 #ffffff，文字：深色 #1f232e，分隔符：白色 #ffffff
+                        _buildSeckillCountdown(countdownSeconds),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              _buildPriceItem('原价', originalPrice),
-              Text(
-                ' - ',
-                style: TextStyle(fontSize: 16.sp, color: Colors.white),
+              const SizedBox(height: 0), // 无间距（小程序中 .t 和 .price-text 紧贴）
+              // ✅ .price-text 部分 (对应小程序 CSS Line 708-744)
+              // ⚠️ padding: 8px 44px 8px 56px - px 单位，不需要除以 2
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(
+                  56, // padding-left: 56px (px 单位)
+                  8, // padding-top: 8px (px 单位)
+                  44, // padding-right: 44px (px 单位)
+                  8, // padding-bottom: 8px (px 单位)
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white, // background-color: #ffffff
+                  borderRadius: BorderRadius.circular(
+                    5,
+                  ), // border-radius: 5px (px 单位)
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // ✅ 秒杀价
+                    _buildSeckillPriceItem('秒杀价', salePrice),
+                    // ✅ =
+                    Text(
+                      '=',
+                      style: TextStyle(fontSize: 14.sp, color: Colors.black),
+                    ),
+                    // ✅ 原价
+                    _buildSeckillPriceItem('原价', originalPrice),
+                    // ✅ -
+                    Text(
+                      '-',
+                      style: TextStyle(fontSize: 14.sp, color: Colors.black),
+                    ),
+                    // ✅ 限时优惠
+                    _buildSeckillPriceItem('限时优惠', discountPrice),
+                  ],
+                ),
               ),
-              _buildPriceItem('限时优惠', discountPrice),
             ],
           ),
         ],
@@ -249,24 +361,107 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
     );
   }
 
-  Widget _buildPriceItem(String label, double price) {
+  /// 秒杀倒计时（对应小程序 count-down2.vue）
+  /// ⚠️ 注意：秒杀区域的倒计时样式与首页不同
+  /// 背景：白色 #ffffff，文字：深色 #1f232e，分隔符：白色 #ffffff
+  Widget _buildSeckillCountdown(int durationSeconds) {
+    return _SeckillCountdownTimer(
+      durationSeconds: durationSeconds,
+      onFinish: () {
+        // 倒计时结束，重新开始
+      },
+    );
+  }
+
+  /// 秒杀价格项 (对应小程序 .price-text .ee, CSS Line 722-743)
+  Widget _buildSeckillPriceItem(String label, double price) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        // ✅ label (对应小程序 view:nth-child(1), CSS Line 726-729)
+        // ⚠️ font-size: 12px - px 单位，不需要除以 2
         Text(
           label,
-          style: TextStyle(fontSize: 12.sp, color: Colors.white70),
-        ),
-        SizedBox(height: 4.h),
-        Text(
-          '¥${price.toStringAsFixed(2)}',
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+          style: const TextStyle(
+            fontSize: 12, // font-size: 12px (px 单位)
+            color: Colors.red, // color: red
           ),
+        ),
+        const SizedBox(height: 0), // 无间距（小程序中 label 和 price 紧贴）
+        // ✅ price (对应小程序 view:nth-child(2), CSS Line 730-742)
+        // ⚠️ font-size: 24rpx, 34rpx - rpx 单位，需要除以 2
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              '￥',
+              style: TextStyle(
+                fontWeight: FontWeight.w400, // font-weight: 400
+                fontSize: 12.sp, // font-size: 24rpx ÷ 2 = 12.sp
+                color: const Color(0xFFFF5430), // color: #ff5430
+              ),
+            ),
+            Text(
+              price.toStringAsFixed(2),
+              style: TextStyle(
+                fontWeight: FontWeight.w500, // font-weight: 500
+                fontSize: 17.sp, // font-size: 34rpx ÷ 2 = 17.sp
+                color: const Color(0xFFFF5430), // color: #ff5430
+              ),
+            ),
+          ],
         ),
       ],
     );
+  }
+
+  /// 获取显示标题（对应小程序 detail.vue Line 47 和 secretRealDetail.vue Line 509）
+  /// type == 8 时，根据 details_type 显示不同标题：
+  /// - details_type == 2 → 计算 examTitle = year + 专业名称最后一部分（对应小程序 secretRealDetail.vue Line 506-509）
+  /// - 其他情况 → 优先显示 exam_title（如果存在），否则显示 name
+  String _getDisplayTitle(GoodsDetailModel detail) {
+    final typeInt = int.tryParse(detail.type?.toString() ?? '') ?? 0;
+
+    // ✅ type == 8（试卷）时，根据 details_type 显示标题
+    if (typeInt == 8) {
+      final detailsTypeInt =
+          int.tryParse(detail.detailsType?.toString() ?? '') ?? 0;
+
+      // ✅ details_type == 2 → 计算 examTitle（对应小程序 secretRealDetail.vue Line 506-509）
+      if (detailsTypeInt == 2) {
+        // ✅ 小程序逻辑：examTitle = year + 专业名称最后一部分
+        final professionalIdName = detail.professionalIdName ?? '';
+        if (professionalIdName.isNotEmpty) {
+          final professionalIdNames = professionalIdName.split('-');
+          final titleName = professionalIdNames.isNotEmpty
+              ? professionalIdNames[professionalIdNames.length - 1]
+              : '';
+          final year = detail.year ?? '';
+          // ✅ 组合：year + titleName（例如："2026" + "口腔执业医师" = "2026口腔执业医师"）
+          // 但用户说显示的是"历年真题"，可能是 API 返回的 exam_title 就是"历年真题"
+          // 或者需要特殊处理
+          if (year.isNotEmpty && titleName.isNotEmpty) {
+            return '$year$titleName';
+          }
+        }
+        // ✅ 如果计算失败，优先使用 API 返回的 exam_title
+        if (detail.examTitle != null && detail.examTitle!.isNotEmpty) {
+          return detail.examTitle!;
+        }
+        // ✅ 如果 exam_title 也没有，返回"历年真题"作为默认值
+        return '历年真题';
+      }
+
+      // ✅ 其他情况，优先显示 exam_title（如果存在）
+      if (detail.examTitle != null && detail.examTitle!.isNotEmpty) {
+        return detail.examTitle!;
+      }
+    }
+
+    // ✅ 其他情况或 exam_title 为空时，显示 name
+    return detail.name ?? '';
   }
 
   /// 商品信息框
@@ -278,11 +473,8 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 商品名称
-          Text(
-            detail.name ?? '',
-            style: AppTextStyles.heading3,
-          ),
+          // 商品名称（type == 8 时优先显示 exam_title）
+          Text(_getDisplayTitle(detail), style: AppTextStyles.heading3),
           SizedBox(height: AppSpacing.smV),
           // 标签（题目数量、年份等）
           Wrap(
@@ -299,7 +491,9 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
             SizedBox(height: AppSpacing.smV),
             Text(
               detail.tipsText,
-              style: AppTextStyles.labelLarge.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.labelLarge.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
           SizedBox(height: AppSpacing.mdV),
@@ -319,10 +513,7 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
         color: AppColors.courseTagBg,
         borderRadius: BorderRadius.circular(AppRadius.xs),
       ),
-      child: Text(
-        text,
-        style: AppTextStyles.courseTag,
-      ),
+      child: Text(text, style: AppTextStyles.courseTag),
     );
   }
 
@@ -367,7 +558,9 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                   '有效期 ${price.validityText}',
                   style: TextStyle(
                     fontSize: 14.sp,
-                    color: isSelected ? AppColors.textWhite : AppColors.textPrimary,
+                    color: isSelected
+                        ? AppColors.textWhite
+                        : AppColors.textPrimary,
                     fontWeight: isSelected
                         ? FontWeight.w500
                         : FontWeight.normal,
@@ -413,7 +606,9 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
               SizedBox(width: AppSpacing.sm),
               Text(
                 '本题库共有 $questionNum 道题',
-                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
@@ -426,7 +621,9 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
             ),
             child: Text(
               '章节列表功能开发中...',
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
         ],
@@ -439,29 +636,40 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   /// ⚠️ 注意：介绍路径已在 provider 中处理（路径互换）
   Widget _buildIntroImage(GoodsDetailModel detail) {
     final introPath = detail.materialIntroPath ?? '';
-    
+
+    // ✅ 调试日志：打印完整URL（对比小程序）
+    print('🖼️ [商品详情页] 介绍图片URL: $introPath');
+
     if (introPath.isEmpty) {
+      print('🖼️ [商品详情页] 介绍图片路径为空，不显示');
       return const SizedBox.shrink();
     }
 
     return Container(
       width: double.infinity,
       color: AppColors.surface,
-      child: CachedNetworkImage(
-        imageUrl: introPath,
+      // ✅ 使用 Image.network 避免 iOS Release 模式 Content-Disposition 问题
+      child: Image.network(
+        introPath,
         fit: BoxFit.fitWidth,
-        placeholder: (context, url) => Container(
-          height: 200.h,
-          alignment: Alignment.center,
-          child: const CircularProgressIndicator(),
-        ),
-        errorWidget: (context, error, stackTrace) {
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            height: 200.h,
+            alignment: Alignment.center,
+            child: const CircularProgressIndicator(),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          print('❌ [商品详情页] 介绍图片加载失败: $introPath, error: $error');
           return Container(
             padding: AppSpacing.allXl,
             child: Center(
               child: Text(
                 '商品介绍加载失败',
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textHint,
+                ),
               ),
             ),
           );
@@ -476,9 +684,11 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
     if (detail.prices.isEmpty) return const SizedBox.shrink();
 
     final selectedPrice = detail.prices[selectedIndex];
-    final permissionStatus = SafeTypeConverter.toSafeString(detail.permissionStatus);
+    final permissionStatus = SafeTypeConverter.toSafeString(
+      detail.permissionStatus,
+    );
     final isNotPurchased = permissionStatus == '2';
-    
+
     // 🔍 调试日志：打印购买状态
     print('\n🔍 底部栏渲染状态：');
     print('   permission_status: $permissionStatus (1=已购买, 2=未购买)');
@@ -534,21 +744,57 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                 ),
               ),
               SizedBox(width: AppSpacing.md),
-              ElevatedButton(
-                onPressed: () => _handlePurchase(detail, selectedPrice),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 40.w,
-                    vertical: 14.h,
+              // ✅ 购买按钮 (对应小程序 .but, CSS Line 938-949)
+              SizedBox(
+                width: 238.w, // width: 476rpx = 238.w
+                height: 40.h, // height: 80rpx = 40.h
+                child: ElevatedButton(
+                  onPressed: () => _handlePurchase(detail, selectedPrice),
+                  style: ElevatedButton.styleFrom(
+                    // ✅ background: linear-gradient(163deg, #ff8928 0%, #ff5430 100%)
+                    backgroundColor: Colors.transparent,
+                    padding: EdgeInsets.zero,
+                    // ✅ border-radius: 40rpx = 20.r
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    // ✅ box-shadow: 0px 2px 6px 0px rgba(255, 89, 50, 0.45)
+                    elevation: 0,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.xl),
+                  child: Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        // ✅ 163deg 对应角度计算
+                        colors: [
+                          Color(0xFFFF8928), // #ff8928
+                          Color(0xFFFF5430), // #ff5430
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(
+                            0xFFFF5932,
+                          ).withOpacity(0.45), // rgba(255, 89, 50, 0.45)
+                          offset: const Offset(0, 2),
+                          blurRadius: 6,
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '立即购买',
+                      style: TextStyle(
+                        fontSize: 14.sp, // font-size: 28rpx = 14.sp
+                        fontWeight: FontWeight.w500, // font-weight: 500
+                        color: Colors.white, // color: #ffffff
+                      ),
+                    ),
                   ),
-                ),
-                child: Text(
-                  '立即购买',
-                  style: AppTextStyles.buttonLarge,
                 ),
               ),
             ] else ...[
@@ -588,14 +834,20 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
 
   /// 处理购买 - 调用统一支付模块
   /// 对应小程序: detail.vue Line 509-583
-  Future<void> _handlePurchase(GoodsDetailModel detail, GoodsPriceModel selectedPrice) async {
+  Future<void> _handlePurchase(
+    GoodsDetailModel detail,
+    GoodsPriceModel selectedPrice,
+  ) async {
     // ✅ 防止重复点击（对应小程序 Line 510-518）
     if (_isPurchasing) {
       EasyLoading.showInfo('请勿重复点击');
       return;
     }
-    
-    final goodsId = SafeTypeConverter.toSafeString(detail.goodsId, defaultValue: '');
+
+    final goodsId = SafeTypeConverter.toSafeString(
+      detail.goodsId,
+      defaultValue: '',
+    );
     if (goodsId.isEmpty) {
       EasyLoading.showError('商品ID不能为空');
       return;
@@ -616,9 +868,9 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
     try {
       // 设置锁定状态
       setState(() => _isPurchasing = true);
-      
+
       EasyLoading.show(status: '正在处理订单...');
-      
+
       // 🎯 调用统一支付入口
       final paymentNotifier = ref.read(paymentProvider.notifier);
       final result = await paymentNotifier.startPayment(
@@ -627,9 +879,9 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
         months: months,
         payableAmount: salePrice,
       );
-      
+
       EasyLoading.dismiss();
-      
+
       if (!mounted) return;
 
       // 处理支付结果
@@ -638,25 +890,41 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
         // 1. 刷新商品详情（获取最新购买状态）
         final refreshGoodsId = widget.goodsId ?? widget.productId;
         if (refreshGoodsId != null) {
-          await ref.read(goodsDetailNotifierProvider.notifier).refresh(refreshGoodsId);
+          await ref
+              .read(goodsDetailNotifierProvider.notifier)
+              .refresh(refreshGoodsId);
         }
-        
+
         // 2. 跳转支付成功页
         final professionalIdName = SafeTypeConverter.toSafeString(
           detail.professionalIdName,
           defaultValue: '',
         );
-        context.push(AppRoutes.paySuccess, extra: {
-          'goods_id': goodsId,
-          'professional_id_name': professionalIdName,
-        });
+        final goodsType = SafeTypeConverter.toSafeString(
+          detail.type,
+          defaultValue: '',
+        );
+        context.push(
+          AppRoutes.paySuccess,
+          extra: {
+            'goods_id': goodsId,
+            'professional_id_name': professionalIdName,
+            'goods_type': goodsType, // ✅ 传递商品类型，避免支付成功页再次调用API
+          },
+        );
       } else if (!result.isFreeOrder && result.isSuccess) {
         // ✅ 非0元课：跳转确认支付页（对应小程序 Line 569-573）
         final professionalIdName = SafeTypeConverter.toSafeString(
           detail.professionalIdName,
           defaultValue: '',
         );
-        
+
+        // ✅ 获取商品类型
+        final goodsType = SafeTypeConverter.toSafeString(
+          detail.type,
+          defaultValue: '',
+        );
+
         // 🔄 使用 await 等待支付结果（方案2：路由返回值）
         final paymentResult = await context.push<Map<String, dynamic>>(
           AppRoutes.confirmPayment,
@@ -664,19 +932,23 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
             'order_id': result.orderId!,
             'flow_id': result.flowId!,
             'goods_id': result.goodsId!,
-            'finance_body_id': result.financeBodyId ?? '',  // ✅ 财务主体ID
+            'finance_body_id': result.financeBodyId ?? '', // ✅ 财务主体ID
             'goods_name': detail.name ?? '商品',
             'payable_amount': result.payableAmount!,
-            'refresh_goods_id': goodsId,  // 传递当前商品ID，用于刷新
+            'refresh_goods_id': goodsId, // 传递当前商品ID，用于刷新
             'professional_id_name': professionalIdName,
+            'goods_type': goodsType, // ✅ 传递商品类型，避免支付成功页再次调用API
           },
         );
-        
+
         // 🔄 支付成功回调：刷新商品详情（对应小程序 Line 639: this.getGoodsDetail()）
         if (paymentResult != null && paymentResult['success'] == true) {
           print('\n🔄 支付成功回调，刷新商品详情...');
-          final refreshGoodsId = paymentResult['refresh_goods_id'] as String? ?? goodsId;
-          await ref.read(goodsDetailNotifierProvider.notifier).refresh(refreshGoodsId);
+          final refreshGoodsId =
+              paymentResult['refresh_goods_id'] as String? ?? goodsId;
+          await ref
+              .read(goodsDetailNotifierProvider.notifier)
+              .refresh(refreshGoodsId);
           print('✅ 商品详情已刷新，按钮状态已更新为"去学习"');
         }
       } else {
@@ -700,31 +972,34 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   /// 对应小程序: detail.vue Line 339-366
   void _handleStartPractice(GoodsDetailModel detail) {
     print('\n📚 点击了「立即测试」按钮');
-    
+
     // ✅ 检查购买状态（对应小程序 Line 344）
-    final permissionStatus = SafeTypeConverter.toSafeString(detail.permissionStatus);
+    final permissionStatus = SafeTypeConverter.toSafeString(
+      detail.permissionStatus,
+    );
     print('   权限状态: $permissionStatus (1=已购买, 2=未购买)');
-    
+
     if (permissionStatus != '1') {
       print('   ❌ 未购买，无法跳转');
       EasyLoading.showInfo('请先购买课程');
       return;
     }
-    
+
     final major = ref.read(currentMajorProvider);
     final goodsId = detail.goodsId?.toString();
     final professionalId = major?.majorId.toString();
     final typeInt = SafeTypeConverter.toInt(detail.type);
-    
+
     print('   商品ID: $goodsId');
     print('   专业ID: $professionalId');
     print('   类型: $typeInt (18=章节练习, 8=试卷, 10=模考)');
 
     // type == 18: 章节练习（对应小程序 Line 345-351）
     if (typeInt == 18) {
-      final url = '/chapterList?professional_id=$professionalId&goods_id=$goodsId&total=${detail.tikuGoodsDetails?.questionNum}';
+      final url =
+          '/chapterList?professional_id=$professionalId&goods_id=$goodsId&total=${detail.tikuGoodsDetails?.questionNum}';
       print('   ✅ 跳转到章节练习: $url');
-      
+
       context.push(
         AppRoutes.chapterList,
         extra: {
@@ -738,9 +1013,10 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
 
     // type == 10: 模考（对应小程序 Line 353-360）
     if (typeInt == 10) {
-      final url = '/examInfo?product_id=$goodsId&title=${detail.name}&page=home';
+      final url =
+          '/examInfo?product_id=$goodsId&title=${detail.name}&page=home';
       print('   ✅ 跳转到模考: $url');
-      
+
       context.push(
         AppRoutes.examInfo,
         extra: {'product_id': goodsId, 'title': detail.name, 'page': 'home'},
@@ -752,7 +1028,7 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
     if (typeInt == 8) {
       final url = '/testExam?id=$goodsId';
       print('   ✅ 跳转到试卷: $url');
-      
+
       context.push(
         AppRoutes.testExam,
         extra: {
@@ -762,9 +1038,143 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
       );
       return;
     }
-    
+
     // 未知类型
     print('   ❌ 未知商品类型: $typeInt');
     EasyLoading.showInfo('不支持的商品类型');
+  }
+}
+
+/// 秒杀倒计时组件（对应小程序 count-down2.vue）
+/// 样式：白色背景，深色文字，白色分隔符
+class _SeckillCountdownTimer extends StatefulWidget {
+  final int durationSeconds;
+  final VoidCallback? onFinish;
+
+  const _SeckillCountdownTimer({required this.durationSeconds, this.onFinish});
+
+  @override
+  State<_SeckillCountdownTimer> createState() => _SeckillCountdownTimerState();
+}
+
+class _SeckillCountdownTimerState extends State<_SeckillCountdownTimer> {
+  late int _remainingSeconds;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _remainingSeconds = widget.durationSeconds;
+    _startCountdown();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startCountdown() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 0) {
+        setState(() {
+          _remainingSeconds--;
+        });
+      } else {
+        timer.cancel();
+        widget.onFinish?.call();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // ✅ 对应小程序 count-down2.vue 的显示格式
+    final hours = _remainingSeconds ~/ 3600;
+    final minutes = (_remainingSeconds % 3600) ~/ 60;
+    final seconds = _remainingSeconds % 60;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ✅ 小时（对应小程序 .time__item, CSS Line 54-64）
+        Container(
+          width: 17.w, // width: 34rpx ÷ 2 = 17.w
+          height: 17.h, // height: 34rpx ÷ 2 = 17.h
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white, // ✅ 小程序 background: #ffffff
+            borderRadius: BorderRadius.circular(
+              4.r,
+            ), // border-radius: 8rpx ÷ 2 = 4.r
+          ),
+          child: Text(
+            hours > 9 ? hours.toString() : '0$hours',
+            style: TextStyle(
+              fontSize: 12.sp, // font-size: 24rpx ÷ 2 = 12.sp
+              fontWeight: FontWeight.w400, // font-weight: 400
+              color: const Color(0xFF1F232E), // ✅ 小程序 color: #1f232e
+            ),
+          ),
+        ),
+        // ✅ 分隔符（对应小程序 .b, CSS Line 65-71）
+        Container(
+          width: 10.w, // width: 20rpx ÷ 2 = 10.w
+          alignment: Alignment.center,
+          child: Text(
+            ':',
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: Colors.white, // ✅ 小程序 color: #ffffff
+            ),
+          ),
+        ),
+        // ✅ 分钟
+        Container(
+          width: 17.w,
+          height: 17.h,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+          child: Text(
+            minutes > 9 ? minutes.toString() : '0$minutes',
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFF1F232E),
+            ),
+          ),
+        ),
+        // ✅ 分隔符
+        Container(
+          width: 10.w,
+          alignment: Alignment.center,
+          child: Text(
+            ':',
+            style: TextStyle(fontSize: 12.sp, color: Colors.white),
+          ),
+        ),
+        // ✅ 秒
+        Container(
+          width: 17.w,
+          height: 17.h,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+          child: Text(
+            seconds > 9 ? seconds.toString() : '0$seconds',
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFF1F232E),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

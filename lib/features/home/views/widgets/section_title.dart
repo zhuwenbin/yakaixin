@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../app/config/api_config.dart';
 
@@ -17,26 +16,13 @@ class SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        CachedNetworkImage(
-          imageUrl: ApiConfig.completeImageUrl('title-icon.png'),
+        // ✅ 使用 Image.network 避免 iOS Release 模式 Content-Disposition 问题
+        Image.network(
+          ApiConfig.completeImageUrl('title-icon.png'),
           width: 15.w,
           height: 15.w,
           fit: BoxFit.contain,
-          placeholder: (context, url) => SizedBox(
-            width: 15.w,
-            height: 15.w,
-            child: Center(
-              child: SizedBox(
-                width: 10.w,
-                height: 10.w,
-                child: CircularProgressIndicator(
-                  strokeWidth: 1.5,
-                  color: Color(0xFF018BFF),
-                ),
-              ),
-            ),
-          ),
-          errorWidget: (context, error, stackTrace) {
+          errorBuilder: (context, error, stackTrace) {
             // 图标加载失败时显示一个默认图标
             return Container(
               width: 15.w,

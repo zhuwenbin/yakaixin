@@ -7,7 +7,7 @@ part of 'simulated_exam_room_provider.dart';
 // **************************************************************************
 
 String _$simulatedExamRoomNotifierHash() =>
-    r'9cda69494cbbd38c89610d81b7b3d173004ab65b';
+    r'a9852e881dcf2e8b995f3658f01ec8f17ff0d8f6';
 
 /// 模拟考场Provider
 /// 对应小程序: pages/test/simulatedExamRoom.vue

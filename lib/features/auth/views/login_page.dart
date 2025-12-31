@@ -164,16 +164,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     
                     SizedBox(height: 48.h),
                     
-                    // 标题：手机号登陆
+                    // 标题：手机号登陆 + 注册说明
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(
-                        '手机号登陆',
-                        style: TextStyle(
-                          fontSize: 28.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '手机号登录',
+                            style: TextStyle(
+                              fontSize: 28.sp,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          // ✅ 新用户注册提示（App Store审核要求）
+                          Text(
+                            '新用户验证后自动注册',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     

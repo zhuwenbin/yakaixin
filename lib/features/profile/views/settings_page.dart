@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../core/config/debug_config.dart';
+import '../../../core/widgets/confirm_dialog.dart';
+import '../providers/settings_provider.dart';
+import '../../payment/services/iap_service.dart';
 
 /// 设置页面 - 对应小程序 userInfo/set.vue
 /// 功能：章节练习设置、隐私协议、用户协议、退出登录
@@ -17,14 +20,16 @@ class SettingsPage extends ConsumerStatefulWidget {
 }
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
-  int _chapterQuestionNumber = 20;
-  bool _showDialog = false;
   final TextEditingController _numberController = TextEditingController();
+  bool _isClearing = false;
 
   @override
   void initState() {
     super.initState();
-    _loadSettings();
+    // 加载设置（从服务器）
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(settingsNotifierProvider.notifier).loadSettings();
+    });
   }
 
   @override
@@ -33,16 +38,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     super.dispose();
   }
 
-  Future<void> _loadSettings() async {
-    // TODO: API调用获取设置
-    setState(() {
-      _chapterQuestionNumber = 20;
-      _numberController.text = _chapterQuestionNumber.toString();
-    });
-  }
-
   void _showQuestionNumberDialog() {
-    _numberController.text = _chapterQuestionNumber.toString();
+    final settingsState = ref.read(settingsNotifierProvider);
+    _numberController.text = settingsState.chapterQuestionNumber.toString();
     showDialog(
       context: context,
       builder: (context) => _buildQuestionNumberDialog(),
@@ -52,28 +50,110 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Future<void> _saveQuestionNumber() async {
     final number = int.tryParse(_numberController.text);
     if (number == null || number <= 0) {
-      // TODO: 显示错误提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('请输入正确的数字！')),
+        );
+      }
       return;
     }
 
-    // TODO: 保存设置到服务器
-    setState(() {
-      _chapterQuestionNumber = number;
-    });
-    Navigator.pop(context);
+    final success = await ref.read(settingsNotifierProvider.notifier).saveChapterQuestionNumber(number);
+    
+    if (mounted) {
+      Navigator.pop(context);
+      
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('设置成功！')),
+        );
+      } else {
+        final error = ref.read(settingsNotifierProvider).error;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error ?? '保存失败，请稍后重试')),
+        );
+      }
+    }
   }
 
-  void _logout() {
-    showDialog(
-      context: context,
-      builder: (context) => _buildLogoutDialog(),
+  Future<void> _logout() async {
+    // ✅ 使用统一的确认对话框组件
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: '提示',
+      content: '确定退出登录',
     );
+    
+    if (confirmed == true) {
+      // 执行退出登录
+      await ref.read(authProvider.notifier).logout();
+      // 跳转到登录页
+      if (mounted) {
+        context.go(AppRoutes.loginCenter);
+      }
+    }
+  }
+
+  /// 🧹 清理未完成的内购交易
+  Future<void> _clearPendingTransactions() async {
+    // ✅ 确认对话框
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: '清理未完成交易',
+      content: '此操作会尝试处理所有未完成的内购交易。\n\n操作需要约 10 秒，期间请勿关闭应用。\n\n确定继续吗？',
+    );
+    
+    if (confirmed != true) return;
+
+    setState(() => _isClearing = true);
+    
+    try {
+      // ✅ 调用 IAPService 的清理方法
+      final iapService = ref.read(iapServiceProvider);
+      await iapService.clearAllPendingTransactions();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ 清理完成！\n请查看控制台日志了解详情'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ 清理失败: $e\n\n建议重启应用或退出登录 App Store'),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isClearing = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     // ✅ 监听调试工具开关状态
     final isDebugEnabled = ref.watch(debugToolsEnabledProvider);
+    // ✅ 监听设置状态
+    final settingsState = ref.watch(settingsNotifierProvider);
+    
+    // ✅ 处理副作用（错误提示）
+    ref.listen<SettingsState>(
+      settingsNotifierProvider,
+      (previous, next) {
+        if (next.error != null && previous?.error != next.error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(next.error!)),
+          );
+        }
+      },
+    );
     
     return Scaffold(
       backgroundColor: Colors.white,
@@ -86,8 +166,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         children: [
           _buildSettingItem(
             title: '章节练习',
-            trailing: '每次$_chapterQuestionNumber道题',
-            onTap: _showQuestionNumberDialog,
+            trailing: settingsState.isLoading 
+                ? '加载中...' 
+                : '每次${settingsState.chapterQuestionNumber}道题',
+            onTap: settingsState.isLoading ? () {} : _showQuestionNumberDialog,
           ),
           _buildSettingItem(
             title: '修改密码',
@@ -142,6 +224,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     onChanged: (value) {
                       ref.read(debugToolsEnabledProvider.notifier).state = value;
                     },
+                  ),
+                  
+                  // ✅ iOS 内购交易清理按钮
+                  _buildDebugActionItem(
+                    icon: Icons.cleaning_services,
+                    title: '清理未完成交易',
+                    subtitle: '清理 iOS 内购的 pending transaction（仅 iOS）',
+                    isLoading: _isClearing,
+                    onTap: _isClearing ? null : _clearPendingTransactions,
                   ),
                 ],
               ),
@@ -207,6 +298,82 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
+  Widget _buildDebugActionItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool isLoading,
+    required VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
+        decoration: const BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: Color(0xFFEEEEEE), width: 1),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36.w,
+              height: 36.w,
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Icon(
+                icon,
+                size: 20.sp,
+                color: Colors.orange,
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: const Color(0xFF161F30),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: const Color(0xFF787E8F),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isLoading)
+              SizedBox(
+                width: 20.w,
+                height: 20.w,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                ),
+              )
+            else
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16.sp,
+                color: const Color(0xFF787E8F),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSettingItem({
     required String title,
     String? trailing,
@@ -260,6 +427,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Widget _buildQuestionNumberDialog() {
+    final settingsState = ref.watch(settingsNotifierProvider);
+    
     return AlertDialog(
       title: const Text('章节练习'),
       content: TextField(
@@ -275,39 +444,21 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: settingsState.isLoading ? null : () => Navigator.pop(context),
           child: const Text('取消'),
         ),
         TextButton(
-          onPressed: _saveQuestionNumber,
-          child: const Text('确定'),
+          onPressed: settingsState.isLoading ? null : _saveQuestionNumber,
+          child: settingsState.isLoading
+              ? SizedBox(
+                  width: 16.w,
+                  height: 16.w,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('确定'),
         ),
       ],
     );
   }
 
-  Widget _buildLogoutDialog() {
-    return AlertDialog(
-      title: const Text('提示'),
-      content: const Text('确定退出登录'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
-        ),
-        TextButton(
-          onPressed: () async {
-            Navigator.pop(context);
-            // 执行退出登录
-            await ref.read(authProvider.notifier).logout();
-            // 跳转到登录页
-            if (mounted) {
-              context.go(AppRoutes.loginCenter);
-            }
-          },
-          child: const Text('确定'),
-        ),
-      ],
-    );
-  }
 }

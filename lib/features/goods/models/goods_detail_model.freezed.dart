@@ -44,6 +44,9 @@ mixin _$GoodsDetailModel {
   String? get year => throw _privateConstructorUsedError;
   @JsonKey(name: 'exam_title')
   String? get examTitle => throw _privateConstructorUsedError;
+  @JsonKey(name: 'details_type')
+  dynamic get detailsType =>
+      throw _privateConstructorUsedError; // ✅ 详情页类型: 1=经典, 2=真题(历年真题), 3=科目, 4=模拟
   @JsonKey(name: 'prices')
   List<GoodsPriceModel> get prices => throw _privateConstructorUsedError;
   @JsonKey(name: 'tiku_goods_details')
@@ -59,6 +62,9 @@ mixin _$GoodsDetailModel {
       throw _privateConstructorUsedError; // ✅ 新增：套餐包含的商品列表
   @JsonKey(name: 'detail_package_goods')
   List<PackageGoodsModel>? get detailPackageGoods =>
+      throw _privateConstructorUsedError; // ✅ 新增：模拟考场统计信息（对应小程序 mkgoods_statistics）
+  @JsonKey(name: 'mkgoods_statistics')
+  MockGoodsStatistics? get mkgoodsStatistics =>
       throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -85,6 +91,7 @@ abstract class $GoodsDetailModelCopyWith<$Res> {
       @JsonKey(name: 'professional_id_name') String? professionalIdName,
       @JsonKey(name: 'year') String? year,
       @JsonKey(name: 'exam_title') String? examTitle,
+      @JsonKey(name: 'details_type') dynamic detailsType,
       @JsonKey(name: 'prices') List<GoodsPriceModel> prices,
       @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails,
       @JsonKey(name: 'teaching_system') TeachingSystem? teachingSystem,
@@ -93,11 +100,14 @@ abstract class $GoodsDetailModelCopyWith<$Res> {
       dynamic recitationQuestionModel,
       @JsonKey(name: 'permission_order_id') dynamic permissionOrderId,
       @JsonKey(name: 'detail_package_goods')
-      List<PackageGoodsModel>? detailPackageGoods});
+      List<PackageGoodsModel>? detailPackageGoods,
+      @JsonKey(name: 'mkgoods_statistics')
+      MockGoodsStatistics? mkgoodsStatistics});
 
   $TikuGoodsDetailsCopyWith<$Res>? get tikuGoodsDetails;
   $TeachingSystemCopyWith<$Res>? get teachingSystem;
   $PaperStatisticsCopyWith<$Res>? get paperStatistics;
+  $MockGoodsStatisticsCopyWith<$Res>? get mkgoodsStatistics;
 }
 
 /// @nodoc
@@ -124,6 +134,7 @@ class _$GoodsDetailModelCopyWithImpl<$Res, $Val extends GoodsDetailModel>
     Object? professionalIdName = freezed,
     Object? year = freezed,
     Object? examTitle = freezed,
+    Object? detailsType = freezed,
     Object? prices = null,
     Object? tikuGoodsDetails = freezed,
     Object? teachingSystem = freezed,
@@ -131,6 +142,7 @@ class _$GoodsDetailModelCopyWithImpl<$Res, $Val extends GoodsDetailModel>
     Object? recitationQuestionModel = freezed,
     Object? permissionOrderId = freezed,
     Object? detailPackageGoods = freezed,
+    Object? mkgoodsStatistics = freezed,
   }) {
     return _then(_value.copyWith(
       goodsId: freezed == goodsId
@@ -177,6 +189,10 @@ class _$GoodsDetailModelCopyWithImpl<$Res, $Val extends GoodsDetailModel>
           ? _value.examTitle
           : examTitle // ignore: cast_nullable_to_non_nullable
               as String?,
+      detailsType: freezed == detailsType
+          ? _value.detailsType
+          : detailsType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       prices: null == prices
           ? _value.prices
           : prices // ignore: cast_nullable_to_non_nullable
@@ -205,6 +221,10 @@ class _$GoodsDetailModelCopyWithImpl<$Res, $Val extends GoodsDetailModel>
           ? _value.detailPackageGoods
           : detailPackageGoods // ignore: cast_nullable_to_non_nullable
               as List<PackageGoodsModel>?,
+      mkgoodsStatistics: freezed == mkgoodsStatistics
+          ? _value.mkgoodsStatistics
+          : mkgoodsStatistics // ignore: cast_nullable_to_non_nullable
+              as MockGoodsStatistics?,
     ) as $Val);
   }
 
@@ -243,6 +263,19 @@ class _$GoodsDetailModelCopyWithImpl<$Res, $Val extends GoodsDetailModel>
       return _then(_value.copyWith(paperStatistics: value) as $Val);
     });
   }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $MockGoodsStatisticsCopyWith<$Res>? get mkgoodsStatistics {
+    if (_value.mkgoodsStatistics == null) {
+      return null;
+    }
+
+    return $MockGoodsStatisticsCopyWith<$Res>(_value.mkgoodsStatistics!,
+        (value) {
+      return _then(_value.copyWith(mkgoodsStatistics: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
@@ -265,6 +298,7 @@ abstract class _$$GoodsDetailModelImplCopyWith<$Res>
       @JsonKey(name: 'professional_id_name') String? professionalIdName,
       @JsonKey(name: 'year') String? year,
       @JsonKey(name: 'exam_title') String? examTitle,
+      @JsonKey(name: 'details_type') dynamic detailsType,
       @JsonKey(name: 'prices') List<GoodsPriceModel> prices,
       @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails,
       @JsonKey(name: 'teaching_system') TeachingSystem? teachingSystem,
@@ -273,7 +307,9 @@ abstract class _$$GoodsDetailModelImplCopyWith<$Res>
       dynamic recitationQuestionModel,
       @JsonKey(name: 'permission_order_id') dynamic permissionOrderId,
       @JsonKey(name: 'detail_package_goods')
-      List<PackageGoodsModel>? detailPackageGoods});
+      List<PackageGoodsModel>? detailPackageGoods,
+      @JsonKey(name: 'mkgoods_statistics')
+      MockGoodsStatistics? mkgoodsStatistics});
 
   @override
   $TikuGoodsDetailsCopyWith<$Res>? get tikuGoodsDetails;
@@ -281,6 +317,8 @@ abstract class _$$GoodsDetailModelImplCopyWith<$Res>
   $TeachingSystemCopyWith<$Res>? get teachingSystem;
   @override
   $PaperStatisticsCopyWith<$Res>? get paperStatistics;
+  @override
+  $MockGoodsStatisticsCopyWith<$Res>? get mkgoodsStatistics;
 }
 
 /// @nodoc
@@ -305,6 +343,7 @@ class __$$GoodsDetailModelImplCopyWithImpl<$Res>
     Object? professionalIdName = freezed,
     Object? year = freezed,
     Object? examTitle = freezed,
+    Object? detailsType = freezed,
     Object? prices = null,
     Object? tikuGoodsDetails = freezed,
     Object? teachingSystem = freezed,
@@ -312,6 +351,7 @@ class __$$GoodsDetailModelImplCopyWithImpl<$Res>
     Object? recitationQuestionModel = freezed,
     Object? permissionOrderId = freezed,
     Object? detailPackageGoods = freezed,
+    Object? mkgoodsStatistics = freezed,
   }) {
     return _then(_$GoodsDetailModelImpl(
       goodsId: freezed == goodsId
@@ -358,6 +398,10 @@ class __$$GoodsDetailModelImplCopyWithImpl<$Res>
           ? _value.examTitle
           : examTitle // ignore: cast_nullable_to_non_nullable
               as String?,
+      detailsType: freezed == detailsType
+          ? _value.detailsType
+          : detailsType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       prices: null == prices
           ? _value._prices
           : prices // ignore: cast_nullable_to_non_nullable
@@ -386,6 +430,10 @@ class __$$GoodsDetailModelImplCopyWithImpl<$Res>
           ? _value._detailPackageGoods
           : detailPackageGoods // ignore: cast_nullable_to_non_nullable
               as List<PackageGoodsModel>?,
+      mkgoodsStatistics: freezed == mkgoodsStatistics
+          ? _value.mkgoodsStatistics
+          : mkgoodsStatistics // ignore: cast_nullable_to_non_nullable
+              as MockGoodsStatistics?,
     ));
   }
 }
@@ -405,6 +453,7 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
       @JsonKey(name: 'professional_id_name') this.professionalIdName,
       @JsonKey(name: 'year') this.year,
       @JsonKey(name: 'exam_title') this.examTitle,
+      @JsonKey(name: 'details_type') this.detailsType,
       @JsonKey(name: 'prices') final List<GoodsPriceModel> prices = const [],
       @JsonKey(name: 'tiku_goods_details') this.tikuGoodsDetails,
       @JsonKey(name: 'teaching_system') this.teachingSystem,
@@ -412,7 +461,8 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
       @JsonKey(name: 'recitation_question_model') this.recitationQuestionModel,
       @JsonKey(name: 'permission_order_id') this.permissionOrderId,
       @JsonKey(name: 'detail_package_goods')
-      final List<PackageGoodsModel>? detailPackageGoods})
+      final List<PackageGoodsModel>? detailPackageGoods,
+      @JsonKey(name: 'mkgoods_statistics') this.mkgoodsStatistics})
       : _prices = prices,
         _detailPackageGoods = detailPackageGoods;
 
@@ -455,7 +505,12 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
   @override
   @JsonKey(name: 'exam_title')
   final String? examTitle;
+  @override
+  @JsonKey(name: 'details_type')
+  final dynamic detailsType;
+// ✅ 详情页类型: 1=经典, 2=真题(历年真题), 3=科目, 4=模拟
   final List<GoodsPriceModel> _prices;
+// ✅ 详情页类型: 1=经典, 2=真题(历年真题), 3=科目, 4=模拟
   @override
   @JsonKey(name: 'prices')
   List<GoodsPriceModel> get prices {
@@ -493,9 +548,14 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
     return EqualUnmodifiableListView(value);
   }
 
+// ✅ 新增：模拟考场统计信息（对应小程序 mkgoods_statistics）
+  @override
+  @JsonKey(name: 'mkgoods_statistics')
+  final MockGoodsStatistics? mkgoodsStatistics;
+
   @override
   String toString() {
-    return 'GoodsDetailModel(goodsId: $goodsId, name: $name, type: $type, materialCoverPath: $materialCoverPath, materialIntroPath: $materialIntroPath, longImgPath: $longImgPath, permissionStatus: $permissionStatus, professionalId: $professionalId, professionalIdName: $professionalIdName, year: $year, examTitle: $examTitle, prices: $prices, tikuGoodsDetails: $tikuGoodsDetails, teachingSystem: $teachingSystem, paperStatistics: $paperStatistics, recitationQuestionModel: $recitationQuestionModel, permissionOrderId: $permissionOrderId, detailPackageGoods: $detailPackageGoods)';
+    return 'GoodsDetailModel(goodsId: $goodsId, name: $name, type: $type, materialCoverPath: $materialCoverPath, materialIntroPath: $materialIntroPath, longImgPath: $longImgPath, permissionStatus: $permissionStatus, professionalId: $professionalId, professionalIdName: $professionalIdName, year: $year, examTitle: $examTitle, detailsType: $detailsType, prices: $prices, tikuGoodsDetails: $tikuGoodsDetails, teachingSystem: $teachingSystem, paperStatistics: $paperStatistics, recitationQuestionModel: $recitationQuestionModel, permissionOrderId: $permissionOrderId, detailPackageGoods: $detailPackageGoods, mkgoodsStatistics: $mkgoodsStatistics)';
   }
 
   @override
@@ -521,6 +581,8 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
             (identical(other.year, year) || other.year == year) &&
             (identical(other.examTitle, examTitle) ||
                 other.examTitle == examTitle) &&
+            const DeepCollectionEquality()
+                .equals(other.detailsType, detailsType) &&
             const DeepCollectionEquality().equals(other._prices, _prices) &&
             (identical(other.tikuGoodsDetails, tikuGoodsDetails) ||
                 other.tikuGoodsDetails == tikuGoodsDetails) &&
@@ -533,31 +595,36 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
             const DeepCollectionEquality()
                 .equals(other.permissionOrderId, permissionOrderId) &&
             const DeepCollectionEquality()
-                .equals(other._detailPackageGoods, _detailPackageGoods));
+                .equals(other._detailPackageGoods, _detailPackageGoods) &&
+            (identical(other.mkgoodsStatistics, mkgoodsStatistics) ||
+                other.mkgoodsStatistics == mkgoodsStatistics));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      const DeepCollectionEquality().hash(goodsId),
-      name,
-      const DeepCollectionEquality().hash(type),
-      materialCoverPath,
-      materialIntroPath,
-      longImgPath,
-      permissionStatus,
-      professionalId,
-      professionalIdName,
-      year,
-      examTitle,
-      const DeepCollectionEquality().hash(_prices),
-      tikuGoodsDetails,
-      teachingSystem,
-      paperStatistics,
-      const DeepCollectionEquality().hash(recitationQuestionModel),
-      const DeepCollectionEquality().hash(permissionOrderId),
-      const DeepCollectionEquality().hash(_detailPackageGoods));
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        const DeepCollectionEquality().hash(goodsId),
+        name,
+        const DeepCollectionEquality().hash(type),
+        materialCoverPath,
+        materialIntroPath,
+        longImgPath,
+        permissionStatus,
+        professionalId,
+        professionalIdName,
+        year,
+        examTitle,
+        const DeepCollectionEquality().hash(detailsType),
+        const DeepCollectionEquality().hash(_prices),
+        tikuGoodsDetails,
+        teachingSystem,
+        paperStatistics,
+        const DeepCollectionEquality().hash(recitationQuestionModel),
+        const DeepCollectionEquality().hash(permissionOrderId),
+        const DeepCollectionEquality().hash(_detailPackageGoods),
+        mkgoodsStatistics
+      ]);
 
   @JsonKey(ignore: true)
   @override
@@ -587,6 +654,7 @@ abstract class _GoodsDetailModel implements GoodsDetailModel {
       @JsonKey(name: 'professional_id_name') final String? professionalIdName,
       @JsonKey(name: 'year') final String? year,
       @JsonKey(name: 'exam_title') final String? examTitle,
+      @JsonKey(name: 'details_type') final dynamic detailsType,
       @JsonKey(name: 'prices') final List<GoodsPriceModel> prices,
       @JsonKey(name: 'tiku_goods_details')
       final TikuGoodsDetails? tikuGoodsDetails,
@@ -596,8 +664,9 @@ abstract class _GoodsDetailModel implements GoodsDetailModel {
       final dynamic recitationQuestionModel,
       @JsonKey(name: 'permission_order_id') final dynamic permissionOrderId,
       @JsonKey(name: 'detail_package_goods')
-      final List<PackageGoodsModel>?
-          detailPackageGoods}) = _$GoodsDetailModelImpl;
+      final List<PackageGoodsModel>? detailPackageGoods,
+      @JsonKey(name: 'mkgoods_statistics')
+      final MockGoodsStatistics? mkgoodsStatistics}) = _$GoodsDetailModelImpl;
 
   factory _GoodsDetailModel.fromJson(Map<String, dynamic> json) =
       _$GoodsDetailModelImpl.fromJson;
@@ -636,6 +705,9 @@ abstract class _GoodsDetailModel implements GoodsDetailModel {
   @JsonKey(name: 'exam_title')
   String? get examTitle;
   @override
+  @JsonKey(name: 'details_type')
+  dynamic get detailsType;
+  @override // ✅ 详情页类型: 1=经典, 2=真题(历年真题), 3=科目, 4=模拟
   @JsonKey(name: 'prices')
   List<GoodsPriceModel> get prices;
   @override
@@ -656,6 +728,9 @@ abstract class _GoodsDetailModel implements GoodsDetailModel {
   @override // ✅ 新增：套餐包含的商品列表
   @JsonKey(name: 'detail_package_goods')
   List<PackageGoodsModel>? get detailPackageGoods;
+  @override // ✅ 新增：模拟考场统计信息（对应小程序 mkgoods_statistics）
+  @JsonKey(name: 'mkgoods_statistics')
+  MockGoodsStatistics? get mkgoodsStatistics;
   @override
   @JsonKey(ignore: true)
   _$$GoodsDetailModelImplCopyWith<_$GoodsDetailModelImpl> get copyWith =>
@@ -1611,5 +1686,230 @@ abstract class _PackageGoodsModel implements PackageGoodsModel {
   @override
   @JsonKey(ignore: true)
   _$$PackageGoodsModelImplCopyWith<_$PackageGoodsModelImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+MockGoodsStatistics _$MockGoodsStatisticsFromJson(Map<String, dynamic> json) {
+  return _MockGoodsStatistics.fromJson(json);
+}
+
+/// @nodoc
+mixin _$MockGoodsStatistics {
+  /// 考试时长（分钟）
+  @JsonKey(name: 'exam_duration')
+  dynamic get examDuration => throw _privateConstructorUsedError;
+
+  /// 满分
+  @JsonKey(name: 'full_mark_score')
+  dynamic get fullMarkScore => throw _privateConstructorUsedError;
+
+  /// 题型数量映射（如 {"A1": 97, "A2": 8, "共用题干题": 15, "共用选项题": 30}）
+  @JsonKey(name: 'type_count_map')
+  Map<String, dynamic>? get typeCountMap => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $MockGoodsStatisticsCopyWith<MockGoodsStatistics> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $MockGoodsStatisticsCopyWith<$Res> {
+  factory $MockGoodsStatisticsCopyWith(
+          MockGoodsStatistics value, $Res Function(MockGoodsStatistics) then) =
+      _$MockGoodsStatisticsCopyWithImpl<$Res, MockGoodsStatistics>;
+  @useResult
+  $Res call(
+      {@JsonKey(name: 'exam_duration') dynamic examDuration,
+      @JsonKey(name: 'full_mark_score') dynamic fullMarkScore,
+      @JsonKey(name: 'type_count_map') Map<String, dynamic>? typeCountMap});
+}
+
+/// @nodoc
+class _$MockGoodsStatisticsCopyWithImpl<$Res, $Val extends MockGoodsStatistics>
+    implements $MockGoodsStatisticsCopyWith<$Res> {
+  _$MockGoodsStatisticsCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? examDuration = freezed,
+    Object? fullMarkScore = freezed,
+    Object? typeCountMap = freezed,
+  }) {
+    return _then(_value.copyWith(
+      examDuration: freezed == examDuration
+          ? _value.examDuration
+          : examDuration // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      fullMarkScore: freezed == fullMarkScore
+          ? _value.fullMarkScore
+          : fullMarkScore // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      typeCountMap: freezed == typeCountMap
+          ? _value.typeCountMap
+          : typeCountMap // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$MockGoodsStatisticsImplCopyWith<$Res>
+    implements $MockGoodsStatisticsCopyWith<$Res> {
+  factory _$$MockGoodsStatisticsImplCopyWith(_$MockGoodsStatisticsImpl value,
+          $Res Function(_$MockGoodsStatisticsImpl) then) =
+      __$$MockGoodsStatisticsImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {@JsonKey(name: 'exam_duration') dynamic examDuration,
+      @JsonKey(name: 'full_mark_score') dynamic fullMarkScore,
+      @JsonKey(name: 'type_count_map') Map<String, dynamic>? typeCountMap});
+}
+
+/// @nodoc
+class __$$MockGoodsStatisticsImplCopyWithImpl<$Res>
+    extends _$MockGoodsStatisticsCopyWithImpl<$Res, _$MockGoodsStatisticsImpl>
+    implements _$$MockGoodsStatisticsImplCopyWith<$Res> {
+  __$$MockGoodsStatisticsImplCopyWithImpl(_$MockGoodsStatisticsImpl _value,
+      $Res Function(_$MockGoodsStatisticsImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? examDuration = freezed,
+    Object? fullMarkScore = freezed,
+    Object? typeCountMap = freezed,
+  }) {
+    return _then(_$MockGoodsStatisticsImpl(
+      examDuration: freezed == examDuration
+          ? _value.examDuration
+          : examDuration // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      fullMarkScore: freezed == fullMarkScore
+          ? _value.fullMarkScore
+          : fullMarkScore // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      typeCountMap: freezed == typeCountMap
+          ? _value._typeCountMap
+          : typeCountMap // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$MockGoodsStatisticsImpl implements _MockGoodsStatistics {
+  const _$MockGoodsStatisticsImpl(
+      {@JsonKey(name: 'exam_duration') this.examDuration,
+      @JsonKey(name: 'full_mark_score') this.fullMarkScore,
+      @JsonKey(name: 'type_count_map')
+      final Map<String, dynamic>? typeCountMap})
+      : _typeCountMap = typeCountMap;
+
+  factory _$MockGoodsStatisticsImpl.fromJson(Map<String, dynamic> json) =>
+      _$$MockGoodsStatisticsImplFromJson(json);
+
+  /// 考试时长（分钟）
+  @override
+  @JsonKey(name: 'exam_duration')
+  final dynamic examDuration;
+
+  /// 满分
+  @override
+  @JsonKey(name: 'full_mark_score')
+  final dynamic fullMarkScore;
+
+  /// 题型数量映射（如 {"A1": 97, "A2": 8, "共用题干题": 15, "共用选项题": 30}）
+  final Map<String, dynamic>? _typeCountMap;
+
+  /// 题型数量映射（如 {"A1": 97, "A2": 8, "共用题干题": 15, "共用选项题": 30}）
+  @override
+  @JsonKey(name: 'type_count_map')
+  Map<String, dynamic>? get typeCountMap {
+    final value = _typeCountMap;
+    if (value == null) return null;
+    if (_typeCountMap is EqualUnmodifiableMapView) return _typeCountMap;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
+
+  @override
+  String toString() {
+    return 'MockGoodsStatistics(examDuration: $examDuration, fullMarkScore: $fullMarkScore, typeCountMap: $typeCountMap)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$MockGoodsStatisticsImpl &&
+            const DeepCollectionEquality()
+                .equals(other.examDuration, examDuration) &&
+            const DeepCollectionEquality()
+                .equals(other.fullMarkScore, fullMarkScore) &&
+            const DeepCollectionEquality()
+                .equals(other._typeCountMap, _typeCountMap));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType,
+      const DeepCollectionEquality().hash(examDuration),
+      const DeepCollectionEquality().hash(fullMarkScore),
+      const DeepCollectionEquality().hash(_typeCountMap));
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$MockGoodsStatisticsImplCopyWith<_$MockGoodsStatisticsImpl> get copyWith =>
+      __$$MockGoodsStatisticsImplCopyWithImpl<_$MockGoodsStatisticsImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$MockGoodsStatisticsImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _MockGoodsStatistics implements MockGoodsStatistics {
+  const factory _MockGoodsStatistics(
+      {@JsonKey(name: 'exam_duration') final dynamic examDuration,
+      @JsonKey(name: 'full_mark_score') final dynamic fullMarkScore,
+      @JsonKey(name: 'type_count_map')
+      final Map<String, dynamic>? typeCountMap}) = _$MockGoodsStatisticsImpl;
+
+  factory _MockGoodsStatistics.fromJson(Map<String, dynamic> json) =
+      _$MockGoodsStatisticsImpl.fromJson;
+
+  @override
+
+  /// 考试时长（分钟）
+  @JsonKey(name: 'exam_duration')
+  dynamic get examDuration;
+  @override
+
+  /// 满分
+  @JsonKey(name: 'full_mark_score')
+  dynamic get fullMarkScore;
+  @override
+
+  /// 题型数量映射（如 {"A1": 97, "A2": 8, "共用题干题": 15, "共用选项题": 30}）
+  @JsonKey(name: 'type_count_map')
+  Map<String, dynamic>? get typeCountMap;
+  @override
+  @JsonKey(ignore: true)
+  _$$MockGoodsStatisticsImplCopyWith<_$MockGoodsStatisticsImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

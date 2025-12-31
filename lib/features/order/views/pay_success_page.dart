@@ -6,7 +6,7 @@ import '../../../app/routes/app_routes.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
 import '../../main/main_tab_page.dart';
-import '../../../../app/config/api_config.dart';
+import '../../goods/services/goods_service.dart';
 
 /// 支付成功页面
 /// 对应小程序: pages/order/paySuccess.vue
@@ -15,12 +15,14 @@ class PaySuccessPage extends ConsumerStatefulWidget {
   final String? goodsId;
   final String? professionalIdName;
   final int? isLearnButton; // 1=显示"去学习"按钮, 0=显示"开始测验"按钮
+  final String? goodsType; // ✅ 新增：商品类型（从详情页/订单页传递，避免再次调用API）
 
   const PaySuccessPage({
     super.key,
     this.goodsId,
     this.professionalIdName,
     this.isLearnButton,
+    this.goodsType, // ✅ 新增：商品类型参数
   });
 
   @override
@@ -343,11 +345,75 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
 
   /// 开始测验
   /// 对应小程序 Line 99-155: goDetail()
-  void _onGoTest() {
-    // TODO: 实现根据商品类型跳转到对应页面
-    // 需要先获取商品详情，然后根据type判断跳转
-    if (mounted) {
-      context.go(AppRoutes.studyIndex);
+  /// ⚠️ 注意：对于试题（非课程），应该返回到主页面，而不是跳转到新的课程页面
+  /// ✅ 优化：优先使用传递过来的商品类型，避免再次调用API
+  Future<void> _onGoTest() async {
+    if (widget.goodsId == null || widget.goodsId!.isEmpty) {
+      // ✅ 如果没有商品ID，直接返回主页面（题库Tab）
+      _goToHomePage();
+      return;
     }
+
+    // ✅ 优先使用传递过来的商品类型（从详情页/订单页传递）
+    String? type = widget.goodsType?.toString();
+
+    // ✅ 如果没有传递商品类型，才调用API获取
+    if (type == null || type.isEmpty) {
+      try {
+        final goodsService = ref.read(goodsServiceProvider);
+        final storage = ref.read(storageServiceProvider);
+        final studentId = storage.getString(StorageKeys.studentId);
+
+        final detail = await goodsService.getGoodsDetail(
+          goodsId: widget.goodsId!,
+          userId: studentId,
+          studentId: studentId,
+        );
+
+        if (!mounted) return;
+
+        type = detail.type?.toString();
+      } catch (e) {
+        print('❌ [支付成功页] 获取商品详情失败: $e');
+        // ✅ 获取失败时，返回主页面
+        if (mounted) {
+          _goToHomePage();
+        }
+        return;
+      }
+    }
+
+    if (!mounted) return;
+
+    // ✅ type == 2 或 3 (课程) - 返回主页面并选中课程Tab（索引2）
+    // ⚠️ 用户反馈：应该返回到主页面，选中课程Tab，而不是跳转到新的课程详情页
+    if (type == '2' || type == '3') {
+      _goToHomePageWithTab(tabIndex: 2); // ✅ 课程Tab（索引2）
+      return;
+    }
+
+    // ✅ 对于试题（非课程），应该返回到主页面，选中题库Tab（索引1）
+    // ⚠️ 用户反馈：试题购买成功后，点击"开始测验"，应该返回到主页面，选中题库Tab
+    _goToHomePageWithTab(tabIndex: 1); // ✅ 题库Tab（索引1）
+  }
+
+  /// 返回主页面并选中指定Tab
+  /// 
+  /// - tabIndex: Tab索引（0=首页, 1=题库, 2=课程, 3=我的）
+  /// ⚠️ 用户反馈：应该返回到主页面并选中对应的Tab，而不是跳转到新的详情页
+  void _goToHomePageWithTab({required int tabIndex}) {
+    if (mounted) {
+      // 1. 设置Tab索引
+      ref.read(mainTabIndexProvider.notifier).state = tabIndex;
+      // 2. 返回主Tab页面（显示TabBar）
+      context.go(AppRoutes.mainTab);
+    }
+  }
+
+  /// 返回主页面（题库Tab）- 已废弃，使用 _goToHomePageWithTab 代替
+  /// ⚠️ 对于试题（非课程），应该返回到主页面，而不是跳转到新的课程页面
+  @Deprecated('使用 _goToHomePageWithTab(tabIndex: 1) 代替')
+  void _goToHomePage() {
+    _goToHomePageWithTab(tabIndex: 1);
   }
 }

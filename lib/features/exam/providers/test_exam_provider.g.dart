@@ -6,7 +6,7 @@ part of 'test_exam_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$testExamNotifierHash() => r'b35c9d48dda4d9404719d602c4680f66e7c823cd';
+String _$testExamNotifierHash() => r'0205d9562f0ad56f4745159d36cee7caa8e8e898';
 
 /// 试卷详情页 Provider
 ///

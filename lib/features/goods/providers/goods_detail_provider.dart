@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../app/config/api_config.dart';
-import '../../../core/utils/error_message_mapper.dart';
 import '../../../core/utils/safe_type_converter.dart';
 import '../models/goods_detail_model.dart';
 import '../services/goods_service.dart';
@@ -93,10 +92,27 @@ class GoodsDetailNotifier extends _$GoodsDetailNotifier {
       introPath = detail.materialCoverPath;
     }
 
-    // 4. ✅ 处理封面路径为空的情况
-    // 对应小程序 Line 485-492
+    // 4. ✅ 处理封面路径为空的情况，并拼接完整URL
+    // 对应小程序 Line 485-492: this.info.material_cover_path = this.completepath(this.info.material_cover_path)
+    print('🖼️ [商品详情] 封面路径处理前: coverPath=$coverPath, introPath=$introPath');
     if (coverPath == null || coverPath.isEmpty) {
       coverPath = 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixinshare.png';
+      print('🖼️ [商品详情] 封面路径为空，使用默认图片: $coverPath');
+    } else {
+      // ✅ 调用 completeImageUrl 拼接完整URL（对应小程序 completepath()）
+      final originalCoverPath = coverPath;
+      coverPath = ApiConfig.completeImageUrl(coverPath);
+      print('🖼️ [商品详情] 封面路径处理后: $originalCoverPath → $coverPath');
+    }
+
+    // 5. ✅ 处理介绍路径，拼接完整URL（如果存在）
+    // 对应小程序 Line 89: completepath(info.material_intro_path)
+    if (introPath != null && introPath.isNotEmpty) {
+      final originalIntroPath = introPath;
+      introPath = ApiConfig.completeImageUrl(introPath);
+      print('🖼️ [商品详情] 介绍路径处理后: $originalIntroPath → $introPath');
+    } else {
+      print('🖼️ [商品详情] 介绍路径为空');
     }
 
     return detail.copyWith(

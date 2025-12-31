@@ -68,10 +68,12 @@ class BottomToolbar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          // 1. 问老师（微信分享）
+          // 1. 问老师（系统分享）
+          // 对应小程序: bottom-utils.vue Line 5-9
+          // 小程序图标: /static/imgs/jintiku/share-two.svg
           if (showAskTeacher)
             _ToolbarButton(
-              icon: Icons.share_outlined,
+              icon: Icons.share,  // ✅ 使用Material分享图标
               label: '问老师',
               onTap: onAskTeacher,
             ),
@@ -116,13 +118,17 @@ class BottomToolbar extends StatelessWidget {
 
 /// 工具栏按钮组件
 class _ToolbarButton extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;              // Material图标
+  final String? iconUrl;             // 网络图标URL
+  final IconData? fallbackIcon;      // 网络图标加载失败时的备用图标
   final String label;
   final Color? iconColor;
   final VoidCallback? onTap;
   
   const _ToolbarButton({
-    required this.icon,
+    this.icon,
+    this.iconUrl,
+    this.fallbackIcon,
     required this.label,
     this.iconColor,
     this.onTap,
@@ -143,11 +149,8 @@ class _ToolbarButton extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 24.sp,
-                color: iconColor ?? AppColors.textSecondary,
-              ),
+              // ✅ 支持网络图标或Material图标
+              _buildIcon(),
               SizedBox(height: 4.h),
               Text(
                 label,
@@ -159,6 +162,35 @@ class _ToolbarButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+  
+  /// 构建图标（支持网络图标和Material图标）
+  Widget _buildIcon() {
+    // ✅ 优先使用网络图标
+    if (iconUrl != null) {
+      return Image.network(
+        iconUrl!,
+        width: 20.w,   // ✅ 小程序：40rpx ÷ 2 = 20.w
+        height: 20.w,
+        fit: BoxFit.contain,
+        color: iconColor ?? AppColors.textSecondary,
+        errorBuilder: (context, error, stackTrace) {
+          // ✅ 加载失败时使用备用图标
+          return Icon(
+            fallbackIcon ?? Icons.error_outline,
+            size: 24.sp,
+            color: iconColor ?? AppColors.textSecondary,
+          );
+        },
+      );
+    }
+    
+    // ✅ 使用Material图标
+    return Icon(
+      icon ?? Icons.help_outline,
+      size: 24.sp,
+      color: iconColor ?? AppColors.textSecondary,
     );
   }
 }

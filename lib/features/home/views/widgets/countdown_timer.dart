@@ -59,26 +59,95 @@ class _CountdownTimerState extends State<CountdownTimer> {
     });
   }
 
-  /// 格式化时间: HH:mm:ss
-  String _formatTime(int seconds) {
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    final secs = seconds % 60;
-    return '${_twoDigits(hours)}:${_twoDigits(minutes)}:${_twoDigits(secs)}';
-  }
-
-  String _twoDigits(int n) => n.toString().padLeft(2, '0');
-
   @override
   Widget build(BuildContext context) {
-    return Text(
-      _formatTime(_remainingSeconds),
-      style: TextStyle(
-        fontSize: 14.sp,
-        fontWeight: FontWeight.w600,
-        color: const Color(0xFF082980),
-        letterSpacing: 2.w,
-      ),
+    // ✅ 对应小程序 count-down.vue 的显示格式
+    final hours = _remainingSeconds ~/ 3600;
+    final minutes = (_remainingSeconds % 3600) ~/ 60;
+    final seconds = _remainingSeconds % 60;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ✅ 小时
+        Container(
+          width: 17.w, // ✅ 小程序34rpx ÷ 2 = 17.w
+          height: 17.h, // ✅ 小程序34rpx ÷ 2 = 17.h
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: const Color(0xFF018BFF), // ✅ 小程序background: #018BFF
+            borderRadius: BorderRadius.circular(4.r), // ✅ 小程序border-radius: 8rpx ÷ 2 = 4.r
+          ),
+          child: Text(
+            hours > 9 ? hours.toString() : '0$hours',
+            style: TextStyle(
+              fontSize: 12.sp, // ✅ 小程序24rpx ÷ 2 = 12.sp
+              fontWeight: FontWeight.w400, // ✅ 小程序font-weight: 400
+              color: Colors.white, // ✅ 小程序color: #ffffff
+            ),
+          ),
+        ),
+        // ✅ 分隔符
+        Container(
+          width: 10.w, // ✅ 小程序20rpx ÷ 2 = 10.w
+          alignment: Alignment.center,
+          child: Text(
+            ':',
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: const Color(0xFF5B606D), // ✅ 小程序color: #5b606d
+            ),
+          ),
+        ),
+        // ✅ 分钟
+        Container(
+          width: 17.w,
+          height: 17.h,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: const Color(0xFF018BFF),
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+          child: Text(
+            minutes > 9 ? minutes.toString() : '0$minutes',
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w400,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        // ✅ 分隔符
+        Container(
+          width: 10.w,
+          alignment: Alignment.center,
+          child: Text(
+            ':',
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: const Color(0xFF5B606D),
+            ),
+          ),
+        ),
+        // ✅ 秒
+        Container(
+          width: 17.w,
+          height: 17.h,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: const Color(0xFF018BFF),
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+          child: Text(
+            seconds > 9 ? seconds.toString() : '0$seconds',
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w400,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

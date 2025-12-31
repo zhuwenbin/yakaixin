@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_radius.dart';
+import '../../../../core/utils/safe_type_converter.dart';
 import '../../models/goods_model.dart';
 
 /// 课程卡片组件（网课/直播）
@@ -199,8 +200,14 @@ class CourseCard extends StatelessWidget {
     );
   }
 
-  /// 底部信息
+  /// 底部信息（学习计划和已购人数，一行显示两个）
+  /// 对应小程序: examination-course-item.vue Line 26-29
+  /// 小程序显示: {{ item.new_type_name }} | {{ item.student_num }}人购买
   Widget _buildBottomInfo() {
+    // ✅ 获取已购人数（对应小程序 item.student_num）
+    final studentNum = SafeTypeConverter.toInt(goods.studentNum, defaultValue: 0);
+    final purchaseText = studentNum > 0 ? '$studentNum人购买' : '0人购买';
+
     return Container(
       decoration: const BoxDecoration(
         border: Border(
@@ -211,16 +218,25 @@ class CourseCard extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Flexible(
+          // ✅ 学习计划（左侧，对应小程序 item.new_type_name）
+          Expanded(
             child: Text(
-              goods.newTypeName ?? '',
+              goods.newTypeName ?? '学习计划',
               style: AppTextStyles.courseSecondary,
               overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
-          Text(
-            '${goods.studentNum ?? 0}人购买',
-            style: AppTextStyles.courseSecondary,
+          SizedBox(width: 12.w),
+          // ✅ 已购人数（右侧，对应小程序 {{ item.student_num }}人购买）
+          Expanded(
+            child: Text(
+              purchaseText,
+              style: AppTextStyles.courseSecondary,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              textAlign: TextAlign.right,
+            ),
           ),
         ],
       ),

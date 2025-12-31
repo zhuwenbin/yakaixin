@@ -75,6 +75,9 @@ dependencies:
   # 二维码
   qr_flutter: ^4.1.0
   
+  # 分享功能
+  share_plus: ^7.2.2
+  
   # 微信支付SDK
   fluwx: ^5.7.5
   
@@ -89,9 +92,8 @@ dependencies:
   # WebView（用于H5直播）
   webview_flutter: ^4.10.0
   
-  # 视频播放器
-  video_player: ^2.8.2
-  chewie: ^1.7.5
+  # 视频播放器（使用 Better Player，更好的性能和鸿蒙系统支持）
+  better_player: ^0.0.84
 
   # 工具
   json_annotation: ^4.9.0
@@ -138,6 +140,7 @@ flutter:
   assets:
     - assets/images/
     - assets/images/course_type/
+    - assets/images/secret.png
     # ✅ Mock 数据文件（仅开发环境使用）
     - assets/mock/
 

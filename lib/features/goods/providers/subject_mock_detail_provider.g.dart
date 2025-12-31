@@ -7,7 +7,7 @@ part of 'subject_mock_detail_provider.dart';
 // **************************************************************************
 
 String _$subjectMockDetailNotifierHash() =>
-    r'7a078b4d717f2f5521ab7e6bf40dc83246e0e068';
+    r'3dfdde1b28043a75d21b77d53c44bef5e400a0ac';
 
 /// 科目模考详情Provider
 /// 对应小程序: pages/test/subjectMockDetail.vue

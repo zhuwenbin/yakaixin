@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/utils/safe_type_converter.dart';
+import '../../../core/widgets/common_state_widget.dart';
 import '../../wrong_book/providers/wrong_book_provider.dart';
 import '../../wrong_book/models/wrong_question_model.dart';
-import '../../collection/widgets/time_range_selector.dart';
+import '../../collection/widgets/time_range_selector_dialog.dart';
 import 'wrong_book_detail_page.dart';
 
 /// 错题本页面
@@ -24,7 +24,6 @@ class WrongBookPage extends ConsumerStatefulWidget {
 class _WrongBookPageState extends ConsumerState<WrongBookPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  bool _showTimeSelector = false;
 
   @override
   void initState() {
@@ -82,76 +81,87 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
             ],
           ),
           
-          // 时间选择器
-          if (_showTimeSelector)
-            TimeRangeSelector(
-              selectedRange: state.timeRange,
-              selectedName: state.timeRangeName ?? '时间',
-              startDate: state.startDate,
-              endDate: state.endDate,
-              onClose: () => setState(() => _showTimeSelector = false),
-              onConfirm: (range, name, startDate, endDate) {
-                setState(() => _showTimeSelector = false);
-                ref.read(wrongBookNotifierProvider.notifier).updateFilter(
-                  timeRange: range,
-                  timeRangeName: name,
-                  startDate: startDate,
-                  endDate: endDate,
-                );
-              },
-            ),
+          // ✅ 时间选择器（使用 Dialog，与专业选择动画一致）
+          // 注意：不再使用 if 条件显示，而是通过 showDialog 控制
         ],
       ),
     );
   }
 
   /// 构建Tab栏和筛选按钮
+  /// 对应小程序: wrongQuestionBook/index.vue .header_tab
+  /// 小程序样式：
+  /// - font-size: 32rpx (16sp)
+  /// - 默认颜色: #262629
+  /// - 激活颜色: #387dfc
+  /// - font-weight: 400 (激活时也是400，不加粗)
+  /// - tab 间距: margin-right: 60rpx (30px)
+  /// - 没有底部指示器
   Widget _buildTabBar() {
+    final currentIndex = _tabController.index;
+    
     return Container(
       color: AppColors.surface,
-      padding: AppSpacing.horizontalMd.add(EdgeInsets.symmetric(vertical: 8.h)),
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h), // ✅ 对应小程序 padding: 16rpx 24rpx
       child: Row(
         children: [
-          // Tab栏
+          // ✅ 自定义 Tab 栏（对应小程序 .left_tab）
           Expanded(
-            child: TabBar(
-              controller: _tabController,
-              labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.textSecondary,
-              labelStyle: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-              unselectedLabelStyle: AppTextStyles.bodyMedium,
-              indicatorColor: AppColors.primary,
-              indicatorSize: TabBarIndicatorSize.label,
-              indicatorWeight: 3,
-              tabs: const [
-                Tab(text: '全部'),
-                Tab(text: '标记'),
-                Tab(text: '易错'),
+            child: Row(
+              children: [
+                _buildCustomTab(0, '全部', currentIndex),
+                SizedBox(width: 30.w), // ✅ 对应小程序 margin-right: 60rpx
+                _buildCustomTab(1, '标记', currentIndex),
+                SizedBox(width: 30.w),
+                _buildCustomTab(2, '易错', currentIndex),
               ],
             ),
           ),
           SizedBox(width: 16.w),
-          // 筛选按钮
+          // ✅ 筛选按钮（对应小程序 .right_screen）
           GestureDetector(
-            onTap: () => setState(() => _showTimeSelector = true),
+            onTap: () => _showTimeRangeSelector(context, ref),
             child: Row(
               children: [
                 Text(
                   '筛选',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    fontSize: 14.sp, // ✅ 对应小程序 font-size: 28rpx (14sp)
+                    color: const Color(0xFF03203D), // ✅ 对应小程序 color: #03203d
                   ),
                 ),
                 SizedBox(width: 4.w),
                 Icon(
                   Icons.filter_list,
-                  size: 18.sp,
-                  color: AppColors.textSecondary,
+                  size: 12.sp, // ✅ 对应小程序 24rpx (12sp)
+                  color: const Color(0xFF03203D),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+  
+  /// 构建自定义 Tab 项
+  /// 对应小程序: .tab_name 和 .init
+  Widget _buildCustomTab(int index, String text, int currentIndex) {
+    final isActive = currentIndex == index;
+    
+    return GestureDetector(
+      onTap: () {
+        _tabController.animateTo(index);
+      },
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 16.sp, // ✅ 对应小程序 font-size: 32rpx (16sp)
+          fontWeight: FontWeight.normal, // ✅ 对应小程序 font-weight: 400
+          color: isActive
+              ? const Color(0xFF387DFC) // ✅ 对应小程序 .init { color: #387dfc }
+              : const Color(0xFF262629), // ✅ 对应小程序默认颜色 #262629
+        ),
       ),
     );
   }
@@ -159,7 +169,8 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
   /// 构建错题列表
   Widget _buildQuestionList(List<WrongQuestionModel> questions) {
     if (questions.isEmpty) {
-      return _buildEmptyState();
+      // ✅ 使用统一的空状态组件（对应小程序图片和样式）
+      return CommonStateWidget.noWrongQuestion();
     }
 
     return RefreshIndicator(
@@ -340,28 +351,6 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
     );
   }
 
-  /// 构建空状态
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.check_circle_outline,
-            size: 80.sp,
-            color: AppColors.border,
-          ),
-          SizedBox(height: AppSpacing.mdV),
-          Text(
-            '暂无错题~',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textHint,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   /// 去除HTML标签
   String _stripHtml(String html) {
@@ -468,6 +457,29 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
         return state.fallibleQuestions;
       default:
         return state.allQuestions;
+    }
+  }
+
+  /// 显示时间范围选择器
+  /// 从底部弹出，使用与专业选择相同的动画参数
+  void _showTimeRangeSelector(BuildContext context, WidgetRef ref) async {
+    final state = ref.read(wrongBookNotifierProvider);
+    
+    final result = await showTimeRangeSelectorDialog(
+      context,
+      selectedRange: state.timeRange,
+      selectedName: state.timeRangeName ?? '时间',
+      startDate: state.startDate,
+      endDate: state.endDate,
+    );
+    
+    if (result != null) {
+      ref.read(wrongBookNotifierProvider.notifier).updateFilter(
+        timeRange: result['range'] as String,
+        timeRangeName: result['name'] as String,
+        startDate: result['startDate'] as String?,
+        endDate: result['endDate'] as String?,
+      );
     }
   }
 }

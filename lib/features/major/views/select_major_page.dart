@@ -6,7 +6,6 @@ import 'package:dio/dio.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/utils/toast_util.dart';
 import '../../../core/widgets/loading_hud.dart';
-import '../../auth/providers/auth_provider.dart';
 import '../providers/major_provider.dart';
 import '../../../../app/config/api_config.dart';
 
@@ -96,11 +95,25 @@ class _SelectMajorPageState extends ConsumerState<SelectMajorPage> {
                 ),
         ),
       ),
-      // 底部提交按钮
-      floatingActionButton: _selectedMajorId != null
-          ? _buildSubmitButton()
+      // 底部提交按钮 - 使用 bottomNavigationBar 避免被系统UI覆盖（小米真机适配）
+      bottomNavigationBar: _selectedMajorId != null
+          ? Container(
+              padding: EdgeInsets.only(
+                left: 64.w,
+                right: 64.w,
+                top: 16.h,
+                bottom: 16.h,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+              ),
+              child: SafeArea(
+                child: Center(
+                  child: _buildSubmitButton(),
+                ),
+              ),
+            )
           : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 

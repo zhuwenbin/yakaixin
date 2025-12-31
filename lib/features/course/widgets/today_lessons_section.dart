@@ -92,7 +92,11 @@ class LessonItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final startTime = lesson.startTime?.split(' ').last.substring(0, 5) ?? '';
+    // ✅ 对应小程序: getStartTime(time) { return time.toString().split(' ')[1]; }
+    // 小程序返回完整时间部分（如 "14:30:00"），不截取
+    final startTime = lesson.startTime?.split(' ').length == 2 
+        ? lesson.startTime!.split(' ')[1] 
+        : '';
     final teachingTypeName = lesson.teachingTypeName ?? '';
     final lessonNum = lesson.lessonNum ?? '';
     final lessonName = lesson.lessonName ?? '';
@@ -211,31 +215,40 @@ class LessonItem extends ConsumerWidget {
     );
   }
 
+  /// 构建时间区域
+  /// 对应小程序: .today-lesson-item-left .start-time 和 .today-lesson-type-status
   Widget _buildTimeSection(String startTime, String teachingTypeName) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 12.w),
       child: Column(
         children: [
-          SizedBox(height: 15.h),
+          SizedBox(height: 15.h), // ✅ 对应小程序 margin-top: 30rpx (15.h)
           Text(
             startTime,
             style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF009F32),
+              fontSize: 16.sp, // ✅ 对应小程序 font-size: 32rpx (16.sp)
+              fontWeight: FontWeight.w700, // ✅ 对应小程序 font-weight: 700
+              color: const Color(0xFF009F32), // ✅ 对应小程序 color: #009F32
             ),
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 6.h), // ✅ 对应小程序 margin-top: 12rpx (6.h)
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+            width: 50.w, // ✅ 对应小程序 width: 100rpx (50.w)
+            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.5.h), // ✅ 对应小程序 padding: 3rpx 12rpx
             decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFF0F4921), width: 1.5),
-              borderRadius: AppRadius.radiusXs,
+              border: Border.all(
+                color: const Color(0xFF0F4921), // ✅ 对应小程序 border: 3rpx solid #0F4921
+                width: 1.5, // ✅ 对应小程序 3rpx = 1.5px
+              ),
+              borderRadius: BorderRadius.circular(4.r), // ✅ 对应小程序 border-radius: 8rpx (4.r)
             ),
             child: Text(
               teachingTypeName,
-              style: AppTextStyles.labelMedium.copyWith(
-                color: const Color(0xFF0F4921),
+              textAlign: TextAlign.center, // ✅ 对应小程序 text-align: center
+              style: TextStyle(
+                fontSize: 12.sp, // ✅ 对应小程序 font-size: 24rpx (12.sp)
+                fontWeight: FontWeight.normal, // ✅ 对应小程序 font-weight: 400
+                color: const Color(0xFF0F4921), // ✅ 对应小程序 color: #0F4921
               ),
             ),
           ),
@@ -244,6 +257,8 @@ class LessonItem extends ConsumerWidget {
     );
   }
 
+  /// 构建课节信息
+  /// 对应小程序: .today-lesson-item-right .today-lesson-title 和 .learn-course-lessons-assistant-name-name
   Widget _buildLessonInfo(
     BuildContext context,
     WidgetRef ref,
@@ -256,22 +271,28 @@ class LessonItem extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 16.h),
+          SizedBox(height: 16.h), // ✅ 对应小程序 padding-top: 32rpx (16.h)
+          // ✅ 主标题：对应小程序 .today-lesson-title
           Text(
             lessonNum.isNotEmpty ? '第$lessonNum节' : '',
             style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary,
+              fontSize: 16.sp, // ✅ 对应小程序 font-size: 32rpx (16.sp)
+              fontWeight: FontWeight.w500, // ✅ 对应小程序 font-weight: 500
+              color: const Color(0xFF000000), // ✅ 对应小程序 color: #000000
+              height: 1.4, // ✅ 对应小程序 line-height: 1.4
             ),
+            maxLines: 2, // ✅ 对应小程序 -webkit-line-clamp: 2
+            overflow: TextOverflow.ellipsis,
           ),
           SizedBox(height: 4.h),
+          // ✅ 副标题：对应小程序 .learn-course-lessons-assistant-name-name
           Text(
             lessonName,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              fontSize: 14.sp, // ✅ 对应小程序 font-size: 28rpx (14.sp)
+              color: const Color(0xFF666666), // ✅ 对应小程序 color: #666666
             ),
-            maxLines: 1,
+            maxLines: 1, // ✅ 对应小程序 white-space: nowrap
             overflow: TextOverflow.ellipsis,
           ),
         ],

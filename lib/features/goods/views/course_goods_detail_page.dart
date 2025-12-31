@@ -40,8 +40,7 @@ class CourseGoodsDetailPage extends ConsumerStatefulWidget {
       _CourseGoodsDetailPageState();
 }
 
-class _CourseGoodsDetailPageState
-    extends ConsumerState<CourseGoodsDetailPage> {
+class _CourseGoodsDetailPageState extends ConsumerState<CourseGoodsDetailPage> {
   int _tabIndex = 1; // 1-课程介绍 2-课程大纲
 
   // ✅ 使用 Model 类存储商品详情
@@ -82,24 +81,25 @@ class _CourseGoodsDetailPageState
       // ⚠️ permission_status='2' (未购买) → 显示"立即报名"
       final goodsService = ref.read(goodsServiceProvider);
       final storage = ref.read(storageServiceProvider);
-      
+
       // 获取用户信息（如果已登录）
       final studentId = storage.getString(StorageKeys.studentId);
-      
+
       final response = await goodsService.getGoodsDetail(
         goodsId: widget.goodsId!,
-        userId: studentId,     // ✅ 传入 user_id 以获取购买状态
-        studentId: studentId,  // ✅ 传入 student_id 以获取购买状态
+        userId: studentId, // ✅ 传入 user_id 以获取购买状态
+        studentId: studentId, // ✅ 传入 student_id 以获取购买状态
         noProfessionalId: '1', // 不筛选专业ID
       );
-      
+
       setState(() {
         _goodsDetail = response;
         _isLoading = false;
       });
-    
+
       // ✅ 如果有课程大纲数据(detail_package_goods)，加载课程章节
-      if (response.detailPackageGoods != null && response.detailPackageGoods!.isNotEmpty) {
+      if (response.detailPackageGoods != null &&
+          response.detailPackageGoods!.isNotEmpty) {
         print('📚 开始加载 ${response.detailPackageGoods!.length} 个课程的章节数据...');
         _courseList = response.detailPackageGoods!.map((course) {
           return {
@@ -107,7 +107,7 @@ class _CourseGoodsDetailPageState
             'chapterData': [], // 初始化空章节数据
           };
         }).toList();
-        
+
         // 为每个课程加载章节
         for (var course in _courseList) {
           await _loadChapterData(course);
@@ -131,7 +131,7 @@ class _CourseGoodsDetailPageState
       EasyLoading.showError('加载失败');
     }
   }
-  
+
   /// 拼接完整路径
   /// 对应小程序: completePath() (Line 478-486)
   /// 如果路径不包含完整域名,则拼接OSS域名前缀
@@ -146,7 +146,7 @@ class _CourseGoodsDetailPageState
     // 拼接完整路径
     return 'https://yakaixin.oss-cn-beijing.aliyuncs.com/$path';
   }
-  
+
   /// 加载课程章节数据
   /// 对应小程序: getChapter() -> chapterpaper API
   /// 参考: mini-dev_250812/src/modules/jintiku/pages/course/courseDetail.vue:340-356
@@ -157,9 +157,9 @@ class _CourseGoodsDetailPageState
         print('⚠️ 课程ID为空，跳过章节加载');
         return;
       }
-      
+
       print('📖 加载课程章节: $courseId - ${course['name']}');
-      
+
       // ✅ 调用真实API获取章节数据
       // 对应小程序: chapterpaper({ goods_id, no_professional_id, no_user_id })
       final goodsService = ref.read(goodsServiceProvider);
@@ -168,25 +168,27 @@ class _CourseGoodsDetailPageState
         noProfessionalId: '1',
         // noUserId: '1',
       );
-      
+
       // ✅ 解析章节数据并设置默认展开状态
       // 遵守 @data_type_safety.md: 安全的类型转换
-      final chapters = (response as List?)?.map((item) {
-        // ✅ 安全转换: dynamic -> Map<String, dynamic>
-        final chapterMap = item is Map<String, dynamic> 
-            ? item 
-            : (item as Map).cast<String, dynamic>();
-        
-        return {
-          ...chapterMap,
-          'expand': true, // 默认展开所有章节
-        };
-      }).toList() ?? [];
-      
+      final chapters =
+          (response as List?)?.map((item) {
+            // ✅ 安全转换: dynamic -> Map<String, dynamic>
+            final chapterMap = item is Map<String, dynamic>
+                ? item
+                : (item as Map).cast<String, dynamic>();
+
+            return {
+              ...chapterMap,
+              'expand': true, // 默认展开所有章节
+            };
+          }).toList() ??
+          [];
+
       setState(() {
         course['chapterData'] = chapters;
       });
-      
+
       print('✅ 章节加载成功: ${chapters.length} 章');
     } catch (e) {
       print('❌ 加载章节失败: $e');
@@ -234,9 +236,7 @@ class _CourseGoodsDetailPageState
             else if (_goodsDetail != null)
               _buildBody()
             else
-              CommonStateWidget.empty(
-                message: '暂无数据',
-              ),
+              CommonStateWidget.empty(message: '暂无数据'),
             // ✅ 已购买(permissionStatus='1')显示"去学习"，未购买(permissionStatus='2')显示"立即报名"
             if (!_isLoading && _goodsDetail != null) _buildBottomBar(),
           ],
@@ -266,7 +266,7 @@ class _CourseGoodsDetailPageState
   Widget _buildCoverImage() {
     // ✅ 使用 _completePath 拼接完整URL
     final coverPath = _completePath(_goodsDetail?.materialCoverPath);
-    
+
     return SliverToBoxAdapter(
       child: Container(
         width: double.infinity,
@@ -282,13 +282,21 @@ class _CourseGoodsDetailPageState
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           color: AppColors.card,
-                          child: Icon(Icons.image, size: 60.sp, color: AppColors.textHint),
+                          child: Icon(
+                            Icons.image,
+                            size: 60.sp,
+                            color: AppColors.textHint,
+                          ),
                         );
                       },
                     )
                   : Container(
                       color: AppColors.card,
-                      child: Icon(Icons.image, size: 60.sp, color: AppColors.textHint),
+                      child: Icon(
+                        Icons.image,
+                        size: 60.sp,
+                        color: AppColors.textHint,
+                      ),
                     ),
             ),
             // ✅ 底部圆角遮罩（.fake-bar）
@@ -318,7 +326,12 @@ class _CourseGoodsDetailPageState
     return SliverToBoxAdapter(
       child: Container(
         color: AppColors.surface,
-        padding: EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.mdV),
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          0,
+          AppSpacing.md,
+          AppSpacing.mdV,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -435,7 +448,7 @@ class _CourseGoodsDetailPageState
   Widget _buildValidityTime() {
     final startDate = _goodsDetail?.validityStartDateVal;
     final endDate = _goodsDetail?.validityEndDateVal;
-    
+
     return Text(
       '有效时间: ${startDate ?? ''} - ${endDate ?? ''}',
       style: AppTextStyles.labelMedium.copyWith(color: AppColors.textHint),
@@ -446,7 +459,7 @@ class _CourseGoodsDetailPageState
     final permissionStatus = _goodsDetail?.permissionStatus;
     final salePrice = _goodsDetail?.salePrice;
     final studentNum = _goodsDetail?.studentNum;
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -519,8 +532,9 @@ class _CourseGoodsDetailPageState
                           tab['title'],
                           style: TextStyle(
                             fontSize: 15.sp,
-                            fontWeight:
-                                isActive ? FontWeight.w600 : FontWeight.w400,
+                            fontWeight: isActive
+                                ? FontWeight.w600
+                                : FontWeight.w400,
                             color: isActive
                                 ? AppColors.primary
                                 : AppColors.textHint,
@@ -577,7 +591,7 @@ class _CourseGoodsDetailPageState
   Widget _buildIntroduction() {
     // ✅ 使用 _completePath 拼接完整URL
     final introPath = _completePath(_goodsDetail?.materialIntroPath);
-    
+
     return SliverToBoxAdapter(
       child: Container(
         color: AppColors.surface,
@@ -593,7 +607,9 @@ class _CourseGoodsDetailPageState
                     alignment: Alignment.center,
                     child: Text(
                       '暂无课程介绍',
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textHint,
+                      ),
                     ),
                   );
                 },
@@ -603,7 +619,9 @@ class _CourseGoodsDetailPageState
                 alignment: Alignment.center,
                 child: Text(
                   '暂无课程介绍',
-                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textHint,
+                  ),
                 ),
               ),
       ),
@@ -616,14 +634,19 @@ class _CourseGoodsDetailPageState
       child: Container(
         color: AppColors.surface,
         margin: EdgeInsets.only(top: AppSpacing.smV),
-        padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.smV),
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.smV,
+        ),
         child: _courseList.isEmpty
             ? Container(
                 height: 200.h,
                 alignment: Alignment.center,
                 child: Text(
                   '暂无课程大纲',
-                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textHint,
+                  ),
                 ),
               )
             : Column(
@@ -643,7 +666,9 @@ class _CourseGoodsDetailPageState
         children: [
           Text(
             course['name'] ?? '',
-            style: AppTextStyles.heading4.copyWith(color: AppColors.textPrimary),
+            style: AppTextStyles.heading4.copyWith(
+              color: AppColors.textPrimary,
+            ),
           ),
           SizedBox(height: 12.h),
           ...((course['chapterData'] as List?) ?? []).map((chapter) {
@@ -683,11 +708,15 @@ class _CourseGoodsDetailPageState
                 ),
                 Text(
                   '${subs.length}节',
-                  style: AppTextStyles.labelMedium.copyWith(color: AppColors.textHint),
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.textHint,
+                  ),
                 ),
                 SizedBox(width: AppSpacing.sm),
                 Icon(
-                  isExpand ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  isExpand
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
                   size: 20.sp,
                   color: AppColors.textHint,
                 ),
@@ -715,12 +744,7 @@ class _CourseGoodsDetailPageState
     return Container(
       padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 4.w),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.divider,
-            width: 1,
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -739,17 +763,13 @@ class _CourseGoodsDetailPageState
           Expanded(
             child: Text(
               name,
-              style: TextStyle(
-                fontSize: 16.sp,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 16.sp, color: AppColors.textSecondary),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
           // 试听按钮
-          if (canTrial)
-            SizedBox(width: AppSpacing.sm),
+          if (canTrial) SizedBox(width: AppSpacing.sm),
           if (canTrial)
             GestureDetector(
               onTap: () => _onTrialListen(section),
@@ -761,7 +781,9 @@ class _CourseGoodsDetailPageState
                 ),
                 child: Text(
                   '开始试听',
-                  style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary),
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ),
@@ -795,10 +817,8 @@ class _CourseGoodsDetailPageState
           top: false,
           child: Center(
             child: ElevatedButton(
-
-              // onPressed: isPurchased ? _onGoCourse : _onPurchase,
-             onPressed: _onPurchase,
-
+              // ✅ 修复：已购买跳转到学习页面，未购买跳转到支付页面
+              onPressed: isPurchased ? _onGoCourse : _onPurchase,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.textWhite,
@@ -827,36 +847,37 @@ class _CourseGoodsDetailPageState
   Future<void> _onTrialListen(Map<String, dynamic> section) async {
     try {
       EasyLoading.show(status: '加载中...');
-      
+
       // ✅ 对应小程序: trialListen API
       // trialListen({ goods_id: section.goods_id, system_id: section.system_id })
       final goodsId = section['goods_id']?.toString() ?? widget.goodsId;
-      final systemId = section['system_id']?.toString() ?? section['id']?.toString() ?? '';
-      
+      final systemId =
+          section['system_id']?.toString() ?? section['id']?.toString() ?? '';
+
       print('🎧 试听课程:');
       print('   商品ID: $goodsId');
       print('   章节ID: $systemId');
       print('   章节名称: ${section['name']}');
-      
+
       // TODO: 调用试听接口
       // final response = await ref.read(courseServiceProvider).trialListen(
       //   goodsId: goodsId,
       //   systemId: systemId,
       // );
-      
+
       // Mock演示：模拟网络请求延迟
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       EasyLoading.dismiss();
-      
+
       // ✅ 对应小程序: if (res.data && res.data.path)
       // Mock数据：假设返回了视频路径
       final String? videoPath = 'course/test/video.mp4'; // 相对路径
-      
+
       if (videoPath != null && videoPath.isNotEmpty) {
         // ✅ 对应小程序: completePath(res.data.path)
         final fullPath = _completePath(videoPath);
-        
+
         // ✅ 对应小程序: this.$xh.push('jintiku', `pages/course/listenVideo?url=...`)
         if (mounted) {
           context.push(
@@ -884,20 +905,26 @@ class _CourseGoodsDetailPageState
   /// 对应小程序 getOrder 方法 (Line 417-476)
   Future<void> _onPurchase() async {
     // 准备参数
-    final goodsId = SafeTypeConverter.toSafeString(_goodsDetail?.goodsId, defaultValue: '');
+    final goodsId = SafeTypeConverter.toSafeString(
+      _goodsDetail?.goodsId,
+      defaultValue: '',
+    );
     if (goodsId.isEmpty) {
       EasyLoading.showError('商品ID不能为空');
       return;
     }
-    
+
     final salePrice = _goodsDetail?.salePrice ?? '0';
     final payableAmount = double.tryParse(salePrice) ?? 0.0;
     final goodsMonthsPriceId = SafeTypeConverter.toSafeString(
       _goodsDetail?.goodsMonthsPriceId,
       defaultValue: '',
     );
-    final months = SafeTypeConverter.toSafeString(_goodsDetail?.month, defaultValue: '0');
-    
+    final months = SafeTypeConverter.toSafeString(
+      _goodsDetail?.month,
+      defaultValue: '0',
+    );
+
     // ✅ 使用统一支付流程管理器
     await context.startPayment(
       ref: ref,
@@ -908,7 +935,7 @@ class _CourseGoodsDetailPageState
       goodsName: _goodsDetail?.name ?? '课程',
       professionalIdName: _goodsDetail?.professionalIdName,
       refreshGoodsId: goodsId,
-      isLearnButton: 0,  // 支付成功页显示"开始测验"按钮
+      isLearnButton: 0, // 支付成功页显示"开始测验"按钮
       onSuccess: () async {
         // 支付成功：刷新商品详情
         print('✅ [课程商品] 支付成功，刷新商品详情');
@@ -921,7 +948,6 @@ class _CourseGoodsDetailPageState
       },
     );
   }
-
 
   /// 去学习
   /// ✅ 返回主页面并切换到课程 Tab（索引 2）

@@ -6,7 +6,7 @@ part of 'wrong_book_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$wrongBookNotifierHash() => r'3c78f66dbba8880a5e4416f1a17b61c39cda8be7';
+String _$wrongBookNotifierHash() => r'6cbe07f4ab2a214a34c42575719ed1790ac39113';
 
 /// 错题本Provider
 ///

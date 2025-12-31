@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/subject_mock_detail_provider.dart';
 import '../models/goods_detail_model.dart';
 import '../../../core/utils/safe_type_converter.dart';
 import '../../../core/payment/payment_flow_manager.dart';
 import '../../../core/widgets/common_state_widget.dart';
-import '../../../app/routes/app_routes.dart';
 import '../../../app/config/api_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -102,14 +100,19 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
       child: Column(
         children: [
           if (completeImageUrl != null && completeImageUrl.isNotEmpty)
-            CachedNetworkImage(
-              imageUrl: completeImageUrl,
+            // ✅ 使用 Image.network 避免 iOS Release 模式 Content-Disposition 问题
+            Image.network(
+              completeImageUrl,
               fit: BoxFit.fitWidth,
-              placeholder: (context, url) => Container(
-                height: 200.h,
-                child: const Center(child: CircularProgressIndicator()),
-              ),
-              errorWidget: (context, error, stackTrace) {
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  height: 200.h,
+                  alignment: Alignment.center,
+                  child: const CircularProgressIndicator(),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
                 return Container(
                   padding: AppSpacing.allXl,
                   child: Column(
@@ -157,7 +160,7 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
     final activePriceIndex = ref.watch(
       subjectMockDetailNotifierProvider.select((s) => s.activePriceIndex),
     );
-    final prices = detail.prices ?? [];
+    final prices = detail.prices;
     final currentPrice = prices.isNotEmpty && activePriceIndex < prices.length
         ? prices[activePriceIndex]
         : null;
@@ -194,17 +197,17 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
                         Text(
                           '¥',
                           style: TextStyle(
-                            fontSize: 16.sp,
-                            color: AppColors.subjectMockPrice,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 18.sp, // ✅ 对应小程序 font-size: 36upx ÷ 2 = 18.sp
+                            color: AppColors.subjectMockPrice, // ✅ 对应小程序 color: #cd3f2f
+                            fontWeight: FontWeight.w700, // ✅ 对应小程序 font-weight: 700
                           ),
                         ),
                         Text(
                           currentSalePrice,
                           style: TextStyle(
-                            fontSize: 24.sp,
-                            color: AppColors.subjectMockPrice,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 18.sp, // ✅ 对应小程序 font-size: 36upx ÷ 2 = 18.sp
+                            color: AppColors.subjectMockPrice, // ✅ 对应小程序 color: #cd3f2f
+                            fontWeight: FontWeight.w700, // ✅ 对应小程序 font-weight: 700
                           ),
                         ),
                       ],
@@ -213,19 +216,29 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
                 ),
               ),
               SizedBox(width: AppSpacing.md),
-              ElevatedButton(
-                onPressed: () => _handlePurchase(context, ref, detail, currentPrice),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.subjectMockBuyButton, // ✅ 对应小程序 Line 640: background-color: #ff5402
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 40.w,
-                    vertical: 14.h,
+              // ✅ 购买按钮 (对应小程序 .pay-button, CSS Line 639-648)
+              SizedBox(
+                width: 240.w, // ✅ 对应小程序 width: 480upx ÷ 2 = 240.w
+                height: 48.h, // ✅ 对应小程序 height: 96upx ÷ 2 = 48.h
+                child: ElevatedButton(
+                  onPressed: () => _handlePurchase(context, ref, detail, currentPrice),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.subjectMockBuyButton, // ✅ 对应小程序 background-color: #ff5402
+                    padding: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100.r), // ✅ 对应小程序 border-radius: 200upx ÷ 2 = 100.r
+                    ),
+                    elevation: 0,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.xl),
+                  child: Text(
+                    '立即购买',
+                    style: TextStyle(
+                      fontSize: 18.sp, // ✅ 对应小程序 font-size: 36upx ÷ 2 = 18.sp
+                      color: Colors.white, // ✅ 对应小程序 color: #ffffff
+                      fontWeight: FontWeight.normal, // 小程序未指定，使用默认
+                    ),
                   ),
                 ),
-                child: Text('立即购买', style: AppTextStyles.buttonLarge),
               ),
             ] else ...[
               Expanded(

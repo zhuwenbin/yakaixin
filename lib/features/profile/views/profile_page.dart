@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../app/config/api_config.dart';
@@ -32,11 +31,11 @@ class ProfilePage extends ConsumerWidget {
             top: 0,
             left: 0,
             right: 0,
-            child: CachedNetworkImage(
-              imageUrl: ApiConfig.completeImageUrl('my-background-img.png'),
+            child: Image.network(
+              ApiConfig.completeImageUrl('my-background-img.png'),
               height: statusBarHeight + 220.h, // 状态栏 + 头部区域高度
               fit: BoxFit.cover,
-              errorWidget: (context, error, stackTrace) {
+              errorBuilder: (context, error, stackTrace) {
                 return Container(
                   height: statusBarHeight + 220.h,
                   color: Colors.white,
@@ -108,15 +107,11 @@ class ProfilePage extends ConsumerWidget {
                 ),
                 child: ClipOval(
                   child: isLoggedIn && user?.avatar != null && user!.avatar!.isNotEmpty
-                      ? CachedNetworkImage(
+                      ? Image.network(
                           // ✅ 修复：使用 ApiConfig.completeImageUrl() 拼接完整URL
-                          imageUrl: ApiConfig.completeImageUrl(user.avatar),
+                          ApiConfig.completeImageUrl(user.avatar),
                           fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            color: Colors.grey[300],
-                            child: Icon(Icons.person, size: 30.w, color: Colors.white),
-                          ),
-                          errorWidget: (context, url, error) => Container(
+                          errorBuilder: (context, error, stackTrace) => Container(
                             color: Colors.grey[300],
                             child: Icon(Icons.person, size: 30.w, color: Colors.white),
                           ),
@@ -160,16 +155,21 @@ class ProfilePage extends ConsumerWidget {
                 ),
               ),
               // 编辑图标
+              // 对应小程序: .edit image (Line 36-37)
               if (isLoggedIn)
                 Image.network(
-                  ApiConfig.completeImageUrl('public/34e7174539261545097316_%E7%BC%96%E7%BB%84%204%E5%A4%87%E4%BB%BD%203%402x.png'),
-                  width: 20.w,
-                  height: 20.w,
-                  errorBuilder: (context, error, stackTrace) => Icon(
-                    Icons.chevron_right,
-                    color: const Color(0xFF03203D),
-                    size: 24.sp,
-                  ),
+                  // ✅ 使用小程序相同的完整URL（旧OSS）
+                  'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/34e7174539261545097316_%E7%BC%96%E7%BB%84%204%E5%A4%87%E4%BB%BD%203%402x.png',
+                  width: 20.w,  // ✅ 对应小程序 width: 20px (20.w)
+                  height: 20.w, // ✅ 对应小程序 height: 20px (20.w)
+                  errorBuilder: (context, error, stackTrace) {
+                    // ✅ 图片加载失败时显示默认图标
+                    return Icon(
+                      Icons.edit,
+                      color: const Color(0xFF03203D), // ✅ 对应小程序 color: #03203d
+                      size: 20.w,
+                    );
+                  },
                 ),
             ],
           ),
@@ -231,16 +231,11 @@ class ProfilePage extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CachedNetworkImage(
-                  imageUrl: tab['icon'] as String,
+                Image.network(
+                  tab['icon'] as String,
                   width: 32.w,
                   height: 32.w,
-                  placeholder: (context, url) => Container(
-                    width: 32.w,
-                    height: 32.w,
-                    color: Colors.grey[200],
-                  ),
-                  errorWidget: (context, url, error) => Icon(
+                  errorBuilder: (context, error, stackTrace) => Icon(
                     Icons.image_not_supported,
                     size: 32.w,
                     color: Colors.grey,
@@ -331,16 +326,13 @@ class ProfilePage extends ConsumerWidget {
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
         child: Row(
           children: [
-            CachedNetworkImage(
-              imageUrl: icon,
+            // ✅ 改用 Image.network 避免 CachedNetworkImage 在 iOS Release 模式下
+            // 因 Content-Disposition: attachment 导致的无法显示问题
+            Image.network(
+              icon,
               width: 24.w,
               height: 24.w,
-              placeholder: (context, url) => Container(
-                width: 24.w,
-                height: 24.w,
-                color: Colors.grey[200],
-              ),
-              errorWidget: (context, url, error) => Icon(
+              errorBuilder: (context, error, stackTrace) => Icon(
                 Icons.image_not_supported,
                 size: 24.w,
                 color: Colors.grey,

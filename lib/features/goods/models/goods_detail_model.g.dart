@@ -20,6 +20,7 @@ _$GoodsDetailModelImpl _$$GoodsDetailModelImplFromJson(
       professionalIdName: json['professional_id_name'] as String?,
       year: json['year'] as String?,
       examTitle: json['exam_title'] as String?,
+      detailsType: json['details_type'],
       prices: (json['prices'] as List<dynamic>?)
               ?.map((e) => GoodsPriceModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -41,6 +42,10 @@ _$GoodsDetailModelImpl _$$GoodsDetailModelImplFromJson(
       detailPackageGoods: (json['detail_package_goods'] as List<dynamic>?)
           ?.map((e) => PackageGoodsModel.fromJson(e as Map<String, dynamic>))
           .toList(),
+      mkgoodsStatistics: json['mkgoods_statistics'] == null
+          ? null
+          : MockGoodsStatistics.fromJson(
+              json['mkgoods_statistics'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$$GoodsDetailModelImplToJson(
@@ -57,6 +62,7 @@ Map<String, dynamic> _$$GoodsDetailModelImplToJson(
       'professional_id_name': instance.professionalIdName,
       'year': instance.year,
       'exam_title': instance.examTitle,
+      'details_type': instance.detailsType,
       'prices': instance.prices,
       'tiku_goods_details': instance.tikuGoodsDetails,
       'teaching_system': instance.teachingSystem,
@@ -64,6 +70,7 @@ Map<String, dynamic> _$$GoodsDetailModelImplToJson(
       'recitation_question_model': instance.recitationQuestionModel,
       'permission_order_id': instance.permissionOrderId,
       'detail_package_goods': instance.detailPackageGoods,
+      'mkgoods_statistics': instance.mkgoodsStatistics,
     };
 
 _$GoodsPriceModelImpl _$$GoodsPriceModelImplFromJson(
@@ -141,4 +148,20 @@ Map<String, dynamic> _$$PackageGoodsModelImplToJson(
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
+    };
+
+_$MockGoodsStatisticsImpl _$$MockGoodsStatisticsImplFromJson(
+        Map<String, dynamic> json) =>
+    _$MockGoodsStatisticsImpl(
+      examDuration: json['exam_duration'],
+      fullMarkScore: json['full_mark_score'],
+      typeCountMap: json['type_count_map'] as Map<String, dynamic>?,
+    );
+
+Map<String, dynamic> _$$MockGoodsStatisticsImplToJson(
+        _$MockGoodsStatisticsImpl instance) =>
+    <String, dynamic>{
+      'exam_duration': instance.examDuration,
+      'full_mark_score': instance.fullMarkScore,
+      'type_count_map': instance.typeCountMap,
     };

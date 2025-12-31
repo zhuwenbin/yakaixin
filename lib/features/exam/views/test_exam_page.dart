@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yakaixin_app/core/theme/app_colors.dart';
-import 'package:yakaixin_app/core/theme/app_text_styles.dart';
 import 'package:yakaixin_app/core/utils/safe_type_converter.dart';
 import 'package:yakaixin_app/core/widgets/common_state_widget.dart';
 import 'package:yakaixin_app/app/routes/app_routes.dart';
+import 'package:yakaixin_app/app/config/api_config.dart';
 import 'package:yakaixin_app/features/exam/providers/test_exam_provider.dart';
 import 'package:yakaixin_app/features/exam/models/paper_model.dart';
 import 'package:yakaixin_app/features/home/models/goods_model.dart';
@@ -106,10 +106,18 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
 
   /// 商品信息头部 (对应小程序 Line 3-21)
   Widget _buildGoodsHeader(GoodsModel goods) {
-
-    var coverImage = goods.materialIntroPath;
-    if (coverImage == null || coverImage.isEmpty){
+    // ✅ 对应小程序 exam.vue Line 9: completepath(info.material_intro_path)
+    // 小程序使用 material_intro_path 作为封面图，并调用 completepath() 拼接完整URL
+    String? coverImage = goods.materialIntroPath;
+    
+    if (coverImage == null || coverImage.isEmpty) {
       coverImage = 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixinshare.png';
+      print('🖼️ [试卷页] 封面路径为空，使用默认图片: $coverImage');
+    } else {
+      // ✅ 调用 completeImageUrl 拼接完整URL（对应小程序 completepath()）
+      final originalPath = coverImage;
+      coverImage = ApiConfig.completeImageUrl(coverImage);
+      print('🖼️ [试卷页] 封面路径处理后: $originalPath → $coverImage');
     }
 
     return Container(
@@ -119,25 +127,26 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 封面图 (对应小程序 Line 4-12)
-          // ⚠️ 注意：小程序使用 material_intro_path 作为封面图
-          if (goods.materialIntroPath != null &&
-              goods.materialIntroPath!.isNotEmpty)
-            Container(
-              width: 50.w, // 小程序: 100rpx = 50.w
-              margin: EdgeInsets.only(right: 12.w), // 小程序: 24rpx = 12.w
-              child: Image.network(
-                goods.materialIntroPath!,
+          // 小程序使用 material_intro_path 作为封面图，并调用 completepath() 拼接完整URL
+          Container(
+            width: 50.w, // 小程序: 100rpx = 50.w
+            margin: EdgeInsets.only(right: 12.w), // 小程序: 24rpx = 12.w
+            child: Image.network(
+              coverImage,
                 fit: BoxFit.fitWidth,
-                errorBuilder: (_, __, ___) => Container(
-                  width: 50.w,
-                  height: 50.w,
-                  color: AppColors.card,
-                  child: Icon(
-                    Icons.image,
-                    color: AppColors.textHint,
-                    size: 25.sp,
-                  ),
-                ),
+                errorBuilder: (context, error, stackTrace) {
+                  print('❌ [试卷页] 封面图片加载失败: $coverImage, error: $error');
+                  return Container(
+                    width: 50.w,
+                    height: 50.w,
+                    color: AppColors.card,
+                    child: Icon(
+                      Icons.image,
+                      color: AppColors.textHint,
+                      size: 25.sp,
+                    ),
+                  );
+                },
               ),
             ),
           // 商品信息 - 上下结构 (对应小程序 Line 13-20 .info-l)

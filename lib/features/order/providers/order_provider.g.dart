@@ -6,7 +6,7 @@ part of 'order_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$orderNotifierHash() => r'49304ee8a2cbc81b27a277123dc3f0b33aaf67c1';
+String _$orderNotifierHash() => r'c87bf179592fdec398da9de83a43c05635cd060d';
 
 /// 订单 Provider
 /// 职责:
@@ -28,7 +28,7 @@ final orderNotifierProvider =
 );
 
 typedef _$OrderNotifier = AutoDisposeNotifier<OrderState>;
-String _$orderListHash() => r'07e2de84167c2222799eb5106262a62bb36093f1';
+String _$orderListHash() => r'0be71924d46999adb2d0ad1057b0cdd4bad96a8a';
 
 /// Copied from Dart SDK
 class _SystemHash {

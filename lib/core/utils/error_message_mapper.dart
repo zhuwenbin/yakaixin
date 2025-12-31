@@ -7,16 +7,41 @@ class ErrorMessageMapper {
 
   /// 将 DioException 转换为用户友好的错误提示
   static String mapDioException(DioException error) {
-    // 优先使用拦截器已处理的错误信息
+    // ✅ 优先级1: 使用拦截器已处理的错误信息（拦截器从后端 msg 字段提取）
     if (error.error != null && error.error is String) {
       final errorMsg = error.error as String;
-      // 过滤掉技术性错误
-      if (!_isTechnicalError(errorMsg)) {
+      // ✅ 后端返回的业务错误信息（如"账号与密码不匹配"）不应该被过滤
+      // 只有技术性错误才需要过滤
+      if (!isTechnicalError(errorMsg)) {
+        print('✅ [错误映射] 使用拦截器提取的错误信息: $errorMsg');
         return errorMsg;
+      } else {
+        print('⚠️ [错误映射] 错误信息被识别为技术性错误，继续查找其他来源: $errorMsg');
       }
     }
 
-    // 根据错误类型返回友好提示
+    // ✅ 优先级2: 从响应数据中提取错误信息（兜底）
+    if (error.type == DioExceptionType.badResponse && error.response?.data is Map) {
+      final data = error.response!.data as Map<String, dynamic>;
+      final msg = data['msg'] ?? data['message'];
+      if (msg != null) {
+        String? extractedMsg;
+        if (msg is String && msg.isNotEmpty && !isTechnicalError(msg)) {
+          extractedMsg = msg;
+        } else if (msg is List && msg.isNotEmpty) {
+          final joinedMsg = msg.join(', ');
+          if (!isTechnicalError(joinedMsg)) {
+            extractedMsg = joinedMsg;
+          }
+        }
+        if (extractedMsg != null) {
+          print('✅ [错误映射] 从响应数据提取错误信息: $extractedMsg');
+          return extractedMsg;
+        }
+      }
+    }
+
+    // ✅ 优先级3: 根据错误类型返回友好提示
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
         return '连接超时，请检查网络后重试';
@@ -41,21 +66,23 @@ class ErrorMessageMapper {
         
       case DioExceptionType.unknown:
         return _mapUnknownError(error);
-        
-      default:
-        return '网络请求失败，请稍后重试';
     }
   }
 
   /// 将普通 Exception 转换为用户友好提示
   static String mapException(Exception error) {
+    // ✅ 如果是 DioException，应该使用 mapDioException
+    if (error is DioException) {
+      return mapDioException(error);
+    }
+    
     final errorMsg = error.toString();
     
     // 移除 "Exception: " 前缀
     final cleanMsg = errorMsg.replaceFirst('Exception: ', '');
     
     // 过滤技术性错误
-    if (_isTechnicalError(cleanMsg)) {
+    if (isTechnicalError(cleanMsg)) {
       return '操作失败，请稍后重试';
     }
     
@@ -72,7 +99,7 @@ class ErrorMessageMapper {
     } else {
       // 普通错误对象
       final errorMsg = error.toString();
-      if (_isTechnicalError(errorMsg)) {
+      if (isTechnicalError(errorMsg)) {
         return defaultMessage;
       }
       return errorMsg;
@@ -88,12 +115,12 @@ class ErrorMessageMapper {
       final data = error.response!.data as Map<String, dynamic>;
       final msg = data['msg'] ?? data['message'];
       if (msg != null) {
-        if (msg is String && msg.isNotEmpty && !_isTechnicalError(msg)) {
+        if (msg is String && msg.isNotEmpty && !isTechnicalError(msg)) {
           return msg;  // ← 后端业务错误优先级最高
         }
         if (msg is List && msg.isNotEmpty) {
           final joinedMsg = msg.join(', ');
-          if (!_isTechnicalError(joinedMsg)) {
+          if (!isTechnicalError(joinedMsg)) {
             return joinedMsg;  // ← 后端业务错误优先级最高
           }
         }
@@ -149,7 +176,7 @@ class ErrorMessageMapper {
   }
 
   /// 判断是否为技术性错误（需要转换为友好提示）
-  static bool _isTechnicalError(String message) {
+  static bool isTechnicalError(String message) {
     final technicalKeywords = [
       'bad response',
       'Bad response',

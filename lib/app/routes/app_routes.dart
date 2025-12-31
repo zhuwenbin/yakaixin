@@ -91,6 +91,9 @@ class AppRoutes {
   /// P3-2 模考详情 - 模考信息
   static const String examInfo = '/exam-info';
 
+  /// P3-2-1 模考帮助 - 模考说明
+  static const String examHelp = '/exam-help';
+
   /// P3-3 考试须知 - 考前须知
   static const String examNotice = '/exam-notice';
 

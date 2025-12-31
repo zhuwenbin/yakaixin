@@ -36,11 +36,11 @@ class _SplashPageState extends ConsumerState<SplashPage> {
       
       if (!mounted) return;
 
-      // // ✅ 初始化支付服务（包含内购产品列表加载）
-      // print('\n💳 初始化支付服务...');
-      // final paymentService = ref.read(unifiedPaymentServiceProvider);
-      // await paymentService.initialize();
-      // print('✅ 支付服务初始化完成\n');
+      // ✅ 初始化支付服务（包含内购产品列表加载）
+      print('\n💳 初始化支付服务...');
+      final paymentService = ref.read(unifiedPaymentServiceProvider);
+      await paymentService.initialize();
+      print('✅ 支付服务初始化完成\n');
       
       // ✅ 检查登录状态
       final isLoggedIn = ref.read(authProvider).isLoggedIn;

@@ -235,14 +235,47 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
   }
 
   Widget _buildTeachers(List teachers) {
-    if (teachers.isEmpty) return const SizedBox.shrink();
+    // ✅ 过滤掉头像和name都为空的数据（和列表页一样）
+    final filteredTeachers = teachers.where((teacher) {
+      if (teacher is! Map<String, dynamic>) return false;
+      final avatar = teacher['avatar']?.toString().trim() ?? '';
+      final name = teacher['name']?.toString().trim() ?? '';
+      return avatar.isNotEmpty || name.isNotEmpty;
+    }).toList();
 
-    return Wrap(
-      spacing: 16.w,
-      runSpacing: 12.h,
-      children: teachers.map<Widget>((teacher) {
-        if (teacher is! Map<String, dynamic>) return const SizedBox.shrink();
-        return _TeacherItem(teacher: teacher, completePath: _completePath);
+    if (filteredTeachers.isEmpty) return const SizedBox.shrink();
+
+    // ✅ 将教师列表分组，每两个一组（和列表页一样）
+    final List<List<dynamic>> teacherGroups = [];
+    for (int i = 0; i < filteredTeachers.length; i += 2) {
+      if (i + 1 < filteredTeachers.length) {
+        teacherGroups.add([filteredTeachers[i], filteredTeachers[i + 1]]);
+      } else {
+        teacherGroups.add([filteredTeachers[i]]);
+      }
+    }
+
+    return Column(
+      children: teacherGroups.map((group) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: 22.h), // ✅ 小程序22rpx ÷ 2 = 22.h（垂直间距）
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ✅ 第一个教师
+              Expanded(
+                child: _TeacherItem(teacher: group[0], completePath: _completePath),
+              ),
+              // ✅ 如果有第二个教师，显示第二个
+              if (group.length > 1) ...[
+                SizedBox(width: 12.w), // ✅ 两个教师之间的间距
+                Expanded(
+                  child: _TeacherItem(teacher: group[1], completePath: _completePath),
+                ),
+              ],
+            ],
+          ),
+        );
       }).toList(),
     );
   }
@@ -660,7 +693,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
   }
 }
 
-/// 教师信息项
+/// 教师信息项（和列表页样式一致）
 class _TeacherItem extends StatelessWidget {
   final Map<String, dynamic> teacher;
   final String Function(String?) completePath;
@@ -670,35 +703,63 @@ class _TeacherItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final avatar = teacher['avatar']?.toString() ?? '';
+    final name = teacher['name']?.toString() ?? '';
+    final title = teacher['title']?.toString() ?? '';
     final avatarUrl = avatar.isNotEmpty ? completePath(avatar) : '';
 
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        CircleAvatar(
-          radius: 20.r,
-          backgroundImage: avatarUrl.isNotEmpty
-              ? NetworkImage(avatarUrl)
-              : null,
-          child: avatarUrl.isEmpty ? Icon(Icons.person, size: 20.sp) : null,
-        ),
-        SizedBox(width: 8.w),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              teacher['name'] ?? '',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF262629),
+        // 头像（和列表页样式一致）
+        Container(
+          width: 40.w, // ✅ 小程序80rpx ÷ 2 = 40.w
+          height: 40.w,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.green, width: 2.w), // ✅ 小程序2rpx ÷ 2 = 2.w
+          ),
+          child: ClipOval(
+            // ✅ 使用 Image.network 避免 iOS Release 模式 Content-Disposition 问题
+            child: Image.network(
+              avatarUrl.isNotEmpty
+                  ? avatarUrl
+                  : 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/teacher_avatar.png',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Image.network(
+                'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/teacher_avatar.png',
+                fit: BoxFit.cover,
               ),
             ),
-            Text(
-              teacher['title'] ?? '',
-              style: TextStyle(fontSize: 12.sp, color: const Color(0xFF999999)),
-            ),
-          ],
+          ),
+        ),
+        SizedBox(width: 5.w), // ✅ 小程序10rpx ÷ 2 = 5.w
+        // 姓名和职称
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                name,
+                style: TextStyle(
+                  fontSize: 12.sp, // ✅ 小程序24rpx ÷ 2 = 12.sp
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF262629),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 3.h), // ✅ 小程序6rpx ÷ 2 = 3.h
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: const Color(0xFF262629).withOpacity(0.6), // ✅ 小程序rgba(38, 38, 41, 0.6)
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ],
     );

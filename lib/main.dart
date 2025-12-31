@@ -18,7 +18,7 @@ import 'app/config/api_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // ✅ 默认锁定竖屏方向
   // ⚠️ 注意：Chewie 播放器会在全屏时自动切换为横屏，退出全屏时恢复竖屏
   // 这个设置只是默认值，不会阻止视频全屏时的横屏切换
@@ -26,29 +26,27 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  
+
   // ✅ 1. 初始化 SharedPreferences
   final prefs = await SharedPreferences.getInstance();
   final storage = StorageService(prefs);
-  
+
   // ✅ 2. 初始化 ApiConfig
   ApiConfig.init(storage);
-  
+
   // ✅ 3. 初始化中文日期格式
   await initializeDateFormatting('zh_CN', null);
-  
+
   // ✅ 4. 初始化统一支付服务（微信 + iOS内购）
   // 注意：这里不能使用ref，所以先跳过
   // 初始化会在首次使用时自动执行
-  
+
   print('🚀 应用初始化完成');
-  
+
   // ✅ 5. 启动应用（传递 storage override）
   runApp(
     ProviderScope(
-      overrides: [
-        storageServiceProvider.overrideWithValue(storage),
-      ],
+      overrides: [storageServiceProvider.overrideWithValue(storage)],
       child: const MyApp(),
     ),
   );
@@ -61,15 +59,15 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 监听路由 Provider
     final router = ref.watch(appRouterProvider);
-    
+
     return ScreenUtilInit(
       designSize: const Size(375, 812), // iPhone X 设计稿尺寸(正确配置)
-      minTextAdapt: true,
-      splitScreenMode: true,
+      minTextAdapt: true, // ✅ 防止字体缩小，保持最小可读性
+      splitScreenMode: true, // ✅ 支持分屏模式
       builder: (context, child) {
         // 初始化HUD
         LoadingHUD.init();
-        
+
         return MaterialApp.router(
           title: AppConstants.appName,
           debugShowCheckedModeBanner: false,
@@ -92,12 +90,12 @@ class MyApp extends ConsumerWidget {
           builder: (context, widget) {
             // 确保 widget 不为 null
             if (widget == null) return const SizedBox.shrink();
-            
+
             // 先包裹 NetworkDebugOverlay
             widget = NetworkDebugOverlay(child: widget);
             // 再应用 EasyLoading
             widget = EasyLoading.init()(context, widget);
-            
+
             return widget;
           },
         );

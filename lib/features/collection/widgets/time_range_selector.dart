@@ -52,25 +52,8 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onClose,
-      child: Material(
-        color: Colors.black54,
-        child: GestureDetector(
-          onTap: () {}, // 阻止事件冒泡
-          child: Column(
-            children: [
-              const Spacer(),
-              Container(
-                width: double.infinity,
-                constraints: BoxConstraints(maxHeight: 500.h),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(12.r),
-                  ),
-                ),
-                child: Column(
+    // ✅ 移除遮罩和外部布局，只保留内容（由 Dialog 处理遮罩和动画）
+    return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // 标题
@@ -96,12 +79,6 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
                     // 确定按钮
                     _buildConfirmButton(),
                   ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 

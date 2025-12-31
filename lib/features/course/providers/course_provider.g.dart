@@ -6,7 +6,7 @@ part of 'course_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$courseNotifierHash() => r'5a76d927fbf3547ae2b446451426a60a8b3b2467';
+String _$courseNotifierHash() => r'e1271f5e3fdef1c87d0a8968b8c7a483ed39d5b1';
 
 /// 课程页面 ViewModel
 ///

@@ -125,6 +125,87 @@ class ProfileService {
       throw Exception('上传图片失败: $e');
     }
   }
+
+  /// 获取考试时间配置（包括章节练习设置）
+  /// 对应小程序: getExamTime (api/userInfo.js Line 22-28)
+  /// 对应接口: GET /c/tiku/configclient/getconfiginfo
+  /// 返回: { chapter_number: '20' }
+  Future<Map<String, dynamic>> getExamTime() async {
+    try {
+      print('📡 [获取考试配置] 开始请求...');
+      
+      final response = await _dioClient.get(
+        '/c/tiku/configclient/getconfiginfo',
+      );
+
+      print('📡 [获取考试配置] 响应: ${response.data}');
+
+      // 检查响应码
+      if (response.data['code'] != 100000) {
+        final errorMsg = response.data['msg']?.first ?? '获取配置失败';
+        print('❌ [获取考试配置] 失败: $errorMsg');
+        throw Exception(errorMsg);
+      }
+
+      final data = response.data['data'];
+      if (data == null) {
+        print('⚠️ [获取考试配置] 返回数据为空，使用默认值');
+        return {
+          'chapter_number': '20', // 默认值
+        };
+      }
+
+      print('✅ [获取考试配置] 成功: chapter_number=${data['chapter_number']}');
+      return data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      print('❌ [获取考试配置] 网络错误: ${e.message}');
+      throw Exception('网络请求失败: ${e.message}');
+    } catch (e) {
+      print('❌ [获取考试配置] 错误: $e');
+      throw Exception('获取配置失败: $e');
+    }
+  }
+
+  /// 设置考试时间配置（包括章节练习设置）
+  /// 对应小程序: setTimeInfo (api/userInfo.js Line 30-39)
+  /// 对应接口: POST /c/tiku/configclient/setconfiginfo
+  /// 参数: { chapter_number: '20' }
+  Future<void> setTimeInfo({
+    required String chapterNumber,
+  }) async {
+    try {
+      print('📡 [设置考试配置] 请求参数: chapter_number=$chapterNumber');
+      
+      final response = await _dioClient.post(
+        '/c/tiku/configclient/setconfiginfo',
+        data: {
+          'chapter_number': chapterNumber,
+        },
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      print('📡 [设置考试配置] 响应: ${response.data}');
+
+      // 检查响应码
+      if (response.data['code'] != 100000) {
+        final errorMsg = response.data['msg']?.first ?? '设置失败';
+        print('❌ [设置考试配置] 失败: $errorMsg');
+        throw Exception(errorMsg);
+      }
+      
+      print('✅ [设置考试配置] 成功');
+    } on DioException catch (e) {
+      print('❌ [设置考试配置] 网络错误: ${e.message}');
+      throw Exception('网络请求失败: ${e.message}');
+    } catch (e) {
+      print('❌ [设置考试配置] 错误: $e');
+      throw Exception('设置配置失败: $e');
+    }
+  }
 }
 
 /// ProfileService Provider

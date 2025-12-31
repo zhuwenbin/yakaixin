@@ -7,7 +7,7 @@ part of 'collection_provider.dart';
 // **************************************************************************
 
 String _$collectionNotifierHash() =>
-    r'52ee836e0e25cdddf8ae696294a4b00cf19c2996';
+    r'52bbe656261827101a7217dd8033a7f2df0806de';
 
 /// 收藏列表Provider
 /// 对应小程序: collect/index.vue

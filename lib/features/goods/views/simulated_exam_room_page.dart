@@ -5,6 +5,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/widgets/common_state_widget.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../providers/simulated_exam_room_provider.dart';
 import '../models/goods_detail_model.dart';
 
@@ -95,55 +96,60 @@ class _SimulatedExamRoomPageState extends ConsumerState<SimulatedExamRoomPage> {
   }
 
   /// 左侧考生信息栏（对应小程序 Line 3-21）
+  /// 显示：姓名、准考证号、考场号、座位号（垂直文字）
   Widget _buildLeftSidebar(GoodsDetailModel detail) {
+    // ✅ 获取用户信息
+    final user = ref.watch(currentUserProvider);
+    final studentName = user?.nickname?.isNotEmpty == true
+        ? user!.nickname!
+        : (user?.studentName ?? 'FELIXELICSI');
+    final studentId = user?.studentId ?? '1001';
+    
+    // ✅ 生成准考证号、考场号、座位号（基于学生ID）
+    final admissionNumber = studentId.length >= 4 
+        ? studentId.substring(studentId.length - 4) 
+        : studentId.padLeft(4, '0');
+    final examRoomNumber = '01'; // 默认考场号
+    final seatNumber = '01'; // 默认座位号
+
     return Container(
-      width: 115.w,
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 10.w),
+      width: 54.w, // 对应小程序 54upx
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(color: const Color(0xFFD9D9D9), width: 2.w),
+        ),
+      ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 专业名称（对应小程序没有，根据截图添加）
-          Text(
-            detail.professionalIdName ?? '口腔执业医师',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          SizedBox(height: 20.h),
-          Divider(color: Colors.grey.shade300),
-          SizedBox(height: 20.h),
-          // 满分（对应截图）
-          _buildSidebarItem('满分', '600分'),
-          SizedBox(height: 20.h),
-          // 时长（对应截图）
-          _buildSidebarItem('时长', '150分钟'),
+          _buildSidebarText('姓名：$studentName'),
+          SizedBox(height: 60.h), // 对应小程序 margin-top: 60upx
+          _buildSidebarText('准考证号：$admissionNumber'),
+          SizedBox(height: 60.h),
+          _buildSidebarText('考场号：$examRoomNumber'),
+          SizedBox(height: 60.h),
+          _buildSidebarText('座位号：$seatNumber'),
         ],
       ),
     );
   }
 
-  Widget _buildSidebarItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600),
+  /// 左侧边栏文字（垂直显示）
+  /// 对应小程序: writing-mode: vertical-lr; text-orientation: sideways;
+  Widget _buildSidebarText(String text) {
+    return RotatedBox(
+      quarterTurns: 3, // 逆时针旋转90度，实现垂直文字
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 16.sp, // 对应小程序 16upx
+          color: const Color(0xFF333333), // 对应小程序 color: #333
+          letterSpacing: 0.5, // 对应小程序 letter-spacing: 0.5rem
+          height: 1.0,
         ),
-        SizedBox(height: 6.h),
-        Text(
-          value,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -161,38 +167,51 @@ class _SimulatedExamRoomPageState extends ConsumerState<SimulatedExamRoomPage> {
             color: Colors.white,
             padding: EdgeInsets.all(20.w),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // 标题（对应小程序 Line 24）
+                // 标题（对应小程序 Line 24-25）
+                // 对应小程序: examTitle = `${this.info.year}${titleName}`
                 Text(
-                  detail.name ?? '',
+                  _getExamTitle(detail),
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 17.sp,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 40.sp, // 对应小程序 40upx
+                    fontWeight: FontWeight.normal,
                     color: Colors.black,
                   ),
                 ),
-                SizedBox(height: 8.h),
+                SizedBox(height: 15.h), // 对应小程序 padding-top: 15upx
                 // 副标题（对应小程序 Line 25）
                 Text(
-                  '查漏补缺 直击重点',
+                  '模拟考场',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.grey.shade600,
+                    fontSize: 44.sp, // 对应小程序 44upx
+                    fontWeight: FontWeight.w700, // 对应小程序 font-weight: 700
+                    color: Colors.black,
                   ),
                 ),
-                SizedBox(height: 16.h),
+                SizedBox(height: 80.h), // 对应小程序 padding-top: 80upx
                 // 总分和时间（对应小程序 Line 28-31）
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '总分: 600分',
-                      style: TextStyle(fontSize: 13.sp, color: Colors.grey),
+                      '总分: ${_getFullMarkScore(detail)}分',
+                      style: TextStyle(
+                        fontSize: 26.sp, // 对应小程序 26upx
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black,
+                      ),
                     ),
-                    SizedBox(width: 20.w),
+                    SizedBox(width: 24.w), // 对应小程序 margin-right: 24upx
                     Text(
-                      '时间: 150分钟',
-                      style: TextStyle(fontSize: 13.sp, color: Colors.grey),
+                      '时间: ${_getExamDuration(detail)}分钟',
+                      style: TextStyle(
+                        fontSize: 26.sp,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black,
+                      ),
                     ),
                   ],
                 ),
@@ -201,37 +220,10 @@ class _SimulatedExamRoomPageState extends ConsumerState<SimulatedExamRoomPage> {
           ),
           SizedBox(height: 10.h),
           // 考试统计表格区域（对应小程序 Line 33-60）
-          // 注意：小程序中表格数据来自 mkgoods_statistics，这里暂时占位
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 12.w),
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.description,
-                  size: 48.sp,
-                  color: Colors.grey.shade400,
-                ),
-                SizedBox(height: 12.h),
-                Text(
-                  '考试列表功能开发中...',
-                  style: TextStyle(fontSize: 14.sp, color: Colors.grey),
-                ),
-                SizedBox(height: 6.h),
-                Text(
-                  '需要额外接口支持',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.grey.shade400,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          if (detail.mkgoodsStatistics != null &&
+              detail.mkgoodsStatistics!.typeCountMap != null &&
+              detail.mkgoodsStatistics!.typeCountMap!.isNotEmpty)
+            _buildQuestionTypeTable(detail.mkgoodsStatistics!),
           SizedBox(height: 10.h),
           // 注意事项（对应小程序 Line 63-70）
           Container(
@@ -297,6 +289,111 @@ class _SimulatedExamRoomPageState extends ConsumerState<SimulatedExamRoomPage> {
     );
   }
 
+  /// 获取考试标题（对应小程序 Line 815-818）
+  String _getExamTitle(GoodsDetailModel detail) {
+    if (detail.examTitle != null && detail.examTitle!.isNotEmpty) {
+      return detail.examTitle!;
+    }
+    // 对应小程序: `${this.info.year}${titleName}`
+    final year = detail.year ?? '';
+    final professionalName = detail.professionalIdName?.split('-').last ?? '口腔执业医师';
+    return '$year$professionalName';
+  }
+
+  /// 获取满分（对应小程序 Line 798-799）
+  String _getFullMarkScore(GoodsDetailModel detail) {
+    final score = detail.mkgoodsStatistics?.fullMarkScore;
+    if (score != null) {
+      return score.toString();
+    }
+    return '600'; // 默认值
+  }
+
+  /// 获取考试时长（对应小程序 Line 798-799）
+  String _getExamDuration(GoodsDetailModel detail) {
+    final duration = detail.mkgoodsStatistics?.examDuration;
+    if (duration != null) {
+      return duration.toString();
+    }
+    return '150'; // 默认值
+  }
+
+  /// 构建题型数量表格（对应小程序 Line 33-60, 639-675）
+  Widget _buildQuestionTypeTable(MockGoodsStatistics statistics) {
+    final typeCountMap = statistics.typeCountMap;
+    if (typeCountMap == null || typeCountMap.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // ✅ 生成表头：["题型", "A1题", "A2题", ...]
+    final headers = ['题型', ...typeCountMap.keys.map((k) => '${k}题')];
+    
+    // ✅ 生成表体：["数量", "97", "8", ...]
+    final bodies = ['数量', ...typeCountMap.values.map((v) => v.toString())];
+
+    // ✅ 计算每列宽度（对应小程序 computeWidths 方法）
+    final widths = _computeWidths(headers);
+
+    return Container(
+      margin: EdgeInsets.only(
+        left: 40.w,
+        right: 40.w,
+        top: 60.h, // 对应小程序 margin-top: 60upx
+      ),
+      child: Table(
+        border: TableBorder(
+          left: BorderSide(color: const Color(0xFFD9D9D9), width: 2.w),
+          right: BorderSide(color: const Color(0xFFD9D9D9), width: 2.w),
+          top: BorderSide(color: const Color(0xFFD9D9D9), width: 2.w),
+          bottom: BorderSide(color: const Color(0xFFD9D9D9), width: 2.w),
+          horizontalInside: BorderSide(color: const Color(0xFFD9D9D9), width: 2.w),
+          verticalInside: BorderSide(color: const Color(0xFFD9D9D9), width: 2.w),
+        ),
+        columnWidths: Map.fromIterable(
+          List.generate(headers.length, (i) => i),
+          key: (i) => i,
+          value: (i) => FlexColumnWidth(widths[i]),
+        ),
+        children: [
+          // 表头
+          TableRow(
+            decoration: const BoxDecoration(color: Colors.white),
+            children: headers.map((header) => _buildTableCell(header, isHeader: true)).toList(),
+          ),
+          // 表体
+          TableRow(
+            decoration: const BoxDecoration(color: Colors.white),
+            children: bodies.map((body) => _buildTableCell(body, isHeader: false)).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 计算列宽度（对应小程序 computeWidths 方法 Line 650-656）
+  List<double> _computeWidths(List<String> names) {
+    final lengths = names.map((n) => n.length).toList();
+    final total = lengths.fold<int>(0, (sum, len) => sum + len);
+    return lengths.map((len) => len / total).toList();
+  }
+
+  /// 构建表格单元格
+  Widget _buildTableCell(String text, {required bool isHeader}) {
+    return Container(
+      height: 70.h, // 对应小程序 height: 70rpx
+      alignment: Alignment.center,
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 26.sp, // 对应小程序 font-size: 26rpx
+          color: const Color(0xFF161F30), // 对应小程序 color: #161f30
+          fontWeight: isHeader ? FontWeight.w500 : FontWeight.normal,
+        ),
+      ),
+    );
+  }
+
   /// 底部按钮（对应小程序 Line 72-74, 348-358）
   Widget _buildBottomButton(GoodsDetailModel detail, bool isPurchased) {
     return Padding(
@@ -306,12 +403,13 @@ class _SimulatedExamRoomPageState extends ConsumerState<SimulatedExamRoomPage> {
         child: ElevatedButton(
           onPressed: () => _handleEnterExamRoom(detail, isPurchased),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF2E68FF),
+            backgroundColor: const Color(0xFFFF5402), // 对应小程序 background-color: #ff5402
             padding: EdgeInsets.symmetric(vertical: 16.h),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.r),
+              borderRadius: BorderRadius.circular(100.r), // 对应小程序 border-radius: 100upx
             ),
             elevation: 0,
+            minimumSize: Size(560.w, 96.h), // 对应小程序 width: 560upx, height: 96upx
           ),
           child: Text(
             '进入考场',

@@ -7,7 +7,7 @@ part of 'secret_real_detail_provider.dart';
 // **************************************************************************
 
 String _$secretRealDetailNotifierHash() =>
-    r'525a84f89740661d33ac60f36a95b29a1c3818b8';
+    r'8755f8d92a64f61b9bb21606eec9cf1e992d50d6';
 
 /// 历年真题详情Provider
 /// 对应小程序: pages/test/secretRealDetail.vue

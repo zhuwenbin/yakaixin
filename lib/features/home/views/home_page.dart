@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -9,13 +8,13 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_radius.dart';
+import '../../../core/utils/safe_type_converter.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/home_provider.dart';
 import '../models/goods_model.dart';
 import '../../major/widgets/major_selector_dialog.dart';
 import 'widgets/home_header.dart';
 import 'widgets/home_content.dart';
-import '../../../../app/config/api_config.dart';
 
 /// 首页 - 刷题（带轮播）
 /// 对应小程序: src/modules/jintiku/pages/index/brushing.vue
@@ -63,7 +62,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          _buildBackgroundImage(statusBarHeight),
           _buildMainContent(homeState, statusBarHeight),
           HomeHeader(
             majorName: major?.majorName ?? '选择专业',
@@ -75,31 +73,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildBackgroundImage(double statusBarHeight) {
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: CachedNetworkImage(
-        imageUrl: ApiConfig.completeImageUrl('my-background-img.png'),
-        height: statusBarHeight + 48.h,
-        fit: BoxFit.cover,
-        errorWidget: (_, __, ___) {
-          return Container(
-            height: statusBarHeight + 48.h,
-            color: AppColors.surface,
-          );
-        },
-      ),
-    );
-  }
-
   Widget _buildMainContent(HomeState state, double statusBarHeight) {
     return Positioned.fill(
       child: RefreshIndicator(
         onRefresh: () => ref.read(homeProvider.notifier).refresh(),
         child: CustomScrollView(
           slivers: [
+            // ✅ 顶部留出专业选择栏的高度（白色导航栏）
             SliverToBoxAdapter(child: SizedBox(height: statusBarHeight + 48.h)),
             if (state.isLoading)
               SliverToBoxAdapter(child: _buildLoading())
@@ -352,12 +332,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     // ✅ type == 18 (章节练习) - 跳转章节列表（对应小程序 Line 277-282）
     if (type == '18') {
       print('📚 type == 18 (章节练习)，已购买 → 跳转 chapterList');
+      // ✅ 安全转换 questionNum 为 int（可能是 String 或 int）
+      final totalInt = SafeTypeConverter.toInt(questionNum, defaultValue: 0);
       context.push(
         AppRoutes.chapterList,
         extra: {
           'goods_id': goodsId,
           'professional_id': professionalId,
-          'total': questionNum,
+          'total': totalInt, // ✅ 确保传递 int 类型
         },
       );
       return;

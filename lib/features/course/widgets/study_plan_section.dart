@@ -7,7 +7,8 @@ import '../../../app/routes/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_radius.dart';
+// ignore: unused_import
+import '../../../core/theme/app_radius.dart'; // 保留：恢复筛选功能时需要
 import '../models/course_model.dart';
 import '../../../../app/config/api_config.dart';
 import 'course_item_card.dart';
@@ -97,68 +98,71 @@ class StudyPlanSection extends ConsumerWidget {
   }
 
   Widget _buildTeachingTypeFilter(BuildContext context) {
-    return PopupMenuButton<String>(
-      initialValue: teachingType,
-      onSelected: onTeachingTypeChanged,
-      offset: Offset(0, 35.h),
-      shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
-      color: AppColors.surface,
-      elevation: 4,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            _getTeachingTypeName(teachingType),
-            style: AppTextStyles.bodyMedium,
-          ),
-          SizedBox(width: 3.w),
-          Icon(
-            Icons.keyboard_arrow_down,
-            size: 16.sp,
-            color: AppColors.textPrimary,
-          ),
-        ],
-      ),
-      itemBuilder: (context) => _teachingTypeOptions.map((option) {
-        final isActive = teachingType == option['id'];
-        return PopupMenuItem<String>(
-          value: option['id'],
-          child: Container(
-            width: 100.w,
-            alignment: Alignment.center,
-            padding: EdgeInsets.symmetric(vertical: 8.h),
-            child: Text(
-              option['name']!,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: isActive ? AppColors.primary : AppColors.textPrimary,
-              ),
-            ),
-          ),
-        );
-      }).toList(),
+    // ✅ 暂时显示为文本，但保留原有功能代码
+    // TODO: 后续需要恢复筛选功能时，取消注释下面的代码，删除上面的 Text widget
+    return Text(
+      '授课形式',
+      style: AppTextStyles.bodyMedium,
     );
+
+    // ⚠️ 保留原有筛选功能代码（暂时注释）
+    // return PopupMenuButton<String>(
+    //   initialValue: teachingType,
+    //   onSelected: onTeachingTypeChanged,
+    //   offset: Offset(0, 35.h),
+    //   shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
+    //   color: AppColors.surface,
+    //   elevation: 4,
+    //   child: Row(
+    //     mainAxisSize: MainAxisSize.min,
+    //     children: [
+    //       Text(
+    //         _getTeachingTypeName(teachingType),
+    //         style: AppTextStyles.bodyMedium,
+    //       ),
+    //       SizedBox(width: 3.w),
+    //       Icon(
+    //         Icons.keyboard_arrow_down,
+    //         size: 16.sp,
+    //         color: AppColors.textPrimary,
+    //       ),
+    //     ],
+    //   ),
+    //   itemBuilder: (context) => _teachingTypeOptions.map((option) {
+    //     final isActive = teachingType == option['id'];
+    //     return PopupMenuItem<String>(
+    //       value: option['id'],
+    //       child: Container(
+    //         width: 100.w,
+    //         alignment: Alignment.center,
+    //         padding: EdgeInsets.symmetric(vertical: 8.h),
+    //         child: Text(
+    //           option['name']!,
+    //           style: AppTextStyles.bodyMedium.copyWith(
+    //             color: isActive ? AppColors.primary : AppColors.textPrimary,
+    //           ),
+    //         ),
+    //       ),
+    //     );
+    //   }).toList(),
+    // );
   }
 
   Widget _buildMyCoursesButton(BuildContext context) {
+    // ✅ 与小程序保持一致：只有文字，颜色 #0075FF
+    // 对应小程序: courseList.vue Line 22-24
+    // <view class="my-course" @click="goMyCourse">
+    //   <text style="color: #0075FF;">我的课程</text>
+    // </view>
     return GestureDetector(
       onTap: () => context.push(AppRoutes.myCourse),
-      child: Row(
-        children: [
-          Image.network(
-            ApiConfig.completeImageUrl(
-              'public/652517359747899528889_wodekecheng.png',
-            ),
-            width: 14.w,
-            height: 14.w,
-            errorBuilder: (context, error, stackTrace) =>
-                Icon(Icons.class_, size: 14.w, color: AppColors.primary),
-          ),
-          SizedBox(width: 3.w),
-          Text(
-            '我的课程',
-            style: TextStyle(fontSize: 14.sp, color: const Color(0xBF03203D)),
-          ),
-        ],
+      child: Text(
+        '我的课程',
+        style: TextStyle(
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w400, // font-weight: 400
+          color: const Color(0xFF0075FF), // color: #0075FF
+        ),
       ),
     );
   }
@@ -186,6 +190,8 @@ class StudyPlanSection extends ConsumerWidget {
     );
   }
 
+  /// 获取授课形式名称（保留：恢复筛选功能时需要）
+  // ignore: unused_element
   String _getTeachingTypeName(String id) {
     final option = _teachingTypeOptions.firstWhere(
       (item) => item['id'] == id,

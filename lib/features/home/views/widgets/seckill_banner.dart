@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -44,8 +43,8 @@ class SeckillBanner extends StatelessWidget {
       },
       options: CarouselOptions(
         height: 150.h,
-        viewportFraction: 0.85,
-        enlargeCenterPage: false,
+        viewportFraction: 1.0, // ✅ 不显示前后预览，与小程序一致
+        enlargeCenterPage: false, // ✅ 不缩放
         autoPlay: true,
         autoPlayInterval: const Duration(seconds: 3),
         autoPlayAnimationDuration: const Duration(milliseconds: 800),
@@ -61,11 +60,11 @@ class SeckillBanner extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       child: ClipRRect(
         borderRadius: AppRadius.radiusLg,
-        child: CachedNetworkImage(
-          imageUrl:
-              ApiConfig.completeImageUrl('public/36byshkvk6.jpg'),
+        // ✅ 使用 Image.network 避免 iOS Release 模式 Content-Disposition 问题
+        child: Image.network(
+          ApiConfig.completeImageUrl('public/36byshkvk6.jpg'),
           fit: BoxFit.cover,
-          errorWidget: (context, error, stackTrace) {
+          errorBuilder: (context, error, stackTrace) {
             return Container(
               color: AppColors.card,
               alignment: Alignment.center,

@@ -7,7 +7,7 @@ part of 'goods_detail_provider.dart';
 // **************************************************************************
 
 String _$goodsDetailNotifierHash() =>
-    r'5d1c05dd1dfc2f876fa8ab9cc527081be9eb56d6';
+    r'05afa9684be8b89b610e8be1df06b3a9b9428a5a';
 
 /// 商品详情Provider
 /// 对应小程序: pages/test/detail.vue
