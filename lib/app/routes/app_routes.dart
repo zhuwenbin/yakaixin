@@ -31,6 +31,18 @@ class AppRoutes {
   /// P1-5 修改密码
   static const String changePassword = '/change-password';
 
+  /// P1-6 删除账户风险提示
+  static const String deleteAccountRisk = '/delete-account-risk';
+  
+  /// P1-7 删除账户安全验证
+  static const String deleteAccountVerification = '/delete-account-verification';
+  
+  /// P1-8 删除账户确认
+  static const String deleteAccountConfirm = '/delete-account-confirm';
+
+  /// P1-9 隐私协议弹窗（首次安装必现）
+  static const String privacyAgreement = '/privacy-agreement';
+
   // ===== F2. 题库练习模块 =====
 
   /// P2-1 首页(题库) - 题库首页,章节练习入口
@@ -151,6 +163,12 @@ class AppRoutes {
 
   /// P5-1-4 模拟考试商品详情
   static const String simulatedExamRoom = '/simulated-exam-room';
+
+  /// P5-1-5 购买确认页（5.1.1 合规：详情页提示登录并下订单）
+  static const String purchaseConfirm = '/purchase-confirm';
+
+  /// P5-1-6 商品详情（弹窗风格，参照小程序购买弹窗，逻辑与其他详情页一致）
+  static const String goodsDetailPopup = '/goods-detail-popup';
 
   /// P5-2 我的订单 - 订单列表
   static const String myOrder = '/my-order';

@@ -22,9 +22,11 @@ class VideoIndexPage extends ConsumerStatefulWidget {
   final String? goodsPid;
   final String? systemId;
   final String? name;
-  final String? filterGoodsId; // ✅ 新增：对应小程序 filter_goods_id
-  final String? classId; // ✅ 新增：对应小程序 class_id
-  final List<Map<String, dynamic>>? chapterData; // ✅ 新增：从上一页传递的章节数据
+  final String? filterGoodsId;
+  final String? classId;
+  /// 当前班级在列表中的下标，用于选 detail_package_goods[classIndex] 拉目录（与小程序一致）
+  final int? classIndex;
+  final List<Map<String, dynamic>>? chapterData;
 
   const VideoIndexPage({
     super.key,
@@ -36,7 +38,8 @@ class VideoIndexPage extends ConsumerStatefulWidget {
     this.name,
     this.filterGoodsId,
     this.classId,
-    this.chapterData, // ✅ 新增参数
+    this.classIndex,
+    this.chapterData,
   });
 
   @override
@@ -55,27 +58,20 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
   double _currentTime = 0;
   String _currentLessonId = '';
   String? _goodsId;
-  String? _filterGoodsId; // ✅ 实际用于获取目录的ID
-  bool _hasSignedIn = false; // ✅ 防止重复签到标志
+  String? _filterGoodsId;
+  int? _classIndex;
+  bool _hasSignedIn = false;
 
   @override
   void initState() {
     super.initState();
     _currentLessonId = widget.lessonId ?? '';
     _goodsId = widget.goodsId;
-    _filterGoodsId = widget.filterGoodsId; // ✅ 保存 filter_goods_id
+    _filterGoodsId = widget.filterGoodsId;
+    _classIndex = widget.classIndex;
     _lessonName = widget.name ?? '';
 
-    // ✅ 优先使用传入的章节数据（避免重复请求）
-    if (widget.chapterData != null && widget.chapterData!.isNotEmpty) {
-      print('✅ [章节数据] 使用从上一页传递的数据，共 ${widget.chapterData!.length} 个章节');
-      _chapterData = widget.chapterData!.map((chapter) {
-        return {
-          ...chapter,
-          'expand': true, // 默认展开
-        };
-      }).toList();
-    }
+    // 目录与小程序一致：统一由 chapterpaper API 返回，不使用传入的 chapterData
 
     // ✅ 立即显示UI，后台加载讲义
     if (widget.systemId != null && widget.systemId!.isNotEmpty) {
@@ -143,15 +139,9 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
         _videoUrl = videoUrl;
       });
 
-      // ✅ 第二步：如果没有传入章节数据，才去请求
-      // 对应小程序 newVideo.vue Line 386-418
-      if ((widget.chapterData == null || widget.chapterData!.isEmpty) &&
-          studentId.isNotEmpty &&
-          _goodsId != null) {
-        print('⚠️ [章节数据] 未传入，开始请求...');
+      // 与小程序一致：目录统一由 chapterpaper API 拉取（filterGoodsId / 套餐ID）
+      if (studentId.isNotEmpty && _goodsId != null) {
         await _loadGoodsDetailAndChapter(studentId);
-      } else {
-        print('✅ [章节数据] 已存在，跳过请求');
       }
     } catch (e) {
       setState(() {
@@ -191,29 +181,57 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
         '📦 [商品详情] detail_package_goods: ${goodsDetail.detailPackageGoods?.length ?? 0} 个',
       );
 
-      // 2. 选择实际的课程ID
-      // 小程序逻辑 (newVideo.vue Line 408-415):
-      // - 如果有 filter_goods_id，用它
-      // - 否则从 detail_package_goods[0].id 取第一个
+      // 2. 选择用于 chapterpaper 的 goods_id
+      // 章节接口只认「套餐商品 id」(detail_package_goods[].id)，不能传主商品 id(goods_id)。
+      // 若 filterGoodsId 等于主商品 id（如 series/goods 返回的 id 与主 id 相同），必须用 classIndex 或套餐列表中的 id。
       String? actualGoodsId;
 
       print('\n========== 🎯 [选择用于获取章节的ID] ==========');
+      print('🎯 主商品 goods_id: $_goodsId (不能用于 chapter 接口)');
 
-      if (_filterGoodsId != null && _filterGoodsId!.isNotEmpty) {
-        // ✅ 优先使用 filter_goods_id（对应班级的ID）
-        actualGoodsId = _filterGoodsId;
-        print('✅ [优先级 1] 使用 filter_goods_id: $actualGoodsId');
-      } else if (goodsDetail.detailPackageGoods != null &&
+      if (goodsDetail.detailPackageGoods != null &&
           goodsDetail.detailPackageGoods!.isNotEmpty) {
-        // ✅ 从套餐商品中获取第一个ID
-        actualGoodsId = SafeTypeConverter.toSafeString(
-          goodsDetail.detailPackageGoods![0].id,
-        );
-        print('✅ [优先级 2] 使用 detail_package_goods[0].id: $actualGoodsId');
+        final packages = goodsDetail.detailPackageGoods!;
+        final packageIds =
+            packages.map((p) => SafeTypeConverter.toSafeString(p.id)).toList();
+        final filterStr = _filterGoodsId != null ? _filterGoodsId!.trim() : '';
+        final mainGoodsId = _goodsId != null ? _goodsId!.trim() : '';
+        final isFilterSameAsMain = filterStr.isNotEmpty &&
+            mainGoodsId.isNotEmpty &&
+            filterStr == mainGoodsId;
+        if (filterStr.isNotEmpty &&
+            packageIds.contains(filterStr) &&
+            !isFilterSameAsMain) {
+          actualGoodsId = filterStr;
+          print('✅ [与小程序一致] 使用 filter_goods_id: $actualGoodsId');
+        } else if (isFilterSameAsMain) {
+          if (_classIndex != null &&
+              _classIndex! >= 0 &&
+              _classIndex! < packages.length) {
+            actualGoodsId = packageIds[_classIndex!];
+            print(
+              '✅ [修正] filter 与主商品 id 相同，改用 classIndex=$_classIndex → 套餐 id: $actualGoodsId',
+            );
+          } else {
+            actualGoodsId = packageIds.first;
+            print(
+              '✅ [修正] filter 与主商品 id 相同，改用 detail_package_goods[0].id: $actualGoodsId',
+            );
+          }
+        } else if (_classIndex != null &&
+            _classIndex! >= 0 &&
+            _classIndex! < packages.length) {
+          actualGoodsId = packageIds[_classIndex!];
+          print(
+            '✅ [兜底] filter 不在列表中，使用 classIndex=$_classIndex → $actualGoodsId',
+          );
+        } else {
+          actualGoodsId = packageIds.first;
+          print('✅ [兜底] 使用 detail_package_goods[0].id: $actualGoodsId');
+        }
       } else {
-        // 兜底：使用传入的 goodsId
         actualGoodsId = _goodsId;
-        print('⚠️ [优先级 3 - 兜底] 使用 goods_id: $actualGoodsId');
+        print('⚠️ [兜底] 无套餐列表，使用 goods_id: $actualGoodsId');
       }
 
       print('=========================================\n');
@@ -275,7 +293,7 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
         _chapterData = chapters.map((chapter) {
           return {
             ...chapter,
-            'expand': true, // 默认展开（对应小程序 Line 356）
+            'expand': true, // 播放页：默认展开（对应小程序 Line 356）
           };
         }).toList();
       });
@@ -760,9 +778,12 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
     }
   }
 
+  /// 目录列表（与小程序 newVideo.vue .tab-body + .pane-wrapper-outline 一致：白底、顶部分割线、内边距 20rpx 32rpx）
   Widget _buildChapterList() {
     if (_chapterData.isEmpty) {
-      return Center(
+      return Container(
+        color: Colors.white,
+        alignment: Alignment.center,
         child: Text(
           '暂无目录',
           style: TextStyle(fontSize: 14.sp, color: const Color(0xFF999999)),
@@ -770,19 +791,26 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
       );
     }
 
-    return ListView.builder(
-      padding: EdgeInsets.all(16.w),
-      itemCount: _chapterData.length,
-      itemBuilder: (context, index) {
-        final chapter = _chapterData[index];
-        return _buildChapterItem(chapter);
-      },
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFF4F5F5), width: 1)),
+      ),
+      child: ListView.builder(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+        itemCount: _chapterData.length,
+        itemBuilder: (context, index) {
+          final chapter = _chapterData[index];
+          return _buildChapterItem(chapter);
+        },
+      ),
     );
   }
 
   Widget _buildChapterItem(Map<String, dynamic> chapter) {
     final isExpanded = chapter['expand'] == true;
-    final subs = chapter['subs'] as List? ?? [];
+    // 与小程序一致：接口可能返回 subs 或 list
+    final subs = (chapter['subs'] ?? chapter['list']) as List? ?? [];
 
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
@@ -816,26 +844,16 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
                       color: const Color(0xFF999999),
                     ),
                   ),
-                  SizedBox(width: 12.w), // ✅ 与小程序一致：24rpx = 12.w
-                  // ✅ 与章节练习一致：使用相同的图片图标和旋转动画
+                  SizedBox(width: 12.w), // 与小程序 newVideo.vue .section-count margin-right 24rpx
+                  // 与小程序 .expand-button 一致：arrow-d.png，收起时 .down 旋转 180deg
                   AnimatedRotation(
-                    turns: isExpanded ? 0.5 : 0, // ✅ 展开时旋转180度（0.5圈）
-                    duration: const Duration(
-                      milliseconds: 250,
-                    ), // ✅ 与章节练习一致：250ms
-                    child: Image.network(
-                      'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/16950043427848e3c169500434278459705_select.png',
-                      width: 16.w, // ✅ 与章节练习一致：32rpx = 16.w
-                      height: 16.h, // ✅ 与章节练习一致：32rpx = 16.h
+                    turns: isExpanded ? 0 : 0.5,
+                    duration: const Duration(milliseconds: 300),
+                    child: Image.asset(
+                      'assets/images/arrow_d.png',
+                      width: 16.w,
+                      height: 16.w,
                       fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        // ✅ 如果图片加载失败，使用默认图标
-                        return Icon(
-                          Icons.keyboard_arrow_down,
-                          size: 16.w,
-                          color: const Color(0xFF999999),
-                        );
-                      },
                     ),
                   ),
                 ],
@@ -850,7 +868,11 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
     );
   }
 
+  /// 课节项（与小程序 newVideo.vue .section-line 一致：left-point 3px×12px、time 在上 name 在下、播放按钮）
   Widget _buildSectionItem(Map<String, dynamic> section) {
+    final timeStr = section['time']?.toString() ?? '';
+    final nameStr = section['name']?.toString() ?? '';
+
     return GestureDetector(
       onTap: () => _switchLesson(section),
       child: Container(
@@ -861,12 +883,11 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
           ),
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center, // ✅ 图标与标题中间对齐
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // ✅ 竖线高度与标题文字高度匹配（16.sp ≈ 16.h），确保垂直居中对齐
             Container(
               width: 3.w,
-              height: 16.h, // ✅ 与标题文字高度（16.sp）匹配
+              height: 12.h,
               decoration: BoxDecoration(
                 color: const Color(0xFF3B7BFB),
                 borderRadius: BorderRadius.circular(2.r),
@@ -878,16 +899,17 @@ class _VideoIndexPageState extends ConsumerState<VideoIndexPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Text(
-                  //   section['time']?.toString() ?? '',
-                  //   style: TextStyle(
-                  //     fontSize: 12.sp,
-                  //     color: const Color(0xFF696E7A),
-                  //   ),
-                  // ),
-                  // SizedBox(height: 3.h),
+                  if (timeStr.isNotEmpty)
+                    Text(
+                      timeStr,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: const Color(0xFF696E7A),
+                      ),
+                    ),
+                  if (timeStr.isNotEmpty) SizedBox(height: 3.h),
                   Text(
-                    section['name']?.toString() ?? '',
+                    nameStr,
                     style: TextStyle(
                       fontSize: 16.sp,
                       color: const Color(0xFF5B6E81),

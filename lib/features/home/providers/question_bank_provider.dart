@@ -66,9 +66,10 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
   QuestionBankNotifier(this._ref) : super(const QuestionBankState());
 
   /// 加载所有数据
-  Future<void> loadAllData() async {
-    // 获取当前专业ID
-    var majorId = _ref.read(currentMajorProvider)?.majorId;
+  /// [majorId] 可选，显式传入时优先使用（用于登录后刷新避免 Provider 时序导致读到旧专业）
+  Future<void> loadAllData({String? majorId}) async {
+    // 优先使用传入的 majorId，否则从 Provider 读取
+    majorId = majorId ?? _ref.read(currentMajorProvider)?.majorId;
 
     // ✅ 如果没有专业，使用默认专业（口腔执业医师）
     if (majorId == null || majorId.isEmpty) {
@@ -105,7 +106,12 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
   }
 
   /// 加载学习数据
+  /// 对应小程序: index/index.vue Line 323-360 apiExamLearningData()
+  /// ⚠️ 注意：未登录时此接口会失败，但小程序会静默处理（只显示Toast，不影响其他数据加载）
   Future<void> _loadLearningData(String majorId) async {
+    // ✅ 检查登录状态：未登录时静默处理错误，不阻塞其他数据加载
+    final isLoggedIn = _ref.read(authProvider).isLoggedIn;
+    
     state = state.copyWith(isLoadingLearning: true, error: null);
 
     try {
@@ -120,25 +126,50 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
         isLoadingLearning: false,
       );
     } on DioException catch (e) {
-      // ✅ 使用拦截器已处理好的用户友好错误信息
-      final errorMsg = e.error?.toString() ?? '加载学习数据失败';
-      state = state.copyWith(
-        isLoadingLearning: false,
-        error: errorMsg,
-        errorType: ErrorType.network,
-      );
+      // ✅ 未登录时静默处理错误（对应小程序：未登录时接口失败，只显示Toast，不影响其他数据）
+      if (!isLoggedIn) {
+        print('⚠️ [学习数据] 未登录用户，接口调用失败，静默处理: ${e.error ?? e.message}');
+        state = state.copyWith(
+          learningData: null, // ✅ 未登录时学习数据为 null
+          isLoadingLearning: false,
+          // ✅ 不设置 error，避免显示错误提示
+        );
+      } else {
+        // ✅ 已登录时显示错误提示
+        final errorMsg = e.error?.toString() ?? '加载学习数据失败';
+        print('❌ [学习数据] 已登录用户，接口调用失败: $errorMsg');
+        state = state.copyWith(
+          isLoadingLearning: false,
+          error: errorMsg,
+          errorType: ErrorType.network,
+        );
+      }
     } catch (e) {
-      // ✅ 兜底：未预期的错误
-      state = state.copyWith(
-        isLoadingLearning: false,
-        error: '加载学习数据失败',
-        errorType: ErrorType.network,
-      );
+      // ✅ 未登录时静默处理错误
+      if (!isLoggedIn) {
+        print('⚠️ [学习数据] 未登录用户，接口调用失败，静默处理: $e');
+        state = state.copyWith(
+          learningData: null,
+          isLoadingLearning: false,
+        );
+      } else {
+        // ✅ 已登录时显示错误提示
+        print('❌ [学习数据] 已登录用户，接口调用失败: $e');
+        state = state.copyWith(
+          isLoadingLearning: false,
+          error: '加载学习数据失败',
+          errorType: ErrorType.network,
+        );
+      }
     }
   }
 
   /// 加载章节列表
+  /// ⚠️ 注意：未登录时此接口可能失败，需要静默处理（章节列表为空）
   Future<void> _loadChapters(String majorId) async {
+    // ✅ 检查登录状态：未登录时静默处理错误，不阻塞其他数据加载
+    final isLoggedIn = _ref.read(authProvider).isLoggedIn;
+    
     state = state.copyWith(isLoadingChapters: true);
 
     try {
@@ -148,26 +179,51 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
 
       state = state.copyWith(chapters: chapters, isLoadingChapters: false);
     } on DioException catch (e) {
-      // ✅ 使用拦截器已处理好的用户友好错误信息
-      final errorMsg = e.error?.toString() ?? '加载章节失败';
-      state = state.copyWith(
-        isLoadingChapters: false,
-        error: errorMsg,
-        errorType: ErrorType.network,
-      );
+      // ✅ 未登录时静默处理错误（对应小程序：未登录时接口失败，只显示Toast，不影响其他数据）
+      if (!isLoggedIn) {
+        print('⚠️ [章节列表] 未登录用户，接口调用失败，静默处理: ${e.error ?? e.message}');
+        state = state.copyWith(
+          chapters: [], // ✅ 未登录时章节列表为空
+          isLoadingChapters: false,
+          // ✅ 不设置 error，避免显示错误提示
+        );
+      } else {
+        // ✅ 已登录时显示错误提示
+        final errorMsg = e.error?.toString() ?? '加载章节失败';
+        print('❌ [章节列表] 已登录用户，接口调用失败: $errorMsg');
+        state = state.copyWith(
+          isLoadingChapters: false,
+          error: errorMsg,
+          errorType: ErrorType.network,
+        );
+      }
     } catch (e) {
-      // ✅ 兜底：未预期的错误
-      state = state.copyWith(
-        isLoadingChapters: false,
-        error: '加载章节失败',
-        errorType: ErrorType.network,
-      );
+      // ✅ 未登录时静默处理错误
+      if (!isLoggedIn) {
+        print('⚠️ [章节列表] 未登录用户，接口调用失败，静默处理: $e');
+        state = state.copyWith(
+          chapters: [],
+          isLoadingChapters: false,
+        );
+      } else {
+        // ✅ 已登录时显示错误提示
+        print('❌ [章节列表] 已登录用户，接口调用失败: $e');
+        state = state.copyWith(
+          isLoadingChapters: false,
+          error: '加载章节失败',
+          errorType: ErrorType.network,
+        );
+      }
     }
   }
 
   /// 加载章节练习（大卡片）
   /// 对应小程序: src/modules/jintiku/components/commen/index-nav.vue Line 268-282
+  /// ⚠️ 注意：未登录时此接口可能失败，需要静默处理（章节练习为null）
   Future<void> _loadChapterExercise(String majorId) async {
+    // ✅ 检查登录状态：未登录时静默处理错误
+    final isLoggedIn = _ref.read(authProvider).isLoggedIn;
+    
     print('📚 [QuestionBankProvider] 开始加载章节练习: majorId=$majorId');
     state = state.copyWith(isLoadingChapters: true);
 
@@ -196,15 +252,33 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
         print('⚠️ [QuestionBankProvider] 没有章节练习数据（接口返回null）');
       }
     } catch (e, stackTrace) {
-      print('❌ [QuestionBankProvider] 加载章节练习失败: $e');
-      print('❌ [QuestionBankProvider] 堆栈: $stackTrace');
+      // ✅ 未登录时静默处理错误（章节练习失败不影响整体页面）
+      if (!isLoggedIn) {
+        print('⚠️ [章节练习] 未登录用户，接口调用失败，静默处理: $e');
+      } else {
+        print('❌ [QuestionBankProvider] 加载章节练习失败: $e');
+        print('❌ [QuestionBankProvider] 堆栈: $stackTrace');
+      }
       // 章节练习失败不影响整体页面
       state = state.copyWith(chapterExercise: null);
     }
   }
 
   /// 加载已购商品
+  /// ⚠️ 注意：未登录时此接口会失败，需要静默处理（已购商品列表为空）
   Future<void> _loadPurchasedGoods(String majorId) async {
+    // ✅ 检查登录状态：未登录时直接返回空列表，不调用接口
+    final isLoggedIn = _ref.read(authProvider).isLoggedIn;
+    
+    if (!isLoggedIn) {
+      print('⚠️ [已购商品] 未登录用户，跳过接口调用，返回空列表');
+      state = state.copyWith(
+        purchasedGoods: [],
+        isLoadingPurchased: false,
+      );
+      return;
+    }
+    
     print('📚 [题库Provider] 开始加载已购试题: majorId=$majorId');
     state = state.copyWith(isLoadingPurchased: true);
 
@@ -370,6 +444,12 @@ class QuestionBankNotifier extends StateNotifier<QuestionBankState> {
 
   /// 打卡
   Future<void> checkIn() async {
+    // ✅ 检查登录状态（打卡需要登录）
+    final isLoggedIn = _ref.read(authProvider).isLoggedIn;
+    if (!isLoggedIn) {
+      throw Exception('请先登录');
+    }
+
     // ✅ 业务逻辑验证：已打卡或正在加载时不处理
     final isCheckedIn = (state.learningData?.isCheckin ?? 0) == 1;
     if (isCheckedIn || state.isLoadingLearning) {

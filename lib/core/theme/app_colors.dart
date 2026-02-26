@@ -131,6 +131,9 @@ class AppColors {
   /// 课程次要信息文字色（半透明黑）
   static const Color courseSecondaryText = Color(0xA603203D);
 
+  /// 课程页日期选中色（与小程序 #018CFF 一致，周历/日历选中、小圆点）
+  static const Color courseDatePrimary = Color(0xFF018CFF);
+
   // ============ 题库专用色 ============
 
   /// 题库标签背景色（浅蓝）

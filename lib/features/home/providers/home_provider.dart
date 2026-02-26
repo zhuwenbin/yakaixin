@@ -38,23 +38,22 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
   /// 加载首页数据
   /// 参考小程序: src/modules/jintiku/pages/index/brushing.vue getGoods()
-  Future<void> loadHomeData() async {
+  /// [majorId] 可选，显式传入时优先使用（用于登录后刷新避免 Provider 时序导致读到旧专业）
+  Future<void> loadHomeData({String? majorId}) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      // 获取当前专业ID
-      final majorId = _ref.read(currentMajorProvider)?.majorId;
-      
+      // 优先使用传入的 majorId，否则从 Provider 读取
+      majorId = majorId ?? _ref.read(currentMajorProvider)?.majorId;
+
       print('🔍 [首页数据加载] 开始加载...');
       print('📍 [专业ID] majorId: $majorId');
-      
+
+      // ✅ 如果没有专业，使用默认专业（口腔执业医师）
+      // 这样未登录用户也能浏览商品列表
       if (majorId == null || majorId.isEmpty) {
-        print('❌ [首页数据加载] 专业ID为空');
-        state = state.copyWith(
-          isLoading: false,
-          error: '请先选择专业',
-        );
-        return;
+        majorId = '524033912737962623'; // 默认专业：口腔执业医师
+        print('⚠️ [首页数据加载] 专业ID为空，使用默认专业: $majorId');
       }
 
       // ✅ 对照小程序逻辑:
@@ -86,17 +85,17 @@ class HomeNotifier extends StateNotifier<HomeState> {
       // ✅ 题库数据 - 直接使用第一个结果
       final questionBankList = results[0].list;
       print('📚 [题库数据] 获取到 ${questionBankList.length} 条数据');
-      
+
       // ✅ 网课列表 - 增强数据处理（对应小程序 Line 336-356）
       final onlineCourseList = _enhanceCourseData(results[1].list);
       print('🎓 [网课数据] 获取到 ${onlineCourseList.length} 条数据（已增强）');
-      
+
       // ✅ 直播列表 - 增强数据处理（对应小程序 Line 313-332）
       final liveList = _enhanceCourseData(results[2].list);
       print('📡 [直播数据] 获取到 ${liveList.length} 条数据（已增强）');
 
       // ✅ 筛选秒杀推荐商品 (首页推荐 且 **未购买**)
-      // 参考小程序 Line 258-262: 
+      // 参考小程序 Line 258-262:
       // res.data.list.filter(e => e.is_homepage_recommend == 1 && e.permission_status == '2')
       // ⚠️ 注意: permission_status='2' 表示未购买，'1'表示已购买
 
@@ -104,11 +103,10 @@ class HomeNotifier extends StateNotifier<HomeState> {
         // ✅ 使用 SafeTypeConverter 处理 dynamic 类型
         final isRecommend = SafeTypeConverter.toInt(e.isHomepageRecommend) == 1;
         final isNotBought = e.permissionStatus == '2';
-        
+
         return isRecommend && isNotBought;
       }).toList();
-      
-  
+
       state = state.copyWith(
         questionBankList: questionBankList,
         recommendList: recommendList,
@@ -116,25 +114,17 @@ class HomeNotifier extends StateNotifier<HomeState> {
         liveList: liveList,
         isLoading: false,
       );
-      
-
     } on DioException catch (e, stackTrace) {
       // ✅ 使用拦截器已处理好的用户友好错误信息
       final errorMsg = e.error?.toString() ?? '加载失败，请稍后重试';
       print('❌ [首页数据加载] 失败: $errorMsg');
       print('📍 堆栈信息: $stackTrace');
-      state = state.copyWith(
-        isLoading: false,
-        error: errorMsg,
-      );
+      state = state.copyWith(isLoading: false, error: errorMsg);
     } catch (e, stackTrace) {
       // ✅ 兜底：未预期的错误
       print('❌ [首页数据加载] 未预期错误: $e');
       print('📍 堆栈信息: $stackTrace');
-      state = state.copyWith(
-        isLoading: false,
-        error: '加载失败，请稍后重试',
-      );
+      state = state.copyWith(isLoading: false, error: '加载失败，请稍后重试');
     }
   }
 
@@ -143,7 +133,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
     // ⚠️ 不清空数据，直接重新加载，保持 loading 状态
     await loadHomeData();
   }
-  
+
   /// 增强课程数据
   /// 对应小程序 brushing.vue Line 274-356 的数据处理逻辑
   /// ✅ 使用 SafeTypeConverter 确保类型安全
@@ -159,16 +149,17 @@ class HomeNotifier extends StateNotifier<HomeState> {
       } else if (typeInt == 3 || typeInt == 2) {
         newTypeName = '套餐';
       }
-      
+
       // 2. ✅ 计算 shop_type（对应小程序 Line 289-310 computGoodType）
       // 已在 GoodsModelExtension 中实现 computeShopType()
       final shopType = item.computeShopType();
-      
+
       // 3. ✅ 提取前4个教师数据（对应小程序 Line 323, 347）
-      final showTeacherData = item.teacherData != null && item.teacherData!.length > 4
+      final showTeacherData =
+          item.teacherData != null && item.teacherData!.length > 4
           ? item.teacherData!.sublist(0, 4)
           : item.teacherData;
-      
+
       // ✅ 返回增强后的数据（使用 copyWith 保持不可变性）
       return item.copyWith(
         newTypeName: newTypeName.isEmpty ? item.newTypeName : newTypeName,
@@ -181,8 +172,5 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
 /// 首页Provider实例
 final homeProvider = StateNotifierProvider<HomeNotifier, HomeState>((ref) {
-  return HomeNotifier(
-    ref.read(goodsServiceProvider),
-    ref,
-  );
+  return HomeNotifier(ref.read(goodsServiceProvider), ref);
 });

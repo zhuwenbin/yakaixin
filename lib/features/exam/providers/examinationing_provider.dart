@@ -28,6 +28,9 @@ class ExaminationingState with _$ExaminationingState {
     /// 剩余时间（秒）
     @Default(0) int remainingTime,
 
+    /// 初始剩余时间（秒），答题/背题切换时重置用
+    @Default(0) int initialRemainingTime,
+
     /// 是否正在加载
     @Default(false) bool isLoading,
 
@@ -76,16 +79,18 @@ class ExaminationingNotifier extends _$ExaminationingNotifier {
         type: type,
       );
 
-      // 2. 处理试题编号（对应小程序的setQuestionLists方法）
-      final processedQuestions = _processQuestions(questions);
+      // 2. 一拆多题：多子题拆成多条展示，一题一页（对应 make_question_page 拆分配伍题逻辑）
+      final expandedQuestions = _expandQuestions(questions);
+      // 3. 处理试题编号（对应小程序的setQuestionLists方法）
+      final processedQuestions = _processQuestions(expandedQuestions);
 
-      // 3. 获取考试信息（时间、状态）
+      // 4. 获取考试信息（时间、状态）
       final examInfo = await examService.getStudentExamInfo(
         examId: examinationId,
         examRoundId: examinationSessionId,
       );
 
-      // 4. 计算剩余时间
+      // 5. 计算剩余时间
       // ✅ 修复：优先使用 API 返回的时间，如果为空则使用传入的 timeLimit
       final remainingTime = _calculateRemainingTime(examInfo, timeLimit);
 
@@ -93,10 +98,11 @@ class ExaminationingNotifier extends _$ExaminationingNotifier {
         questions: processedQuestions,
         examInfo: examInfo,
         remainingTime: remainingTime,
+        initialRemainingTime: remainingTime,
         isLoading: false,
       );
 
-      // 5. 启动倒计时
+      // 6. 启动倒计时
       _startTimer();
     } on DioException catch (e) {
       // ✅ 使用拦截器已处理好的用户友好错误信息
@@ -106,6 +112,23 @@ class ExaminationingNotifier extends _$ExaminationingNotifier {
       // ✅ 兜底：未预期的错误
       state = state.copyWith(isLoading: false, error: '加载试题失败，请稍后重试');
     }
+  }
+
+  /// 一拆多题：将 stem_list 多于一条的题目拆成多条，每条只含一个子题，便于一题一页滑动
+  /// 提交时按相同 id 合并回一条（见 submitAnswers 中的合并逻辑）
+  List<QuestionModel> _expandQuestions(List<QuestionModel> questions) {
+    final List<QuestionModel> result = [];
+    for (final q in questions) {
+      if (q.stemList.isEmpty) continue;
+      if (q.stemList.length == 1) {
+        result.add(q);
+        continue;
+      }
+      for (int j = 0; j < q.stemList.length; j++) {
+        result.add(q.copyWith(stemList: [q.stemList[j]]));
+      }
+    }
+    return result;
   }
 
   /// 处理试题，添加题号
@@ -191,6 +214,17 @@ class ExaminationingNotifier extends _$ExaminationingNotifier {
         timer.cancel();
       }
     });
+  }
+
+  /// 重置剩余时间为初始值（答题/背题切换时调用）
+  /// 必须先取消旧定时器再更新状态并重新启动，否则上一个倒计时会继续跑
+  void resetRemainingTime() {
+    final initial = state.initialRemainingTime;
+    if (initial > 0) {
+      _timer?.cancel();
+      state = state.copyWith(remainingTime: initial);
+      _startTimer();
+    }
   }
 
   /// 切换到指定题目
@@ -287,36 +321,34 @@ class ExaminationingNotifier extends _$ExaminationingNotifier {
       final finalCostTime = costTime > 0 ? costTime : 1; // ✅ 对应小程序 Line 411-413
 
       // 2. 构建答案数据（对应小程序 Line 417-431 / test.vue Line 404-419）
-      // ⚠️ 关键修复：提交时必须使用 id 字段（对应小程序 item.id，即 question_version_id）
-      // question_id 字段（如 582238836886474787）只是数据库引用，不用于提交
-      final questionInfo = state.questions.map((question) {
-        // ✅ 提交参数使用 id 字段（即 question_version_id，如 582238838496170019）
+      // ⚠️ 一拆多题后：同一 id 可能有多条（多个子题），需合并成一条再提交
+      final List<Map<String, dynamic>> questionInfo = [];
+      for (final question in state.questions) {
         final questionId = question.id;
+        final userOption = question.stemList.map((stem) {
+          final answer = stem.selected.map((item) {
+            if (question.type == '8' ||
+                question.type == '9' ||
+                question.type == '10') {
+              return item.replaceAll('\n', '<br/>');
+            }
+            return item.toString();
+          }).toList();
+          return {
+            'sub_question_id': stem.id,
+            'answer': answer,
+          };
+        }).toList();
 
-        return {
-          'question_id': questionId,
-          'user_option': question.stemList.map((stem) {
-            // ✅ answer 必须是字符串数组（对应小程序 Line 423-427 / test.vue Line 410-415）
-
-            final answer = stem.selected.map((item) {
-              // ✅ 填空题（type 8/9/10）：替换换行符为 <br/>
-              if (question.type == '8' ||
-                  question.type == '9' ||
-                  question.type == '10') {
-                return item.replaceAll('\n', '<br/>');
-              }
-              // ✅ 选择题：确保是字符串（对应小程序 String(jtem)）
-              return item.toString();
-            }).toList();
-
-            return {
-              'sub_question_id':
-                  stem.id, // ✅ 对应小程序 res.id (Line 422 / test.vue Line 409)
-              'answer': answer, // ✅ 字符串数组（对应小程序）
-            };
-          }).toList(),
-        };
-      }).toList();
+        if (questionInfo.isNotEmpty && questionInfo.last['question_id'] == questionId) {
+          (questionInfo.last['user_option'] as List).addAll(userOption);
+        } else {
+          questionInfo.add({
+            'question_id': questionId,
+            'user_option': userOption,
+          });
+        }
+      }
 
       // 3. 提交答案（包含所有必填参数）
       final examService = ref.read(examServiceProvider);

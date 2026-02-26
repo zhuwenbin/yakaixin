@@ -19,7 +19,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 class WrongBookDetailPage extends ConsumerStatefulWidget {
   final List<WrongQuestionModel> questions;
   final int initialIndex;
-  final bool isReview;  // true-错题复查(做题模式), false-查看详情(直接显示答案)
+  final bool isReview; // true-错题复查(做题模式), false-查看详情(直接显示答案)
 
   const WrongBookDetailPage({
     super.key,
@@ -29,24 +29,53 @@ class WrongBookDetailPage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<WrongBookDetailPage> createState() => _WrongBookDetailPageState();
+  ConsumerState<WrongBookDetailPage> createState() =>
+      _WrongBookDetailPageState();
 }
 
 class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
   late PageController _pageController;
   late int _currentIndex;
-  
-  // ✅ 用于控制当前题目是否显示解析（每道题独立）
+  /// 一拆多题后的展示列表（多子题拆成多条，一题一页）
+  late List<WrongQuestionModel> _expandedQuestions;
+
   final Map<int, bool> _showAnalysisMap = {};
-  
-  // ✅ 用于保存每道题的答案（错题复查模式）
   final Map<int, String> _userAnswersMap = {};
 
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialIndex;
-    _pageController = PageController(initialPage: widget.initialIndex);
+    _expandedQuestions = _expandQuestions(widget.questions);
+    // 入口传入的 initialIndex 是原始题目列表下标，需映射到展开后的下标
+    final expandedIndex = _originalIndexToExpanded(widget.initialIndex);
+    _currentIndex = expandedIndex >= _expandedQuestions.length ? 0 : expandedIndex;
+    _pageController = PageController(initialPage: _currentIndex);
+  }
+
+  int _originalIndexToExpanded(int originalIndex) {
+    int pos = 0;
+    for (int i = 0; i < widget.questions.length && i < originalIndex; i++) {
+      final len = widget.questions[i].stemList?.length ?? 1;
+      pos += len > 0 ? len : 1;
+    }
+    return pos;
+  }
+
+  /// 一拆多题：多子题拆成多条，便于一题一页滑动
+  List<WrongQuestionModel> _expandQuestions(List<WrongQuestionModel> questions) {
+    final List<WrongQuestionModel> result = [];
+    for (final q in questions) {
+      final list = q.stemList;
+      if (list == null || list.isEmpty) continue;
+      if (list.length == 1) {
+        result.add(q);
+        continue;
+      }
+      for (int j = 0; j < list.length; j++) {
+        result.add(q.copyWith(stemList: [list[j]]));
+      }
+    }
+    return result;
   }
 
   @override
@@ -64,16 +93,16 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
           children: [
             // 顶部导航栏
             _buildTopBar(),
-            // 题目内容 - ✅ 使用QuestionCard组件
+            // 题目内容（一拆多题后按 _expandedQuestions 展示）
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: widget.questions.length,
+                itemCount: _expandedQuestions.length,
                 onPageChanged: (index) {
                   setState(() => _currentIndex = index);
                 },
                 itemBuilder: (context, index) {
-                  return _buildQuestionCard(widget.questions[index]);
+                  return _buildQuestionCard(_expandedQuestions[index]);
                 },
               ),
             ),
@@ -85,7 +114,7 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
     );
   }
 
-  /// 顶部导航栏
+  /// 顶部导航栏（返回按钮与错题本/收藏详情一致：arrow_back_ios，图标用 .w 不用 .sp）
   Widget _buildTopBar() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
@@ -93,20 +122,25 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // 返回按钮
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: Icon(Icons.arrow_back, size: 24.sp, color: AppColors.textPrimary),
+            child: Padding(
+              padding: EdgeInsets.all(8.w),
+              child: Icon(
+                Icons.arrow_back_ios,
+                size: 20.w,
+                color: AppColors.textPrimary,
+              ),
+            ),
           ),
-          // 进度显示
           Text(
-            '${_currentIndex + 1}/${widget.questions.length}',
+            '${_currentIndex + 1}/${_expandedQuestions.length}',
             style: AppTextStyles.bodyMedium.copyWith(
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(width: 24.sp), // 占位保持居中
+          SizedBox(width: 40.w), // 占位保持标题居中
         ],
       ),
     );
@@ -116,7 +150,7 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
   Widget _buildQuestionCard(WrongQuestionModel question) {
     // ✅ 转换数据格式为QuestionCard需要的格式
     final questionData = _convertToQuestionCardData(question);
-    
+
     // ✅ 错题复查模式：使用保存的答案或点击"查看觧析"的标记
     if (widget.isReview) {
       if (_userAnswersMap.containsKey(_currentIndex)) {
@@ -127,7 +161,7 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
         questionData['user_answer'] = '__FORCE_SHOW__';
       }
     }
-    
+
     // ✅ 返回包含题目卡片 + 纠错按钮的容器
     // 对应小程序 Line 116-118
     return SingleChildScrollView(
@@ -141,22 +175,26 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
             showAnswer: !widget.isReview,
             readOnly: !widget.isReview,
             // ✅ 答题回调：保存答案到 Map
-            onAnswerChanged: widget.isReview ? (answer) {
-              _userAnswersMap[_currentIndex] = answer;
-              print('✅ 题目 $_currentIndex 答题: $answer, 保存到 _userAnswersMap');
-              // ✅ 延迟执行 setState，避免在 QuestionCard 内部构建时触发重建导致数据丢失
-              Future.microtask(() {
-                if (mounted) {
-                  setState(() {
-                    // ✅ 只是为了触发重建，数据已经在上面保存了
-                  });
-                }
-              });
-            } : null,
+            onAnswerChanged: widget.isReview
+                ? (answer) {
+                    _userAnswersMap[_currentIndex] = answer;
+                    print(
+                      '✅ 题目 $_currentIndex 答题: $answer, 保存到 _userAnswersMap',
+                    );
+                    // ✅ 延迟执行 setState，避免在 QuestionCard 内部构建时触发重建导致数据丢失
+                    Future.microtask(() {
+                      if (mounted) {
+                        setState(() {
+                          // ✅ 只是为了触发重建，数据已经在上面保存了
+                        });
+                      }
+                    });
+                  }
+                : null,
           ),
-          
+
           SizedBox(height: 20.h),
-          
+
           // ✅ 试题纠错按钮（对应小程序 Line 116-118）
           _buildErrorCorrectionButton(question),
         ],
@@ -170,9 +208,9 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
     print('题目ID: ${q.id}');
     print('题目类型: ${q.type}');
     print('stemList长度: ${q.stemList?.length ?? 0}');
-    
+
     // ✅ 解析选项 - 后端返回的是HTML字符串数组 ["<p>选项1</p>", "<p>选项2</p>"]
-    List<Map<String, dynamic>> options = [];  // ✅ 修改为 dynamic
+    List<Map<String, dynamic>> options = []; // ✅ 修改为 dynamic
     if (q.stemList != null && q.stemList!.isNotEmpty) {
       final firstStem = q.stemList!.first;
       print('stemList[0].option: ${firstStem.option}');
@@ -186,13 +224,15 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
             final optText = entry.value.toString(); // ✅ 直接是HTML字符串
             return {
               'label': labels[index],
-              'text': optText,  // ✅ QuestionOptions组件使用'text'字段
+              'text': optText, // ✅ QuestionOptions组件使用'text'字段
             };
           }).toList();
           print('✅ 成功解析到 ${options.length} 个选项:');
           for (var opt in options) {
             final value = opt['value']?.toString() ?? '';
-            final preview = value.length > 30 ? value.substring(0, 30) + '...' : value;
+            final preview = value.length > 30
+                ? value.substring(0, 30) + '...'
+                : value;
             print('   ${opt['label']}: $preview');
           }
         } catch (e, stackTrace) {
@@ -217,10 +257,12 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
           final List<dynamic> answerJson = json.decode(firstStem.answer!);
           print('✅ 解析后的answerJson: $answerJson');
           final labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-          answer = answerJson.map((idx) {
-            final i = int.tryParse(idx.toString()) ?? 0;
-            return labels[i];
-          }).join(',');
+          answer = answerJson
+              .map((idx) {
+                final i = int.tryParse(idx.toString()) ?? 0;
+                return labels[i];
+              })
+              .join(',');
           print('✅ 最终答案: $answer');
         } catch (e) {
           print('❌ 解析答案失败: $e, 原始数据: ${firstStem.answer}');
@@ -234,39 +276,45 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
     String questionContent = '';
     if (q.stemList != null && q.stemList!.isNotEmpty) {
       questionContent = q.stemList!.first.content ?? '';
-      print('\n题干内容: ${questionContent.length > 50 ? questionContent.substring(0, 50) + '...' : questionContent}');
+      print(
+        '\n题干内容: ${questionContent.length > 50 ? questionContent.substring(0, 50) + '...' : questionContent}',
+      );
     } else {
       print('\n❌ 题干内容为空');
     }
-    
+
     // ✅ 获取主题干 (thematic_stem)
     final thematicStem = q.thematicStem;
     if (thematicStem != null && thematicStem.isNotEmpty) {
-      print('主题干: ${thematicStem.length > 50 ? thematicStem.substring(0, 50) + '...' : thematicStem}');
+      print(
+        '主题干: ${thematicStem.length > 50 ? thematicStem.substring(0, 50) + '...' : thematicStem}',
+      );
     }
 
     final result = {
       'id': q.id,
       'type': q.type,
-      'question': questionContent,  // ✅ 使用 'question' 字段
+      'question': questionContent, // ✅ 使用 'question' 字段
       'thematic_stem': q.thematicStem,
-      'options': options,  // ✅ Map<String, String> 格式
-      'answer': answer,  // ✅ 字母格式 "A,B"
+      'options': options, // ✅ Map<String, String> 格式
+      'answer': answer, // ✅ 字母格式 "A,B"
       'analysis': q.parse ?? '',
-      'knowledge_ids_name': [q.knowledgeIdsName ?? ''],  // ✅ 数组格式
+      'knowledge_ids_name': [q.knowledgeIdsName ?? ''], // ✅ 数组格式
       'level': q.level,
       // ✅ 复查模式：不设置user_answer，让用户可以重新答题
       // ✅ 查看详情模式：也不设置user_answer，直接显示答案和解析
       'user_answer': null,
     };
-    
+
     print('\n========== 转换后的数据 ==========');
-    print('question: ${questionContent.length > 50 ? questionContent.substring(0, 50) + '...' : questionContent}');
+    print(
+      'question: ${questionContent.length > 50 ? questionContent.substring(0, 50) + '...' : questionContent}',
+    );
     print('options数量: ${options.length}');
     print('answer: $answer');
     print('user_answer: ${result['user_answer']}');
     print('===================================\n');
-    
+
     return result;
   }
 
@@ -274,10 +322,10 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
   Widget _buildBottomBar() {
     final currentQuestion = widget.questions[_currentIndex];
     final wrongAnswerBookId = currentQuestion.wrongAnswerBookId ?? '';
-    
+
     // ✅ 从Provider中获取最新的题目状态
     final wrongBookState = ref.watch(wrongBookNotifierProvider);
-    
+
     // ✅ 先在所有列表中查找最新状态
     WrongQuestionModel? latestQuestion;
     final allQuestions = [
@@ -285,20 +333,22 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
       ...wrongBookState.markedQuestions,
       ...wrongBookState.fallibleQuestions,
     ];
-    
+
     for (final q in allQuestions) {
       if (q.wrongAnswerBookId == wrongAnswerBookId) {
         latestQuestion = q;
         break;
       }
     }
-    
+
     // ✅ 使用最新状态的isMark，如果找不到则使用当前question的状态
-    final isMark = SafeTypeConverter.toInt(
-      (latestQuestion ?? currentQuestion).isMark
-    ) == 1;
-    
-    print('🔍 底部栏状态: wrongAnswerBookId=$wrongAnswerBookId, isMark=$isMark, latestQuestion存在=${latestQuestion != null}');
+    final isMark =
+        SafeTypeConverter.toInt((latestQuestion ?? currentQuestion).isMark) ==
+        1;
+
+    print(
+      '🔍 底部栏状态: wrongAnswerBookId=$wrongAnswerBookId, isMark=$isMark, latestQuestion存在=${latestQuestion != null}',
+    );
 
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -339,9 +389,9 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
                   ),
                 ),
               ),
-            
+
             if (!widget.isReview) SizedBox(width: 12.w),
-            
+
             // ✅ 错题复查模式 - 只显示"查看觧析"按钮
             // 对应小程序Line 129-135: v-if="isReview == 'true'"
             if (widget.isReview)
@@ -360,13 +410,10 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
                     padding: EdgeInsets.symmetric(vertical: 12.h),
                     elevation: 0,
                   ),
-                  child: Text(
-                    '查看觧析',
-                    style: AppTextStyles.buttonMedium,
-                  ),
+                  child: Text('查看觧析', style: AppTextStyles.buttonMedium),
                 ),
               ),
-            
+
             // ✅ 标记按钮（点击列表进入时显示）
             // 对应小程序Line 136-147
             if (!widget.isReview)
@@ -374,7 +421,9 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
                 child: ElevatedButton(
                   onPressed: () => _toggleMark(currentQuestion, isMark),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isMark ? AppColors.border : AppColors.warning,
+                    backgroundColor: isMark
+                        ? AppColors.border
+                        : AppColors.warning,
                     foregroundColor: AppColors.textWhite,
                     padding: EdgeInsets.symmetric(vertical: 12.h),
                     elevation: 0,
@@ -394,12 +443,12 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
   /// 移出错题
   Future<void> _removeQuestion(WrongQuestionModel question) async {
     try {
-      await ref.read(wrongBookNotifierProvider.notifier).removeQuestion(
-        wrongAnswerBookId: question.wrongAnswerBookId ?? '',
-      );
-      
+      await ref
+          .read(wrongBookNotifierProvider.notifier)
+          .removeQuestion(wrongAnswerBookId: question.wrongAnswerBookId ?? '');
+
       EasyLoading.showSuccess('操作成功');
-      
+
       // 如果还有题目，跳转到下一题；否则返回
       if (widget.questions.length > 1) {
         if (_currentIndex >= widget.questions.length - 1 && _currentIndex > 0) {
@@ -421,11 +470,13 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
     if (isMark) {
       // ✅ 已标记 → 取消标记（直接调用接口）
       try {
-        await ref.read(wrongBookNotifierProvider.notifier).toggleMark(
-          wrongAnswerBookId: question.wrongAnswerBookId ?? '',
-          isMarked: true,  // 取消标记
-        );
-        
+        await ref
+            .read(wrongBookNotifierProvider.notifier)
+            .toggleMark(
+              wrongAnswerBookId: question.wrongAnswerBookId ?? '',
+              isMarked: true, // 取消标记
+            );
+
         EasyLoading.showSuccess('操作成功');
       } catch (e) {
         EasyLoading.showError('操作失败');
@@ -439,15 +490,10 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
   /// 显示标签选择器
   /// 对应小程序: filtrateModule = true
   void _showMarkTagSelector(WrongQuestionModel question) {
-    final tags = [
-      '思路错误',
-      '理解错误',
-      '概念不清',
-      '审题不清',
-    ];
-    
+    final tags = ['思路错误', '理解错误', '概念不清', '审题不清'];
+
     final selectedTags = <String>{};
-    
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -490,10 +536,7 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
                               ),
                             ),
                           ),
-                          Text(
-                            '选择标签',
-                            style: AppTextStyles.heading4,
-                          ),
+                          Text('选择标签', style: AppTextStyles.heading4),
                           TextButton(
                             onPressed: selectedTags.isEmpty
                                 ? null
@@ -516,7 +559,7 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
                         ],
                       ),
                     ),
-                    
+
                     // 标签列表
                     Padding(
                       padding: EdgeInsets.all(16.w),
@@ -565,7 +608,7 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
                         }).toList(),
                       ),
                     ),
-                    
+
                     SizedBox(height: 16.h),
                   ],
                 ),
@@ -584,12 +627,14 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
     List<String> tags,
   ) async {
     try {
-      await ref.read(wrongBookNotifierProvider.notifier).toggleMark(
-        wrongAnswerBookId: question.wrongAnswerBookId ?? '',
-        isMarked: false,  // 标记
-        markTab: tags.join(','),  // ✅ 逗号分隔的标签字符串
-      );
-      
+      await ref
+          .read(wrongBookNotifierProvider.notifier)
+          .toggleMark(
+            wrongAnswerBookId: question.wrongAnswerBookId ?? '',
+            isMarked: false, // 标记
+            markTab: tags.join(','), // ✅ 逗号分隔的标签字符串
+          );
+
       EasyLoading.showSuccess('操作成功');
     } catch (e) {
       EasyLoading.showError('操作失败');
@@ -632,7 +677,7 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
           print('描述: ${data['description']}');
           print('图片: ${data['file_path']}');
           print('================================\n');
-          
+
           // ✅ 获取题目信息
           final questionId = question.id?.toString() ?? '';
           final questionVersionId = question.stemList?.isNotEmpty == true
@@ -640,31 +685,37 @@ class _WrongBookDetailPageState extends ConsumerState<WrongBookDetailPage> {
               : '';
           // ✅ 修复：version 为 0 时使用默认值 '1'（对照章节练习页面）
           final versionRaw = question.version?.toString() ?? '';
-          final version = (versionRaw.isEmpty || versionRaw == '0') ? '1' : versionRaw;
-          
+          final version = (versionRaw.isEmpty || versionRaw == '0')
+              ? '1'
+              : versionRaw;
+
           print('题目ID: $questionId (类型: ${questionId.runtimeType})');
-          print('题目版本ID: $questionVersionId (类型: ${questionVersionId.runtimeType})');
+          print(
+            '题目版本ID: $questionVersionId (类型: ${questionVersionId.runtimeType})',
+          );
           print('版本号: $version (原始值: $versionRaw)\n');
-          
+
           if (questionId.isEmpty || questionVersionId.isEmpty) {
             EasyLoading.showError('题目信息不完整');
             return;
           }
-          
+
           EasyLoading.show(status: '提交中...');
-          
+
           // ✅ 调用纠错接口
-          await ref.read(wrongBookNotifierProvider.notifier).submitErrorCorrection(
-            questionId: questionId,
-            questionVersionId: questionVersionId,
-            version: version,
-            errorType: data['err_type'] as String,
-            errorContent: data['description'] as String,
-            filePath: (data['file_path'] as List).cast<String>(),
-          );
-          
+          await ref
+              .read(wrongBookNotifierProvider.notifier)
+              .submitErrorCorrection(
+                questionId: questionId,
+                questionVersionId: questionVersionId,
+                version: version,
+                errorType: data['err_type'] as String,
+                errorContent: data['description'] as String,
+                filePath: (data['file_path'] as List).cast<String>(),
+              );
+
           print('✅ 纠错提交成功\n');
-          
+
           // ✅ 延迟显示成功提示
           await Future.delayed(const Duration(milliseconds: 500));
           EasyLoading.showSuccess('感谢您的意见！');

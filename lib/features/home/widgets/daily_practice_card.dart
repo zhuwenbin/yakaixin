@@ -47,7 +47,7 @@ class DailyPracticeCard extends StatelessWidget {
                   children: [
                     // 标题
                     Text(
-                      dailyPractice.name,
+                      '每日一练',
                       style: TextStyle(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w500,

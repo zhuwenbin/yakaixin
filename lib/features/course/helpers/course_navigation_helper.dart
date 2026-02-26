@@ -42,8 +42,8 @@ class CourseNavigationHelper {
   /// - lessonId: 课节ID
   /// - lessonName: 课节名称（用于显示AppBar标题）
   /// - teachingType: 教学类型（"1": 直播, "3": 录播）
-  /// - classId: 班级ID（可选，用于签到接口）
-  /// - chapterData: 章节数据（可选，用于显示目录）
+  /// - classId: 班级ID（可选，用于签到）
+  /// - filterGoodsId: 当前班级/套餐ID（可选，用于拉取目录，对应小程序 filter_goods_id）
   /// - goodsId: 商品ID（可选）
   /// - orderId: 订单ID（可选）
   /// - systemId: 系统ID（可选，用于讲义）
@@ -56,11 +56,12 @@ class CourseNavigationHelper {
     required String lessonId,
     required String lessonName,
     required String teachingType,
-    String? classId, // ✅ 新增参数：班级ID（用于签到）
-    List<Map<String, dynamic>>? chapterData, // ✅ 章节数据
-    String? goodsId, // ✅ 商品ID
-    String? orderId, // ✅ 订单ID
-    String? systemId, // ✅ 系统ID
+    String? classId,
+    String? filterGoodsId,
+    int? classIndex,
+    String? goodsId,
+    String? orderId,
+    String? systemId,
   }) async {
     try {
       EasyLoading.show(status: '加载中...');
@@ -80,11 +81,12 @@ class CourseNavigationHelper {
             builder: (context) => VideoIndexPage(
               lessonId: lessonId,
               name: lessonName,
-              classId: classId, // ✅ 传递 classId（用于签到）
-              chapterData: chapterData, // ✅ 传递章节数据（用于显示目录）
-              goodsId: goodsId, // ✅ 传递商品ID
-              orderId: orderId, // ✅ 传递订单ID
-              systemId: systemId, // ✅ 传递系统ID（用于讲义）
+              classId: classId,
+              filterGoodsId: filterGoodsId ?? classId,
+              classIndex: classIndex,
+              goodsId: goodsId,
+              orderId: orderId,
+              systemId: systemId,
             ),
           ),
         );

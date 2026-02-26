@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/storage/storage_service.dart';
-import '../../../core/utils/error_message_mapper.dart';
 import '../../../app/constants/storage_keys.dart';
 import '../../../core/network/dio_client.dart';
 import '../../auth/models/user_model.dart'; // 导入 MajorModel
@@ -96,18 +95,16 @@ class MajorNotifier extends StateNotifier<MajorState> {
       final authState = ref.read(authProvider);
       final studentId = authState.user?.studentId;
 
-      if (studentId == null) {
-        throw Exception('用户未登录');
+      // ✅ 游客模式：未登录时只保存到本地，不调用后端
+      if (studentId != null && studentId.isNotEmpty) {
+        await _dioClient.put(
+          '/c/student',
+          data: {
+            'id': studentId,
+            'major_id': majorId,
+          },
+        );
       }
-
-      // 调用API保存专业
-      await _dioClient.put(
-        '/c/student',
-        data: {
-          'id': studentId,
-          'major_id': majorId,
-        },
-      );
 
       // 保存到本地存储
       final majorJson = {
@@ -132,19 +129,21 @@ class MajorNotifier extends StateNotifier<MajorState> {
 
       // 对应小程序的setTimeInfo调用（设置章节数为3000）
       // 延迟1秒后调用
-      Future.delayed(Duration(seconds: 1), () async {
-        try {
-          await _dioClient.post(
-            '/c/student/save/attr',
-            data: {
-              'chapter_number': '3000',
-            },
-          );
-        } catch (e) {
-          // 忽略错误
-          print('设置章节数失败: $e');
-        }
-      });
+      if (studentId != null && studentId.isNotEmpty) {
+        Future.delayed(const Duration(seconds: 1), () async {
+          try {
+            await _dioClient.post(
+              '/c/student/save/attr',
+              data: {
+                'chapter_number': '3000',
+              },
+            );
+          } catch (e) {
+            // 忽略错误
+            print('设置章节数失败: $e');
+          }
+        });
+      }
     } catch (e) {
       rethrow;
     }

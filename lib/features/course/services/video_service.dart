@@ -1,3 +1,4 @@
+import '../../../app/config/api_config.dart';
 import '../../../core/network/dio_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../goods/services/goods_service.dart';
@@ -120,17 +121,19 @@ class VideoService {
 
   /// 获取商品详情
   /// API: /c/goods/v2/detail
-  /// 对应小程序: getGoodsDetail
-  /// ✅ 关键：视频播放页调用时需要传 userId + studentId
+  /// 对应小程序: newVideo.vue getDetail() Line 386-396 参数完全一致
   Future<GoodsDetailModel> getGoodsDetail({
     required String goodsId,
-    String? userId,      // ✅ 新增：对应小程序 user_id
-    String? studentId,   // ✅ 新增：对应小程序 student_id
+    String? userId,
+    String? studentId,
   }) async {
     return await _goodsService.getGoodsDetail(
       goodsId: goodsId,
       userId: userId,
       studentId: studentId,
+      merchantId: ApiConfig.merchantId,
+      brandId: ApiConfig.brandId,
+      noProfessionalId: '1',
     );
   }
   

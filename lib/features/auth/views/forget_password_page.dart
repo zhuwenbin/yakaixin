@@ -28,9 +28,10 @@ class _ForgetPasswordPageState extends ConsumerState<ForgetPasswordPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   
-  // 验证码倒计时
+  // 验证码倒计时（与小程序 login-h5 一致）
   int _countdown = 0;
-  
+  bool _hasSentCode = false;
+
   // 重置中状态
   bool _isResetting = false;
 
@@ -59,14 +60,16 @@ class _ForgetPasswordPageState extends ConsumerState<ForgetPasswordPage> {
       // ✅ scene=3 表示修改密码场景（忘记密码和修改密码使用相同接口）
       await ref.read(authProvider.notifier).sendVerifyCode(_phoneController.text, scene: 3);
       
-      // 开始倒计时60秒
+      // 开始倒计时 60 秒
       setState(() {
         _countdown = 60;
+        _hasSentCode = true;
       });
-      
+
       Future.doWhile(() async {
         await Future.delayed(const Duration(seconds: 1));
-        if (_countdown > 0 && mounted) {
+        if (!mounted) return false;
+        if (_countdown > 0) {
           setState(() {
             _countdown--;
           });
@@ -356,7 +359,7 @@ class _ForgetPasswordPageState extends ConsumerState<ForgetPasswordPage> {
               },
             ),
           ),
-          // 发送验证码按钮
+          // 验证码按钮（与小程序一致：获取验证码 / Xs后重新发送 / 重新获取验证码）
           GestureDetector(
             onTap: _countdown > 0 ? null : _sendCode,
             child: Container(
@@ -365,7 +368,9 @@ class _ForgetPasswordPageState extends ConsumerState<ForgetPasswordPage> {
                 vertical: 12.h,
               ),
               child: Text(
-                _countdown > 0 ? '${_countdown}s' : '发送验证码',
+                _countdown > 0
+                    ? '${_countdown}s后重新发送'
+                    : (_hasSentCode ? '重新获取验证码' : '获取验证码'),
                 style: TextStyle(
                   fontSize: 14.sp,
                   color: _countdown > 0

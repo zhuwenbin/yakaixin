@@ -56,6 +56,19 @@ class ToastUtil {
     );
   }
 
+  /// 底部黑色 Toast（用于协议提示等，底部弹出、黑色背景）
+  static void showBottomBlack(String message) {
+    Fluttertoast.cancel();
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.black87,
+      textColor: Colors.white,
+      fontSize: 14.0,
+    );
+  }
+
   /// 取消Toast
   static void cancel() {
     Fluttertoast.cancel();

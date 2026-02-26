@@ -172,9 +172,7 @@ class StudyPlanSection extends ConsumerWidget {
       children: [
         SizedBox(height: 25.h),
         Image.network(
-          ApiConfig.completeImageUrl(
-            'public/4045173295663081752515_8b3592c2dcddcac66af8ddd46abbbf1b74efa19fac63-AlBs3V_fw1200%402x.png',
-          ),
+          'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/4045173295663081752515_8b3592c2dcddcac66af8ddd46abbbf1b74efa19fac63-AlBs3V_fw1200%402x.png',
           width: 60.w,
           height: 60.w,
           errorBuilder: (context, error, stackTrace) =>

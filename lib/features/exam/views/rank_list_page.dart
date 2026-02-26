@@ -149,24 +149,19 @@ class _RankListPageState extends ConsumerState<RankListPage> {
     };
   }
 
-  /// 格式化时间 - 对应小程序 utils/index.js formatSeconds
+  /// 格式化时间 - 与小程序 rankList.vue 一致，使用 utils/index.js formatSeconds（中文 时/分/秒）
   String _formatTime(int seconds) {
     if (seconds <= 0) return '';
-    
     final hours = seconds ~/ 3600;
     final minutes = (seconds % 3600) ~/ 60;
     final secs = seconds % 60;
-
-    final parts = <String>[];
     if (hours > 0) {
-      parts.add('${hours}h');
+      return '${hours}时${minutes}分${secs}秒';
     }
     if (minutes > 0) {
-      parts.add('${minutes}min');
+      return '${minutes}分${secs}秒';
     }
-    parts.add('${secs}s');
-
-    return parts.join(' ');
+    return '${secs}秒';
   }
 
   int _toInt(dynamic value, {int defaultValue = 0}) {

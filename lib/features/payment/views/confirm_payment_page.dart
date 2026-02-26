@@ -189,26 +189,14 @@ class _ConfirmPaymentPageState extends ConsumerState<ConfirmPaymentPage> {
       
       if (!mounted) return;
 
-      // ✅ 支付成功处理
+      // ✅ 支付成功处理：仅 pop 带回结果，由详情页/订单页统一 push 支付成功页（与小程序一致，避免重复跳转）
       print('\n✅ 支付成功！');
       print('   平台: ${Platform.isIOS ? 'iOS内购' : 'Android微信'}');
-      
-      // 🔄 返回上一页，携带刷新标记
       context.pop({
         'success': true,
         'goods_id': widget.goodsId,
         'refresh_goods_id': widget.refreshGoodsId,
       });
-      
-      // 🎯 延迟跳转支付成功页
-      await Future.delayed(const Duration(milliseconds: 100));
-      if (mounted) {
-        context.push('/pay-success', extra: {
-          'goods_id': widget.goodsId,
-          'professional_id_name': widget.professionalIdName ?? '',
-          'goods_type': widget.goodsType, // ✅ 传递商品类型，避免支付成功页再次调用API
-        });
-      }
     } catch (e) {
       print('\n❌ 支付异常: $e');
       EasyLoading.dismiss();

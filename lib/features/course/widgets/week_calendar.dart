@@ -92,7 +92,7 @@ class _WeekDayItem extends StatelessWidget {
       child: Container(
         width: 45.w,
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
+          color: isSelected ? AppColors.courseDatePrimary : Colors.transparent,
           borderRadius: AppRadius.radiusSm,
         ),
         padding: EdgeInsets.symmetric(vertical: 2.h),
@@ -124,7 +124,7 @@ class _WeekDayItem extends StatelessWidget {
                 width: 5.w,
                 height: 5.h,
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.textWhite : AppColors.primary,
+                  color: isSelected ? AppColors.textWhite : AppColors.courseDatePrimary,
                   shape: BoxShape.circle,
                 ),
               ),

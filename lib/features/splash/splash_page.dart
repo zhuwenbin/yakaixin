@@ -2,16 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import '../auth/views/login_page.dart';
-import '../auth/providers/auth_provider.dart';
-import '../main/main_tab_page.dart';
+
+import '../../app/constants/storage_keys.dart';
 import '../../app/routes/app_routes.dart';
-import '../../app/config/api_config.dart';
-import '../../app/constants/app_constants.dart';
 import '../../core/storage/storage_service.dart';
-import '../payment/services/wechat_payment_service.dart';
+import '../auth/providers/auth_provider.dart';
 import '../payment/services/unified_payment_service.dart';
 
 /// 启动页 - 执行初始化 + 检查登录状态
@@ -33,24 +28,38 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     try {
       // ✅ 等待 500ms（确保原生启动页显示）
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       if (!mounted) return;
 
-      // ✅ 初始化支付服务（包含内购产品列表加载）
-      print('\n💳 初始化支付服务...');
-      final paymentService = ref.read(unifiedPaymentServiceProvider);
-      await paymentService.initialize();
-      print('✅ 支付服务初始化完成\n');
-      
-      // ✅ 检查登录状态
-      final isLoggedIn = ref.read(authProvider).isLoggedIn;
+      // ✅ 首次安装需弹出隐私协议弹窗（小米应用商店要求）
+      // 参照 iOS PrivacyProtectVC 实现
+      final storage = ref.read(storageServiceProvider);
+      final hasAgreedPrivacy =
+          storage.getBool(StorageKeys.agreePrivacyProtect) ?? false;
 
-      // ✅ 跳转页面
-      if (isLoggedIn) {
-        context.go(AppRoutes.mainTab);
-      } else {
-        context.go(AppRoutes.loginCenter);
+      if (!hasAgreedPrivacy) {
+        context.go(AppRoutes.privacyAgreement);
+        return;
       }
+
+      // ✅ 先跳转页面，避免白屏
+      // 根据 Guideline 5.1.1，未登录用户应该可以浏览公开内容（首页）
+      // ✅ 未登录时也跳转到 mainTab，这样可以看到 tabbar
+      context.go(AppRoutes.mainTab);
+
+      // ✅ 后台异步初始化支付服务（不阻塞页面跳转）
+      // 这样即使支付服务初始化较慢，也不会导致白屏
+      print('\n💳 后台初始化支付服务...');
+      final paymentService = ref.read(unifiedPaymentServiceProvider);
+      paymentService
+          .initialize()
+          .then((_) {
+            print('✅ 支付服务初始化完成\n');
+          })
+          .catchError((e) {
+            print('⚠️ 支付服务初始化失败: $e\n');
+            // 支付服务初始化失败不影响应用使用，只影响支付功能
+          });
     } catch (e) {
       print('❌ 检查登录状态失败: $e');
       if (mounted) {
@@ -61,11 +70,29 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ 空白页面，不显示任何内容（依赖原生启动页）
-    // 注意：真机运行时原生启动页会正常显示
-    // 热重启时可能看到短暂空白，这是正常现象
-    return const Scaffold(
-      backgroundColor: Colors.white,  // 白色背景避免闪烁
+    // ✅ 显示启动页图片（全屏）
+    return Scaffold(
+      body: SizedBox.expand(
+        child: Image.asset(
+          'assets/images/splash.png',
+          fit: BoxFit.cover, // ✅ 充满整个屏幕，保持宽高比
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (context, error, stackTrace) {
+            // ✅ 如果图片加载失败，显示白色背景
+            return Container(
+              color: Colors.white,
+              child: const Center(
+                child: Icon(
+                  Icons.image_not_supported,
+                  color: Colors.grey,
+                  size: 48,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -98,10 +125,7 @@ class TempHomePage extends ConsumerWidget {
               SizedBox(height: 30.h),
               Text(
                 '登录成功!',
-                style: TextStyle(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 30.h),
               Container(
@@ -125,8 +149,7 @@ class TempHomePage extends ConsumerWidget {
                     _buildInfoRow('学员姓名', user?.studentName ?? '-'),
                     _buildInfoRow('昵称', user?.nickname ?? '-'),
                     _buildInfoRow('手机号', user?.phone ?? '-'),
-                    if (major != null)
-                      _buildInfoRow('当前专业', major.majorName),
+                    if (major != null) _buildInfoRow('当前专业', major.majorName),
                   ],
                 ),
               ),
@@ -141,23 +164,20 @@ class TempHomePage extends ConsumerWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 16.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 40.w,
+                    vertical: 16.h,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                 ),
-                child: Text(
-                  '退出登录',
-                  style: TextStyle(fontSize: 16.sp),
-                ),
+                child: Text('退出登录', style: TextStyle(fontSize: 16.sp)),
               ),
               SizedBox(height: 20.h),
               Text(
                 'TabBar主页面待实现...',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 12.sp, color: Colors.grey),
               ),
             ],
           ),
@@ -175,19 +195,13 @@ class TempHomePage extends ConsumerWidget {
             width: 80.w,
             child: Text(
               '$label:',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey.shade700),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
             ),
           ),
         ],

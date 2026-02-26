@@ -79,8 +79,8 @@ class FullCalendar extends StatelessWidget {
         width: 52.w, // ✅ 对应小程序 width: 52px
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: const Color(0xFF018CFF), // ✅ 对应小程序 background: #018CFF
-          borderRadius: BorderRadius.circular(25.r), // ✅ 对应小程序 border-radius: 25px
+          color: AppColors.courseDatePrimary, // 对应小程序 #018CFF
+          borderRadius: BorderRadius.circular(25.r), // 对应小程序 border-radius: 25px
         ),
         child: Text(
           '今日',
@@ -126,15 +126,15 @@ class FullCalendar extends StatelessWidget {
   CalendarStyle _buildCalendarStyle() {
     return CalendarStyle(
       todayDecoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.3),
+        color: AppColors.courseDatePrimary.withValues(alpha: 0.3),
         shape: BoxShape.circle,
       ),
       selectedDecoration: BoxDecoration(
-        color: AppColors.primary,
+        color: AppColors.courseDatePrimary,
         shape: BoxShape.circle,
       ),
       todayTextStyle: TextStyle(
-        color: AppColors.primary,
+        color: AppColors.courseDatePrimary,
         fontSize: 14.sp,
         fontWeight: FontWeight.w500,
       ),
@@ -186,7 +186,7 @@ class FullCalendar extends StatelessWidget {
               width: 6.w,
               height: 6.w,
               decoration: const BoxDecoration(
-                color: Color(0xFFFF6B6B),
+                color: AppColors.courseDatePrimary,
                 shape: BoxShape.circle,
               ),
             ),

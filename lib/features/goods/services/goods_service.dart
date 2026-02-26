@@ -68,35 +68,47 @@ class GoodsService {
   }
 
   /// 通过position_identify获取商品
-  /// 对应小程序: study-card-grid.vue 卡片点击逻辑
+  /// 对应小程序: study-card-grid.vue getGoods({ shelf_platform_id, professional_id, position_identify })，接口 /c/goods/v2
   Future<GoodsListResponse> getGoodsByPosition({
     required String positionIdentify,
     String? professionalId,
+    String? shelfPlatformId,
   }) async {
     return getGoodsList(
       positionIdentify: positionIdentify,
       professionalId: professionalId,
+      shelfPlatformId: shelfPlatformId,
     );
   }
 
   /// 获取商品详情
   /// 对应小程序: /c/goods/v2/detail
-  /// 参考: mini-dev_250812/src/modules/jintiku/pages/test/detail.vue Line 408-503
-  /// 参考: newVideo.vue Line 389-396 (视频播放页需要传 user_id + student_id)
+  /// 参考: newVideo.vue getDetail() Line 386-396 (goods_id, user_id, student_id, merchant_id, brand_id, no_professional_id)
   Future<GoodsDetailModel> getGoodsDetail({
     required String goodsId,
-    String? userId, // ✅ 新增：用户ID
-    String? studentId, // ✅ 新增：学生ID
+    String? userId,
+    String? studentId,
+    String? merchantId,
+    String? brandId,
+    String? noProfessionalId,
   }) async {
     try {
       final queryParams = <String, dynamic>{'goods_id': goodsId};
 
-      // ✅ 小程序逻辑：视频播放页调用时需要传 user_id + student_id
       if (userId != null && userId.isNotEmpty) {
         queryParams['user_id'] = userId;
       }
       if (studentId != null && studentId.isNotEmpty) {
         queryParams['student_id'] = studentId;
+      }
+      if (merchantId != null && merchantId.isNotEmpty) {
+        queryParams['merchant_id'] = merchantId;
+      }
+      if (brandId != null && brandId.isNotEmpty) {
+        queryParams['brand_id'] = brandId;
+      }
+      if (noProfessionalId != null && noProfessionalId.isNotEmpty) {
+        queryParams['no_professional_id'] = noProfessionalId;
       }
 
       final response = await _dioClient.get(

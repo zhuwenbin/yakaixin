@@ -7,12 +7,31 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yakaixin_app/app/constants/storage_keys.dart';
-import 'package:yakaixin_app/app/routes/app_routes.dart'; // ✅ 导入 AppRoutes
+import 'package:yakaixin_app/app/routes/app_routes.dart';
+import 'package:yakaixin_app/core/theme/app_colors.dart';
+import 'package:yakaixin_app/core/theme/app_text_styles.dart';
+import 'package:yakaixin_app/core/utils/safe_type_converter.dart';
+import 'package:yakaixin_app/core/widgets/confirm_dialog.dart';
 import 'package:yakaixin_app/features/exam/models/question_model.dart';
 import 'package:yakaixin_app/features/exam/providers/examinationing_provider.dart';
 
 /// 考试中页面 - 对应小程序 examination/examinationing.vue
-/// 功能：考试答题、倒计时、答题卡
+/// 功能：考试答题、倒计时、答题卡；每日一练支持答题/背题模式
+///
+/// 入口与类型：
+/// - 模拟考试 / 历年真题 → 试卷详情(TestExam) → 开始考试 → 本页为 **type=8 试卷答题**
+/// - 每日一练 → 开始做题 → 本页可带 recitation_question_model=1 显示答题/背题 Tab
+/// 布局与样式对齐小程序：头部交卷左、题号居中；Session/时间条；底部答题卡/标疑/上一题/下一题
+///
+/// 背题模式蓝色 #387dfc（小程序 question-answer）
+const Color _recitationBlue = Color(0xFF387DFC);
+/// 答题卡/标疑图标（小程序 test.vue 同款，750rpx→375 故 17.w×20.w）
+const String _kAnswerCardIconUrl =
+    'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/16950896298723a451695089629872551_dtk.png';
+const String _kDoubtIconUrl =
+    'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/16967375279005243169673752790025047_%E5%85%A8%E9%83%A8%E8%A7%A3%E6%9E%90%E5%A4%87%E4%BB%BD%205%402x.png';
+const String _kDoubtActiveIconUrl =
+    'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/16956222038717b4a169562220387182065_%E7%BC%96%E7%BB%84%205%E5%A4%87%E4%BB%BD%402x.png';
 ///
 /// ✅ 完整MVVM架构：
 /// - Model: QuestionModel (question_model.dart)
@@ -47,9 +66,13 @@ class ExaminationingPage extends ConsumerStatefulWidget {
   ConsumerState<ExaminationingPage> createState() => _ExaminationingPageState();
 }
 
+const int _recitationModeAnswer = 1;
+const int _recitationModeRecite = 2;
+
 class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
   bool _showAnswerSheet = false;
   final PageController _pageController = PageController();
+  int _recitationMode = _recitationModeAnswer;
 
   @override
   void initState() {
@@ -109,7 +132,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
         // ✅ 使用 pushReplacement 替换当前页面，点击返回时不会回到答题页
         print('\n📝 [交卷成功]');
         print('  → 使用 pushReplacement 跳转到成绩报告页');
-        
+
         context.pushReplacement(
           AppRoutes.examScoreReport,
           extra: {
@@ -168,25 +191,15 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
       );
     }
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        final shouldPop = await _showExitConfirmDialog();
-        if (shouldPop == true && context.mounted) {
-          context.pop();
-        }
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
-        body: SafeArea(
-          child: Stack(
-            children: [
-              _buildBody(examinationingState),
-              if (_showAnswerSheet) _buildAnswerSheetMask(),
-              if (_showAnswerSheet) _buildAnswerSheet(),
-            ],
-          ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            _buildBody(examinationingState),
+            if (_showAnswerSheet) _buildAnswerSheetMask(),
+            if (_showAnswerSheet) _buildAnswerSheet(),
+          ],
         ),
       ),
     );
@@ -203,38 +216,66 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
     );
   }
 
-  /// 顶部栏
+  bool get _isRecitationEnabled {
+    final v = widget.recitationQuestionModel;
+    return v == '1' || (v != null && v.toString() == '1');
+  }
+
   Widget _buildHeader(ExaminationingState state) {
+    if (_isRecitationEnabled) {
+      return _buildRecitationHeader(state);
+    }
+    return _buildNormalHeader(state);
+  }
+
+  /// 普通模式头部（对应小程序 .priview-time：交卷绝对左侧，题号居中，96rpx 高）
+  Widget _buildNormalHeader(ExaminationingState state) {
     return Container(
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      height: 48.h, // 小程序 96rpx = 48.h
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: const Color(0xFFEEEEEE), width: 1)),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          GestureDetector(
-            onTap: () => _showSubmitDialog(),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 54, 63, 223),
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              child: Text(
-                '交卷',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
+          // 交卷：绝对左侧（小程序 .success position absolute left 40rpx）
+          Positioned(
+            left: 20.w, // 40rpx = 20.w
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: GestureDetector(
+                onTap: () => _showSubmitDialog(),
+                child: Container(
+                  width: 60.w, // 120rpx = 60.w
+                  height: 22.h, // 44rpx = 22.h
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2E68FF),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Text(
+                    '交卷',
+                    style: TextStyle(
+                      fontSize: 12.sp, // 24rpx = 12.sp
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-          Text(
-            '${state.currentIndex + 1}/${state.questions.length}',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF262629),
+          // 题号居中（小程序 .nums 在 center）
+          RichText(
+            text: TextSpan(
+              style: TextStyle(fontSize: 16.sp, color: const Color(0xFF000000), fontWeight: FontWeight.w500),
+              children: [
+                TextSpan(text: '${state.currentIndex + 1}'),
+                TextSpan(text: '/${state.questions.length}', style: TextStyle(color: const Color(0xFF949494))),
+              ],
             ),
           ),
         ],
@@ -242,30 +283,205 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
     );
   }
 
-  /// 轮次信息
+  Widget _buildRecitationHeader(ExaminationingState state) {
+    final showSubmit = _recitationMode == _recitationModeAnswer;
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      child: Row(
+        children: [
+          if (showSubmit)
+            GestureDetector(
+              onTap: () => _showSubmitDialog(),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: _recitationBlue,
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  '交卷',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          const Spacer(),
+          Container(
+            width: 125.w,
+            height: 30.h,
+            decoration: BoxDecoration(
+              color: const Color(0xFFC6BFBF),
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Row(
+              children: [
+                _buildRecitationTab('答题', _recitationModeAnswer),
+                _buildRecitationTab('背题', _recitationModeRecite),
+              ],
+            ),
+          ),
+          const Spacer(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecitationTab(String label, int mode) {
+    final isActive = _recitationMode == mode;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _onRecitationTabTap(mode),
+        child: Container(
+          height: 30.h,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isActive ? const Color(0xFFF0F0F0) : const Color(0xFFC6BFBF),
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: isActive ? const Color(0xFF666666) : Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onRecitationTabTap(int mode) async {
+    if (_recitationMode == mode) return;
+    final content = mode == _recitationModeAnswer
+        ? '确认切换到答题模式吗？'
+        : '确认切换到背题模式吗？';
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: '提示',
+      content: content,
+      confirmText: '确定',
+      cancelText: '取消',
+    );
+    if (confirmed != true) return;
+    setState(() => _recitationMode = mode);
+    ref.read(examinationingNotifierProvider.notifier).resetRemainingTime();
+  }
 
   Widget _buildSessionInfo(ExaminationingState state) {
+    final showTime =
+        !_isRecitationEnabled || _recitationMode != _recitationModeRecite;
+    if (_isRecitationEnabled) {
+      return _buildRecitationSessionInfo(state, showTime);
+    }
+    return _buildNormalSessionInfo(state, showTime);
+  }
+
+  Widget _buildRecitationSessionInfo(ExaminationingState state, bool showTime) {
     return Container(
       width: double.infinity,
-
       color: Colors.white,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            '${widget.title}',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF262629),
+          Row(
+            children: [
+              SizedBox(width: 60.w),
+              Expanded(
+                child: Text(
+                  widget.title,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF000000),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              SizedBox(
+                width: 60.w,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '${state.currentIndex + 1}/${state.questions.length}',
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF000000),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (showTime) ...[
+            SizedBox(height: 4.h),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              decoration: const BoxDecoration(color: Color(0xFFF5F8FF)),
+              alignment: Alignment.center,
+              child: Text(
+                '剩余考试时间：${_formatTime(state.remainingTime)}',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF2E68FF),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 普通模式 Session 信息（对应小程序 .title 32rpx/94rpx高 + .time 24rpx/64rpx高 #f5f8ff）
+  Widget _buildNormalSessionInfo(ExaminationingState state, bool showTime) {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 47.h, // 小程序 .title height 94rpx = 47.h
+            child: Center(
+              child: Text(
+                widget.title,
+                style: TextStyle(
+                  fontSize: 16.sp, // 32rpx = 16.sp
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF000000),
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
-          SizedBox(height: 4.h),
-          Text(
-            '剩余考试时间：${_formatTime(state.remainingTime)}',
-            style: TextStyle(fontSize: 12.sp, color: const Color(0xFFFF4D4F)),
-          ),
+          if (showTime)
+            Container(
+              width: double.infinity,
+              height: 32.h, // 小程序 .time height 64rpx = 32.h
+              decoration: const BoxDecoration(color: Color(0xFFF5F8FF)),
+              alignment: Alignment.center,
+              child: Text(
+                '剩余考试时间：${_formatTime(state.remainingTime)}',
+                style: TextStyle(
+                  fontSize: 12.sp, // 24rpx = 12.sp
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF2E68FF),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -280,15 +496,17 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
     return Expanded(
       child: PageView.builder(
         controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(), // ✅ 禁用滑动，只能通过按钮切换
         onPageChanged: (index) {
-          // 禁止 PageView 自己改变索引，只能通过按钮
+          ref.read(examinationingNotifierProvider.notifier).goToQuestion(index);
         },
         itemCount: state.questions.length,
         itemBuilder: (context, index) {
           final question = state.questions[index];
+          final showAnswer = _isRecitationEnabled &&
+              _recitationMode == _recitationModeRecite;
           return _QuestionCard(
             question: question,
+            showAnswer: showAnswer,
             onAnswerChanged: (answer) {
               ref
                   .read(examinationingNotifierProvider.notifier)
@@ -300,43 +518,51 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
     );
   }
 
-  /// 底部操作栏
   Widget _buildBottomBar(ExaminationingState state) {
     final currentQuestion = state.questions.isNotEmpty
         ? state.questions[state.currentIndex]
         : null;
+    final isReciteOnly =
+        _isRecitationEnabled && _recitationMode == _recitationModeRecite;
 
+    // 对应小程序 .utils：height 158rpx，padding-top 36rpx padding-bottom 42rpx，图标 34rpx×40rpx
     return Container(
       color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.only(
+        left: 16.w,
+        right: 16.w,
+        top: 18.h, // 36rpx = 18.h
+        bottom: 21.h, // 42rpx = 21.h
+      ),
       child: Row(
         children: [
-          _buildBottomButton(
-            icon: 'assets/images/exam_answer_card.png',
-            label: '答题卡',
-            onTap: () {
-              setState(() {
-                _showAnswerSheet = true;
-              });
-            },
-          ),
-          SizedBox(width: 12.w),
-          _buildBottomButton(
-            icon: 'assets/images/exam_doubt.png',
-            label: currentQuestion?.doubt == true ? '已标疑' : '标疑',
-            isActive: currentQuestion?.doubt ?? false,
-            onTap: () {
-              ref.read(examinationingNotifierProvider.notifier).toggleDoubt();
-            },
-          ),
+          if (!isReciteOnly) ...[
+            _buildBottomButton(
+              label: '答题卡',
+              iconUrl: _kAnswerCardIconUrl,
+              onTap: () {
+                setState(() => _showAnswerSheet = true);
+              },
+            ),
+            SizedBox(width: 12.w),
+            _buildBottomButton(
+              label: currentQuestion?.doubt == true ? '已标疑' : '标疑',
+              iconUrl: _kDoubtIconUrl,
+              iconActiveUrl: _kDoubtActiveIconUrl,
+              isActive: currentQuestion?.doubt ?? false,
+              onTap: () {
+                ref.read(examinationingNotifierProvider.notifier).toggleDoubt();
+              },
+            ),
+          ],
           const Spacer(),
-          _buildNavButton('上一题', () {
+          _buildNavButton('上一题', false, () {
             ref
                 .read(examinationingNotifierProvider.notifier)
                 .previousQuestion();
           }),
           SizedBox(width: 12.w),
-          _buildNavButton('下一题', () {
+          _buildNavButton('下一题', true, () {
             ref.read(examinationingNotifierProvider.notifier).nextQuestion();
           }),
         ],
@@ -345,62 +571,80 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
   }
 
   Widget _buildBottomButton({
-    required String icon,
     required String label,
+    String? iconUrl,
+    String? iconActiveUrl,
     required VoidCallback onTap,
     bool isActive = false,
   }) {
+    final url = (isActive && iconActiveUrl != null && iconActiveUrl.isNotEmpty)
+        ? iconActiveUrl
+        : (iconUrl ?? '');
     return GestureDetector(
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 40.w,
-            height: 40.w,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(4.r),
-            ),
-            child: Icon(
+          if (url.isNotEmpty)
+            SizedBox(
+              width: 17.w, // 小程序 34rpx = 17.w
+              height: 20.h, // 小程序 40rpx = 20.h
+              child: Image.network(
+                url,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.grid_view,
+                  size: 20.sp,
+                  color: isActive
+                      ? const Color(0xFFFB9E0C)
+                      : const Color(0xFF666666),
+                ),
+              ),
+            )
+          else
+            Icon(
               Icons.grid_view,
               size: 20.sp,
-              color: isActive ? const Color(0xFF018CFF) : Colors.grey,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.sp,
               color: isActive
-                  ? const Color(0xFF018CFF)
+                  ? const Color(0xFFFB9E0C)
                   : const Color(0xFF666666),
             ),
-          ),
+            SizedBox(height: 7.h), // 小程序 image margin-bottom 14rpx = 7.h
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.sp, // 24rpx = 12.sp，小程序 color rgba(41,65,90,0.75)
+                color: isActive
+                    ? const Color(0xFFFB9E0C)
+                    : const Color(0xFF29415A).withOpacity(0.75),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildNavButton(String label, VoidCallback onTap) {
+  /// 上一题/下一题（对应小程序 .btn 192rpx×80rpx、40rpx 圆角、26rpx；上一题描边、下一题实心 #2e68ff）
+  Widget _buildNavButton(String label, bool isPrimary, VoidCallback onTap) {
+    const blue = Color(0xFF2E68FF);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18.r),
+      borderRadius: BorderRadius.circular(20.r), // 40rpx = 20.r
       child: Container(
-        width: 80.w,
-        height: 36.h,
+        width: 96.w, // 192rpx = 96.w
+        height: 40.h, // 80rpx = 40.h
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: const Color(0xFF2E68FF),
-          borderRadius: BorderRadius.circular(18.r),
+          color: isPrimary ? blue : Colors.white,
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(color: blue, width: 1),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 14.sp,
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
+            fontSize: 13.sp, // 26rpx = 13.sp
+            color: isPrimary ? Colors.white : blue,
+            fontWeight: FontWeight.w400,
           ),
         ),
       ),
@@ -589,26 +833,6 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
     final minutes = (seconds % 3600) ~/ 60;
     final secs = seconds % 60;
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-  }
-
-  Future<bool?> _showExitConfirmDialog() {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('确认退出？'),
-        content: const Text('您还没有交卷，确定退出吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('确定'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showSubmitDialog() {
@@ -844,12 +1068,17 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
   }
 }
 
-/// 题目卡片
+/// 题目卡片（背题模式 showAnswer 时显示正确答案、名师解析、知识点）
 class _QuestionCard extends StatefulWidget {
   final QuestionModel question;
+  final bool showAnswer;
   final Function(List<String>) onAnswerChanged;
 
-  const _QuestionCard({required this.question, required this.onAnswerChanged});
+  const _QuestionCard({
+    required this.question,
+    this.showAnswer = false,
+    required this.onAnswerChanged,
+  });
 
   @override
   State<_QuestionCard> createState() => _QuestionCardState();
@@ -868,9 +1097,31 @@ class _QuestionCardState extends State<_QuestionCard> {
     }
   }
 
+  static List<String> _parseCorrectAnswerLetters(String? answerJson) {
+    if (answerJson == null || answerJson.isEmpty) return [];
+    try {
+      final list = jsonDecode(answerJson) as List<dynamic>?;
+      if (list == null) return [];
+      const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+      return list
+          .map((e) => SafeTypeConverter.toInt(e, defaultValue: -1))
+          .where((i) => i >= 0 && i < letters.length)
+          .map((i) => letters[i])
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isSingleChoice = widget.question.type == '1';
+    final firstStem = widget.question.stemList.isNotEmpty
+        ? widget.question.stemList.first
+        : null;
+    final correctLetters = widget.showAnswer && firstStem != null
+        ? _parseCorrectAnswerLetters(firstStem.answer)
+        : <String>[];
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.w),
@@ -885,10 +1136,130 @@ class _QuestionCardState extends State<_QuestionCard> {
           children: [
             _buildQuestionStem(),
             SizedBox(height: 16.h),
-            ..._buildOptions(isSingleChoice),
+            ..._buildOptions(isSingleChoice, correctLetters),
+            if (widget.showAnswer) ...[
+              SizedBox(height: 16.h),
+              _buildRecitationAnswerSection(correctLetters),
+              if (widget.question.parse != null &&
+                  widget.question.parse!.isNotEmpty) ...[
+                SizedBox(height: 24.h),
+                _buildRecitationAnalysisSection(),
+              ],
+              SizedBox(height: 24.h),
+              _buildRecitationKnowledgeSection(),
+            ],
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildRecitationAnswerSection(List<String> correctLetters) {
+    final text =
+        correctLetters.isEmpty ? '—' : correctLetters.join(',');
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 16.h),
+      child: Row(
+        children: [
+          Text(
+            '正确答案',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Text(
+            text,
+            style: AppTextStyles.bodyLarge.copyWith(
+              color: _recitationBlue,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecitationAnalysisSection() {
+    final parse = widget.question.parse ?? '';
+    final content = parse.isEmpty ? '暂无解析' : parse;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 4.w,
+              height: 16.h,
+              decoration: BoxDecoration(
+                color: _recitationBlue,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              '名师解析',
+              style: AppTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+                color: _recitationBlue,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12.h),
+        Html(
+          data: content,
+          style: {
+            'body': Style(
+              margin: Margins.zero,
+              padding: HtmlPaddings.zero,
+              fontSize: FontSize(14.sp),
+              color: AppColors.textSecondary,
+              lineHeight: const LineHeight(1.6),
+            ),
+            'p': Style(margin: Margins.zero, padding: HtmlPaddings.zero),
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecitationKnowledgeSection() {
+    final points = widget.question.knowledgeIdsName ?? [];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 4.w,
+              height: 16.h,
+              decoration: BoxDecoration(
+                color: _recitationBlue,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              '知识点',
+              style: AppTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+                color: _recitationBlue,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 11.h),
+        Text(
+          points.isEmpty ? '暂无相关知识点' : points.join('  '),
+          style: TextStyle(
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w400,
+            color: const Color(0xFF333333),
+            height: 1.54,
+          ),
+        ),
+      ],
     );
   }
 
@@ -954,7 +1325,7 @@ class _QuestionCardState extends State<_QuestionCard> {
     );
   }
 
-  List<Widget> _buildOptions(bool isSingleChoice) {
+  List<Widget> _buildOptions(bool isSingleChoice, List<String> correctLetters) {
     final firstStem = widget.question.stemList.isNotEmpty
         ? widget.question.stemList.first
         : null;
@@ -962,7 +1333,6 @@ class _QuestionCardState extends State<_QuestionCard> {
       return [];
     }
 
-    // 解析JSON字符串选项 - option是String数组，不是Map数组
     final List<dynamic> options = [];
     try {
       options.addAll(jsonDecode(firstStem.option!) as List);
@@ -970,37 +1340,36 @@ class _QuestionCardState extends State<_QuestionCard> {
       return [];
     }
 
-    // 选项标签列表 A, B, C, D...
     const selectList = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
     return options.asMap().entries.map((entry) {
       final index = entry.key;
-      final optionContent = entry.value as String; // 选项是纯String，不是Map
-      final key = selectList[index]; // A, B, C, D...
+      final optionContent = entry.value as String;
+      final key = selectList[index];
       final isSelected = isSingleChoice
           ? _selectedAnswer == key
           : _multipleAnswers.contains(key);
+      final isCorrectAnswer =
+          widget.showAnswer && correctLetters.contains(key);
 
       return GestureDetector(
         onTap: () => _handleOptionTap(key, isSingleChoice),
         child: Container(
-          margin: EdgeInsets.only(bottom: 16.h), // ✅ 对应小程序 32rpx (Line 355)
-          padding: EdgeInsets.symmetric(
-            horizontal: 20.w,
-            vertical: 15.h,
-          ), // ✅ 对应小程序 40rpx/15px (Line 354)
+          margin: EdgeInsets.only(bottom: 16.h),
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 15.h),
           decoration: BoxDecoration(
-            // ✅ 选中状态背景 rgba(124, 191, 247, 0.18) (Line 378)
-            color: isSelected
-                ? const Color(0x2E7CBFF7) // rgba(124, 191, 247, 0.18)
-                : Colors.white,
-            // ✅ 圆角 50rpx (Line 350)
+            color: isCorrectAnswer
+                ? const Color(0xFFF0E6FF)
+                : isSelected
+                    ? const Color(0x2E7CBFF7)
+                    : Colors.white,
             borderRadius: BorderRadius.circular(25.r),
-            // ✅ 边框：选中蓝色，未选中浅灰 (Line 351, 377)
             border: Border.all(
-              color: isSelected
-                  ? const Color(0xFF567DFA) // 选中：蓝色边框
-                  : const Color(0xFFECECEC), // 未选中：浅灰边框
+              color: isCorrectAnswer
+                  ? const Color(0xFF8B7CB3)
+                  : isSelected
+                      ? const Color(0xFF567DFA)
+                      : const Color(0xFFECECEC),
               width: 1,
             ),
           ),
@@ -1062,11 +1431,11 @@ class _QuestionCardState extends State<_QuestionCard> {
         } else {
           _multipleAnswers.add(key);
         }
-        // ✅ 转换为数字索引字符串数组: ["A", "B"] → ["0", "1"] (对应小程序)
-        final answer = _multipleAnswers.toList()
-          ..sort()
-          ..map((letter) => _convertLetterToIndex(letter)).toList();
-        final indexedAnswer = _multipleAnswers.map((letter) => _convertLetterToIndex(letter)).toList()..sort();
+        final indexedAnswer =
+            _multipleAnswers
+                .map((letter) => _convertLetterToIndex(letter))
+                .toList()
+              ..sort();
         widget.onAnswerChanged(indexedAnswer);
       }
     });

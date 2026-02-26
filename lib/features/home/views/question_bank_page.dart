@@ -8,6 +8,7 @@ import '../../../app/routes/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/confirm_dialog.dart';
 import '../providers/question_bank_provider.dart';
 import '../models/question_bank_model.dart';
 import '../models/goods_model.dart';
@@ -47,6 +48,15 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
     // ✅ 通过 ref.watch 监听 ViewModel 状态
     final state = ref.watch(questionBankProvider);
     final statusBarHeight = MediaQuery.of(context).padding.top;
+
+    // ✅ 监听登录状态变化，登录成功后刷新题库数据
+    // ✅ 仅「已登录→未登录」时在此刷新；「未登录→已登录」由 Auth 的 _refreshAllPagesAfterLogin 用正确专业 ID 刷新，避免竞态导致错误数据覆盖
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (previous?.isLoggedIn == true && !next.isLoggedIn) {
+        print('🔄 [题库页] 检测到登录状态变化（已登录 → 未登录），刷新题库数据');
+        ref.read(questionBankProvider.notifier).loadAllData();
+      }
+    });
 
     // ✅ 使用 ref.listen 处理副作用（Toast、导航等）
     ref.listen<QuestionBankState>(questionBankProvider, (previous, next) {
@@ -89,13 +99,9 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       child: CustomScrollView(
         slivers: [
           // ✅ 顶部状态栏占位
-          SliverToBoxAdapter(
-            child: SizedBox(height: statusBarHeight),
-          ),
+          SliverToBoxAdapter(child: SizedBox(height: statusBarHeight)),
           // ✅ 专业选择栏（作为ScrollView的一部分，会跟随滚动）
-          SliverToBoxAdapter(
-            child: _buildScrollableHeader(context, ref),
-          ),
+          SliverToBoxAdapter(child: _buildScrollableHeader(context, ref)),
           SliverToBoxAdapter(child: SizedBox(height: 16.h)),
           SliverToBoxAdapter(child: _buildStudyCalendar(state, ref)),
           SliverToBoxAdapter(child: SizedBox(height: 16.h)),
@@ -196,8 +202,21 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
     return StudyCalendarCard(
       learningData: state.learningData,
       isLoadingLearningData: state.isLoadingLearning,
-      onCheckIn: () => ref.read(questionBankProvider.notifier).checkIn(),
+      onCheckIn: () => _handleCheckIn(context, ref),
     );
+  }
+
+  /// 处理打卡点击
+  /// 对应小程序: index.vue Line 216-219 handleCheckIn()
+  void _handleCheckIn(BuildContext context, WidgetRef ref) {
+    // ✅ 检查登录状态（根据 Guideline 5.1.1，打卡需要登录）
+    if (!ref.read(authProvider).isLoggedIn) {
+      _showLoginDialog(context);
+      return;
+    }
+
+    // 已登录，执行打卡
+    ref.read(questionBankProvider.notifier).checkIn();
   }
 
   /// 学习卡片网格(绝密押题、科目模考、模拟考试、学习报告)
@@ -320,11 +339,12 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       final authState = ref.read(authProvider);
       final professionalId = authState.currentMajor?.majorId ?? '';
 
-      // 通过API获取商品数据
+      // 通过API获取商品数据（与小程序 study-card-grid.vue 一致：/c/goods/v2 + shelf_platform_id + professional_id + position_identify）
       final goodsService = ref.read(goods_service.goodsServiceProvider);
       final response = await goodsService.getGoodsByPosition(
         positionIdentify: positionIdentify,
         professionalId: professionalId.isNotEmpty ? professionalId : null,
+        shelfPlatformId: ApiConfig.shelfPlatformId,
       );
 
       if (!mounted) return;
@@ -650,6 +670,12 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
 
   /// 对应小程序: daily-nav.vue Line 112-136
   void _handleDailyPractice(BuildContext context) {
+    // ✅ 检查登录状态（根据 Guideline 5.1.1，刷题需要登录）
+    if (!ref.read(authProvider).isLoggedIn) {
+      _showLoginDialog(context);
+      return;
+    }
+
     final state = ref.read(questionBankProvider);
     final dailyPractice = state.dailyPractice;
 
@@ -700,12 +726,15 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       );
     } else {
       // 已购买 (permission_status == '1')
-      // ✅ 对应小程序: daily-nav-two.vue Line 248-251 (goDetailPage方法)
-      // 每日一练 details_type=='1' 已购买 → pages/test/exam (试卷详情页)
-      debugPrint('✅ 已购买 → 跳转到试卷详情页 (TestExamPage)');
+      // ✅ 对应小程序: daily-nav-two.vue Line 248-251，每日一练传 recitation_question_model=1 开启答题/背题
+      debugPrint('✅ 已购买 → 跳转到试卷详情页 (TestExamPage)，开启背题模式');
       context.push(
         AppRoutes.testExam,
-        extra: {'id': goodsId, 'professional_id': professionalId},
+        extra: {
+          'id': goodsId,
+          'professional_id': professionalId,
+          'recitation_question_model': '1',
+        },
       );
     }
   }
@@ -713,6 +742,12 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   /// 处理章节练习点击
   /// 对应小程序: src/modules/jintiku/components/commen/index-nav.vue Line 110-135
   void _handleChapterPractice(BuildContext context) {
+    // ✅ 检查登录状态（根据 Guideline 5.1.1，刷题需要登录）
+    if (!ref.read(authProvider).isLoggedIn) {
+      _showLoginDialog(context);
+      return;
+    }
+
     final state = ref.read(questionBankProvider);
     final chapterExercise = state.chapterExercise;
 
@@ -780,5 +815,34 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
         },
       );
     }
+  }
+
+  /// 显示登录提示对话框
+  /// 根据 Guideline 5.1.1，打卡和刷题需要登录
+  /// 使用统一的 ConfirmDialog 组件
+  void _showLoginDialog(BuildContext context) {
+    ConfirmDialog.show(
+      context,
+      title: '需要登录',
+      content: '此操作需要登录账户，请先登录后再试',
+      confirmText: '去登录',
+      cancelText: '取消',
+      onConfirm: () {
+        // ✅ 使用 GoRouterState.of(context).uri 获取当前完整路径（包括查询参数）
+        final routerState = GoRouterState.of(context);
+        final currentUri = routerState.uri;
+        String returnPath = currentUri.path;
+        if (currentUri.queryParameters.isNotEmpty) {
+          final queryString = currentUri.queryParameters.entries
+              .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+              .join('&');
+          returnPath = '$returnPath?$queryString';
+        }
+
+        print('🔄 [题库登录] 返回路径: $returnPath');
+
+        context.push(AppRoutes.loginCenter, extra: {'returnPath': returnPath});
+      },
+    );
   }
 }

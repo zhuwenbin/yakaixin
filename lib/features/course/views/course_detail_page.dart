@@ -28,18 +28,9 @@ class CourseDetailPage extends ConsumerStatefulWidget {
 }
 
 class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
-  /// 拼接完整图片路径
-  /// 对应小程序: completePath() (Line 478-486)
+  /// 拼接完整图片路径（使用 ApiConfig.completeImageUrl，避免双斜杠）
   String _completePath(String? path) {
-    if (path == null || path.isEmpty) {
-      return '';
-    }
-    // 如果已经包含完整域名,直接返回
-    if (path.contains('http://') || path.contains('https://')) {
-      return path;
-    }
-    // 拼接完整路径
-    return 'https://yakaixin.oss-cn-beijing.aliyuncs.com/$path';
+    return ApiConfig.completeImageUrl(path);
   }
 
   @override
@@ -206,29 +197,38 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
     );
   }
 
+  /// 头部学习进度条，与小程序 index-new.vue .learn-course-details-progress 一致
+  /// 小程序：u-line-progress 默认背景 #ececec、填充 #018CFF、高度 12px、圆角 100px；
+  /// 百分数 #018CFF，学习进度文案 12px #424b57，间距 9/14
   Widget _buildProgress(int progress) {
     return Row(
       children: [
         Text(
           '学习进度',
-          style: TextStyle(fontSize: 14.sp, color: const Color(0xFF666666)),
+          style: TextStyle(
+            fontSize: 12.sp,
+            color: const Color(0xFF424B57),
+          ),
         ),
-        SizedBox(width: 12.w),
+        SizedBox(width: 9.w),
         Expanded(
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(2.r),
+            borderRadius: BorderRadius.circular(100),
             child: LinearProgressIndicator(
               value: progress / 100,
-              backgroundColor: const Color(0xFFD3F4E2),
+              backgroundColor: const Color(0xFFECECEC),
               valueColor: const AlwaysStoppedAnimation(Color(0xFF018CFF)),
-              minHeight: 6.h,
+              minHeight: 12.h,
             ),
           ),
         ),
-        SizedBox(width: 12.w),
+        SizedBox(width: 14.w),
         Text(
           '$progress%',
-          style: TextStyle(fontSize: 14.sp, color: const Color(0xFF666666)),
+          style: TextStyle(
+            fontSize: 12.sp,
+            color: const Color(0xFF018CFF),
+          ),
         ),
       ],
     );
@@ -390,11 +390,22 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
         ? ((lessonAttendanceNum / lessonNum) * 100).round()
         : 0;
 
+    // 与小程序一致：卡片顶部渐变背景 #E8FFF2 -> #F1FFF8 -> #F4FFFB，下方白色（index-new.vue .learn-course-list-item）
     return Container(
       margin: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 0),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8.r),
+        borderRadius: BorderRadius.circular(6.r),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFE8FFF2),
+            Color(0xFFF1FFF8),
+            Color(0xFFF4FFFB),
+            Colors.white,
+          ],
+          stops: [0.0, 0.35, 0.55, 1.0],
+        ),
       ),
       child: Column(
         children: [
@@ -429,17 +440,20 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
           children: [
             Row(
               children: [
+                // 与小程序 .teaching-type 一致：蓝底白字 31×17px、圆角 2px、11px
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+                  constraints: BoxConstraints(minWidth: 31.w, minHeight: 17.h),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE6F4FF),
-                    borderRadius: BorderRadius.circular(4.r),
+                    color: const Color(0xFF018CFF),
+                    borderRadius: BorderRadius.circular(2.r),
                   ),
+                  alignment: Alignment.center,
                   child: Text(
                     classItem.teachingTypeName ?? '',
                     style: TextStyle(
-                      fontSize: 12.sp,
-                      color: const Color(0xFF018CFF),
+                      fontSize: 11.sp,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -448,7 +462,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
                   child: Text(
                     classItem.name ?? '',
                     style: TextStyle(
-                      fontSize: 14.sp,
+                      fontSize: 15.sp,
                       fontWeight: FontWeight.w500,
                       color: const Color(0xFF262629),
                     ),
@@ -457,15 +471,24 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
                 Text(
                   '($lessonAttendanceNum/$lessonNum)',
                   style: TextStyle(
-                    fontSize: 12.sp,
-                    color: const Color(0xFF999999),
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF262629),
                   ),
                 ),
                 SizedBox(width: 8.w),
-                Icon(
-                  isClose ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
-                  size: 20.sp,
-                  color: const Color(0xFF999999),
+                Image.network(
+                  isClose
+                      ? 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/31c3173314287462623784_%E4%B8%8A.png'
+                      : 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/57dd17331428838889503_%E4%B8%8B.png',
+                  width: 17.w,
+                  height: 17.w,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Icon(
+                    isClose ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
+                    size: 17.sp,
+                    color: const Color(0xFF262629),
+                  ),
                 ),
               ],
             ),
@@ -490,35 +513,36 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
               ),
             ],
             SizedBox(height: 12.h),
+            // 与学习进度一致：进度条底色 #ECECEC，填充 #018CFF、高 12、圆角 100
             Row(
               children: [
                 Text(
                   '班级进度',
                   style: TextStyle(
                     fontSize: 12.sp,
-                    color: const Color(0xFF999999),
+                    color: const Color(0xFF424B57),
                   ),
                 ),
-                SizedBox(width: 12.w),
+                SizedBox(width: 9.w),
                 Expanded(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(2.r),
+                    borderRadius: BorderRadius.circular(100),
                     child: LinearProgressIndicator(
                       value: progress / 100,
-                      backgroundColor: const Color(0xFFD3F4E2),
+                      backgroundColor: const Color(0xFFECECEC),
                       valueColor: const AlwaysStoppedAnimation(
                         Color(0xFF018CFF),
                       ),
-                      minHeight: 4.h,
+                      minHeight: 12.h,
                     ),
                   ),
                 ),
-                SizedBox(width: 12.w),
+                SizedBox(width: 17.w),
                 Text(
                   '$lessonAttendanceNum/$lessonNum',
                   style: TextStyle(
                     fontSize: 12.sp,
-                    color: const Color(0xFF999999),
+                    color: const Color(0xFF424B57),
                   ),
                 ),
               ],
@@ -529,26 +553,36 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
     );
   }
 
+  /// 与小程序 .learn-course-list-content 一致：白底、左右 2px 边距、padding 18px 16px 0（上18 左16 右16 下0），小节无额外左右 padding
   Widget _buildLessonList(CourseClassModel classItem) {
     final lessons = classItem.lessons ?? [];
+    final total = lessons.length;
 
-    return Column(
-      children: lessons.asMap().entries.map((entry) {
-        final index = entry.key;
-        final lesson = entry.value;
-        return _LessonItem(
-          lesson: lesson,
-          index: index,
-          teachingType: classItem.teachingType ?? '',
-          onTap:
-              (
-                String lessonId,
-                String teachingType,
-                Map<String, dynamic> lessonData,
-              ) => _goLookCourse(lessonId, teachingType, lesson),
-          onHomeworkTap: _goAnswer,
-        );
-      }).toList(),
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 2.w),
+      padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 0),
+      color: Colors.white,
+      child: Column(
+        children: lessons.asMap().entries.map((entry) {
+          final index = entry.key;
+          final lesson = entry.value;
+          return _LessonItem(
+            lesson: lesson,
+            index: index,
+            isFirst: index == 0,
+            isLast: index == total - 1,
+            teachingType: classItem.teachingType ?? '',
+            onTap:
+                (
+                  String lessonId,
+                  String teachingType,
+                  Map<String, dynamic> lessonData,
+                ) =>
+                    _goLookCourse(lessonId, teachingType, lesson),
+            onHomeworkTap: _goAnswer,
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -639,19 +673,24 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
     print('==========================================\n');
 
     if (teachingType == '3') {
-      // ✅ 录播课程 - 调用 CourseNavigationHelper（与小程序一致）
-      debugPrint('📹 [课程详情] 录播课程，调用导航辅助类');
+      // 与小程序一致：filter_goods_id 用 courseItem.id（套餐商品 id），目录接口只认此 id
+      final classIndex = classList.indexWhere(
+        (c) => c.classId == classItem.classId,
+      );
+      final packageGoodsId = classItem.id ?? classItem.classId;
+      debugPrint('📹 [课程详情] 录播课程，filterGoodsId(套餐id)=$packageGoodsId, classIndex=$classIndex');
       await CourseNavigationHelper.navigateToLesson(
         context: context,
         ref: ref,
         lessonId: lessonId,
         lessonName: lesson['lesson_name']?.toString() ?? '录播',
         teachingType: teachingType,
-        classId: classItem.classId, // ✅ 传递 classId（用于签到）
-        chapterData: chapterData, // ✅ 传递章节数据（用于显示目录）
-        goodsId: widget.goodsId, // ✅ 传递商品ID
-        orderId: widget.orderId, // ✅ 传递订单ID
-        systemId: lesson['system_id']?.toString(), // ✅ 传递系统ID（用于讲义）
+        classId: classItem.classId,
+        filterGoodsId: packageGoodsId,
+        classIndex: classIndex >= 0 ? classIndex : null,
+        goodsId: widget.goodsId,
+        orderId: widget.orderId,
+        systemId: lesson['system_id']?.toString(),
       );
     } else if (teachingType == '1') {
       // ✅ 直播课程 - 调用 CourseNavigationHelper（与小程序一致）
@@ -770,6 +809,8 @@ class _TeacherItem extends StatelessWidget {
 class _LessonItem extends StatefulWidget {
   final Map<String, dynamic> lesson;
   final int index;
+  final bool isFirst;
+  final bool isLast;
   final String teachingType;
   final Function(String, String, Map<String, dynamic>) onTap;
   final Function(Map<String, dynamic>, Map<String, dynamic>) onHomeworkTap;
@@ -777,6 +818,8 @@ class _LessonItem extends StatefulWidget {
   const _LessonItem({
     required this.lesson,
     required this.index,
+    required this.isFirst,
+    required this.isLast,
     required this.teachingType,
     required this.onTap,
     required this.onHomeworkTap,
@@ -793,17 +836,27 @@ class _LessonItemState extends State<_LessonItem> {
   Widget build(BuildContext context) {
     final isFinished = widget.lesson['status'] == '2';
 
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: const Color(0xFFE8E9EA).withOpacity(0.6)),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
+    const dividerColor = Color(0xFFE8E9EA);
+    const dividerOpacity = 0.6;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!widget.isFirst)
+          Divider(
+            height: 1,
+            thickness: 1,
+            indent: 0,
+            endIndent: 0,
+            color: dividerColor.withOpacity(dividerOpacity),
+          ),
+        Container(
+          padding: EdgeInsets.only(bottom: 19.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
             onTap: () => widget.onTap(
               widget.lesson['lesson_id'],
               widget.teachingType,
@@ -812,7 +865,7 @@ class _LessonItemState extends State<_LessonItem> {
             child: Row(
               children: [
                 Text(
-                  '${widget.index + 1 < 10 ? '0' : ''}${widget.index + 1}',
+                  '${widget.index + 1}',
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
@@ -824,7 +877,8 @@ class _LessonItemState extends State<_LessonItem> {
                   child: Text(
                     widget.lesson['lesson_name'] ?? '',
                     style: TextStyle(
-                      fontSize: 14.sp,
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w600,
                       color: const Color(0xFF262629),
                     ),
                   ),
@@ -905,13 +959,23 @@ class _LessonItemState extends State<_LessonItem> {
             _buildTopOperations(),
           ],
           // ✅ 新增：底部作业列表
-          if (widget.lesson['evaluation_type_bottom'] != null &&
-              widget.lesson['evaluation_type_bottom'].isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            _buildBottomEvaluations(),
-          ],
-        ],
-      ),
+              if (widget.lesson['evaluation_type_bottom'] != null &&
+                  widget.lesson['evaluation_type_bottom'].isNotEmpty) ...[
+                SizedBox(height: 12.h),
+                _buildBottomEvaluations(),
+              ],
+            ],
+          ),
+        ),
+        if (!widget.isLast)
+          Divider(
+            height: 1,
+            thickness: 1,
+            indent: 0,
+            endIndent: 0,
+            color: dividerColor.withOpacity(dividerOpacity),
+          ),
+      ],
     );
   }
 

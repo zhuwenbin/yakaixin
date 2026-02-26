@@ -6,9 +6,10 @@ import '../../../app/routes/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/utils/safe_type_converter.dart';
-import '../../../core/payment/payment_flow_manager.dart';
+import '../../../core/utils/toast_util.dart';
 import '../../../core/widgets/common_state_widget.dart';
+import '../../../core/widgets/confirm_dialog.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../providers/secret_real_detail_provider.dart';
 import '../models/goods_detail_model.dart';
 
@@ -419,9 +420,13 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
   }
 
   void _handleAction(GoodsDetailModel detail, bool isPurchased) {
+    // 未登录一律进入新详情页，在详情页点击购买时再提示登录（不在本页弹登录）
+    if (!ref.read(authProvider).isLoggedIn) {
+      _navigateToGoodsDetailPopup(detail);
+      return;
+    }
     if (isPurchased) {
-      // 已购买 - 跳转考试页（对应小程序 Line 215）
-      // pages/test/exam?id=${this.info.id}&recitation_question_model=${this.info.recitation_question_model}
+      // 已购买且已登录 - 跳转考试页
       context.push(
         AppRoutes.testExam,
         extra: {
@@ -430,60 +435,63 @@ class _SecretRealDetailPageState extends ConsumerState<SecretRealDetailPage> {
         },
       );
     } else {
-      // 未购买 - 调用下单流程
-      // 对应小程序: secretRealDetail.vue Line 218, 532-608
-      _startPurchaseFlow(detail);
+      _navigateToGoodsDetailPopup(detail);
     }
   }
 
-  /// 开始购买流程（使用统一支付管理器）
-  /// 对应小程序: secretRealDetail.vue Line 532-674
-  Future<void> _startPurchaseFlow(GoodsDetailModel detail) async {
-    // ✅ 获取选中的价格信息
-    // 注意：秘卷真题页面暂时使用第一个价格（小程序逻辑）
-    final selectedIndex = 0;
-    if (detail.prices.isEmpty || selectedIndex >= detail.prices.length) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('价格信息异常')));
-      }
+  /// 跳转弹窗风格商品详情页
+  void _navigateToGoodsDetailPopup(GoodsDetailModel detail) {
+    final productId = detail.goodsId?.toString() ?? '';
+    if (productId.isEmpty) {
+      if (mounted) ToastUtil.error('商品信息异常');
       return;
     }
-
-    final selectedPrice = detail.prices[selectedIndex];
-    final payableAmount = double.tryParse(selectedPrice.salePrice ?? '0') ?? 0;
-    final goodsId = SafeTypeConverter.toSafeString(detail.goodsId);
-    final months = SafeTypeConverter.toSafeString(
-      selectedPrice.month,
-      defaultValue: '0',
-    );
-    final goodsMonthsPriceId = selectedPrice.goodsMonthsPriceId ?? '';
-
-    print('\n🛒 [秘卷真题] 开始下单:');
-    print('   商品ID: $goodsId');
-    print('   月数: $months');
-    print('   应付金额: ¥$payableAmount');
-
-    // ✅ 使用统一支付流程管理器
-    await context.startPayment(
-      ref: ref,
-      goodsId: goodsId,
-      goodsMonthsPriceId: goodsMonthsPriceId,
-      months: months,
-      payableAmount: payableAmount,
-      goodsName: detail.name ?? '秘卷真题',
-      professionalIdName: detail.professionalIdName,
-      refreshGoodsId: goodsId,
-      isLearnButton: 1, // 支付成功页显示"去学习"按钮
-      onSuccess: () {
-        // 支付成功回调：刷新商品详情
-        print('✅ [秘卷真题] 支付成功，刷新商品详情');
-        ref.read(secretRealDetailNotifierProvider.notifier).refresh(goodsId);
+    context.push(
+      AppRoutes.goodsDetailPopup,
+      extra: {
+        'product_id': productId,
+        'goods_id': productId,
+        'professional_id': widget.professionalId,
       },
-      onError: (error) {
-        // 支付失败回调
-        print('❌ [秘卷真题] 支付失败: $error');
+    );
+  }
+
+  /// 显示登录提示对话框
+  /// 根据 Guideline 5.1.1，购买和学习需要登录
+  /// 使用统一的 ConfirmDialog 组件
+  void _showLoginDialog() {
+    ConfirmDialog.show(
+      context,
+      title: '需要登录',
+      content: '此操作需要登录账户，请先登录后再试',
+      confirmText: '去登录',
+      cancelText: '取消',
+      onConfirm: () {
+        // ✅ 使用 GoRouterState.of(context).uri 获取当前完整路径（包括查询参数）
+        final routerState = GoRouterState.of(context);
+        final currentUri = routerState.uri;
+        String returnPath = currentUri.path;
+        if (currentUri.queryParameters.isNotEmpty) {
+          final queryString = currentUri.queryParameters.entries
+              .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+              .join('&');
+          returnPath = '$returnPath?$queryString';
+        }
+
+        // ✅ 如果查询参数为空，使用 widget 参数手动构建（因为参数可能通过 extra 传递）
+        if (currentUri.queryParameters.isEmpty && widget.productId != null) {
+          returnPath = '${AppRoutes.secretRealDetail}?product_id=${widget.productId}';
+          if (widget.professionalId != null) {
+            returnPath = '$returnPath&professional_id=${widget.professionalId}';
+          }
+        }
+
+        print('🔄 [真题详情登录] 返回路径: $returnPath');
+
+        context.push(
+          AppRoutes.loginCenter,
+          extra: {'returnPath': returnPath},
+        );
       },
     );
   }

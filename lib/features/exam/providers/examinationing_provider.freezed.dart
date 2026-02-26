@@ -28,6 +28,9 @@ mixin _$ExaminationingState {
   /// 剩余时间（秒）
   int get remainingTime => throw _privateConstructorUsedError;
 
+  /// 初始剩余时间（秒），答题/背题切换时重置用
+  int get initialRemainingTime => throw _privateConstructorUsedError;
+
   /// 是否正在加载
   bool get isLoading => throw _privateConstructorUsedError;
 
@@ -53,6 +56,7 @@ abstract class $ExaminationingStateCopyWith<$Res> {
       ExamInfoModel? examInfo,
       int currentIndex,
       int remainingTime,
+      int initialRemainingTime,
       bool isLoading,
       String? error,
       bool isSubmitted});
@@ -77,6 +81,7 @@ class _$ExaminationingStateCopyWithImpl<$Res, $Val extends ExaminationingState>
     Object? examInfo = freezed,
     Object? currentIndex = null,
     Object? remainingTime = null,
+    Object? initialRemainingTime = null,
     Object? isLoading = null,
     Object? error = freezed,
     Object? isSubmitted = null,
@@ -97,6 +102,10 @@ class _$ExaminationingStateCopyWithImpl<$Res, $Val extends ExaminationingState>
       remainingTime: null == remainingTime
           ? _value.remainingTime
           : remainingTime // ignore: cast_nullable_to_non_nullable
+              as int,
+      initialRemainingTime: null == initialRemainingTime
+          ? _value.initialRemainingTime
+          : initialRemainingTime // ignore: cast_nullable_to_non_nullable
               as int,
       isLoading: null == isLoading
           ? _value.isLoading
@@ -139,6 +148,7 @@ abstract class _$$ExaminationingStateImplCopyWith<$Res>
       ExamInfoModel? examInfo,
       int currentIndex,
       int remainingTime,
+      int initialRemainingTime,
       bool isLoading,
       String? error,
       bool isSubmitted});
@@ -162,6 +172,7 @@ class __$$ExaminationingStateImplCopyWithImpl<$Res>
     Object? examInfo = freezed,
     Object? currentIndex = null,
     Object? remainingTime = null,
+    Object? initialRemainingTime = null,
     Object? isLoading = null,
     Object? error = freezed,
     Object? isSubmitted = null,
@@ -182,6 +193,10 @@ class __$$ExaminationingStateImplCopyWithImpl<$Res>
       remainingTime: null == remainingTime
           ? _value.remainingTime
           : remainingTime // ignore: cast_nullable_to_non_nullable
+              as int,
+      initialRemainingTime: null == initialRemainingTime
+          ? _value.initialRemainingTime
+          : initialRemainingTime // ignore: cast_nullable_to_non_nullable
               as int,
       isLoading: null == isLoading
           ? _value.isLoading
@@ -207,6 +222,7 @@ class _$ExaminationingStateImpl implements _ExaminationingState {
       this.examInfo,
       this.currentIndex = 0,
       this.remainingTime = 0,
+      this.initialRemainingTime = 0,
       this.isLoading = false,
       this.error,
       this.isSubmitted = false})
@@ -238,6 +254,11 @@ class _$ExaminationingStateImpl implements _ExaminationingState {
   @JsonKey()
   final int remainingTime;
 
+  /// 初始剩余时间（秒），答题/背题切换时重置用
+  @override
+  @JsonKey()
+  final int initialRemainingTime;
+
   /// 是否正在加载
   @override
   @JsonKey()
@@ -254,7 +275,7 @@ class _$ExaminationingStateImpl implements _ExaminationingState {
 
   @override
   String toString() {
-    return 'ExaminationingState(questions: $questions, examInfo: $examInfo, currentIndex: $currentIndex, remainingTime: $remainingTime, isLoading: $isLoading, error: $error, isSubmitted: $isSubmitted)';
+    return 'ExaminationingState(questions: $questions, examInfo: $examInfo, currentIndex: $currentIndex, remainingTime: $remainingTime, initialRemainingTime: $initialRemainingTime, isLoading: $isLoading, error: $error, isSubmitted: $isSubmitted)';
   }
 
   @override
@@ -270,6 +291,8 @@ class _$ExaminationingStateImpl implements _ExaminationingState {
                 other.currentIndex == currentIndex) &&
             (identical(other.remainingTime, remainingTime) ||
                 other.remainingTime == remainingTime) &&
+            (identical(other.initialRemainingTime, initialRemainingTime) ||
+                other.initialRemainingTime == initialRemainingTime) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
             (identical(other.error, error) || other.error == error) &&
@@ -284,6 +307,7 @@ class _$ExaminationingStateImpl implements _ExaminationingState {
       examInfo,
       currentIndex,
       remainingTime,
+      initialRemainingTime,
       isLoading,
       error,
       isSubmitted);
@@ -302,6 +326,7 @@ abstract class _ExaminationingState implements ExaminationingState {
       final ExamInfoModel? examInfo,
       final int currentIndex,
       final int remainingTime,
+      final int initialRemainingTime,
       final bool isLoading,
       final String? error,
       final bool isSubmitted}) = _$ExaminationingStateImpl;
@@ -322,6 +347,10 @@ abstract class _ExaminationingState implements ExaminationingState {
 
   /// 剩余时间（秒）
   int get remainingTime;
+  @override
+
+  /// 初始剩余时间（秒），答题/背题切换时重置用
+  int get initialRemainingTime;
   @override
 
   /// 是否正在加载

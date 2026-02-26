@@ -87,9 +87,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (confirmed == true) {
       // 执行退出登录
       await ref.read(authProvider.notifier).logout();
-      // 跳转到登录页
+      // ✅ 退出登录后跳转到主页（公开页面），而不是登录页
+      // 这样可以避免返回按钮导致的路由循环问题
       if (mounted) {
-        context.go(AppRoutes.loginCenter);
+        context.go(AppRoutes.mainTab);
       }
     }
   }
@@ -193,6 +194,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             title: '关于我们',
             onTap: () {
               context.push(AppRoutes.aboutUs);
+            },
+          ),
+          _buildSettingItem(
+            title: '删除账户',
+            onTap: () {
+              context.push(AppRoutes.deleteAccountRisk);
             },
           ),
           

@@ -333,11 +333,10 @@ class _MajorSelectorDialogState extends ConsumerState<MajorSelectorDialog>
         majorId: item.id,
         majorName: item.dataName,
       );
-      ref.read(authProvider.notifier).switchMajor(majorModel);
+      // ✅ 必须 await，确保状态更新后再触发 onChanged，否则 loadHomeData() 会读到旧专业 ID
+      await ref.read(authProvider.notifier).switchMajor(majorModel);
 
-      EasyLoading.showSuccess('操作成功');
-
-      // 回调
+      // 回调（此时 currentMajorProvider 已为新专业，loadHomeData 会加载正确数据）
       if (widget.onChanged != null) {
         widget.onChanged!();
       }

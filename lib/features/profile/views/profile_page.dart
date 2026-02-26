@@ -87,8 +87,13 @@ class ProfilePage extends ConsumerWidget {
               // 跳转到个人信息编辑页
               context.push(AppRoutes.personEdit);
             } else {
-              // 跳转到登录页面
-              context.push(AppRoutes.loginCenter);
+              // ✅ 跳转到登录页面，登录后返回当前页面
+              final router = GoRouter.of(context);
+              final currentPath = router.routerDelegate.currentConfiguration.uri.path;
+              context.push(
+                AppRoutes.loginCenter,
+                extra: {'returnPath': currentPath},
+              );
             }
           },
           behavior: HitTestBehavior.opaque, // ✅ 确保整个区域可点击

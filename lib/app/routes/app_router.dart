@@ -1,12 +1,13 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/splash/splash_page.dart';
 import '../../features/main/main_tab_page.dart';
 import '../../features/auth/views/login_center_page.dart';
-import '../../features/auth/providers/auth_provider.dart';
 import '../../core/storage/storage_service.dart';
 import '../constants/storage_keys.dart';
+import '../../core/utils/login_return_path_provider.dart';
 import '../../features/auth/views/h5_login_page.dart';
 import '../../features/auth/views/select_major_page.dart';
 import '../../features/auth/views/forget_password_page.dart';
@@ -51,8 +52,10 @@ import '../../features/goods/views/goods_detail_page.dart';
 import '../../features/goods/views/secret_real_detail_page.dart';
 import '../../features/goods/views/subject_mock_detail_page.dart';
 import '../../features/goods/views/simulated_exam_room_page.dart';
+import '../../features/goods/views/goods_detail_popup_page.dart';
 import '../../features/order/views/my_order_page.dart';
 import '../../features/order/views/pay_success_page.dart';
+import '../../features/order/views/purchase_confirm_page.dart';
 import '../../features/profile/views/profile_page.dart';
 import '../../features/profile/views/person_edit_page.dart';
 import '../../features/profile/views/settings_page.dart';
@@ -60,6 +63,10 @@ import '../../features/profile/views/report_center_page.dart';
 import '../../features/profile/views/privacy_policy_page.dart';
 import '../../features/profile/views/user_service_agreement_page.dart';
 import '../../features/profile/views/about_us_page.dart';
+import '../../features/auth/views/delete_account_risk_page.dart';
+import '../../features/auth/views/delete_account_verification_page.dart';
+import '../../features/auth/views/delete_account_confirm_page.dart';
+import '../../features/auth/views/privacy_agreement_page.dart';
 import '../../features/activity/views/code_receive_page.dart';
 import '../../features/activity/views/app_upload_page.dart';
 import '../../features/activity/views/open_app_page.dart';
@@ -69,12 +76,15 @@ import 'app_routes.dart';
 /// 应用路由配置
 /// 使用 Provider 创建，支持登录状态检查
 final appRouterProvider = Provider<GoRouter>((ref) {
-  // 监听登录状态
-  final isLoggedIn = ref.watch(isLoggedInProvider);
+  // ✅ 注意：不 watch isLoggedInProvider，避免登录状态变化时 GoRouter 重建
+  // redirect 函数会在路由导航时自动执行，此时会读取最新的 token
+  // 登录后的跳转由 login_page.dart 中的 addPostFrameCallback 处理
 
   return GoRouter(
     initialLocation: AppRoutes.splash,
     redirect: (context, state) {
+      // ✅ 直接读取 token，不依赖 isLoggedIn 状态
+      // 这样即使不 watch isLoggedInProvider，也能正确检查登录状态
       final storage = ref.read(storageServiceProvider);
       final token = storage.getString(StorageKeys.token);
       final hasToken = token != null && token.isNotEmpty;
@@ -82,18 +92,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isOnLoginPage =
           state.matchedLocation == AppRoutes.loginCenter ||
           state.matchedLocation == AppRoutes.h5Login;
-      
-      // ✅ 允许访问的无需登录页面
-      final isOnPublicPage = 
+
+      // ✅ 允许访问的无需登录页面（公开页面）
+      // 根据 Guideline 5.1.1，用户应该可以自由浏览内容，无需注册
+      final isOnPublicPage =
           state.matchedLocation == AppRoutes.splash ||
           state.matchedLocation == AppRoutes.loginCenter ||
           state.matchedLocation == AppRoutes.h5Login ||
-          state.matchedLocation == AppRoutes.forgetPassword ||  // ✅ 忘记密码
-          state.matchedLocation == AppRoutes.changePassword ||  // ✅ 修改密码
-          state.matchedLocation == AppRoutes.selectMajor ||     // ✅ 选择专业
-          state.matchedLocation == AppRoutes.privacyPolicy ||   // ✅ 隐私政策
-          state.matchedLocation == AppRoutes.userServiceAgreement ||  // ✅ 用户服务协议
-          state.matchedLocation == AppRoutes.aboutUs;  // ✅ 关于我们
+          state.matchedLocation == AppRoutes.mainTab || // ✅ 主Tab页面（包含首页）- 允许浏览
+          state.matchedLocation == AppRoutes.home || // ✅ 首页（商品列表）- 允许浏览
+          state.matchedLocation == AppRoutes.goodsDetail || // ✅ 商品详情（经典版）- 允许查看
+          state.matchedLocation ==
+              AppRoutes.secretRealDetail || // ✅ 真题详情 - 允许查看
+          state.matchedLocation ==
+              AppRoutes.subjectMockDetail || // ✅ 科目详情 - 允许查看
+          state.matchedLocation ==
+              AppRoutes.simulatedExamRoom || // ✅ 模考详情 - 允许查看
+          state.matchedLocation ==
+              AppRoutes.purchaseConfirm || // ✅ 购买确认页（5.1.1 合规）
+          state.matchedLocation ==
+              AppRoutes.goodsDetailPopup || // ✅ 商品详情弹窗风格 - 允许查看
+          state.matchedLocation ==
+              AppRoutes.courseGoodsDetail || // ✅ 课程详情 - 允许查看
+          state.matchedLocation == AppRoutes.forgetPassword || // ✅ 忘记密码
+          state.matchedLocation == AppRoutes.changePassword || // ✅ 修改密码
+          state.matchedLocation == AppRoutes.deleteAccountRisk || // ✅ 删除账户风险提示
+          state.matchedLocation ==
+              AppRoutes.deleteAccountVerification || // ✅ 删除账户安全验证
+          state.matchedLocation == AppRoutes.deleteAccountConfirm || // ✅ 删除账户确认
+          state.matchedLocation == AppRoutes.selectMajor || // ✅ 选择专业
+          state.matchedLocation == AppRoutes.privacyAgreement || // ✅ 隐私协议弹窗（首次安装）
+          state.matchedLocation == AppRoutes.privacyPolicy || // ✅ 隐私政策
+          state.matchedLocation == AppRoutes.userServiceAgreement || // ✅ 用户服务协议
+          state.matchedLocation == AppRoutes.aboutUs; // ✅ 关于我们
 
       // 如果在启动页，不拦截
       if (state.matchedLocation == AppRoutes.splash) {
@@ -105,9 +136,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return AppRoutes.loginCenter;
       }
 
-      // 如果已登录且在登录页，跳转到主页
+      // 如果已登录且在登录页，允许停留在登录页
+      // ✅ 注意：不 watch isLoggedInProvider，所以这里不会因为登录状态变化而自动执行
+      // 但是，当用户导航到登录页时（比如从商品详情页跳转），redirect 会执行
+      // 登录后的跳转由 login_page.dart 中的 addPostFrameCallback 使用 Navigator.pop() 处理
+      // ⚠️ 测试：不使用 returnPath，直接用 Navigator.pop() 返回上一页
       if (hasToken && isOnLoginPage) {
-        return AppRoutes.mainTab;
+        // ✅ 允许停留在登录页，让 login_page.dart 中的 Navigator.pop() 处理跳转
+        print('🔄 [路由拦截器] 检测到已登录且在登录页，允许停留在登录页（由 login_page.dart 处理跳转）');
+        return null;
       }
 
       return null;
@@ -119,6 +156,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SplashPage(),
       ),
 
+      // 隐私协议弹窗（首次安装必现，参照 iOS）
+      GoRoute(
+        path: AppRoutes.privacyAgreement,
+        builder: (context, state) => const PrivacyAgreementPage(),
+      ),
+
       // 主框架
       GoRoute(
         path: AppRoutes.mainTab,
@@ -128,7 +171,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // ===== F1. 用户认证模块 =====
       GoRoute(
         path: AppRoutes.loginCenter,
-        builder: (context, state) => const LoginCenterPage(),
+        builder: (context, state) {
+          // ✅ 获取返回路径（从 extra 参数中获取）
+          final extra = state.extra as Map<String, dynamic>?;
+          final returnPath = extra?['returnPath'] as String?;
+
+          // ✅ 延迟保存返回路径到 Provider，避免在 build 时修改 Provider
+          // 注意：使用 Future.microtask 确保在 build 完成后保存
+          if (returnPath != null && returnPath.isNotEmpty) {
+            Future.microtask(() {
+              ref.read(loginReturnPathProvider.notifier).state = returnPath;
+              print('🔄 [路由构建] 保存返回路径到 Provider: $returnPath');
+            });
+          }
+
+          return LoginCenterPage(returnPath: returnPath);
+        },
       ),
       GoRoute(
         path: AppRoutes.h5Login,
@@ -145,6 +203,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.changePassword,
         builder: (context, state) => const ChangePasswordPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.deleteAccountRisk,
+        builder: (context, state) => const DeleteAccountRiskPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.deleteAccountVerification,
+        builder: (context, state) => const DeleteAccountVerificationPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.deleteAccountConfirm,
+        builder: (context, state) => const DeleteAccountConfirmPage(),
       ),
 
       // ===== F2. 题库练习模块 =====
@@ -282,18 +352,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.examinationing,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
-          return ExaminationingPage(
-            paperVersionId: extra?['paper_version_id'] ?? '',
-            goodsId: extra?['goods_id'] ?? '',
-            orderId: extra?['order_id'] ?? '',
-            title: extra?['title'] ?? '',
-            professionalId: extra?['professional_id'] ?? '',
-            evaluationTypeId: extra?['evaluation_type_id'] ?? '',  // ✅ 测评分类ID
-            type: extra?['type'] ?? '',
-            timeLimit: extra?['time_limit'] ?? 7200,
-            recitationQuestionModel: extra?['recitation_question_model'],
+          return CupertinoPage<void>(
+            key: state.pageKey,
+            child: ExaminationingPage(
+              paperVersionId: extra?['paper_version_id'] ?? '',
+              goodsId: extra?['goods_id'] ?? '',
+              orderId: extra?['order_id'] ?? '',
+              title: extra?['title'] ?? '',
+              professionalId: extra?['professional_id'] ?? '',
+              evaluationTypeId: extra?['evaluation_type_id'] ?? '',
+              type: extra?['type'] ?? '',
+              timeLimit: extra?['time_limit'] ?? 7200,
+              recitationQuestionModel: extra?['recitation_question_model'],
+            ),
           );
         },
       ),
@@ -479,6 +552,44 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: AppRoutes.goodsDetailPopup,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final query = state.uri.queryParameters;
+          final productId =
+              extra?['product_id']?.toString() ?? query['product_id'];
+          final goodsId = extra?['goods_id']?.toString() ??
+              extra?['product_id']?.toString() ??
+              query['goods_id'] ??
+              query['product_id'];
+          final professionalId =
+              extra?['professional_id']?.toString() ?? query['professional_id'];
+          return GoodsDetailPopupPage(
+            productId: productId,
+            goodsId: goodsId,
+            professionalId: professionalId,
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.purchaseConfirm,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return PurchaseConfirmPage(
+            goodsId: extra?['goods_id']?.toString() ?? '',
+            goodsName: extra?['goods_name']?.toString() ?? '',
+            goodsMonthsPriceId: extra?['goods_months_price_id']?.toString() ?? '',
+            months: extra?['months']?.toString() ?? '0',
+            payableAmount: (extra?['payable_amount'] is num)
+                ? (extra!['payable_amount'] as num).toDouble()
+                : double.tryParse(extra?['payable_amount']?.toString() ?? '0') ?? 0,
+            professionalIdName: extra?['professional_id_name']?.toString(),
+            refreshGoodsId: extra?['refresh_goods_id']?.toString(),
+            isLearnButton: extra?['is_learn_button'] as int?,
+          );
+        },
+      ),
+      GoRoute(
         path: AppRoutes.myOrder,
         builder: (context, state) => const MyOrderPage(),
       ),
@@ -489,8 +600,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return PaySuccessPage(
             goodsId: extra?['goods_id'],
             professionalIdName: extra?['professional_id_name'],
-            isLearnButton: extra?['isLearnButton'],
-            goodsType: extra?['goods_type'], // ✅ 新增：商品类型参数
+            isLearnButton: extra?['isLearnButton'] ?? extra?['is_learn_button'],
+            goodsType: extra?['goods_type'],
           );
         },
       ),
@@ -537,9 +648,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           // ✅ 使用已实现的错题详情页
           final questions = extra?['questions'] as List<WrongQuestionModel>?;
           if (questions == null || questions.isEmpty) {
-            return const Scaffold(
-              body: Center(child: Text('暂无错题数据')),
-            );
+            return const Scaffold(body: Center(child: Text('暂无错题数据')));
           }
           return WrongBookDetailPage(
             questions: questions,
@@ -559,11 +668,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           // ✅ 使用已实现的收藏详情页
-          final questions = extra?['questions'] as List<CollectionQuestionModel>?;
+          final questions =
+              extra?['questions'] as List<CollectionQuestionModel>?;
           if (questions == null || questions.isEmpty) {
-            return const Scaffold(
-              body: Center(child: Text('暂无收藏数据')),
-            );
+            return const Scaffold(body: Center(child: Text('暂无收藏数据')));
           }
           return CollectionDetailPage(
             questions: questions,
@@ -607,7 +715,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             orderId: extra?['order_id'] as String? ?? '',
             flowId: extra?['flow_id'] as String? ?? '',
             goodsId: extra?['goods_id'] as String? ?? '',
-            financeBodyId: extra?['finance_body_id'] as String? ?? '',  // ✅ 财务主体ID
+            financeBodyId:
+                extra?['finance_body_id'] as String? ?? '', // ✅ 财务主体ID
             goodsName: extra?['goods_name'] as String? ?? '',
             payableAmount:
                 (extra?['payable_amount'] as num?)?.toDouble() ?? 0.0,

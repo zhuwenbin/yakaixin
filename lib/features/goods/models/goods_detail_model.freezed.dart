@@ -47,6 +47,9 @@ mixin _$GoodsDetailModel {
   @JsonKey(name: 'details_type')
   dynamic get detailsType =>
       throw _privateConstructorUsedError; // ✅ 详情页类型: 1=经典, 2=真题(历年真题), 3=科目, 4=模拟
+  @JsonKey(name: 'data_type')
+  dynamic get dataType =>
+      throw _privateConstructorUsedError; // 1=普通 2=模考（支付成功页开始测验跳转用）
   @JsonKey(name: 'prices')
   List<GoodsPriceModel> get prices => throw _privateConstructorUsedError;
   @JsonKey(name: 'tiku_goods_details')
@@ -65,7 +68,9 @@ mixin _$GoodsDetailModel {
       throw _privateConstructorUsedError; // ✅ 新增：模拟考场统计信息（对应小程序 mkgoods_statistics）
   @JsonKey(name: 'mkgoods_statistics')
   MockGoodsStatistics? get mkgoodsStatistics =>
-      throw _privateConstructorUsedError;
+      throw _privateConstructorUsedError; // 专享权益 HTML 内容（对应小程序 confirmation_page_data，弹窗 .list v-html）
+  @JsonKey(name: 'confirmation_page_data')
+  String? get confirmationPageData => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -92,6 +97,7 @@ abstract class $GoodsDetailModelCopyWith<$Res> {
       @JsonKey(name: 'year') String? year,
       @JsonKey(name: 'exam_title') String? examTitle,
       @JsonKey(name: 'details_type') dynamic detailsType,
+      @JsonKey(name: 'data_type') dynamic dataType,
       @JsonKey(name: 'prices') List<GoodsPriceModel> prices,
       @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails,
       @JsonKey(name: 'teaching_system') TeachingSystem? teachingSystem,
@@ -102,7 +108,8 @@ abstract class $GoodsDetailModelCopyWith<$Res> {
       @JsonKey(name: 'detail_package_goods')
       List<PackageGoodsModel>? detailPackageGoods,
       @JsonKey(name: 'mkgoods_statistics')
-      MockGoodsStatistics? mkgoodsStatistics});
+      MockGoodsStatistics? mkgoodsStatistics,
+      @JsonKey(name: 'confirmation_page_data') String? confirmationPageData});
 
   $TikuGoodsDetailsCopyWith<$Res>? get tikuGoodsDetails;
   $TeachingSystemCopyWith<$Res>? get teachingSystem;
@@ -135,6 +142,7 @@ class _$GoodsDetailModelCopyWithImpl<$Res, $Val extends GoodsDetailModel>
     Object? year = freezed,
     Object? examTitle = freezed,
     Object? detailsType = freezed,
+    Object? dataType = freezed,
     Object? prices = null,
     Object? tikuGoodsDetails = freezed,
     Object? teachingSystem = freezed,
@@ -143,6 +151,7 @@ class _$GoodsDetailModelCopyWithImpl<$Res, $Val extends GoodsDetailModel>
     Object? permissionOrderId = freezed,
     Object? detailPackageGoods = freezed,
     Object? mkgoodsStatistics = freezed,
+    Object? confirmationPageData = freezed,
   }) {
     return _then(_value.copyWith(
       goodsId: freezed == goodsId
@@ -193,6 +202,10 @@ class _$GoodsDetailModelCopyWithImpl<$Res, $Val extends GoodsDetailModel>
           ? _value.detailsType
           : detailsType // ignore: cast_nullable_to_non_nullable
               as dynamic,
+      dataType: freezed == dataType
+          ? _value.dataType
+          : dataType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       prices: null == prices
           ? _value.prices
           : prices // ignore: cast_nullable_to_non_nullable
@@ -225,6 +238,10 @@ class _$GoodsDetailModelCopyWithImpl<$Res, $Val extends GoodsDetailModel>
           ? _value.mkgoodsStatistics
           : mkgoodsStatistics // ignore: cast_nullable_to_non_nullable
               as MockGoodsStatistics?,
+      confirmationPageData: freezed == confirmationPageData
+          ? _value.confirmationPageData
+          : confirmationPageData // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 
@@ -299,6 +316,7 @@ abstract class _$$GoodsDetailModelImplCopyWith<$Res>
       @JsonKey(name: 'year') String? year,
       @JsonKey(name: 'exam_title') String? examTitle,
       @JsonKey(name: 'details_type') dynamic detailsType,
+      @JsonKey(name: 'data_type') dynamic dataType,
       @JsonKey(name: 'prices') List<GoodsPriceModel> prices,
       @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails,
       @JsonKey(name: 'teaching_system') TeachingSystem? teachingSystem,
@@ -309,7 +327,8 @@ abstract class _$$GoodsDetailModelImplCopyWith<$Res>
       @JsonKey(name: 'detail_package_goods')
       List<PackageGoodsModel>? detailPackageGoods,
       @JsonKey(name: 'mkgoods_statistics')
-      MockGoodsStatistics? mkgoodsStatistics});
+      MockGoodsStatistics? mkgoodsStatistics,
+      @JsonKey(name: 'confirmation_page_data') String? confirmationPageData});
 
   @override
   $TikuGoodsDetailsCopyWith<$Res>? get tikuGoodsDetails;
@@ -344,6 +363,7 @@ class __$$GoodsDetailModelImplCopyWithImpl<$Res>
     Object? year = freezed,
     Object? examTitle = freezed,
     Object? detailsType = freezed,
+    Object? dataType = freezed,
     Object? prices = null,
     Object? tikuGoodsDetails = freezed,
     Object? teachingSystem = freezed,
@@ -352,6 +372,7 @@ class __$$GoodsDetailModelImplCopyWithImpl<$Res>
     Object? permissionOrderId = freezed,
     Object? detailPackageGoods = freezed,
     Object? mkgoodsStatistics = freezed,
+    Object? confirmationPageData = freezed,
   }) {
     return _then(_$GoodsDetailModelImpl(
       goodsId: freezed == goodsId
@@ -402,6 +423,10 @@ class __$$GoodsDetailModelImplCopyWithImpl<$Res>
           ? _value.detailsType
           : detailsType // ignore: cast_nullable_to_non_nullable
               as dynamic,
+      dataType: freezed == dataType
+          ? _value.dataType
+          : dataType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       prices: null == prices
           ? _value._prices
           : prices // ignore: cast_nullable_to_non_nullable
@@ -434,6 +459,10 @@ class __$$GoodsDetailModelImplCopyWithImpl<$Res>
           ? _value.mkgoodsStatistics
           : mkgoodsStatistics // ignore: cast_nullable_to_non_nullable
               as MockGoodsStatistics?,
+      confirmationPageData: freezed == confirmationPageData
+          ? _value.confirmationPageData
+          : confirmationPageData // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -454,6 +483,7 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
       @JsonKey(name: 'year') this.year,
       @JsonKey(name: 'exam_title') this.examTitle,
       @JsonKey(name: 'details_type') this.detailsType,
+      @JsonKey(name: 'data_type') this.dataType,
       @JsonKey(name: 'prices') final List<GoodsPriceModel> prices = const [],
       @JsonKey(name: 'tiku_goods_details') this.tikuGoodsDetails,
       @JsonKey(name: 'teaching_system') this.teachingSystem,
@@ -462,7 +492,8 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
       @JsonKey(name: 'permission_order_id') this.permissionOrderId,
       @JsonKey(name: 'detail_package_goods')
       final List<PackageGoodsModel>? detailPackageGoods,
-      @JsonKey(name: 'mkgoods_statistics') this.mkgoodsStatistics})
+      @JsonKey(name: 'mkgoods_statistics') this.mkgoodsStatistics,
+      @JsonKey(name: 'confirmation_page_data') this.confirmationPageData})
       : _prices = prices,
         _detailPackageGoods = detailPackageGoods;
 
@@ -509,8 +540,12 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
   @JsonKey(name: 'details_type')
   final dynamic detailsType;
 // ✅ 详情页类型: 1=经典, 2=真题(历年真题), 3=科目, 4=模拟
+  @override
+  @JsonKey(name: 'data_type')
+  final dynamic dataType;
+// 1=普通 2=模考（支付成功页开始测验跳转用）
   final List<GoodsPriceModel> _prices;
-// ✅ 详情页类型: 1=经典, 2=真题(历年真题), 3=科目, 4=模拟
+// 1=普通 2=模考（支付成功页开始测验跳转用）
   @override
   @JsonKey(name: 'prices')
   List<GoodsPriceModel> get prices {
@@ -552,10 +587,14 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
   @override
   @JsonKey(name: 'mkgoods_statistics')
   final MockGoodsStatistics? mkgoodsStatistics;
+// 专享权益 HTML 内容（对应小程序 confirmation_page_data，弹窗 .list v-html）
+  @override
+  @JsonKey(name: 'confirmation_page_data')
+  final String? confirmationPageData;
 
   @override
   String toString() {
-    return 'GoodsDetailModel(goodsId: $goodsId, name: $name, type: $type, materialCoverPath: $materialCoverPath, materialIntroPath: $materialIntroPath, longImgPath: $longImgPath, permissionStatus: $permissionStatus, professionalId: $professionalId, professionalIdName: $professionalIdName, year: $year, examTitle: $examTitle, detailsType: $detailsType, prices: $prices, tikuGoodsDetails: $tikuGoodsDetails, teachingSystem: $teachingSystem, paperStatistics: $paperStatistics, recitationQuestionModel: $recitationQuestionModel, permissionOrderId: $permissionOrderId, detailPackageGoods: $detailPackageGoods, mkgoodsStatistics: $mkgoodsStatistics)';
+    return 'GoodsDetailModel(goodsId: $goodsId, name: $name, type: $type, materialCoverPath: $materialCoverPath, materialIntroPath: $materialIntroPath, longImgPath: $longImgPath, permissionStatus: $permissionStatus, professionalId: $professionalId, professionalIdName: $professionalIdName, year: $year, examTitle: $examTitle, detailsType: $detailsType, dataType: $dataType, prices: $prices, tikuGoodsDetails: $tikuGoodsDetails, teachingSystem: $teachingSystem, paperStatistics: $paperStatistics, recitationQuestionModel: $recitationQuestionModel, permissionOrderId: $permissionOrderId, detailPackageGoods: $detailPackageGoods, mkgoodsStatistics: $mkgoodsStatistics, confirmationPageData: $confirmationPageData)';
   }
 
   @override
@@ -583,6 +622,7 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
                 other.examTitle == examTitle) &&
             const DeepCollectionEquality()
                 .equals(other.detailsType, detailsType) &&
+            const DeepCollectionEquality().equals(other.dataType, dataType) &&
             const DeepCollectionEquality().equals(other._prices, _prices) &&
             (identical(other.tikuGoodsDetails, tikuGoodsDetails) ||
                 other.tikuGoodsDetails == tikuGoodsDetails) &&
@@ -597,7 +637,9 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
             const DeepCollectionEquality()
                 .equals(other._detailPackageGoods, _detailPackageGoods) &&
             (identical(other.mkgoodsStatistics, mkgoodsStatistics) ||
-                other.mkgoodsStatistics == mkgoodsStatistics));
+                other.mkgoodsStatistics == mkgoodsStatistics) &&
+            (identical(other.confirmationPageData, confirmationPageData) ||
+                other.confirmationPageData == confirmationPageData));
   }
 
   @JsonKey(ignore: true)
@@ -616,6 +658,7 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
         year,
         examTitle,
         const DeepCollectionEquality().hash(detailsType),
+        const DeepCollectionEquality().hash(dataType),
         const DeepCollectionEquality().hash(_prices),
         tikuGoodsDetails,
         teachingSystem,
@@ -623,7 +666,8 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
         const DeepCollectionEquality().hash(recitationQuestionModel),
         const DeepCollectionEquality().hash(permissionOrderId),
         const DeepCollectionEquality().hash(_detailPackageGoods),
-        mkgoodsStatistics
+        mkgoodsStatistics,
+        confirmationPageData
       ]);
 
   @JsonKey(ignore: true)
@@ -655,6 +699,7 @@ abstract class _GoodsDetailModel implements GoodsDetailModel {
       @JsonKey(name: 'year') final String? year,
       @JsonKey(name: 'exam_title') final String? examTitle,
       @JsonKey(name: 'details_type') final dynamic detailsType,
+      @JsonKey(name: 'data_type') final dynamic dataType,
       @JsonKey(name: 'prices') final List<GoodsPriceModel> prices,
       @JsonKey(name: 'tiku_goods_details')
       final TikuGoodsDetails? tikuGoodsDetails,
@@ -666,7 +711,9 @@ abstract class _GoodsDetailModel implements GoodsDetailModel {
       @JsonKey(name: 'detail_package_goods')
       final List<PackageGoodsModel>? detailPackageGoods,
       @JsonKey(name: 'mkgoods_statistics')
-      final MockGoodsStatistics? mkgoodsStatistics}) = _$GoodsDetailModelImpl;
+      final MockGoodsStatistics? mkgoodsStatistics,
+      @JsonKey(name: 'confirmation_page_data')
+      final String? confirmationPageData}) = _$GoodsDetailModelImpl;
 
   factory _GoodsDetailModel.fromJson(Map<String, dynamic> json) =
       _$GoodsDetailModelImpl.fromJson;
@@ -708,6 +755,9 @@ abstract class _GoodsDetailModel implements GoodsDetailModel {
   @JsonKey(name: 'details_type')
   dynamic get detailsType;
   @override // ✅ 详情页类型: 1=经典, 2=真题(历年真题), 3=科目, 4=模拟
+  @JsonKey(name: 'data_type')
+  dynamic get dataType;
+  @override // 1=普通 2=模考（支付成功页开始测验跳转用）
   @JsonKey(name: 'prices')
   List<GoodsPriceModel> get prices;
   @override
@@ -731,6 +781,9 @@ abstract class _GoodsDetailModel implements GoodsDetailModel {
   @override // ✅ 新增：模拟考场统计信息（对应小程序 mkgoods_statistics）
   @JsonKey(name: 'mkgoods_statistics')
   MockGoodsStatistics? get mkgoodsStatistics;
+  @override // 专享权益 HTML 内容（对应小程序 confirmation_page_data，弹窗 .list v-html）
+  @JsonKey(name: 'confirmation_page_data')
+  String? get confirmationPageData;
   @override
   @JsonKey(ignore: true)
   _$$GoodsDetailModelImplCopyWith<_$GoodsDetailModelImpl> get copyWith =>

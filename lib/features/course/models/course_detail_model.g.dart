@@ -27,6 +27,7 @@ Map<String, dynamic> _$$CourseDetailModelImplToJson(
 _$CourseClassModelImpl _$$CourseClassModelImplFromJson(
         Map<String, dynamic> json) =>
     _$CourseClassModelImpl(
+      id: json['id'] as String?,
       classId: json['class_id'] as String?,
       name: json['name'] as String?,
       teachingType: json['teaching_type'] as String?,
@@ -42,6 +43,7 @@ _$CourseClassModelImpl _$$CourseClassModelImplFromJson(
 Map<String, dynamic> _$$CourseClassModelImplToJson(
         _$CourseClassModelImpl instance) =>
     <String, dynamic>{
+      'id': instance.id,
       'class_id': instance.classId,
       'name': instance.name,
       'teaching_type': instance.teachingType,

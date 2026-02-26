@@ -23,6 +23,7 @@ class GoodsDetailModel with _$GoodsDetailModel {
     @JsonKey(name: 'exam_title') String? examTitle,
     @JsonKey(name: 'details_type')
     dynamic detailsType, // ✅ 详情页类型: 1=经典, 2=真题(历年真题), 3=科目, 4=模拟
+    @JsonKey(name: 'data_type') dynamic dataType, // 1=普通 2=模考（支付成功页开始测验跳转用）
     @JsonKey(name: 'prices') @Default([]) List<GoodsPriceModel> prices,
     @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails,
     @JsonKey(name: 'teaching_system') TeachingSystem? teachingSystem,
@@ -34,6 +35,8 @@ class GoodsDetailModel with _$GoodsDetailModel {
     List<PackageGoodsModel>? detailPackageGoods,
     // ✅ 新增：模拟考场统计信息（对应小程序 mkgoods_statistics）
     @JsonKey(name: 'mkgoods_statistics') MockGoodsStatistics? mkgoodsStatistics,
+    // 专享权益 HTML 内容（对应小程序 confirmation_page_data，弹窗 .list v-html）
+    @JsonKey(name: 'confirmation_page_data') String? confirmationPageData,
   }) = _GoodsDetailModel;
 
   factory GoodsDetailModel.fromJson(Map<String, dynamic> json) =>

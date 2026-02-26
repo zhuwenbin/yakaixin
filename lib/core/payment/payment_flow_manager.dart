@@ -7,6 +7,8 @@ import '../../features/order/providers/order_provider.dart';
 import '../utils/safe_type_converter.dart';
 import '../storage/storage_service.dart';
 import '../../app/constants/storage_keys.dart';
+import '../utils/toast_util.dart';
+import '../widgets/confirm_dialog.dart';
 
 /// 统一支付流程管理器
 /// 
@@ -60,7 +62,7 @@ class PaymentFlowManager {
       // ✅ 1. 获取用户信息
       final userInfo = await _getUserInfo();
       if (userInfo == null) {
-        _showError('请先登录');
+        _showLoginRequiredDialog();
         onError?.call('未登录');
         return;
       }
@@ -69,7 +71,7 @@ class PaymentFlowManager {
       final employeeId = userInfo['employee_id'] ?? '';
 
       if (studentId.isEmpty) {
-        _showError('请先登录');
+        _showLoginRequiredDialog();
         onError?.call('用户信息无效');
         return;
       }
@@ -119,14 +121,14 @@ class PaymentFlowManager {
         },
         // 订单创建失败
         error: (errorMsg) {
-          _showError('下单失败: $errorMsg');
+          _showErrorMessage('下单失败: $errorMsg');
           onError?.call(errorMsg);
         },
       );
     } catch (e) {
       EasyLoading.dismiss();
       final errorMsg = '购买失败: $e';
-      _showError(errorMsg);
+      _showErrorMessage(errorMsg);
       onError?.call(errorMsg);
     }
   }
@@ -217,7 +219,7 @@ class PaymentFlowManager {
       // 支付失败
       final errorMsg = paymentResult['error'] ?? '支付失败';
       print('❌ [支付流程] 支付失败: $errorMsg');
-      _showError(errorMsg);
+      _showErrorMessage(SafeTypeConverter.toSafeString(errorMsg));
       onError?.call(errorMsg);
     }
   }
@@ -250,13 +252,38 @@ class PaymentFlowManager {
     }
   }
 
-  /// 显示错误提示
-  void _showError(String message) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-    }
+  void _showLoginRequiredDialog() {
+    if (!context.mounted) return;
+
+    ConfirmDialog.show(
+      context,
+      title: '需要登录',
+      content: '此操作需要登录账户，请先登录后再试',
+      confirmText: '去登录',
+      cancelText: '取消',
+      onConfirm: () {
+        // ✅ 使用 GoRouterState.of(context).uri 获取当前完整路径（包括查询参数）
+        final routerState = GoRouterState.of(context);
+        final currentUri = routerState.uri;
+        String returnPath = currentUri.path;
+        if (currentUri.queryParameters.isNotEmpty) {
+          final queryString = currentUri.queryParameters.entries
+              .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+              .join('&');
+          returnPath = '$returnPath?$queryString';
+        }
+
+        context.push(
+          AppRoutes.loginCenter,
+          extra: {'returnPath': returnPath},
+        );
+      },
+    );
+  }
+
+  void _showErrorMessage(String message) {
+    if (!context.mounted) return;
+    ToastUtil.error(message);
   }
 }
 

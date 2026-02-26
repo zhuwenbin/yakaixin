@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../providers/course_provider.dart';
 import '../widgets/week_calendar.dart';
 import '../widgets/today_lessons_section.dart';
@@ -99,6 +100,14 @@ class _CoursePageState extends ConsumerState<CoursePage> {
     final courseList = courseState.courseList;
     final isLoading = courseState.isLoading;
     final isCourseListLoading = courseState.isCourseListLoading;
+    
+    // ✅ 仅「已登录→未登录」时在此刷新；「未登录→已登录」由 Auth 的 _refreshAllPagesAfterLogin 统一刷新
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (previous?.isLoggedIn == true && !next.isLoggedIn) {
+        print('🔄 [课程页] 检测到登录状态变化（已登录 → 未登录），刷新课程数据');
+        ref.read(courseNotifierProvider.notifier).loadInitialData(_selectedDate, _teachingType);
+      }
+    });
     final showPlan = courseState.showPlan;
 
     return Scaffold(

@@ -1,11 +1,16 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yakaixin_app/core/utils/error_handler.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
+import '../../../app/constants/default_major.dart';
 import '../../../core/widgets/loading_hud.dart';
 import '../../../core/utils/toast_util.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../../home/providers/home_provider.dart';
+import '../../home/providers/question_bank_provider.dart';
+import '../../course/providers/course_provider.dart';
 
 /// 认证状态
 class AuthState {
@@ -40,9 +45,24 @@ class AuthState {
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService;
   final StorageService _storage;
+  final Ref? _ref;
 
-  AuthNotifier(this._authService, this._storage) : super(AuthState()) {
+  AuthNotifier(this._authService, this._storage, {Ref? ref}) 
+      : _ref = ref,
+        super(AuthState()) {
     _loadUserFromStorage();
+  }
+
+  Future<void> _ensureGuestDefaultMajor() async {
+    final currentMajorId = _storage.getString(StorageKeys.currentMajorId);
+    final majorJson = _storage.getJson(StorageKeys.majorInfo);
+
+    if (currentMajorId != null && currentMajorId.isNotEmpty && majorJson != null) {
+      return;
+    }
+
+    await _storage.setJson(StorageKeys.majorInfo, DefaultMajor.json);
+    await _storage.setString(StorageKeys.currentMajorId, DefaultMajor.id);
   }
 
   /// 从本地存储加载用户信息
@@ -93,6 +113,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } else {
       print('⚠️ [启动恢复] 未找到登录信息（userJson或token为null）');
+
+      // ✅ 游客模式：确保有默认专业
+      await _ensureGuestDefaultMajor();
+      final guestMajorJson = _storage.getJson(StorageKeys.majorInfo);
+      final guestMajor = guestMajorJson != null
+          ? MajorModel.fromJson(guestMajorJson)
+          : DefaultMajor.model;
+
+      state = state.copyWith(
+        currentMajor: guestMajor,
+        isLoggedIn: false,
+      );
     }
   }
 
@@ -117,7 +149,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _handleLoginSuccess(response, phone);
 
       LoadingHUD.dismiss();
-      ToastUtil.success('登录成功');
+      // ✅ 登录成功后刷新所有页面数据（不再显示绿色成功提示）
+      _refreshAllPagesAfterLogin();
     } catch (e) {
       // ✅ 统一错误处理
       state = state.copyWith(isLoading: false);
@@ -171,7 +204,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _handleLoginSuccess(response, account);
 
       LoadingHUD.dismiss();
-      ToastUtil.success('登录成功');
+      // ✅ 登录成功后刷新所有页面数据（不再显示绿色成功提示）
+      _refreshAllPagesAfterLogin();
     } catch (e) {
       // ✅ 统一错误处理
       state = state.copyWith(isLoading: false);
@@ -185,6 +219,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   /// 登录成功通用处理逻辑
   /// 对应小程序: store/index.js:149-191 (LOGIN action)
+  ///
+  /// [phone] 参数说明：
+  /// - 验证码登录时：传入的是手机号
+  /// - 密码登录时：传入的是 account（可能是手机号或其他账号）
   Future<void> _handleLoginSuccess(dynamic response, String? phone) async {
     // 1. 保存token
     await _storage.setString(StorageKeys.token, response.token);
@@ -193,8 +231,38 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // 对应小程序: store/index.js:154-156
     String nickname = response.nickname ?? '';
     final bool needDefaultNickname = nickname.isEmpty;
-    if (needDefaultNickname && phone != null && phone.length >= 7) {
-      nickname = '牙开心${phone.substring(phone.length - 4)}';
+
+    // ✅ 获取手机号（用于昵称和保存）
+    // 优先级：response.phone > phone（如果 phone 是手机号格式）
+    String? savedPhone = response.phone;
+
+    print('📞 [登录保存] 手机号处理:');
+    print('   - response.phone: ${response.phone}');
+    print('   - 传入的 phone 参数: $phone');
+
+    if (savedPhone == null || savedPhone.isEmpty) {
+      // 如果 response.phone 为空，检查传入的 phone 是否是手机号格式
+      if (phone != null && phone.isNotEmpty) {
+        // 简单判断：11位数字，以1开头（中国手机号）
+        if (phone.length == 11 &&
+            phone.startsWith('1') &&
+            RegExp(r'^\d+$').hasMatch(phone)) {
+          savedPhone = phone;
+          print('✅ [登录保存] 使用传入的手机号: $savedPhone');
+        } else {
+          print('⚠️ [登录保存] 传入的参数不是手机号格式: $phone');
+        }
+      }
+    } else {
+      print('✅ [登录保存] 使用响应中的手机号: $savedPhone');
+    }
+
+    if (savedPhone == null || savedPhone.isEmpty) {
+      print('⚠️ [登录保存] 警告：未获取到手机号，可能影响后续功能');
+    }
+
+    if (needDefaultNickname && savedPhone != null && savedPhone.length >= 7) {
+      nickname = '牙开心${savedPhone.substring(savedPhone.length - 4)}';
     }
 
     // 3. 保存用户信息（保存完整的登录响应数据）
@@ -203,7 +271,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       'student_name': response.studentName,
       'nickname': nickname, // 使用处理后的昵称
       'avatar': response.avatar,
-      'phone': response.phone ?? phone,
+      'phone': savedPhone, // ✅ 使用处理后的手机号
       'merchant': response.merchants?.map((m) => m.toJson()).toList(),
       'employee_info': response.employeeInfo?.toJson(),
       // ✅ 保存完整的登录响应字段
@@ -307,7 +375,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       studentName: response.studentName,
       nickname: nickname,
       avatar: response.avatar,
-      phone: response.phone ?? phone,
+      phone: savedPhone, // ✅ 使用处理后的手机号
       merchants: response.merchants,
       employeeInfo: response.employeeInfo,
       majors: null,
@@ -456,7 +524,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
 
       LoadingHUD.dismiss();
-      ToastUtil.success('登录成功');
     } catch (e) {
       state = state.copyWith(isLoading: false);
       LoadingHUD.dismiss();
@@ -484,7 +551,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _handleLoginSuccess(response, response.phone);
 
       LoadingHUD.dismiss();
-      ToastUtil.success('登录成功');
+      // ✅ 登录成功后刷新所有页面数据（不再显示绿色成功提示）
+      _refreshAllPagesAfterLogin();
     } catch (e) {
       // ✅ 统一错误处理
       state = state.copyWith(isLoading: false);
@@ -495,24 +563,110 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// 登录成功后刷新所有页面数据
+  /// 使用 addPostFrameCallback 确保在下一帧执行，此时 currentMajorProvider 等已更新为登录账号专业
+  void _refreshAllPagesAfterLogin() {
+    final ref = _ref;
+    if (ref == null) {
+      print('⚠️ [登录刷新] Ref 为空，无法刷新页面数据');
+      return;
+    }
+
+    // 下一帧执行，并显式传入登录账号专业 ID，避免 Provider 时序导致仍读到旧专业
+    final majorIdToUse = state.currentMajor?.majorId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      print('🔄 [登录刷新] 开始刷新所有页面数据... majorId=$majorIdToUse');
+      
+      // ✅ 显式传入当前专业 ID，确保首页/题库按登录账号专业加载
+      try {
+        ref.read(homeProvider.notifier).loadHomeData(majorId: majorIdToUse);
+        print('✅ [登录刷新] 首页数据刷新已触发');
+      } catch (e) {
+        print('⚠️ [登录刷新] 首页数据刷新失败: $e');
+      }
+      
+      try {
+        ref.read(questionBankProvider.notifier).loadAllData(majorId: majorIdToUse);
+        print('✅ [登录刷新] 题库页面数据刷新已触发');
+      } catch (e) {
+        print('⚠️ [登录刷新] 题库页面数据刷新失败: $e');
+      }
+      
+      // ✅ 刷新课程页面数据
+      try {
+        ref.read(courseNotifierProvider.notifier).loadInitialData(DateTime.now(), '');
+        print('✅ [登录刷新] 课程页面数据刷新已触发');
+      } catch (e) {
+        print('⚠️ [登录刷新] 课程页面数据刷新失败: $e');
+      }
+      
+      print('✅ [登录刷新] 所有页面数据刷新完成');
+    });
+  }
+
   /// 切换专业
   Future<void> switchMajor(MajorModel major) async {
     await _storage.setJson(StorageKeys.majorInfo, major.toJson());
     await _storage.setString(StorageKeys.currentMajorId, major.majorId);
 
     state = state.copyWith(currentMajor: major);
-    ToastUtil.success('已切换到${major.majorName}');
   }
 
   /// 登出
   Future<void> logout() async {
     await _storage.remove(StorageKeys.token);
     await _storage.remove(StorageKeys.userInfo);
+    await _storage.remove(StorageKeys.studentId); // ✅ 关键修复：清除 studentId，避免 API 拦截器继续添加 user_id
     await _storage.remove(StorageKeys.majorInfo);
     await _storage.remove(StorageKeys.currentMajorId);
 
-    state = AuthState();
+    // ✅ 退出登录后仍保持游客默认专业，避免页面无法加载 professional_id
+    await _ensureGuestDefaultMajor();
+    state = AuthState(currentMajor: DefaultMajor.model);
     ToastUtil.show('已退出登录');
+    
+    // ✅ 退出登录后刷新所有页面数据（确保显示游客数据）
+    _refreshAllPagesAfterLogout();
+  }
+
+  /// 退出登录后刷新所有页面数据
+  void _refreshAllPagesAfterLogout() {
+    final ref = _ref;
+    if (ref == null) {
+      print('⚠️ [退出登录刷新] Ref 为空，无法刷新页面数据');
+      return;
+    }
+    
+    // 延迟一下，确保状态已更新
+    Future.microtask(() {
+      print('🔄 [退出登录刷新] 开始刷新所有页面数据...');
+      
+      // ✅ 刷新首页数据
+      try {
+        ref.read(homeProvider.notifier).loadHomeData();
+        print('✅ [退出登录刷新] 首页数据刷新已触发');
+      } catch (e) {
+        print('⚠️ [退出登录刷新] 首页数据刷新失败: $e');
+      }
+      
+      // ✅ 刷新题库页面数据
+      try {
+        ref.read(questionBankProvider.notifier).loadAllData();
+        print('✅ [退出登录刷新] 题库页面数据刷新已触发');
+      } catch (e) {
+        print('⚠️ [退出登录刷新] 题库页面数据刷新失败: $e');
+      }
+      
+      // ✅ 刷新课程页面数据
+      try {
+        ref.read(courseNotifierProvider.notifier).loadInitialData(DateTime.now(), '');
+        print('✅ [退出登录刷新] 课程页面数据刷新已触发');
+      } catch (e) {
+        print('⚠️ [退出登录刷新] 课程页面数据刷新失败: $e');
+      }
+      
+      print('✅ [退出登录刷新] 所有页面数据刷新完成');
+    });
   }
 }
 
@@ -520,7 +674,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authService = ref.read(authServiceProvider);
   final storage = ref.read(storageServiceProvider);
-  return AuthNotifier(authService, storage);
+  return AuthNotifier(authService, storage, ref: ref);
 });
 
 /// 是否已登录Provider (便捷访问)

@@ -60,10 +60,11 @@ class StudyCalendarCard extends StatelessWidget {
     );
   }
 
+  /// 对应小程序 study-calendar.vue .calendar-title: 32rpx, font-weight 600, #333
   Widget _buildTitle() {
     return Text(
       '学习日历',
-      style: AppTextStyles.heading4.copyWith(color: AppColors.textPrimary),
+      style: AppTextStyles.heading4.copyWith(color: AppColors.textPrimary), // 16.sp ≈ 32rpx, #333
     );
   }
 

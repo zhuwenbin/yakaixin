@@ -130,25 +130,37 @@ class _ChapterExerciseCard extends StatelessWidget {
                 Expanded(
                   child: Row(
                     children: [
-                      // 进度条
+                      // 进度条（对应小程序 .process + .current，轨道始终可见）
                       Flexible(
                         flex: 4,
-                        child: Container(
-                          height: 8.h, // ✅ 修正：16rpx / 2 = 8.h
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFDDF3FD).withValues(alpha: 0.6),
-                            borderRadius: BorderRadius.circular(8.r), // ✅ 修正：15rpx / 2 = 7.5 约等于 8.r
-                          ),
-                          child: FractionallySizedBox(
-                            alignment: Alignment.centerLeft,
-                            widthFactor: progress.clamp(0.0, 1.0),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF55C3FF),
-                                borderRadius: BorderRadius.circular(8.r),
-                              ),
-                            ),
-                          ),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final barWidth = constraints.maxWidth;
+                            final fillWidth = barWidth * progress.clamp(0.0, 1.0);
+                            return Stack(
+                              alignment: Alignment.centerLeft,
+                              children: [
+                                // 轨道背景（始终完整显示）
+                                Container(
+                                  height: 8.h,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFDDF3FD).withValues(alpha: 0.6),
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                ),
+                                // 填充
+                                if (fillWidth > 0)
+                                  Container(
+                                    width: fillWidth,
+                                    height: 8.h,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF55C3FF),
+                                      borderRadius: BorderRadius.circular(8.r),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                       SizedBox(width: 10.w), // ✅ 修正：20rpx / 2 = 10.w

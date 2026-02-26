@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
+import '../../../core/utils/safe_type_converter.dart';
 import '../../main/main_tab_page.dart';
 import '../../goods/services/goods_service.dart';
 
@@ -344,57 +345,129 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
   }
 
   /// 开始测验
-  /// 对应小程序 Line 99-155: goDetail()
-  /// ⚠️ 注意：对于试题（非课程），应该返回到主页面，而不是跳转到新的课程页面
-  /// ✅ 优化：优先使用传递过来的商品类型，避免再次调用API
+  /// 对应小程序 paySuccess.vue Line 97-154: goDetail()
+  /// 根据商品 type / data_type / details_type 跳转到对应测验页，与小程序一致
   Future<void> _onGoTest() async {
     if (widget.goodsId == null || widget.goodsId!.isEmpty) {
-      // ✅ 如果没有商品ID，直接返回主页面（题库Tab）
-      _goToHomePage();
+      _goToHomePageWithTab(tabIndex: 1);
       return;
     }
 
-    // ✅ 优先使用传递过来的商品类型（从详情页/订单页传递）
-    String? type = widget.goodsType?.toString();
+    final goodsService = ref.read(goodsServiceProvider);
+    final storage = ref.read(storageServiceProvider);
+    final studentId = storage.getString(StorageKeys.studentId);
 
-    // ✅ 如果没有传递商品类型，才调用API获取
-    if (type == null || type.isEmpty) {
-      try {
-        final goodsService = ref.read(goodsServiceProvider);
-        final storage = ref.read(storageServiceProvider);
-        final studentId = storage.getString(StorageKeys.studentId);
+    try {
+      final detail = await goodsService.getGoodsDetail(
+        goodsId: widget.goodsId!,
+        userId: studentId,
+        studentId: studentId,
+      );
 
-        final detail = await goodsService.getGoodsDetail(
-          goodsId: widget.goodsId!,
-          userId: studentId,
-          studentId: studentId,
-        );
+      if (!mounted) return;
 
-        if (!mounted) return;
+      final type = detail.type?.toString();
+      final dataType = detail.dataType?.toString();
+      final detailsType = detail.detailsType?.toString();
+      final productId = detail.goodsId?.toString() ?? widget.goodsId;
+      final professionalId = detail.professionalId ?? '';
 
-        type = detail.type?.toString();
-      } catch (e) {
-        print('❌ [支付成功页] 获取商品详情失败: $e');
-        // ✅ 获取失败时，返回主页面
-        if (mounted) {
-          _goToHomePage();
-        }
+      // 打印 type、data_type，后续各分支会打印跳转类型名称和路由
+      print('📋 [开始测验] type=$type, data_type=$dataType, details_type=$detailsType');
+
+      // type == 2 或 3 (课程) → 返回主页面并选中课程Tab（对应小程序 push pages/study/index）
+      if (type == '2' || type == '3') {
+        print('📋 [开始测验] 跳转类型: 课程 | 路由: 回主页选课程Tab (tabIndex=2)');
+        _goToHomePageWithTab(tabIndex: 2);
         return;
       }
+
+      // data_type == 2 (模考)（对应小程序 Line 111-131）
+      if (dataType == '2') {
+        if (detailsType == '1') {
+          // 模考+经典版 → 模考信息页
+          print('📋 [开始测验] 跳转类型: 模考+经典版 | 路由: ${AppRoutes.examInfo}');
+          context.push(
+            AppRoutes.examInfo,
+            extra: {
+              'product_id': productId,
+              'title': detail.name,
+              'page': 'home',
+              'professional_id': professionalId,
+            },
+          );
+          return;
+        }
+        if (detailsType == '4') {
+          // 模考+模考版 → 模考房间
+          print('📋 [开始测验] 跳转类型: 模考+模考版 | 路由: ${AppRoutes.simulatedExamRoom}');
+          context.push(
+            AppRoutes.simulatedExamRoom,
+            extra: {
+              'product_id': productId,
+              'professional_id': professionalId,
+            },
+          );
+          return;
+        }
+      }
+
+      // type == 18 (章节练习) → 章节列表（对应小程序 Line 133-139）
+      if (type == '18') {
+        final total = SafeTypeConverter.toInt(
+          detail.tikuGoodsDetails?.questionNum,
+          defaultValue: 0,
+        );
+        print('📋 [开始测验] 跳转类型: 章节练习 | 路由: ${AppRoutes.chapterList}');
+        context.push(
+          AppRoutes.chapterList,
+          extra: {
+            'goods_id': productId,
+            'professional_id': professionalId,
+            'total': total,
+          },
+        );
+        return;
+      }
+
+      // type == 10 (模考) → 模考信息页（对应小程序 Line 141-146）
+      if (type == '10') {
+        print('📋 [开始测验] 跳转类型: 模考 | 路由: ${AppRoutes.examInfo}');
+        context.push(
+          AppRoutes.examInfo,
+          extra: {
+            'product_id': productId,
+            'title': detail.name,
+            'page': 'home',
+            'professional_id': professionalId,
+          },
+        );
+        return;
+      }
+
+      // type == 8 (试卷) → 试卷做题页（对应小程序 Line 148-152）
+      if (type == '8') {
+        print('📋 [开始测验] 跳转类型: 试卷 | 路由: ${AppRoutes.testExam}');
+        context.push(
+          AppRoutes.testExam,
+          extra: {
+            'id': productId,
+            'professional_id': professionalId,
+            'recitation_question_model': detail.recitationQuestionModel,
+          },
+        );
+        return;
+      }
+
+      // 未知类型 → 返回主页面选题库Tab
+      print('📋 [开始测验] 跳转类型: 未知类型 | 路由: 回主页选题库Tab (tabIndex=1)');
+      _goToHomePageWithTab(tabIndex: 1);
+    } catch (e) {
+      print('❌ [支付成功页] 获取商品详情失败: $e');
+      if (mounted) {
+        _goToHomePageWithTab(tabIndex: 1);
+      }
     }
-
-    if (!mounted) return;
-
-    // ✅ type == 2 或 3 (课程) - 返回主页面并选中课程Tab（索引2）
-    // ⚠️ 用户反馈：应该返回到主页面，选中课程Tab，而不是跳转到新的课程详情页
-    if (type == '2' || type == '3') {
-      _goToHomePageWithTab(tabIndex: 2); // ✅ 课程Tab（索引2）
-      return;
-    }
-
-    // ✅ 对于试题（非课程），应该返回到主页面，选中题库Tab（索引1）
-    // ⚠️ 用户反馈：试题购买成功后，点击"开始测验"，应该返回到主页面，选中题库Tab
-    _goToHomePageWithTab(tabIndex: 1); // ✅ 题库Tab（索引1）
   }
 
   /// 返回主页面并选中指定Tab
@@ -410,10 +483,4 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
     }
   }
 
-  /// 返回主页面（题库Tab）- 已废弃，使用 _goToHomePageWithTab 代替
-  /// ⚠️ 对于试题（非课程），应该返回到主页面，而不是跳转到新的课程页面
-  @Deprecated('使用 _goToHomePageWithTab(tabIndex: 1) 代替')
-  void _goToHomePage() {
-    _goToHomePageWithTab(tabIndex: 1);
-  }
 }

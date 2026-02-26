@@ -115,28 +115,25 @@ class ApiConfig {
   // 版本号 (对应小程序 version)
   static const String version = '1.4.14';
   
-  // ✅ OSS配置
-  // 新OSS (对应小程序 VUE_APP_YAKAIXIN_BASEOSSURL)
+  // ✅ OSS 配置（与小程序 .env 一致）
+  // 新 OSS：用于拼接 API 返回的相对 path，对应小程序 completePathNew() / VUE_APP_YAKAIXIN_BASEOSSURL
   static const String ossBaseUrl = 'https://yakaixin.oss-cn-beijing.aliyuncs.com/';
-  
-  // 旧OSS (对应小程序 VUE_APP_BASEOSSURL)
-  // ⚠️ 已废弃，请使用 ossBaseUrl
+  // 旧 OSS：仅用于未迁移到新桶的静态图完整 URL，对应小程序 VUE_APP_BASEOSSURL；拼接请用 completeImageUrl
   static const String legacyOssUrl = 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/';
   
   /// 拼接完整的图片URL
   /// 对应小程序: utils/index.js Line 615-616 completePathNew()
+  /// 规则: 已是完整 URL 直接返回; 否则用 ossBaseUrl + path，并去掉 path 前导 '/' 避免双斜杠
   static String completeImageUrl(String? path) {
     if (path == null || path.isEmpty) {
       return '';
     }
-    
-    // 如果已经包含完整URL，直接返回
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
+    final trimmed = path.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
     }
-    
-    // 拼接OSS基础URL (使用新OSS)
-    return ossBaseUrl + path;
+    final relativePath = trimmed.startsWith('/') ? trimmed.substring(1) : trimmed;
+    return ossBaseUrl + relativePath;
   }
   
   /// 转换旧OSS URL为新OSS URL

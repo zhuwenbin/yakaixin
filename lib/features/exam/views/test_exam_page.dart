@@ -18,6 +18,10 @@ import 'package:yakaixin_app/features/home/models/goods_model.dart';
 /// - id: 商品ID
 /// - professionalId: 专业ID
 /// - recitationQuestionModel: 背诵模式 ('1'=开启 '2'=关闭)
+///
+/// 样式对齐小程序: 头部白底 #fff、共X份/年份/共X题 标签；列表项白底、12px 圆角、阴影；开始考试 #2E68FF
+const Color _kExamPageBlue = Color(0xFF2E68FF);
+
 class TestExamPage extends ConsumerStatefulWidget {
   final String? id;
   final String? professionalId;
@@ -63,7 +67,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('试卷详情'), // 
+        title: const Text('试卷详情'), //
         backgroundColor: AppColors.surface,
         elevation: 0, // 移除阴影
       ),
@@ -109,9 +113,10 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
     // ✅ 对应小程序 exam.vue Line 9: completepath(info.material_intro_path)
     // 小程序使用 material_intro_path 作为封面图，并调用 completepath() 拼接完整URL
     String? coverImage = goods.materialIntroPath;
-    
+
     if (coverImage == null || coverImage.isEmpty) {
-      coverImage = 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixinshare.png';
+      coverImage =
+          'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixinshare.png';
       print('🖼️ [试卷页] 封面路径为空，使用默认图片: $coverImage');
     } else {
       // ✅ 调用 completeImageUrl 拼接完整URL（对应小程序 completepath()）
@@ -121,50 +126,49 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
     }
 
     return Container(
-      padding: EdgeInsets.all(16.w), // 小程序: 32rpx = 16.w
-      color: AppColors.surface,
+      padding: EdgeInsets.all(16.w), // 小程序: 32rpx = 16.w (exam.vue .info)
+      color: Colors.white, // 小程序: background-color: #fff
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 封面图 (对应小程序 Line 4-12)
-          // 小程序使用 material_intro_path 作为封面图，并调用 completepath() 拼接完整URL
+          // 封面图 (对应小程序 Line 4-12 .material_cover_path 100rpx)
           Container(
-            width: 50.w, // 小程序: 100rpx = 50.w
-            margin: EdgeInsets.only(right: 12.w), // 小程序: 24rpx = 12.w
+            width: 50.w, // 100rpx = 50.w
+            margin: EdgeInsets.only(right: 12.w), // 24rpx = 12.w
             child: Image.network(
               coverImage,
-                fit: BoxFit.fitWidth,
-                errorBuilder: (context, error, stackTrace) {
-                  print('❌ [试卷页] 封面图片加载失败: $coverImage, error: $error');
-                  return Container(
-                    width: 50.w,
-                    height: 50.w,
-                    color: AppColors.card,
-                    child: Icon(
-                      Icons.image,
-                      color: AppColors.textHint,
-                      size: 25.sp,
-                    ),
-                  );
-                },
-              ),
+              fit: BoxFit.fitWidth,
+              errorBuilder: (context, error, stackTrace) {
+                print('❌ [试卷页] 封面图片加载失败: $coverImage, error: $error');
+                return Container(
+                  width: 50.w,
+                  height: 50.w,
+                  color: AppColors.card,
+                  child: Icon(
+                    Icons.image,
+                    color: AppColors.textHint,
+                    size: 25.sp,
+                  ),
+                );
+              },
             ),
+          ),
           // 商品信息 - 上下结构 (对应小程序 Line 13-20 .info-l)
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 商品名称 (对应小程序 Line 14)
+                // 商品名称 (对应小程序 Line 14 .info-l .name，margin-bottom 24rpx)
                 Text(
                   goods.name ?? '',
                   style: TextStyle(
-                    fontSize: 15.sp, // 小程序: 30rpx = 15.sp
+                    fontSize: 15.sp, // 30rpx = 15.sp
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF262629),
                   ),
                 ),
-                SizedBox(height: 8.h), // 名称与标签之间的间距
-                // 标签行 (对应小程序 Line 15-19 .tags)
+                SizedBox(height: 12.h), // 小程序 .name margin-bottom 24rpx = 12.h
+                // 标签行 (对应小程序 .tags .ee：共X份/年份/共X题，第一个 #ebf1ff+#2e68ff)
                 Row(
                   children: [
                     _buildTag(
@@ -174,8 +178,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
                     SizedBox(width: 6.w),
                     if (_getYearText(goods).isNotEmpty)
                       _buildTag(_getYearText(goods)), // Line 17: info.year
-                    if (_getYearText(goods).isNotEmpty)
-                      SizedBox(width: 6.w),
+                    if (_getYearText(goods).isNotEmpty) SizedBox(width: 6.w),
                     _buildTag(_getQuestionNumText(goods)), // Line 18: 共XX题
                   ],
                 ),
@@ -187,27 +190,25 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
     );
   }
 
-  /// 标签 Widget (对应小程序 Line 355-374)
+  /// 标签 Widget (对应小程序 .tags .ee：34rpx 高、4rpx 圆角、第一个 #ebf1ff+#2e68ff)
   Widget _buildTag(String text, {bool isPrimary = false}) {
     return Container(
-      height: 17.h, // 小程序: 34rpx = 17.h
-      padding: EdgeInsets.symmetric(horizontal: 6.w), // 小程序: 12rpx = 6.w
+      height: 17.h, // 34rpx = 17.h
+      padding: EdgeInsets.symmetric(horizontal: 6.w), // 12rpx = 6.w
       decoration: BoxDecoration(
         color: isPrimary
             ? const Color(0xFFEBF1FF)
-            : const Color(0xFFF5F6FA), // 小程序 Line 363, 371
-        borderRadius: BorderRadius.circular(2.r), // 小程序: 4rpx = 2.r
+            : const Color(0xFFF5F6FA),
+        borderRadius: BorderRadius.circular(2.r), // 4rpx = 2.r
       ),
       child: Center(
         child: Text(
           text,
           style: TextStyle(
-            fontSize: 10.sp, // 小程序: 20rpx = 10.sp
+            fontSize: 10.sp, // 20rpx = 10.sp
             color: isPrimary
-                ? AppColors.primary
-                : const Color(
-                    0xFF2C373D,
-                  ).withOpacity(0.71), // 小程序 Line 367, 372
+                ? _kExamPageBlue
+                : const Color(0xFF2C373D).withOpacity(0.71),
           ),
         ),
       ),
@@ -281,12 +282,12 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
               ),
             ),
           ),
-          // 试卷列表 (对应小程序 Line 28-44)
+          // 试卷列表 (对应小程序 .body background #ffffff)
           Container(
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: Colors.white,
               borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(6.r), // 小程序: 12rpx = 6.r
+                bottomLeft: Radius.circular(6.r),
                 bottomRight: Radius.circular(6.r),
               ),
             ),
@@ -400,22 +401,22 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
     );
   }
 
-  /// 试卷按钮 (对应小程序 Line 294-306)
+  /// 试卷按钮 (对应小程序 .but: 160rpx×56rpx、64rpx 圆角、#2e68ff、28rpx 白字)
   Widget _buildPaperButton(bool isCompleted) {
     return Container(
-      width: 80.w, // 小程序: 160rpx = 80.w
-      height: 28.h, // 小程序: 56rpx = 28.h
+      width: 80.w, // 160rpx = 80.w
+      height: 28.h, // 56rpx = 28.h
       decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(32.r), // 小程序: 64rpx = 32.r
+        color: _kExamPageBlue,
+        borderRadius: BorderRadius.circular(32.r), // 64rpx = 32.r
       ),
       child: Center(
         child: Text(
           isCompleted ? '查看报告' : '开始考试',
           style: TextStyle(
-            fontSize: 14.sp, // 小程序: 28rpx = 14.sp
+            fontSize: 14.sp, // 28rpx = 14.sp
             fontWeight: FontWeight.w400,
-            color: AppColors.textWhite,
+            color: Colors.white,
           ),
         ),
       ),
@@ -432,7 +433,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
     );
   }
 
-  /// 普通试卷列表项 (对应小程序 Line 50-54, 217-246)
+  /// 普通试卷列表项 (对应小程序 .paperList .item: 白底、12px 圆角、阴影、名称+开始考试/查看报告)
   Widget _buildPaperItem(PaperModel paper) {
     final isCompleted = paper.paperExerciseId != '0';
 
@@ -440,40 +441,34 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
       onTap: () => _handlePaperTap(paper),
       child: Container(
         margin: EdgeInsets.only(
-          left: 12.w, // 小程序: 24rpx = 12.w (Line 218)
+          left: 12.w,
           right: 12.w,
-          top: 12.h, // 小程序: margin 24rpx 24rpx 0 24rpx (Line 218)
+          top: 12.h,
         ),
-        padding: EdgeInsets.all(16.w), // 小程序: 32rpx = 16.w (Line 219)
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h), // 32rpx
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(
-            6.r,
-          ), // 小程序: 12px = 6.r (Line 224)
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r), // 小程序 12px
           boxShadow: [
             BoxShadow(
-              color: const Color(
-                0x0F1B2637,
-              ), // rgba(27, 38, 55, 0.06) (Line 225)
-              blurRadius: 15.r, // 小程序: 30rpx = 15.r
-              offset: const Offset(0, 0),
+              color: const Color(0x0F1B2637), // rgba(27,38,55,0.06)
+              blurRadius: 15.r, // 30rpx
+              offset: Offset.zero,
             ),
           ],
         ),
         child: Row(
           children: [
-            // 试卷名称 (对应小程序 Line 227-231)
             Expanded(
               child: Text(
                 paper.name ?? '',
                 style: TextStyle(
-                  fontSize: 14.sp, // 小程序: 28rpx = 14.sp (Line 229)
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF262629), // Line 230
+                  color: const Color(0xFF262629),
                 ),
               ),
             ),
-            // 按钮 (对应小程序 Line 232-245)
             _buildPaperButton(isCompleted),
           ],
         ),
@@ -624,8 +619,6 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
   }
 
   Widget _buildEmpty() {
-    return CommonStateWidget.empty(
-      message: '暂无试卷数据',
-    );
+    return CommonStateWidget.empty(message: '暂无试卷数据');
   }
 }

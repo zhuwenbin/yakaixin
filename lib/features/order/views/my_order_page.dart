@@ -548,20 +548,38 @@ class _OrderItem extends ConsumerWidget {
         return;
       }
 
-      // ✅ 直接跳转到确认付款页面（不需要预先获取支付参数）
+      // ✅ 跳转确认付款页，支付成功后由本页 push 支付成功页（与详情页一致，避免重复跳转）
       if (context.mounted) {
         print('\n🚀 跳转到确认付款页面...');
-        
-        context.push(AppRoutes.confirmPayment, extra: {
-          'goods_id': goodsId,
-          'goods_name': order.goodsName,
-          'goods_months_price_id': null,
-          'months': 0, // TODO: 从订单中获取
-          'payable_amount': amount,
-          'order_id': orderId,  // ✅ 传递订单ID
-          'flow_id': flowId,    // ✅ 传递流水ID
-          'finance_body_id': '',  // ✅ 继续支付时暂无finance_body_id，后台会根据订单查询
-        });
+        final paymentResult = await context.push<Map<String, dynamic>>(
+          AppRoutes.confirmPayment,
+          extra: {
+            'goods_id': goodsId,
+            'goods_name': order.goodsName,
+            'goods_months_price_id': null,
+            'months': 0,
+            'payable_amount': amount,
+            'order_id': orderId,
+            'flow_id': flowId,
+            'finance_body_id': '',
+            'refresh_goods_id': goodsId,
+            'professional_id_name': order.professionalIdName,
+            'goods_type': order.goodsType,
+          },
+        );
+        if (context.mounted &&
+            paymentResult != null &&
+            paymentResult['success'] == true) {
+          context.push(
+            AppRoutes.paySuccess,
+            extra: {
+              'goods_id': goodsId,
+              'professional_id_name': order.professionalIdName,
+              'goods_type': order.goodsType,
+              'isLearnButton': 1,
+            },
+          );
+        }
       }
     } catch (e) {
       EasyLoading.dismiss();

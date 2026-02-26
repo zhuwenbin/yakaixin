@@ -253,6 +253,8 @@ CourseClassModel _$CourseClassModelFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$CourseClassModel {
+  /// 套餐商品 id，与 getGoodsDetail 的 detail_package_goods[].id 一致，小程序用作 filter_goods_id 拉目录
+  String? get id => throw _privateConstructorUsedError;
   @JsonKey(name: 'class_id')
   String? get classId => throw _privateConstructorUsedError;
   @JsonKey(name: 'name')
@@ -269,7 +271,7 @@ mixin _$CourseClassModel {
   String? get address => throw _privateConstructorUsedError;
   @JsonKey(name: 'lesson')
   List<Map<String, dynamic>>? get lessons =>
-      throw _privateConstructorUsedError; // ✅ UI状态字段（不从JSON解析）
+      throw _privateConstructorUsedError; // ✅ UI状态字段（不从JSON解析），默认 true=收起（课程详情页小节默认不展开）
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool get isClose => throw _privateConstructorUsedError;
 
@@ -286,7 +288,8 @@ abstract class $CourseClassModelCopyWith<$Res> {
       _$CourseClassModelCopyWithImpl<$Res, CourseClassModel>;
   @useResult
   $Res call(
-      {@JsonKey(name: 'class_id') String? classId,
+      {String? id,
+      @JsonKey(name: 'class_id') String? classId,
       @JsonKey(name: 'name') String? name,
       @JsonKey(name: 'teaching_type') String? teachingType,
       @JsonKey(name: 'teaching_type_name') String? teachingTypeName,
@@ -310,6 +313,7 @@ class _$CourseClassModelCopyWithImpl<$Res, $Val extends CourseClassModel>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = freezed,
     Object? classId = freezed,
     Object? name = freezed,
     Object? teachingType = freezed,
@@ -321,6 +325,10 @@ class _$CourseClassModelCopyWithImpl<$Res, $Val extends CourseClassModel>
     Object? isClose = null,
   }) {
     return _then(_value.copyWith(
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String?,
       classId: freezed == classId
           ? _value.classId
           : classId // ignore: cast_nullable_to_non_nullable
@@ -370,7 +378,8 @@ abstract class _$$CourseClassModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {@JsonKey(name: 'class_id') String? classId,
+      {String? id,
+      @JsonKey(name: 'class_id') String? classId,
       @JsonKey(name: 'name') String? name,
       @JsonKey(name: 'teaching_type') String? teachingType,
       @JsonKey(name: 'teaching_type_name') String? teachingTypeName,
@@ -392,6 +401,7 @@ class __$$CourseClassModelImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = freezed,
     Object? classId = freezed,
     Object? name = freezed,
     Object? teachingType = freezed,
@@ -403,6 +413,10 @@ class __$$CourseClassModelImplCopyWithImpl<$Res>
     Object? isClose = null,
   }) {
     return _then(_$CourseClassModelImpl(
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String?,
       classId: freezed == classId
           ? _value.classId
           : classId // ignore: cast_nullable_to_non_nullable
@@ -447,7 +461,8 @@ class __$$CourseClassModelImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$CourseClassModelImpl implements _CourseClassModel {
   const _$CourseClassModelImpl(
-      {@JsonKey(name: 'class_id') this.classId,
+      {this.id,
+      @JsonKey(name: 'class_id') this.classId,
       @JsonKey(name: 'name') this.name,
       @JsonKey(name: 'teaching_type') this.teachingType,
       @JsonKey(name: 'teaching_type_name') this.teachingTypeName,
@@ -456,12 +471,15 @@ class _$CourseClassModelImpl implements _CourseClassModel {
       @JsonKey(name: 'address') this.address,
       @JsonKey(name: 'lesson') final List<Map<String, dynamic>>? lessons,
       @JsonKey(includeFromJson: false, includeToJson: false)
-      this.isClose = false})
+      this.isClose = true})
       : _lessons = lessons;
 
   factory _$CourseClassModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$CourseClassModelImplFromJson(json);
 
+  /// 套餐商品 id，与 getGoodsDetail 的 detail_package_goods[].id 一致，小程序用作 filter_goods_id 拉目录
+  @override
+  final String? id;
   @override
   @JsonKey(name: 'class_id')
   final String? classId;
@@ -494,14 +512,14 @@ class _$CourseClassModelImpl implements _CourseClassModel {
     return EqualUnmodifiableListView(value);
   }
 
-// ✅ UI状态字段（不从JSON解析）
+// ✅ UI状态字段（不从JSON解析），默认 true=收起（课程详情页小节默认不展开）
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   final bool isClose;
 
   @override
   String toString() {
-    return 'CourseClassModel(classId: $classId, name: $name, teachingType: $teachingType, teachingTypeName: $teachingTypeName, lessonNum: $lessonNum, lessonAttendanceNum: $lessonAttendanceNum, address: $address, lessons: $lessons, isClose: $isClose)';
+    return 'CourseClassModel(id: $id, classId: $classId, name: $name, teachingType: $teachingType, teachingTypeName: $teachingTypeName, lessonNum: $lessonNum, lessonAttendanceNum: $lessonAttendanceNum, address: $address, lessons: $lessons, isClose: $isClose)';
   }
 
   @override
@@ -509,6 +527,7 @@ class _$CourseClassModelImpl implements _CourseClassModel {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$CourseClassModelImpl &&
+            (identical(other.id, id) || other.id == id) &&
             (identical(other.classId, classId) || other.classId == classId) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.teachingType, teachingType) ||
@@ -527,6 +546,7 @@ class _$CourseClassModelImpl implements _CourseClassModel {
   @override
   int get hashCode => Object.hash(
       runtimeType,
+      id,
       classId,
       name,
       teachingType,
@@ -554,7 +574,8 @@ class _$CourseClassModelImpl implements _CourseClassModel {
 
 abstract class _CourseClassModel implements CourseClassModel {
   const factory _CourseClassModel(
-      {@JsonKey(name: 'class_id') final String? classId,
+      {final String? id,
+      @JsonKey(name: 'class_id') final String? classId,
       @JsonKey(name: 'name') final String? name,
       @JsonKey(name: 'teaching_type') final String? teachingType,
       @JsonKey(name: 'teaching_type_name') final String? teachingTypeName,
@@ -568,6 +589,10 @@ abstract class _CourseClassModel implements CourseClassModel {
   factory _CourseClassModel.fromJson(Map<String, dynamic> json) =
       _$CourseClassModelImpl.fromJson;
 
+  @override
+
+  /// 套餐商品 id，与 getGoodsDetail 的 detail_package_goods[].id 一致，小程序用作 filter_goods_id 拉目录
+  String? get id;
   @override
   @JsonKey(name: 'class_id')
   String? get classId;
@@ -592,7 +617,7 @@ abstract class _CourseClassModel implements CourseClassModel {
   @override
   @JsonKey(name: 'lesson')
   List<Map<String, dynamic>>? get lessons;
-  @override // ✅ UI状态字段（不从JSON解析）
+  @override // ✅ UI状态字段（不从JSON解析），默认 true=收起（课程详情页小节默认不展开）
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool get isClose;
   @override

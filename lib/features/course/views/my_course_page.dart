@@ -45,16 +45,9 @@ class _MyCoursePageState extends ConsumerState<MyCoursePage> {
     }
   }
 
-  /// 拼接完整图片URL
-  /// 对应小程序: completePath() (course.vue Line 119-121)
+  /// 拼接完整图片URL（使用 ApiConfig.completeImageUrl，避免双斜杠）
   String _completePath(String? path) {
-    if (path == null || path.isEmpty) {
-      return '';
-    }
-    if (path.contains('http://') || path.contains('https://')) {
-      return path;
-    }
-    return 'https://yakaixin.oss-cn-beijing.aliyuncs.com/$path';
+    return ApiConfig.completeImageUrl(path);
   }
 
   @override

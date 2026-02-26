@@ -11,19 +11,22 @@ class StudyCardGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ 小程序卡片固定高度 160rpx = 80.h
+    final double cardHeight = 80.h;
+    final double cellWidth = (MediaQuery.sizeOf(context).width - 10.w * 2 - 16.w) / 2;
+    final double aspectRatio = cellWidth / cardHeight;
+
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 5.w), // ✅ 对应小程序 10rpx = 5.w
+      margin: EdgeInsets.symmetric(horizontal: 10.w), // ✅ 对应小程序 padding 10rpx
       child: GridView.builder(
         padding: EdgeInsets.zero,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          // ✅ 小程序卡片高度 160rpx = 80.h
-          // 对应小程序 margin-right + margin-left = 16rpx + 16rpx = 32rpx = 16.w
-          childAspectRatio: 1.3,
-          crossAxisSpacing: 16.w, // ✅ 对应小程序横向间距 32rpx = 16.w
-          mainAxisSpacing: 8.h,   // ✅ 对应小程序纵向间距 16rpx = 8.h
+          childAspectRatio: aspectRatio, // 固定高度 80.h，与小程序 160rpx 一致
+          crossAxisSpacing: 16.w, // ✅ 对应小程序 16rpx 间距
+          mainAxisSpacing: 8.h, // ✅ 对应小程序 16rpx ÷ 2 = 8.h
         ),
         itemCount: cards.length,
         itemBuilder: (context, index) {
@@ -103,10 +106,10 @@ class _StudyCard extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: 14.sp, // ✅ 小程序28rpx ÷ 2 = 14.sp
-                        fontWeight: FontWeight.w600, // ✅ 小程序font-weight: 600
-                        color: AppColors.textPrimary,
-                        height: 1.5, // ✅ 小程序line-height: 1.5
+                        fontSize: 14.sp, // 对应小程序 study-card-grid.vue .card-title: 28rpx
+                        fontWeight: FontWeight.w600, // 对应小程序 font-weight: 600
+                        color: AppColors.textPrimary, // 对应小程序 #333
+                        height: 1.5, // 对应小程序 line-height: 1.5
                       ),
                     ),
                     SizedBox(height: 3.h), // ✅ 小程序6rpx ÷ 2 = 3.h

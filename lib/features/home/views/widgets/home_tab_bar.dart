@@ -66,7 +66,7 @@ class HomeTabBar extends StatelessWidget {
             width: 40.w,
             height: 4.h,
             decoration: BoxDecoration(
-              color: AppColors.tabIndicator,
+              color: AppColors.primaryGradientStart,
               borderRadius: AppRadius.radiusXs,
             ),
           ),

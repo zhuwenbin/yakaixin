@@ -57,6 +57,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     final homeState = ref.watch(homeProvider);
     final major = ref.watch(currentMajorProvider);
     final statusBarHeight = MediaQuery.of(context).padding.top;
+    
+    // ✅ 监听登录状态变化：仅「已登录→未登录」时在此刷新；「未登录→已登录」由 Auth 的 _refreshAllPagesAfterLogin 用正确专业 ID 刷新，避免竞态导致错误数据覆盖
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (previous?.isLoggedIn == true && !next.isLoggedIn) {
+        print('🔄 [首页] 检测到登录状态变化（已登录 → 未登录），刷新首页数据');
+        ref.read(homeProvider.notifier).loadHomeData();
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,

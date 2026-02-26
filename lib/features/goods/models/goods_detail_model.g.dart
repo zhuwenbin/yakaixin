@@ -21,6 +21,7 @@ _$GoodsDetailModelImpl _$$GoodsDetailModelImplFromJson(
       year: json['year'] as String?,
       examTitle: json['exam_title'] as String?,
       detailsType: json['details_type'],
+      dataType: json['data_type'],
       prices: (json['prices'] as List<dynamic>?)
               ?.map((e) => GoodsPriceModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -46,6 +47,7 @@ _$GoodsDetailModelImpl _$$GoodsDetailModelImplFromJson(
           ? null
           : MockGoodsStatistics.fromJson(
               json['mkgoods_statistics'] as Map<String, dynamic>),
+      confirmationPageData: json['confirmation_page_data'] as String?,
     );
 
 Map<String, dynamic> _$$GoodsDetailModelImplToJson(
@@ -63,6 +65,7 @@ Map<String, dynamic> _$$GoodsDetailModelImplToJson(
       'year': instance.year,
       'exam_title': instance.examTitle,
       'details_type': instance.detailsType,
+      'data_type': instance.dataType,
       'prices': instance.prices,
       'tiku_goods_details': instance.tikuGoodsDetails,
       'teaching_system': instance.teachingSystem,
@@ -71,6 +74,7 @@ Map<String, dynamic> _$$GoodsDetailModelImplToJson(
       'permission_order_id': instance.permissionOrderId,
       'detail_package_goods': instance.detailPackageGoods,
       'mkgoods_statistics': instance.mkgoodsStatistics,
+      'confirmation_page_data': instance.confirmationPageData,
     };
 
 _$GoodsPriceModelImpl _$$GoodsPriceModelImplFromJson(

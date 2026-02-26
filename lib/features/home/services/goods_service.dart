@@ -80,17 +80,19 @@ class GoodsService {
   }
 
   /// 根据position_identify获取商品列表
-  /// 对应小程序: getGoods({ position_identify: 'linianzhenti' })
+  /// 对应小程序: study-card-grid.vue getGoods({ shelf_platform_id, professional_id, position_identify })，接口 /c/goods/v2
   /// 用于学习卡片跳转: 绝密押题、科目模考、模拟考试
   Future<GoodsListResponse> getGoodsByPosition({
     required String positionIdentify,
     String? professionalId,
+    String? shelfPlatformId,
   }) async {
     final response = await _dioClient.get(
-      '/c/goods',
+      '/c/goods/v2',
       queryParameters: {
         'position_identify': positionIdentify,
-        if (professionalId != null) 'professional_id': professionalId,
+        if (professionalId != null && professionalId.isNotEmpty) 'professional_id': professionalId,
+        if (shelfPlatformId != null && shelfPlatformId.isNotEmpty) 'shelf_platform_id': shelfPlatformId,
       },
     );
 

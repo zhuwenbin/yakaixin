@@ -34,7 +34,7 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
         setState(() {});
       }
     });
-    
+
     // 初始加载数据
     Future.microtask(() {
       ref.read(wrongBookNotifierProvider.notifier).loadWrongQuestions();
@@ -50,7 +50,7 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(wrongBookNotifierProvider);
-    
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -70,17 +70,18 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildQuestionList(state.allQuestions),      // 全部
-                    _buildQuestionList(state.markedQuestions),   // 标记
+                    _buildQuestionList(state.allQuestions), // 全部
+                    _buildQuestionList(state.markedQuestions), // 标记
                     _buildQuestionList(state.fallibleQuestions), // 易错
                   ],
                 ),
               ),
               // 底部按钮
-              if (_getCurrentQuestions(state).isNotEmpty) _buildBottomButton(state),
+              if (_getCurrentQuestions(state).isNotEmpty)
+                _buildBottomButton(state),
             ],
           ),
-          
+
           // ✅ 时间选择器（使用 Dialog，与专业选择动画一致）
           // 注意：不再使用 if 条件显示，而是通过 showDialog 控制
         ],
@@ -99,10 +100,13 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
   /// - 没有底部指示器
   Widget _buildTabBar() {
     final currentIndex = _tabController.index;
-    
+
     return Container(
       color: AppColors.surface,
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h), // ✅ 对应小程序 padding: 16rpx 24rpx
+      padding: EdgeInsets.symmetric(
+        horizontal: 24.w,
+        vertical: 16.h,
+      ), // ✅ 对应小程序 padding: 16rpx 24rpx
       child: Row(
         children: [
           // ✅ 自定义 Tab 栏（对应小程序 .left_tab）
@@ -143,12 +147,12 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
       ),
     );
   }
-  
+
   /// 构建自定义 Tab 项
   /// 对应小程序: .tab_name 和 .init
   Widget _buildCustomTab(int index, String text, int currentIndex) {
     final isActive = currentIndex == index;
-    
+
     return GestureDetector(
       onTap: () {
         _tabController.animateTo(index);
@@ -196,7 +200,7 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
     final isMark = SafeTypeConverter.toInt(question.isMark) == 1;
     final isFallibility = SafeTypeConverter.toInt(question.isFallibility) == 1;
     final level = SafeTypeConverter.toInt(question.level, defaultValue: 1);
-    
+
     // ✅ 获取题干内容 - 参照小程序，显示 stemList[0].content
     String questionText = '';
     if (question.thematicStem != null && question.thematicStem!.isNotEmpty) {
@@ -204,14 +208,14 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
     } else if (question.stemList != null && question.stemList!.isNotEmpty) {
       questionText = _stripHtml(question.stemList!.first.content ?? '');
     }
-    
+
     // ✅ 显示章节名称 - 不显示tags字段
     final chapterName = question.chapterIdsName ?? '';
-    
+
     // ✅ 时间显示 - 从 created_at_val 获取，只显示前16位
     final timeText = question.createdAtVal ?? question.createdAt ?? '';
-    final displayTime = timeText.isNotEmpty && timeText.length >= 16 
-        ? timeText.substring(0, 16) 
+    final displayTime = timeText.isNotEmpty && timeText.length >= 16
+        ? timeText.substring(0, 16)
         : timeText;
 
     return GestureDetector(
@@ -242,7 +246,10 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
                 // 章节标签 (不显示tags字段)
                 if (chapterName.isNotEmpty)
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withOpacity(0.1),
                       borderRadius: AppRadius.radiusXs,
@@ -258,13 +265,18 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
                   ),
                 if (chapterName.isNotEmpty) SizedBox(height: 8.h),
                 // ✅ 显示标记标签 - 对应小程序 Line 115-122
-                if (isMark && question.tags != null && question.tags!.isNotEmpty)
+                if (isMark &&
+                    question.tags != null &&
+                    question.tags!.isNotEmpty)
                   Wrap(
                     spacing: 8.w,
                     runSpacing: 6.h,
                     children: question.tags!.split(',').map((tag) {
                       return Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 4.h,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: AppRadius.radiusXs,
@@ -278,7 +290,9 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
                       );
                     }).toList(),
                   ),
-                if (isMark && question.tags != null && question.tags!.isNotEmpty)
+                if (isMark &&
+                    question.tags != null &&
+                    question.tags!.isNotEmpty)
                   SizedBox(height: 8.h),
                 // 时间 - 显示YYYY-MM-DD HH:mm
                 if (displayTime.isNotEmpty)
@@ -292,10 +306,7 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
                 // 难易度
                 Row(
                   children: [
-                    Text(
-                      '难易度：',
-                      style: AppTextStyles.labelMedium,
-                    ),
+                    Text('难易度：', style: AppTextStyles.labelMedium),
                     ...List.generate(5, (index) {
                       return Padding(
                         padding: EdgeInsets.only(right: 4.w),
@@ -321,7 +332,10 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
                   // 易错标记
                   if (isFallibility)
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 6.w,
+                        vertical: 2.h,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.error.withOpacity(0.1),
                         borderRadius: AppRadius.radiusXs,
@@ -333,15 +347,10 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
                         ),
                       ),
                     ),
-                  if (isFallibility && isMark)
-                    SizedBox(width: 4.w),
+                  if (isFallibility && isMark) SizedBox(width: 4.w),
                   // 标记图标
                   if (isMark)
-                    Icon(
-                      Icons.bookmark,
-                      size: 20.sp,
-                      color: AppColors.warning,
-                    ),
+                    Icon(Icons.bookmark, size: 20.sp, color: AppColors.warning),
                 ],
               ),
             ),
@@ -350,7 +359,6 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
       ),
     );
   }
-
 
   /// 去除HTML标签
   String _stripHtml(String html) {
@@ -416,32 +424,24 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
             backgroundColor: AppColors.primary,
             foregroundColor: AppColors.textWhite,
             padding: EdgeInsets.symmetric(vertical: 14.h),
-            shape: RoundedRectangleBorder(
-              borderRadius: AppRadius.radiusSm,
-            ),
+            shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusSm),
             elevation: 0,
           ),
-          child: Text(
-            '错题复查',
-            style: AppTextStyles.buttonMedium,
-          ),
+          child: Text('错题复查', style: AppTextStyles.buttonMedium),
         ),
       ),
     );
   }
 
-  /// 跳转到详情页
+  /// 跳转到详情页（与小程序一致：只传当前一道题，详情页只显示该题）
+  /// 对应小程序 index.vue goDetail(data, type) type 为假时 listInfo: [{ question_list: [data] }]
   void _goToDetail(WrongQuestionModel question) {
-    final state = ref.read(wrongBookNotifierProvider);
-    final allQuestions = _getCurrentQuestions(state);
-    final index = allQuestions.indexWhere((q) => q.id == question.id);
-    
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => WrongBookDetailPage(
-          questions: allQuestions,
-          initialIndex: index >= 0 ? index : 0,
+          questions: [question],
+          initialIndex: 0,
           isReview: false,
         ),
       ),
@@ -464,7 +464,7 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
   /// 从底部弹出，使用与专业选择相同的动画参数
   void _showTimeRangeSelector(BuildContext context, WidgetRef ref) async {
     final state = ref.read(wrongBookNotifierProvider);
-    
+
     final result = await showTimeRangeSelectorDialog(
       context,
       selectedRange: state.timeRange,
@@ -472,14 +472,16 @@ class _WrongBookPageState extends ConsumerState<WrongBookPage>
       startDate: state.startDate,
       endDate: state.endDate,
     );
-    
+
     if (result != null) {
-      ref.read(wrongBookNotifierProvider.notifier).updateFilter(
-        timeRange: result['range'] as String,
-        timeRangeName: result['name'] as String,
-        startDate: result['startDate'] as String?,
-        endDate: result['endDate'] as String?,
-      );
+      ref
+          .read(wrongBookNotifierProvider.notifier)
+          .updateFilter(
+            timeRange: result['range'] as String,
+            timeRangeName: result['name'] as String,
+            startDate: result['startDate'] as String?,
+            endDate: result['endDate'] as String?,
+          );
     }
   }
 }

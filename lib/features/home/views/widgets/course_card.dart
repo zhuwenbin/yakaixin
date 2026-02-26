@@ -54,6 +54,10 @@ class CourseCard extends StatelessWidget {
           children: [
             _buildTitle(),
             SizedBox(height: 10.h),
+            if (_shouldShowValidityTime()) ...[
+              _buildValidityTime(),
+              SizedBox(height: 10.h),
+            ],
             _buildTags(),
             SizedBox(height: 10.h),
             _buildPriceRow(),
@@ -141,6 +145,33 @@ class CourseCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  /// 是否显示有效期时间
+  /// 对应小程序 examination-course-item.vue Line 10-13:
+  /// v-if="item.type != 8 && item.type != 18 && !item.validity_start_date.startsWith('0001') && !item.validity_end_date.startsWith('0001')"
+  bool _shouldShowValidityTime() {
+    final typeInt = SafeTypeConverter.toInt(goods.type, defaultValue: 0);
+    if (typeInt == 8 || typeInt == 18) return false;
+    final start = goods.validityStartDate ?? goods.validityStartDateVal ?? '';
+    final end = goods.validityEndDate ?? goods.validityEndDateVal ?? '';
+    if (start.isEmpty || end.isEmpty) return false;
+    if (start.contains('0001') || end.contains('0001')) return false;
+    return true;
+  }
+
+  /// 有效期时间行
+  /// 对应小程序: {{ item.validity_start_date }} - {{ item.validity_end_date }}
+  Widget _buildValidityTime() {
+    final start = goods.validityStartDate ?? goods.validityStartDateVal ?? '';
+    final end = goods.validityEndDate ?? goods.validityEndDateVal ?? '';
+    return Text(
+      '$start – $end',
+      style: AppTextStyles.bodySmall.copyWith(
+        color: AppColors.textHint,
+        fontSize: 14.sp,
+      ),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -13,12 +14,13 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/widgets/common_state_widget.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../order/providers/payment_provider.dart';
-import '../../home/views/widgets/countdown_timer.dart';
+import '../../home/services/chapter_service.dart';
 import '../providers/goods_detail_provider.dart';
 import '../models/goods_detail_model.dart';
 
 /// 商品详情页(经典版)
 /// 对应小程序: pages/test/detail.vue
+
 class GoodsDetailPage extends ConsumerStatefulWidget {
   final String? productId;
   final String? goodsId;
@@ -41,6 +43,12 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   // ✅ 防止重复点击（对应小程序 Line 510-515）
   bool _isPurchasing = false;
 
+  // ✅ 章节列表状态管理
+  List<Map<String, dynamic>> _chapterList = [];
+  bool _isLoadingChapters = false;
+  String? _chapterError;
+  final Set<String> _expandedChapters = {};
+
   @override
   void initState() {
     super.initState();
@@ -52,9 +60,61 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
     });
   }
 
+  /// 加载章节列表数据
+  /// 对应小程序: detail.vue Line 387-396 (getChapterpackageTree)
+  Future<void> _loadChapterList(GoodsDetailModel detail) async {
+    final professionalId = detail.professionalId ?? widget.professionalId;
+    final goodsId = SafeTypeConverter.toSafeString(detail.goodsId);
+
+    if (professionalId == null || professionalId.isEmpty || goodsId.isEmpty) {
+      print(
+        '⚠️ [商品详情页] 缺少章节列表参数: professionalId=$professionalId, goodsId=$goodsId',
+      );
+      return;
+    }
+
+    if (_isLoadingChapters) return; // 防止重复加载
+
+    setState(() {
+      _isLoadingChapters = true;
+      _chapterError = null;
+    });
+
+    try {
+      final service = ref.read(chapterServiceProvider);
+      final chapters = await service.getChapterTree(
+        professionalId: professionalId,
+        goodsId: goodsId,
+      );
+
+      setState(() {
+        _chapterList = chapters;
+        _isLoadingChapters = false;
+      });
+    } catch (e) {
+      print('❌ [商品详情页] 加载章节列表失败: $e');
+      setState(() {
+        _chapterError = e.toString();
+        _isLoadingChapters = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(goodsDetailNotifierProvider);
+
+    // ✅ 监听登录状态变化，登录成功后刷新商品详情
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      // 如果从未登录变为已登录，刷新商品详情
+      if (previous?.isLoggedIn == false && next.isLoggedIn) {
+        print('🔄 [商品详情页] 检测到登录状态变化，刷新商品详情');
+        final goodsId = widget.goodsId ?? widget.productId;
+        if (goodsId != null && goodsId.isNotEmpty) {
+          ref.read(goodsDetailNotifierProvider.notifier).refresh(goodsId);
+        }
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -518,7 +578,9 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   }
 
   /// 有效期选择
-  /// 对应小程序: detail.vue Line 58-69
+  /// 对应小程序: test/detail.vue .prices / .ee / .ee.active
+  /// 未选: 背景 #f5f6fa, 字 rgba(3,32,61,0.85); 选中: 背景 #2e68ff, 字 #ffffff
+  /// 尺寸: 宽 222rpx, 高 64rpx, 圆角 8rpx, 字号 24rpx; 文案「有效期 永久」/「有效期 X个月」
   Widget _buildPriceOptions(GoodsDetailModel detail, int selectedIndex) {
     if (detail.prices.isEmpty) return const SizedBox.shrink();
 
@@ -527,11 +589,15 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
       children: [
         Text(
           '选择有效期',
-          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
+          ),
         ),
-        SizedBox(height: AppSpacing.smV),
+        SizedBox(height: 12.h),
         Wrap(
-          spacing: 12.w,
+          spacing: 9.w,
           runSpacing: 12.h,
           children: detail.prices.asMap().entries.map((entry) {
             final index = entry.key;
@@ -545,25 +611,23 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                     .selectPrice(index);
               },
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                width: 111.w,
+                height: 32.h,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : AppColors.surface,
-                  border: Border.all(
-                    color: isSelected ? AppColors.primary : AppColors.border,
-                    width: 1.5,
-                  ),
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  color: isSelected
+                      ? const Color(0xFF2E68FF)
+                      : const Color(0xFFF5F6FA),
+                  borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: Text(
                   '有效期 ${price.validityText}',
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w400,
                     color: isSelected
-                        ? AppColors.textWhite
-                        : AppColors.textPrimary,
-                    fontWeight: isSelected
-                        ? FontWeight.w500
-                        : FontWeight.normal,
+                        ? const Color(0xFFFFFFFF)
+                        : const Color(0xFF03203D).withOpacity(0.85),
                   ),
                 ),
               ),
@@ -593,41 +657,229 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   Widget _buildChapterArea(GoodsDetailModel detail) {
     final questionNum = detail.tikuGoodsDetails?.questionNum?.toString() ?? '0';
 
+    // ✅ 如果章节列表为空且未加载过，则加载章节数据
+    if (_chapterList.isEmpty && !_isLoadingChapters && _chapterError == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadChapterList(detail);
+      });
+    }
+
     return Container(
       width: double.infinity,
-      padding: AppSpacing.allMd,
+      padding: EdgeInsets.only(top: AppSpacing.mdV, bottom: AppSpacing.mdV),
       color: AppColors.background,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Icon(Icons.star, size: 20.sp, color: AppColors.primary),
-              SizedBox(width: AppSpacing.sm),
-              Text(
-                '本题库共有 $questionNum 道题',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: AppSpacing.mdV),
+          // ✅ 课节头部（与小程序 .header 一致）：一层容器 + 背景图 + 星星与文案
           Container(
-            padding: AppSpacing.allMd,
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
             decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-            ),
-            child: Text(
-              '章节列表功能开发中...',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+              image: DecorationImage(
+                image: AssetImage('assets/images/chapter_header_bg.png'),
+                fit: BoxFit.fill,
               ),
             ),
+            child: Row(
+              children: [
+                Image.network(
+                  'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/604d173977513550467950_xingixng.png',
+                  width: 14.w,
+                  height: 14.w,
+                  errorBuilder: (_, __, ___) =>
+                      Icon(Icons.star, size: 14.w, color: Colors.white),
+                ),
+                SizedBox(width: 6.w),
+                Text(
+                  '本题库共有 $questionNum 道题',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // ✅ 章节列表内容（与小程序 .chapter-list 一致）：白底、无圆角、上边挨着背景图、左右无边距
+          Container(
+            width: double.infinity,
+            padding: AppSpacing.allMd,
+            decoration: const BoxDecoration(
+              color: AppColors.surface,
+            ),
+            child: _isLoadingChapters
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                : _chapterError != null
+                ? Center(
+                    child: Column(
+                      children: [
+                        Text(
+                          '加载失败',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        TextButton(
+                          onPressed: () => _loadChapterList(detail),
+                          child: const Text('重试'),
+                        ),
+                      ],
+                    ),
+                  )
+                : _chapterList.isEmpty
+                ? Center(
+                    child: Text(
+                      '暂无章节数据',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  )
+                : _buildChapterTree(_chapterList),
           ),
         ],
       ),
+    );
+  }
+
+  /// 构建章节树（递归显示）
+  /// 对应小程序: treeChapter 组件
+  Widget _buildChapterTree(
+    List<Map<String, dynamic>> chapters, {
+    int level = 1,
+  }) {
+    return Column(
+      children: chapters.map((chapter) {
+        return _buildChapterItem(chapter, level: level);
+      }).toList(),
+    );
+  }
+
+  /// 构建章节项
+  /// 对应小程序: tree-item.vue
+  Widget _buildChapterItem(Map<String, dynamic> chapter, {int level = 1}) {
+    final chapterId = chapter['id']?.toString() ?? '';
+    final isExpanded = _expandedChapters.contains(chapterId);
+    final children = chapter['child'] as List?;
+    final hasChildren = children != null && children.isNotEmpty;
+    final sectionType = chapter['section_type']?.toString();
+    final questionNum = chapter['question_number']?.toString() ?? '0';
+    final doQuestionNum = chapter['do_question_num']?.toString() ?? '0';
+
+    // ✅ section_type == '2' 表示知识点（叶子节点），只显示名称和题数
+    if (sectionType == '2' || !hasChildren) {
+      return Container(
+        padding: EdgeInsets.fromLTRB(16.w + (level - 1) * 20.w, 8.h, 16.w, 8.h),
+        child: Row(
+          children: [
+            Container(
+              width: 5.w,
+              height: 5.w,
+              margin: EdgeInsets.only(right: 15.w),
+              decoration: BoxDecoration(
+                color: const Color(0xFF387DFC),
+                shape: BoxShape.circle,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                chapter['sectionname']?.toString() ??
+                    chapter['name']?.toString() ??
+                    '未命名',
+                style: AppTextStyles.bodySmall.copyWith(fontSize: 13.sp),
+              ),
+            ),
+            Text(
+              '$questionNum题',
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.textHint,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ✅ 有子节点的章节，可展开/收起
+    return Column(
+      children: [
+        InkWell(
+          onTap: () {
+            setState(() {
+              if (isExpanded) {
+                _expandedChapters.remove(chapterId);
+              } else {
+                _expandedChapters.add(chapterId);
+              }
+            });
+          },
+          child: Container(
+            padding: EdgeInsets.fromLTRB(
+              16.w + (level - 1) * 20.w,
+              12.h,
+              16.w,
+              12.h,
+            ),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: AppColors.border, width: 0.5),
+              ),
+            ),
+            child: Row(
+              children: [
+                // 与小程序 tree-head .left-image 一致：select.png，展开时旋转 180deg
+                Transform.rotate(
+                  angle: isExpanded ? math.pi : 0,
+                  child: Image.network(
+                    'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/16950043427848e3c169500434278459705_select.png',
+                    width: 16.w,
+                    height: 16.w,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Icon(
+                      isExpanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      size: 16.w,
+                      color: AppColors.textHint,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Text(
+                    chapter['sectionname']?.toString() ??
+                        chapter['name']?.toString() ??
+                        '未命名',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w500,
+                      fontSize: level == 1 ? 14.sp : 13.sp,
+                    ),
+                  ),
+                ),
+                // 与小程序 tree-head .num-group 一致：x/xx 题
+                Text(
+                  '$doQuestionNum/$questionNum',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.textHint,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (isExpanded && hasChildren)
+          _buildChapterTree(
+            children.cast<Map<String, dynamic>>(),
+            level: level + 1,
+          ),
+      ],
     );
   }
 
@@ -834,10 +1086,16 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
 
   /// 处理购买 - 调用统一支付模块
   /// 对应小程序: detail.vue Line 509-583
+  /// 未登录时直接跳转登录页（不提示、不跳转确认购买页），已登录时直接下单
   Future<void> _handlePurchase(
     GoodsDetailModel detail,
     GoodsPriceModel selectedPrice,
   ) async {
+    if (!ref.read(authProvider).isLoggedIn) {
+      _navigateToLogin();
+      return;
+    }
+
     // ✅ 防止重复点击（对应小程序 Line 510-518）
     if (_isPurchasing) {
       EasyLoading.showInfo('请勿重复点击');
@@ -941,15 +1199,24 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
           },
         );
 
-        // 🔄 支付成功回调：刷新商品详情（对应小程序 Line 639: this.getGoodsDetail()）
+        // 🔄 支付成功：先刷新详情，再跳转支付成功页（与小程序一致：getGoodsDetail 后 push paySuccess）
         if (paymentResult != null && paymentResult['success'] == true) {
-          print('\n🔄 支付成功回调，刷新商品详情...');
+          print('\n🔄 支付成功，刷新商品详情并跳转支付成功页...');
           final refreshGoodsId =
               paymentResult['refresh_goods_id'] as String? ?? goodsId;
           await ref
               .read(goodsDetailNotifierProvider.notifier)
               .refresh(refreshGoodsId);
-          print('✅ 商品详情已刷新，按钮状态已更新为"去学习"');
+          if (!mounted) return;
+          context.push(
+            AppRoutes.paySuccess,
+            extra: {
+              'goods_id': goodsId,
+              'professional_id_name': professionalIdName,
+              'goods_type': goodsType,
+              'isLearnButton': 0,
+            },
+          );
         }
       } else {
         // ❌ 下订单失败
@@ -972,6 +1239,12 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   /// 对应小程序: detail.vue Line 339-366
   void _handleStartPractice(GoodsDetailModel detail) {
     print('\n📚 点击了「立即测试」按钮');
+
+    // ✅ 检查登录状态（根据 Guideline 5.1.1，学习需要登录）；未登录直接跳转登录页，不弹窗
+    if (!ref.read(authProvider).isLoggedIn) {
+      _navigateToLogin();
+      return;
+    }
 
     // ✅ 检查购买状态（对应小程序 Line 344）
     final permissionStatus = SafeTypeConverter.toSafeString(
@@ -1042,6 +1315,34 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
     // 未知类型
     print('   ❌ 未知商品类型: $typeInt');
     EasyLoading.showInfo('不支持的商品类型');
+  }
+
+  /// 未登录时直接跳转登录页（不弹窗、不跳转确认购买页）
+  void _navigateToLogin() {
+    final routerState = GoRouterState.of(context);
+    final currentUri = routerState.uri;
+    String returnPath = currentUri.path;
+    if (currentUri.queryParameters.isNotEmpty) {
+      final queryString = currentUri.queryParameters.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+      returnPath = '$returnPath?$queryString';
+    }
+    if (currentUri.queryParameters.isEmpty) {
+      final goodsId = widget.goodsId ?? widget.productId;
+      if (goodsId != null) {
+        returnPath =
+            '${AppRoutes.goodsDetail}?goods_id=$goodsId&product_id=$goodsId';
+        if (widget.active != null) {
+          returnPath = '$returnPath&active=${widget.active}';
+        }
+        if (widget.professionalId != null) {
+          returnPath =
+              '$returnPath&professional_id=${widget.professionalId}';
+        }
+      }
+    }
+    context.push(AppRoutes.loginCenter, extra: {'returnPath': returnPath});
   }
 }
 

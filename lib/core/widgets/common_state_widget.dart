@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_spacing.dart';
-import '../../app/config/api_config.dart';
 
 /// 通用状态组件类型
 enum CommonStateType {
@@ -372,25 +371,23 @@ class CommonStateWidget extends StatelessWidget {
 
       case CommonStateType.empty:
         return _StateConfig(
-          imageUrl: imageUrl ?? ApiConfig.completeImageUrl(
-            'public/4045173295663081752515_8b3592c2dcddcac66af8ddd46abbbf1b74efa19fac63-AlBs3V_fw1200%402x.png',
-          ),
+          // 空状态图仅在旧 OSS，与小程序一致用完整 URL
+          imageUrl: imageUrl ?? 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/4045173295663081752515_8b3592c2dcddcac66af8ddd46abbbf1b74efa19fac63-AlBs3V_fw1200%402x.png',
           message: message ?? '暂无数据',
         );
 
       case CommonStateType.noOrder:
         return _StateConfig(
-          imageUrl: imageUrl ?? ApiConfig.completeImageUrl(
-            'public/16954369620338446169543696203498545_%E7%BC%96%E7%BB%84%402x%20(4).png',
-          ),
+          // ✅ 对应小程序: order-list.vue Line 59
+          // 小程序使用旧OSS完整URL: https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/16954369620338446169543696203498545_%E7%BC%96%E7%BB%84%402x%20(4).png
+          // ⚠️ 注意：此图片在旧OSS域名，需要完整URL
+          imageUrl: imageUrl ?? 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/16954369620338446169543696203498545_%E7%BC%96%E7%BB%84%402x%20(4).png',
           message: message ?? '暂无订单！',
         );
 
       case CommonStateType.noCourse:
         return _StateConfig(
-          imageUrl: imageUrl ?? ApiConfig.completeImageUrl(
-            'public/4045173295663081752515_8b3592c2dcddcac66af8ddd46abbbf1b74efa19fac63-AlBs3V_fw1200%402x.png',
-          ),
+          imageUrl: imageUrl ?? 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/4045173295663081752515_8b3592c2dcddcac66af8ddd46abbbf1b74efa19fac63-AlBs3V_fw1200%402x.png',
           message: message ?? '未找到符合的学习内容',
           actionText: '去看课程',
           actionCallback: onAction,
@@ -398,9 +395,7 @@ class CommonStateWidget extends StatelessWidget {
 
       case CommonStateType.noCollection:
         return _StateConfig(
-          imageUrl: imageUrl ?? ApiConfig.completeImageUrl(
-            'public/4045173295663081752515_8b3592c2dcddcac66af8ddd46abbbf1b74efa19fac63-AlBs3V_fw1200%402x.png',
-          ),
+          imageUrl: imageUrl ?? 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/4045173295663081752515_8b3592c2dcddcac66af8ddd46abbbf1b74efa19fac63-AlBs3V_fw1200%402x.png',
           message: message ?? '暂无收藏',
         );
 
