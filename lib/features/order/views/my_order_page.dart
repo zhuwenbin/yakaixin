@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
@@ -9,7 +10,6 @@ import '../models/order_model.dart';
 import '../providers/order_provider.dart';
 import '../providers/payment_provider.dart';
 import '../../../app/routes/app_routes.dart';
-import '../../../../app/config/api_config.dart';
 import '../../../core/widgets/common_state_widget.dart';
 import '../../../core/utils/error_message_mapper.dart';
 
@@ -61,10 +61,7 @@ class _MyOrderPageState extends ConsumerState<MyOrderPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFF5F6F8),
-      appBar: AppBar(
-        title: Text('我的订单'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: Text('我的订单'), elevation: 0),
       body: Column(
         children: [
           // Tab 栏
@@ -167,7 +164,12 @@ class _OrderListViewState extends ConsumerState<_OrderListView> {
             padding: EdgeInsets.all(16.w),
             itemCount: orders.length,
             itemBuilder: (context, index) {
-              return _OrderItem(order: orders[index]);
+              return _OrderItem(
+                order: orders[index],
+                onCountdownFinish: () => ref
+                    .read(orderListProvider(widget.status).notifier)
+                    .refresh(),
+              );
             },
           );
         },
@@ -178,10 +180,11 @@ class _OrderListViewState extends ConsumerState<_OrderListView> {
             error,
             '加载订单列表失败',
           );
-          
+
           return CommonStateWidget.loadError(
             message: errorMessage,
-            onRetry: () => ref.read(orderListProvider(widget.status).notifier).refresh(),
+            onRetry: () =>
+                ref.read(orderListProvider(widget.status).notifier).refresh(),
           );
         },
       ),
@@ -195,12 +198,77 @@ class _OrderListViewState extends ConsumerState<_OrderListView> {
   }
 }
 
+/// 订单待支付倒计时组件
+/// 对应小程序: order-list.vue 内 u-count-down，自动每秒更新
+/// 样式: .pay-time 背景图 timeback.png, 292rpx×44rpx, flex-end
+class _OrderCountdownWidget extends StatefulWidget {
+  final int initialSeconds;
+  final VoidCallback? onFinish;
+
+  const _OrderCountdownWidget({required this.initialSeconds, this.onFinish});
+
+  @override
+  State<_OrderCountdownWidget> createState() => _OrderCountdownWidgetState();
+}
+
+class _OrderCountdownWidgetState extends State<_OrderCountdownWidget> {
+  late int _remainingSeconds;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _remainingSeconds = widget.initialSeconds;
+    _startCountdown();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startCountdown() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 0) {
+        setState(() {
+          _remainingSeconds--;
+        });
+      } else {
+        timer.cancel();
+        widget.onFinish?.call();
+      }
+    });
+  }
+
+  String _formatCountdown(int seconds) {
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 倒计时文字，与「等待支付」共用父容器背景
+    return Text(
+      _formatCountdown(_remainingSeconds),
+      style: TextStyle(
+        fontSize: 12.sp,
+        fontWeight: FontWeight.w500,
+        color: Color(0xFF2E68FF),
+      ),
+    );
+  }
+}
+
 /// 订单项组件
 /// 对应小程序: order-list.vue 的 .item 样式
 class _OrderItem extends ConsumerWidget {
   final OrderModel order;
+  final VoidCallback? onCountdownFinish;
 
-  const _OrderItem({required this.order});
+  const _OrderItem({required this.order, this.onCountdownFinish});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -221,9 +289,9 @@ class _OrderItem extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 倒计时（如果是待支付且有倒计时）
+          // 待支付+倒计时一体：共用圆角背景，左等待支付右倒计时，同时显示/消失
           if (order.status == '1' && _getCountdownSeconds(order.countdown) > 0)
-            _buildCountdown(),
+            _buildPendingPaymentHeader(),
           // 订单号和状态
           _buildOrderInfo(),
           // 商品名称
@@ -241,33 +309,31 @@ class _OrderItem extends ConsumerWidget {
     );
   }
 
-  /// 构建倒计时
-  Widget _buildCountdown() {
+  /// 待支付+倒计时一体容器
+  /// 与小程序一致: .pay-time 292rpx×44rpx，timeback.png 含「等待支付」，仅倒计时右对齐
+  Widget _buildPendingPaymentHeader() {
     return Container(
-      width: 146.w,
+      width: 150.w,
       height: 22.h,
       margin: EdgeInsets.only(bottom: 16.h),
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: NetworkImage(
-            ApiConfig.completeImageUrl('public/4d97173977183148137274_timeback.png'),
+          image: const NetworkImage(
+            'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/4d97173977183148137274_timeback.png',
           ),
           fit: BoxFit.cover,
         ),
+        borderRadius: BorderRadius.circular(8.r),
       ),
       alignment: Alignment.centerRight,
-      padding: EdgeInsets.only(right: 8.w),
-      child: Text(
-        _formatCountdown(_getCountdownSeconds(order.countdown)),
-        style: TextStyle(
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w500,
-          color: Color(0xFF2E68FF),
-        ),
+      padding: EdgeInsets.only(right: 16.w),
+      child: _OrderCountdownWidget(
+        initialSeconds: _getCountdownSeconds(order.countdown),
+        onFinish: onCountdownFinish,
       ),
     );
   }
-  
+
   /// ✅ 安全获取倒计时秒数（dynamic 转 int）
   int _getCountdownSeconds(dynamic countdown) {
     if (countdown == null) return 0;
@@ -276,14 +342,6 @@ class _OrderItem extends ConsumerWidget {
       return int.tryParse(countdown) ?? 0;
     }
     return 0;
-  }
-
-  /// 格式化倒计时
-  String _formatCountdown(int seconds) {
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    final secs = seconds % 60;
-    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
   /// 构建订单信息
@@ -313,7 +371,10 @@ class _OrderItem extends ConsumerWidget {
                 GestureDetector(
                   onTap: () => _copyOrderNo(order.orderNo),
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
+                    ),
                     decoration: BoxDecoration(
                       color: Color(0xFF03203D).withOpacity(0.08),
                       borderRadius: BorderRadius.circular(9.r),
@@ -331,12 +392,13 @@ class _OrderItem extends ConsumerWidget {
             ),
           ),
           SizedBox(width: 8.w),
-          // ✅ 状态文字不换行
+          // ✅ 状态文字 对应小程序 .status: font-weight 400, font-size 12px, color rgba(3,32,61,0.55)
           Text(
             order.statusName,
             style: TextStyle(
               fontSize: 12.sp,
-              color: Color(0xFF03203D).withOpacity(0.55),
+              fontWeight: FontWeight.w400,
+              color: Color.fromRGBO(3, 32, 61, 0.55),
             ),
           ),
         ],
@@ -380,10 +442,7 @@ class _OrderItem extends ConsumerWidget {
               ),
               child: Text(
                 order.numText!,
-                style: TextStyle(
-                  fontSize: 10.sp,
-                  color: Color(0xFF2E68FF),
-                ),
+                style: TextStyle(fontSize: 10.sp, color: Color(0xFF2E68FF)),
               ),
             ),
           if (order.monthText != null) ...[
@@ -427,9 +486,7 @@ class _OrderItem extends ConsumerWidget {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 12.h),
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Color(0xFFE8E9EA), width: 1),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFFE8E9EA), width: 1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -456,7 +513,11 @@ class _OrderItem extends ConsumerWidget {
   }
 
   /// 构建操作按钮
-  Widget _buildActionButtons(BuildContext context, WidgetRef ref, OrderModel order) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    WidgetRef ref,
+    OrderModel order,
+  ) {
     return Padding(
       padding: EdgeInsets.only(bottom: 16.h),
       child: Row(
@@ -472,10 +533,7 @@ class _OrderItem extends ConsumerWidget {
               ),
               child: Text(
                 '去支付',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: Color(0xFFFF5430),
-                ),
+                style: TextStyle(fontSize: 12.sp, color: Color(0xFFFF5430)),
               ),
             ),
           ),
@@ -486,12 +544,16 @@ class _OrderItem extends ConsumerWidget {
 
   /// 处理订单支付
   /// 对应小程序: order-list.vue Line 224-261 (getPayModeListNew)
-  /// 
+  ///
   /// 关键：
   /// - ❌ 不再创建订单（订单已存在）
   /// - ✅ 直接使用订单中的 orderId 和 flowId 继续支付
   /// - ✅ orderId 回退逻辑: order.orderId ?? order.id（对应小程序 Line 233）
-  void _handleOrderPayment(BuildContext context, WidgetRef ref, OrderModel order) async {
+  void _handleOrderPayment(
+    BuildContext context,
+    WidgetRef ref,
+    OrderModel order,
+  ) async {
     try {
       print('\n💳 ========== 订单支付调试 ==========');
       print('📦 订单原始数据:');
@@ -501,20 +563,23 @@ class _OrderItem extends ConsumerWidget {
       print('   order.goodsId: ${order.goodsId}');
       print('   order.status: ${order.status} (${order.statusName})');
       print('   order.payableAmount: ${order.payableAmount}');
-      
+
       // ✅ 使用回退逻辑获取orderId（对应小程序 obj.order_id || obj.id）
       // ⚠️ 注意：order.orderId 可能是 0（而不是 null），所以需要额外判断
-      final orderIdDynamic = (order.orderId == null || order.orderId.toString() == '0') 
-          ? order.id 
+      final orderIdDynamic =
+          (order.orderId == null || order.orderId.toString() == '0')
+          ? order.id
           : order.orderId;
       final orderId = orderIdDynamic?.toString() ?? '';
-      
+
       final flowId = order.flowId?.toString() ?? '';
       final goodsId = order.goodsId?.toString() ?? '';
       final amount = double.tryParse(order.payableAmount) ?? 0.0;
 
       print('\n🔄 处理后的数据:');
-      print('   orderId: $orderId (来源: ${order.orderId != null && order.orderId.toString() != "0" ? "order_id" : "id"})');
+      print(
+        '   orderId: $orderId (来源: ${order.orderId != null && order.orderId.toString() != "0" ? "order_id" : "id"})',
+      );
       print('   flowId: $flowId');
       print('   goodsId: $goodsId');
       print('   amount: $amount');
@@ -539,11 +604,7 @@ class _OrderItem extends ConsumerWidget {
       if (amount == 0) {
         context.push(
           AppRoutes.paySuccess,
-          extra: {
-            'goods_id': goodsId,
-            'order_id': orderId,
-            'isLearnButton': 1,
-          },
+          extra: {'goods_id': goodsId, 'order_id': orderId, 'isLearnButton': 1},
         );
         return;
       }
