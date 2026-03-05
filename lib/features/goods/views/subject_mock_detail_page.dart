@@ -170,7 +170,8 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
   }
 
   Widget _buildBottomBar(GoodsDetailModel detail) {
-    final isPurchased = detail.permissionStatus == '1';
+    // ✅ 仅当 permission_status == '1' 时视为已购买，其余（'2'/null/空）均为未购买
+    final isPurchased = SafeTypeConverter.toSafeString(detail.permissionStatus) == '1';
     final activePriceIndex = ref.watch(
       subjectMockDetailNotifierProvider.select((s) => s.activePriceIndex),
     );
@@ -178,10 +179,8 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
     final currentPrice = prices.isNotEmpty && activePriceIndex < prices.length
         ? prices[activePriceIndex]
         : null;
-    final currentSalePrice = SafeTypeConverter.toSafeString(
-      currentPrice?.salePrice,
-      defaultValue: '0',
-    );
+    // ✅ 参照小程序 subjectMockDetail.vue：底部栏始终「￥」+ currentSalePrice；无 prices 时用顶层 sale_price，无则补 0.00（Line 368-377 注入）
+    final String displayPriceText = _getDisplayPriceText(detail, currentPrice);
 
     return Container(
       padding: AppSpacing.allMd,
@@ -198,73 +197,7 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
       child: SafeArea(
         child: Row(
           children: [
-            if (!isPurchased && currentPrice != null) ...[
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(
-                          '¥',
-                          style: TextStyle(
-                            fontSize:
-                                18.sp, // ✅ 对应小程序 font-size: 36upx ÷ 2 = 18.sp
-                            color: AppColors
-                                .subjectMockPrice, // ✅ 对应小程序 color: #cd3f2f
-                            fontWeight:
-                                FontWeight.w700, // ✅ 对应小程序 font-weight: 700
-                          ),
-                        ),
-                        Text(
-                          currentSalePrice,
-                          style: TextStyle(
-                            fontSize:
-                                18.sp, // ✅ 对应小程序 font-size: 36upx ÷ 2 = 18.sp
-                            color: AppColors
-                                .subjectMockPrice, // ✅ 对应小程序 color: #cd3f2f
-                            fontWeight:
-                                FontWeight.w700, // ✅ 对应小程序 font-weight: 700
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: AppSpacing.md),
-              // ✅ 购买按钮 (对应小程序 .pay-button, CSS Line 639-648)
-              SizedBox(
-                width: 240.w, // ✅ 对应小程序 width: 480upx ÷ 2 = 240.w
-                height: 48.h, // ✅ 对应小程序 height: 96upx ÷ 2 = 48.h
-                child: ElevatedButton(
-                  onPressed: () =>
-                      _handlePurchase(context, ref, detail, currentPrice),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors
-                        .subjectMockBuyButton, // ✅ 对应小程序 background-color: #ff5402
-                    padding: EdgeInsets.zero,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        100.r,
-                      ), // ✅ 对应小程序 border-radius: 200upx ÷ 2 = 100.r
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    '立即购买',
-                    style: TextStyle(
-                      fontSize: 18.sp, // ✅ 对应小程序 font-size: 36upx ÷ 2 = 18.sp
-                      color: Colors.white, // ✅ 对应小程序 color: #ffffff
-                      fontWeight: FontWeight.normal, // 小程序未指定，使用默认
-                    ),
-                  ),
-                ),
-              ),
-            ] else ...[
+            if (isPurchased) ...[
               Expanded(
                 child: ElevatedButton(
                   onPressed: () => _handleStartPractice(context, detail),
@@ -278,6 +211,57 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
                   child: Text('开始练习', style: AppTextStyles.buttonLarge),
                 ),
               ),
+            ] else ...[
+              // 对应小程序 .pay-bottom .bottom-price：￥{{ currentSalePrice }}
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '¥',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        color: AppColors.subjectMockPrice,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      displayPriceText,
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        color: AppColors.subjectMockPrice,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: AppSpacing.md),
+              SizedBox(
+                width: 240.w,
+                height: 48.h,
+                child: ElevatedButton(
+                  onPressed: () =>
+                      _handlePurchase(context, ref, detail, currentPrice),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.subjectMockBuyButton,
+                    padding: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100.r),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    '立即购买',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      color: Colors.white,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ],
         ),
@@ -285,26 +269,42 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
     );
   }
 
+  /// 底部栏价格文案，对应小程序 subjectMockDetail.vue Line 440-441、368-377
+  /// 有 prices 用 prices[0].sale_price；无则用顶层 sale_price，空则 '0.00'（与小程序注入一致）
+  String _getDisplayPriceText(GoodsDetailModel detail, dynamic currentPrice) {
+    if (currentPrice != null) {
+      final s = SafeTypeConverter.toSafeString(currentPrice.salePrice, defaultValue: '');
+      if (s.isNotEmpty) return s;
+    }
+    final topSale = SafeTypeConverter.toSafeString(detail.salePrice, defaultValue: '');
+    return topSale.isNotEmpty ? topSale : '0.00';
+  }
+
   /// 处理购买（使用统一支付管理器）
-  /// ✅ 对应小程序 Line 451-526: getOrder() - 下单后跳转支付
-  /// 未登录时进入购买确认页（5.1.1 合规）
+  /// 对应小程序 subjectMockDetail.vue getOrder() Line 451-526：无 prices 时用注入项 goods_months_price_id: ''、sale_price: '0.00'（Line 368-377），0 元直接下单后跳支付成功
   Future<void> _handlePurchase(
     BuildContext context,
     WidgetRef ref,
     GoodsDetailModel detail,
     dynamic currentPrice,
   ) async {
-    if (currentPrice == null) {
-      ToastUtil.error('价格信息错误');
-      return;
-    }
+    // 参照小程序：无 prices 时注入 { goods_months_price_id: '', month: '0', sale_price: '0.00' }，故用 currentPrice 若为空则用顶层/0
+    final String goodsMonthsPriceId = currentPrice != null
+        ? SafeTypeConverter.toSafeString(currentPrice.goodsMonthsPriceId, defaultValue: '')
+        : '';
+    final String months = currentPrice != null
+        ? SafeTypeConverter.toSafeString(currentPrice.month, defaultValue: '0')
+        : '0';
+    final String salePriceStr = currentPrice != null
+        ? SafeTypeConverter.toSafeString(currentPrice.salePrice, defaultValue: '0.00')
+        : (SafeTypeConverter.toSafeString(detail.salePrice, defaultValue: '0.00'));
+    final double salePrice = double.tryParse(salePriceStr) ?? 0.0;
 
     if (!ref.read(authProvider).isLoggedIn) {
-      _navigateToPurchaseConfirm(context, detail, currentPrice);
+      _navigateToPurchaseConfirm(context, detail, currentPrice, goodsMonthsPriceId, months, salePrice);
       return;
     }
 
-    // 准备参数
     final goodsId = SafeTypeConverter.toSafeString(
       detail.goodsId,
       defaultValue: '',
@@ -314,26 +314,12 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
       return;
     }
 
-    final goodsMonthsPriceId = SafeTypeConverter.toSafeString(
-      currentPrice.goodsMonthsPriceId,
-      defaultValue: '',
-    );
-    final months = SafeTypeConverter.toSafeString(
-      currentPrice.month,
-      defaultValue: '0',
-    );
-    final salePriceStr = SafeTypeConverter.toSafeString(
-      currentPrice.salePrice,
-      defaultValue: '0',
-    );
-    final salePrice = double.tryParse(salePriceStr) ?? 0.0;
-
-    if (goodsMonthsPriceId.isEmpty) {
+    // 0 元时小程序传 goods_months_price_id: ''，不校验套餐
+    if (goodsMonthsPriceId.isEmpty && salePrice > 0) {
       ToastUtil.error('价格套餐错误');
       return;
     }
 
-    // ✅ 使用统一支付流程管理器
     await context.startPayment(
       ref: ref,
       goodsId: goodsId,
@@ -369,9 +355,14 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
     final goodsIdStr = SafeTypeConverter.toSafeString(detail.goodsId);
 
     if (type == 8) {
-      // 科目模考答题页
+      // 科目模考答题页：使用 AppRoutes.testExam，参数通过 extra 传递（go_router 无 /exam 路径）
       context.push(
-        '/exam?id=$goodsIdStr&recitation_question_model=${detail.recitationQuestionModel ?? "1"}',
+        AppRoutes.testExam,
+        extra: {
+          'id': goodsIdStr,
+          'recitation_question_model':
+              SafeTypeConverter.toSafeString(detail.recitationQuestionModel, defaultValue: '1'),
+        },
       );
     } else {
       ToastUtil.show('答题功能开发中...');
@@ -379,29 +370,20 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
   }
 
   /// 未登录时跳转购买确认页（5.1.1 合规）
+  /// 参数已在上层按小程序逻辑解析（无 prices 时用 ''/'0'/'0.00'）
   void _navigateToPurchaseConfirm(
     BuildContext context,
     GoodsDetailModel detail,
     dynamic currentPrice,
+    String goodsMonthsPriceId,
+    String months,
+    double salePrice,
   ) {
     final goodsId = SafeTypeConverter.toSafeString(
       detail.goodsId,
       defaultValue: '',
     );
     if (goodsId.isEmpty) return;
-    final goodsMonthsPriceId = SafeTypeConverter.toSafeString(
-      currentPrice.goodsMonthsPriceId,
-      defaultValue: '',
-    );
-    final months = SafeTypeConverter.toSafeString(
-      currentPrice.month,
-      defaultValue: '0',
-    );
-    final salePriceStr = SafeTypeConverter.toSafeString(
-      currentPrice.salePrice,
-      defaultValue: '0',
-    );
-    final salePrice = double.tryParse(salePriceStr) ?? 0.0;
     context.push(
       AppRoutes.purchaseConfirm,
       extra: {

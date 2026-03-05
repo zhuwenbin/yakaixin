@@ -61,7 +61,7 @@ class WechatPaymentService {
       _paymentSubscription = _fluwx.addSubscriber((response) {
         if (response is WeChatPaymentResponse) {
           print('💳 支付结果回调: errCode=${response.errCode}');
-          
+          // TODO: 暂时使用微信 SDK 的回调结果，后期添加服务器验证
           if (!completer.isCompleted) {
             if (response.errCode == 0) {
               completer.complete(PaymentResult(

@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
+import '../../../app/constants/app_constants.dart';
 import '../../../core/utils/error_message_mapper.dart';
 import '../../payment/models/wechat_pay_params_model.dart';
 
@@ -29,11 +30,11 @@ class Payment extends _$Payment {
       print('\n📝 步骤1: 创建订单...');
       print('   goodsId: $goodsId');
       print('   payableAmount: $payableAmount');
-      
+
       final storage = ref.read(storageServiceProvider);
       final userInfo = storage.getJson(StorageKeys.userInfo);
       final studentId = userInfo?['student_id']?.toString() ?? '';
-      
+
       // ✅ 获取 employee_id（对应小程序 Line 554）
       // 优先使用用户信息中的 employee_id，否则使用默认值
       String employeeId = '508948528815416786'; // 默认推广员ID
@@ -56,30 +57,30 @@ class Payment extends _$Payment {
         'student_id': studentId,
         'merchant_id': '408559575579495187',
         'brand_id': '408559632588540691',
-        
+
         // 订单业务参数
         'business_scene': 1,
-          'goods': [
-            {
-              'goods_id': goodsId,
-              'goods_months_price_id': goodsMonthsPriceId,
-              'months': months,
-              'class_campus_id': '',
-              'class_city_id': '',
-              'goods_num': '1',
-            }
-          ],
-          'deposit_amount': payableAmount,
-          'payable_amount': payableAmount,
-          'real_amount': payableAmount,
-          'remark': '',
-          'student_adddatas_id': '',
-          'total_amount': payableAmount,
-          'app_id': 'wxf787cf63760d80a0', // ✅ 关键修复：添加微信小程序 AppID（对应小程序 config.js Line 1）
-          'pay_method': '',
-          'order_type': 10,
-          'discount_amount': 0,
-          'coupons_ids': [],
+        'goods': [
+          {
+            'goods_id': goodsId,
+            'goods_months_price_id': goodsMonthsPriceId,
+            'months': months,
+            'class_campus_id': '',
+            'class_city_id': '',
+            'goods_num': '1',
+          },
+        ],
+        'deposit_amount': payableAmount,
+        'payable_amount': payableAmount,
+        'real_amount': payableAmount,
+        'remark': '',
+        'student_adddatas_id': '',
+        'total_amount': payableAmount,
+        'app_id': AppConstants.wechatAppId, // APP 微信支付 AppID
+        'pay_method': '',
+        'order_type': 10,
+        'discount_amount': 0,
+        'coupons_ids': [],
         'employee_id': employeeId, // ✅ 关键修复：添加员工ID（对应小程序 Line 554）
         'delivery_type': 1,
       };
@@ -90,35 +91,38 @@ class Payment extends _$Payment {
       print('   请求数据: $orderData');
       print('   请求数据类型: ${orderData.runtimeType}');
 
-      final response = await ref.read(dioClientProvider).post(
-        '/c/order/v2',
-        data: orderData,
-        options: Options(
-          contentType: 'application/json',
-          headers: {
-            'Content-Type': 'application/json',  // ✅ 显式设置
-          },
-        ),
-      );
+      final response = await ref
+          .read(dioClientProvider)
+          .post(
+            '/c/order/v2',
+            data: orderData,
+            options: Options(
+              contentType: 'application/json',
+              headers: {
+                'Content-Type': 'application/json', // ✅ 显式设置
+              },
+            ),
+          );
 
       print('\n📦 下订单响应:');
       print('   statusCode: ${response.statusCode}');
       print('   code: ${response.data['code']}');
 
       if (response.data['code'] == 100000) {
-        final orderId = response.data['data']['order_id']?.toString() ?? '';
-        final flowId = response.data['data']['flow_id']?.toString() ?? '';
-        final financeBodyId = response.data['data']['finance_body_id']?.toString() ?? '';  // ✅ 获取财务主体ID
-        
-        print('\n✅ 订单创建成功:');
-        print('   orderId: $orderId');
-        print('   flowId: $flowId');
-        print('   financeBodyId: $financeBodyId');  // ✅ 打印财务主体ID
-        
+        final data = response.data['data'] as Map<String, dynamic>? ?? {};
+        print('\n✅ 下单成功，返回完整数据（调试用）:');
+        print('   ${data}');
+        final orderId = data['order_id']?.toString() ?? '';
+        final flowId = data['flow_id']?.toString() ?? '';
+        final financeBodyId = data['finance_body_id']?.toString() ?? '';
+        print(
+          '   提取: orderId=$orderId, flowId=$flowId, financeBodyId=$financeBodyId',
+        );
+
         return {
           'order_id': orderId,
           'flow_id': flowId,
-          'finance_body_id': financeBodyId,  // ✅ 返回财务主体ID
+          'finance_body_id': financeBodyId, // ✅ 返回财务主体ID
         };
       } else {
         final msg = response.data['msg'];
@@ -140,21 +144,19 @@ class Payment extends _$Payment {
     }
   }
 
-  /// 获取支付方式列表
-  /// 对应小程序 payModeListNew 接口
-  Future<String?> getPaymentAccount({
-    required String goodsId,
+  /// 通过配置接口获取微信支付的 finance_body_id（与小程序一致）
+  /// 1. GET /c/config/finance/account 获取支付方式列表
+  /// 2. GET /c/config/finance/account/detail 获取详情，取 id 作为 finance_body_id
+  /// 正确逻辑 finance_body_id 不应由前端构造，而是通过这两接口获取
+  Future<String?> getFinanceBodyIdForWechatPay({
     required String orderId,
+    required String goodsId,
   }) async {
     try {
       final storage = ref.read(storageServiceProvider);
       final userInfo = storage.getJson(StorageKeys.userInfo);
-      
-      // Mock模式下使用默认商户信息
       String merchantId = '408559575579495187';
       String brandId = '408559632588540691';
-      
-      // 如果有用户信息,优先使用用户的商户信息
       if (userInfo != null) {
         final merchant = userInfo['merchant'] as List?;
         if (merchant != null && merchant.isNotEmpty) {
@@ -162,43 +164,112 @@ class Payment extends _$Payment {
           brandId = merchant[0]['brand_id']?.toString() ?? brandId;
         }
       }
+      final listResponse = await ref
+          .read(dioClientProvider)
+          .get(
+            '/c/config/finance/account',
+            queryParameters: {
+              'account_use': 1,
+              'is_match': 1,
+              'is_usable': 1,
+              'page': 1,
+              'size': 100,
+              'account_type': 1,
+              'order_id': orderId,
+              'goods_ids': goodsId,
+              'merchant_id': merchantId,
+              'brand_id': brandId,
+              'collection_scene': 1,
+              'collection_terminal': 8,
+            },
+          );
+      if (listResponse.data['code'] != 100000) return null;
+      final list = listResponse.data['data']?['list'] as List?;
 
-      final response = await ref.read(dioClientProvider).get(
-        '/shop/wxurl',
-        queryParameters: {
-          'account_use': 1,
-          'is_match': 1,
-          'is_usable': 1,
-          'page': 1,
-          'size': 100,
-          'account_type': 1,
-          'order_id': orderId,
-          'goods_ids': goodsId,
-          'merchant_id': merchantId,
-          'brand_id': brandId,
-          'collection_scene': 1,
-          'collection_terminal': 8,
-        },
-      );
+      print('-------------------------------list: $list');
+      if (list == null || list.isEmpty) return null;
+      Map<String, dynamic>? wechatItem;
+      try {
+        wechatItem =
+            list.firstWhere(
+                  (item) =>
+                      item['pay_method'] == '6' &&
+                      item['wechat_pay_app_id'] == AppConstants.wechatAppId,
+                )
+                as Map<String, dynamic>?;
+      } catch (_) {
+        print('-------------------------------');
+        return null;
+      }
+      final accountId = wechatItem?['id']?.toString();
+      print('-------------------------------wechatItem: $wechatItem');
+      if (accountId == null || accountId.isEmpty) return null;
+      final detailResponse = await ref
+          .read(dioClientProvider)
+          .get(
+            '/c/config/finance/account/detail',
+            queryParameters: {'id': accountId},
+          );
+      if (detailResponse.data['code'] != 100000) return null;
+      final detailData = detailResponse.data['data'] as Map<String, dynamic>?;
+      final financeBodyId = detailData?['id']?.toString();
+      return financeBodyId?.isNotEmpty == true ? financeBodyId : null;
+    } catch (e) {
+      print('💳 获取 finance_body_id 失败: $e');
+      return null;
+    }
+  }
 
+  /// 获取支付方式列表（旧接口 /shop/wxurl，保留兼容）
+  Future<String?> getPaymentAccount({
+    required String goodsId,
+    required String orderId,
+  }) async {
+    try {
+      final storage = ref.read(storageServiceProvider);
+      final userInfo = storage.getJson(StorageKeys.userInfo);
+      String merchantId = '408559575579495187';
+      String brandId = '408559632588540691';
+      if (userInfo != null) {
+        final merchant = userInfo['merchant'] as List?;
+        if (merchant != null && merchant.isNotEmpty) {
+          merchantId = merchant[0]['merchant_id']?.toString() ?? merchantId;
+          brandId = merchant[0]['brand_id']?.toString() ?? brandId;
+        }
+      }
+      final response = await ref
+          .read(dioClientProvider)
+          .get(
+            '/shop/wxurl',
+            queryParameters: {
+              'account_use': 1,
+              'is_match': 1,
+              'is_usable': 1,
+              'page': 1,
+              'size': 100,
+              'account_type': 1,
+              'order_id': orderId,
+              'goods_ids': goodsId,
+              'merchant_id': merchantId,
+              'brand_id': brandId,
+              'collection_scene': 1,
+              'collection_terminal': 8,
+            },
+          );
       if (response.data['code'] == 100000) {
         final list = response.data['data']['list'] as List?;
         if (list != null && list.isNotEmpty) {
-          // 找到微信支付方式 (pay_method == '6')
           Map<String, dynamic>? wechatAccount;
           try {
-            wechatAccount = list.firstWhere(
-              (item) => item['pay_method'] == '6',
-            ) as Map<String, dynamic>?;
+            wechatAccount =
+                list.firstWhere((item) => item['pay_method'] == '6')
+                    as Map<String, dynamic>?;
           } catch (e) {
-            // 如果没找到微信支付,使用第一个
             wechatAccount = list.first as Map<String, dynamic>?;
           }
-          
           return wechatAccount?['id']?.toString();
         }
       }
-      
       return null;
     } catch (e) {
       print('💳 获取支付账户失败: $e');
@@ -207,29 +278,38 @@ class Payment extends _$Payment {
   }
 
   /// 获取微信支付URL（APP专用）
-  /// 与后端约定使用 /shop/wxurl 接口
   /// ✅ 遵守MVVM：返回Model对象
   Future<WechatPayParamsModel?> getWechatPayUrl({
     required String orderId,
     required String flowId,
+    required String financeBodyId,
   }) async {
     try {
-      final response = await ref.read(dioClientProvider).post(
-        '/shop/wxurl',
-        data: {
-          'order_id': orderId,
-          'flow_id': flowId,
-        },
-      );
+      final response = await ref
+          .read(dioClientProvider)
+          .post(
+            '/c/pay/wechatpay/app',
+            data: {
+              'order_id': orderId,
+              'flow_id': flowId,
+              'finance_body_id': financeBodyId,
+            },
+            options: Options(
+              contentType: 'application/json',
+              headers: {'Content-Type': 'application/json'},
+            ),
+          );
 
       if (response.data['code'] == 100000) {
         final data = response.data['data'];
         if (data == null) return null;
-        
+
         // ✅ 使用Freezed Model，支持两种命名格式
         // 先尝试下划线格式，如果不存在再尝试驼峰格式
         final normalizedData = {
-          'app_id': data['app_id'] ?? data['appId'] ?? '',
+          // 后端 /c/pay/wechatpay/app 当前不返回 app_id，这里兜底使用 AppConstants.wechatAppId
+          'app_id': (data['app_id'] ?? data['appId'] ?? AppConstants.wechatAppId)
+              .toString(),
           'partner_id': data['partner_id'] ?? data['partnerId'] ?? '',
           'prepay_id': data['prepay_id'] ?? data['prepayId'] ?? '',
           'package': data['package'] ?? 'Sign=WXPay',
@@ -237,10 +317,10 @@ class Payment extends _$Payment {
           'time_stamp': data['time_stamp'] ?? data['timeStamp'] ?? '',
           'sign': data['sign'] ?? '',
         };
-        
+
         return WechatPayParamsModel.fromJson(normalizedData);
       }
-      
+
       return null;
     } catch (e) {
       print('💳 获取微信支付URL失败: $e');
@@ -260,15 +340,17 @@ class Payment extends _$Payment {
       final weixinInfo = storage.getJson('weixin_info');
       final openid = weixinInfo?['openid']?.toString() ?? '';
 
-      final response = await ref.read(dioClientProvider).post(
-        '/c/pay/wechatpay/jsapi',
-        data: {
-          'flow_id': flowId,
-          'wechat_app_id': '',
-          'open_id': openid,
-          'finance_body_id': financeBodyId,
-        },
-      );
+      final response = await ref
+          .read(dioClientProvider)
+          .post(
+            '/c/pay/wechatpay/jsapi',
+            data: {
+              'flow_id': flowId,
+              'wechat_app_id': '',
+              'open_id': openid,
+              'finance_body_id': financeBodyId,
+            },
+          );
 
       if (response.data['code'] == 100000) {
         final data = response.data['data'];
@@ -283,7 +365,7 @@ class Payment extends _$Payment {
           'sign': data['sign']?.toString() ?? '', // APP支付签名
         };
       }
-      
+
       return null;
     } catch (e) {
       print('💳 获取支付参数失败: $e');
@@ -303,9 +385,9 @@ class Payment extends _$Payment {
       print('\n💳 ========== 开始支付流程 ==========');
       print('📦 商品ID: $goodsId');
       print('💰 金额: $payableAmount');
-      
+
       // ⚠️ 不设置 state，避免 Future already completed 错误
-      
+
       // 1️⃣ 下订单
       final orderResult = await createOrder(
         goodsId: goodsId,
@@ -313,19 +395,19 @@ class Payment extends _$Payment {
         months: months,
         payableAmount: payableAmount,
       );
-      
+
       if (orderResult == null) {
         return PaymentResult.error('创建订单失败');
       }
-      
+
       final orderId = orderResult['order_id'] ?? '';
       final flowId = orderResult['flow_id'] ?? '';
-      final financeBodyId = orderResult['finance_body_id'] ?? '';  // ✅ 获取财务主体ID
-      
+      final financeBodyId = orderResult['finance_body_id'] ?? ''; // ✅ 获取财务主体ID
+
       print('\n✅ 订单创建成功');
       print('   订单ID: $orderId');
       print('   流水ID: $flowId');
-      print('   财务主体ID: $financeBodyId');  // ✅ 打印财务主体ID
+      print('   财务主体ID: $financeBodyId'); // ✅ 打印财务主体ID
 
       // 2️⃣ 判断金额
       if (payableAmount <= 0) {
@@ -334,7 +416,7 @@ class Payment extends _$Payment {
           orderId: orderId,
           flowId: flowId,
           goodsId: goodsId,
-          financeBodyId: financeBodyId,  // ✅ 传递财务主体ID
+          financeBodyId: financeBodyId, // ✅ 传递财务主体ID
         );
       }
 
@@ -345,7 +427,7 @@ class Payment extends _$Payment {
         flowId: flowId,
         goodsId: goodsId,
         payableAmount: payableAmount,
-        financeBodyId: financeBodyId,  // ✅ 传递财务主体ID
+        financeBodyId: financeBodyId, // ✅ 传递财务主体ID
       );
     } on DioException catch (e) {
       print('\n❌ 下订单失败(DioException): $e');
@@ -362,7 +444,7 @@ class Payment extends _$Payment {
       return PaymentResult.error('下订单失败，请稍后重试');
     }
   }
-  
+
   /// 从订单列表继续支付（不创建新订单）
   Future<PaymentResult> continuePayment({
     required String orderId,
@@ -373,22 +455,22 @@ class Payment extends _$Payment {
     try {
       print('\n💳 从订单列表继续支付');
       print('   订单ID: $orderId');
-      
+
       if (payableAmount <= 0) {
         return PaymentResult.freeOrder(
           orderId: orderId,
           flowId: flowId,
           goodsId: goodsId,
-          financeBodyId: '',  // ✅ 继续支付时暂无finance_body_id
+          financeBodyId: '', // ✅ 继续支付时暂无finance_body_id
         );
       }
-      
+
       return PaymentResult.needPayment(
         orderId: orderId,
         flowId: flowId,
         goodsId: goodsId,
         payableAmount: payableAmount,
-        financeBodyId: '',  // ✅ 继续支付时暂无finance_body_id
+        financeBodyId: '', // ✅ 继续支付时暂无finance_body_id
       );
     } on DioException catch (e) {
       // ✅ 使用拦截器处理好的友好信息
@@ -410,19 +492,15 @@ class PaymentState {
   final String? flowId;
   final bool isSuccess;
 
-  const PaymentState({
-    this.orderId,
-    this.flowId,
-    this.isSuccess = false,
-  });
+  const PaymentState({this.orderId, this.flowId, this.isSuccess = false});
 
   const PaymentState.initial() : this();
-  
+
   const PaymentState.orderCreated({
     required String orderId,
     required String flowId,
   }) : this(orderId: orderId, flowId: flowId);
-  
+
   const PaymentState.success() : this(isSuccess: true);
 }
 
@@ -433,56 +511,54 @@ class PaymentResult {
   final String? orderId;
   final String? flowId;
   final String? goodsId;
-  final String? financeBodyId;  // ✅ 财务主体ID
+  final String? financeBodyId; // ✅ 财务主体ID
   final double? payableAmount;
   final String? errorMessage;
-  
+
   const PaymentResult({
     required this.isSuccess,
     this.isFreeOrder = false,
     this.orderId,
     this.flowId,
     this.goodsId,
-    this.financeBodyId,  // ✅ 财务主体ID
+    this.financeBodyId, // ✅ 财务主体ID
     this.payableAmount,
     this.errorMessage,
   });
-  
+
   /// 0元课成功
   const PaymentResult.freeOrder({
     required String orderId,
     required String flowId,
     required String goodsId,
-    String? financeBodyId,  // ✅ 财务主体ID
+    String? financeBodyId, // ✅ 财务主体ID
   }) : this(
-    isSuccess: true,
-    isFreeOrder: true,
-    orderId: orderId,
-    flowId: flowId,
-    goodsId: goodsId,
-    financeBodyId: financeBodyId,  // ✅ 传递财务主体ID
-  );
-  
+         isSuccess: true,
+         isFreeOrder: true,
+         orderId: orderId,
+         flowId: flowId,
+         goodsId: goodsId,
+         financeBodyId: financeBodyId, // ✅ 传递财务主体ID
+       );
+
   /// 需要支付（非0元课）
   const PaymentResult.needPayment({
     required String orderId,
     required String flowId,
     required String goodsId,
     required double payableAmount,
-    String? financeBodyId,  // ✅ 财务主体ID
+    String? financeBodyId, // ✅ 财务主体ID
   }) : this(
-    isSuccess: true,
-    isFreeOrder: false,
-    orderId: orderId,
-    flowId: flowId,
-    goodsId: goodsId,
-    payableAmount: payableAmount,
-    financeBodyId: financeBodyId,  // ✅ 传递财务主体ID
-  );
-  
+         isSuccess: true,
+         isFreeOrder: false,
+         orderId: orderId,
+         flowId: flowId,
+         goodsId: goodsId,
+         payableAmount: payableAmount,
+         financeBodyId: financeBodyId, // ✅ 传递财务主体ID
+       );
+
   /// 失败
-  const PaymentResult.error(String message) : this(
-    isSuccess: false,
-    errorMessage: message,
-  );
+  const PaymentResult.error(String message)
+    : this(isSuccess: false, errorMessage: message);
 }

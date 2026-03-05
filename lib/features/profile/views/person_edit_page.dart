@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+import '../../../app/config/api_config.dart';
 import '../providers/person_edit_provider.dart';
 
 /// 个人信息编辑页面 - 对应小程序 my/person.vue
@@ -220,6 +221,7 @@ class _PersonEditPageState extends ConsumerState<PersonEditPage> {
                       width: 58.w,
                       height: 58.w,
                       fit: BoxFit.cover,
+                      headers: ApiConfig.ossImageHeaders,
                       errorBuilder: (context, error, stackTrace) {
                         return _buildDefaultAvatar();
                       },

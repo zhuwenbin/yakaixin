@@ -155,7 +155,10 @@ class VideoPlayerManager {
           enableProgressBar: true,
           enableProgressBarDrag: true,
           enableSubtitles: false,
-          enableOverflowMenu: false,
+          enableOverflowMenu: true, // ✅ 仅显示倍速（其余菜单项关闭）
+          enablePlaybackSpeed: true,
+          enableQualities: false,
+          enableAudioTracks: false,
           enablePip: false,
           enableRetry: false, // ✅ 启用重试按钮
           enableSkips: true, // ✅ 启用快进快退功能

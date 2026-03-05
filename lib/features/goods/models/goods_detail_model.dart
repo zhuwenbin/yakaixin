@@ -24,6 +24,9 @@ class GoodsDetailModel with _$GoodsDetailModel {
     @JsonKey(name: 'details_type')
     dynamic detailsType, // ✅ 详情页类型: 1=经典, 2=真题(历年真题), 3=科目, 4=模拟
     @JsonKey(name: 'data_type') dynamic dataType, // 1=普通 2=模考（支付成功页开始测验跳转用）
+    /// 顶层价格（API 返回；当 prices 为空时用于展示，如免费模考 is_free:1 时多为 0）
+    @JsonKey(name: 'sale_price') dynamic salePrice,
+    @JsonKey(name: 'original_price') dynamic originalPrice,
     @JsonKey(name: 'prices') @Default([]) List<GoodsPriceModel> prices,
     @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails,
     @JsonKey(name: 'teaching_system') TeachingSystem? teachingSystem,

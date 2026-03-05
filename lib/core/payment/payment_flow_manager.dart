@@ -115,6 +115,7 @@ class PaymentFlowManager {
             payableAmount: payableAmount,
             refreshGoodsId: refreshGoodsId,
             professionalIdName: professionalIdName,
+            isLearnButton: isLearnButton,
             onSuccess: onSuccess,
             onError: onError,
           );
@@ -175,6 +176,7 @@ class PaymentFlowManager {
     required double payableAmount,
     String? refreshGoodsId,
     String? professionalIdName,
+    int? isLearnButton,
     VoidCallback? onSuccess,
     ValueChanged<String>? onError,
   }) async {
@@ -211,9 +213,17 @@ class PaymentFlowManager {
       // 2. 执行成功回调
       onSuccess?.call();
 
-      // 3. 显示成功提示
+      // 3. 跳转支付成功页（与0元订单、小程序一致；微信/内购均走此逻辑）
       if (context.mounted) {
-        EasyLoading.showSuccess('购买成功');
+        context.push(
+          AppRoutes.paySuccess,
+          extra: {
+            'goods_id': paymentResult['goods_id'] ?? goodsId,
+            'order_id': orderId,
+            'professional_id_name': professionalIdName,
+            'isLearnButton': isLearnButton ?? 0,
+          },
+        );
       }
     } else if (paymentResult != null && paymentResult['success'] == false) {
       // 支付失败

@@ -168,8 +168,9 @@ class PersonEditNotifier extends _$PersonEditNotifier {
 
   /// 获取完整头像URL
   /// 对应小程序 getAvatar (Line 68-70): this.$xh.completePathNew(this.form.avatar)
-  /// 使用 ApiConfig.completeImageUrl() 拼接OSS完整URL
+  /// 使用 ApiConfig.completeImageUrl() 拼接 OSS 完整 URL；历史数据中的旧 OSS 域名用 convertLegacyOssUrl 转新 OSS
   String getCompleteAvatarUrl() {
-    return ApiConfig.completeImageUrl(state.avatar);
+    final url = ApiConfig.completeImageUrl(state.avatar);
+    return ApiConfig.convertLegacyOssUrl(url);
   }
 }

@@ -47,6 +47,9 @@ mixin _$OrderModel {
   @JsonKey(name: 'flow_id')
   dynamic get flowId =>
       throw _privateConstructorUsedError; // ✅ 可能是 String "0" 或 int 0
+  @JsonKey(name: 'finance_body_id')
+  dynamic get financeBodyId =>
+      throw _privateConstructorUsedError; // ✅ 财务主体ID（继续支付时使用）
   @JsonKey(name: 'professional_id_name')
   String? get professionalIdName => throw _privateConstructorUsedError;
   @JsonKey(name: 'months')
@@ -86,6 +89,7 @@ abstract class $OrderModelCopyWith<$Res> {
       @JsonKey(name: 'payable_amount') String payableAmount,
       @JsonKey(name: 'countdown') dynamic countdown,
       @JsonKey(name: 'flow_id') dynamic flowId,
+      @JsonKey(name: 'finance_body_id') dynamic financeBodyId,
       @JsonKey(name: 'professional_id_name') String? professionalIdName,
       @JsonKey(name: 'months') dynamic months,
       @JsonKey(name: 'tiku_goods_details')
@@ -120,6 +124,7 @@ class _$OrderModelCopyWithImpl<$Res, $Val extends OrderModel>
     Object? payableAmount = null,
     Object? countdown = freezed,
     Object? flowId = freezed,
+    Object? financeBodyId = freezed,
     Object? professionalIdName = freezed,
     Object? months = freezed,
     Object? tikuGoodsDetails = freezed,
@@ -173,6 +178,10 @@ class _$OrderModelCopyWithImpl<$Res, $Val extends OrderModel>
           ? _value.flowId
           : flowId // ignore: cast_nullable_to_non_nullable
               as dynamic,
+      financeBodyId: freezed == financeBodyId
+          ? _value.financeBodyId
+          : financeBodyId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       professionalIdName: freezed == professionalIdName
           ? _value.professionalIdName
           : professionalIdName // ignore: cast_nullable_to_non_nullable
@@ -225,6 +234,7 @@ abstract class _$$OrderModelImplCopyWith<$Res>
       @JsonKey(name: 'payable_amount') String payableAmount,
       @JsonKey(name: 'countdown') dynamic countdown,
       @JsonKey(name: 'flow_id') dynamic flowId,
+      @JsonKey(name: 'finance_body_id') dynamic financeBodyId,
       @JsonKey(name: 'professional_id_name') String? professionalIdName,
       @JsonKey(name: 'months') dynamic months,
       @JsonKey(name: 'tiku_goods_details')
@@ -257,6 +267,7 @@ class __$$OrderModelImplCopyWithImpl<$Res>
     Object? payableAmount = null,
     Object? countdown = freezed,
     Object? flowId = freezed,
+    Object? financeBodyId = freezed,
     Object? professionalIdName = freezed,
     Object? months = freezed,
     Object? tikuGoodsDetails = freezed,
@@ -310,6 +321,10 @@ class __$$OrderModelImplCopyWithImpl<$Res>
           ? _value.flowId
           : flowId // ignore: cast_nullable_to_non_nullable
               as dynamic,
+      financeBodyId: freezed == financeBodyId
+          ? _value.financeBodyId
+          : financeBodyId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       professionalIdName: freezed == professionalIdName
           ? _value.professionalIdName
           : professionalIdName // ignore: cast_nullable_to_non_nullable
@@ -357,6 +372,7 @@ class _$OrderModelImpl implements _OrderModel {
       @JsonKey(name: 'payable_amount') required this.payableAmount,
       @JsonKey(name: 'countdown') this.countdown,
       @JsonKey(name: 'flow_id') this.flowId,
+      @JsonKey(name: 'finance_body_id') this.financeBodyId,
       @JsonKey(name: 'professional_id_name') this.professionalIdName,
       @JsonKey(name: 'months') this.months,
       @JsonKey(name: 'tiku_goods_details')
@@ -411,6 +427,10 @@ class _$OrderModelImpl implements _OrderModel {
   final dynamic flowId;
 // ✅ 可能是 String "0" 或 int 0
   @override
+  @JsonKey(name: 'finance_body_id')
+  final dynamic financeBodyId;
+// ✅ 财务主体ID（继续支付时使用）
+  @override
   @JsonKey(name: 'professional_id_name')
   final String? professionalIdName;
   @override
@@ -450,7 +470,7 @@ class _$OrderModelImpl implements _OrderModel {
 
   @override
   String toString() {
-    return 'OrderModel(id: $id, orderId: $orderId, orderNo: $orderNo, goodsId: $goodsId, goodsName: $goodsName, goodsType: $goodsType, status: $status, statusName: $statusName, payableAmount: $payableAmount, countdown: $countdown, flowId: $flowId, professionalIdName: $professionalIdName, months: $months, tikuGoodsDetails: $tikuGoodsDetails, teachingSystem: $teachingSystem, numText: $numText, monthText: $monthText, tips: $tips)';
+    return 'OrderModel(id: $id, orderId: $orderId, orderNo: $orderNo, goodsId: $goodsId, goodsName: $goodsName, goodsType: $goodsType, status: $status, statusName: $statusName, payableAmount: $payableAmount, countdown: $countdown, flowId: $flowId, financeBodyId: $financeBodyId, professionalIdName: $professionalIdName, months: $months, tikuGoodsDetails: $tikuGoodsDetails, teachingSystem: $teachingSystem, numText: $numText, monthText: $monthText, tips: $tips)';
   }
 
   @override
@@ -472,6 +492,8 @@ class _$OrderModelImpl implements _OrderModel {
                 other.payableAmount == payableAmount) &&
             const DeepCollectionEquality().equals(other.countdown, countdown) &&
             const DeepCollectionEquality().equals(other.flowId, flowId) &&
+            const DeepCollectionEquality()
+                .equals(other.financeBodyId, financeBodyId) &&
             (identical(other.professionalIdName, professionalIdName) ||
                 other.professionalIdName == professionalIdName) &&
             const DeepCollectionEquality().equals(other.months, months) &&
@@ -487,26 +509,28 @@ class _$OrderModelImpl implements _OrderModel {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      const DeepCollectionEquality().hash(id),
-      const DeepCollectionEquality().hash(orderId),
-      orderNo,
-      const DeepCollectionEquality().hash(goodsId),
-      goodsName,
-      const DeepCollectionEquality().hash(goodsType),
-      status,
-      statusName,
-      payableAmount,
-      const DeepCollectionEquality().hash(countdown),
-      const DeepCollectionEquality().hash(flowId),
-      professionalIdName,
-      const DeepCollectionEquality().hash(months),
-      const DeepCollectionEquality().hash(_tikuGoodsDetails),
-      const DeepCollectionEquality().hash(_teachingSystem),
-      numText,
-      monthText,
-      tips);
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        const DeepCollectionEquality().hash(id),
+        const DeepCollectionEquality().hash(orderId),
+        orderNo,
+        const DeepCollectionEquality().hash(goodsId),
+        goodsName,
+        const DeepCollectionEquality().hash(goodsType),
+        status,
+        statusName,
+        payableAmount,
+        const DeepCollectionEquality().hash(countdown),
+        const DeepCollectionEquality().hash(flowId),
+        const DeepCollectionEquality().hash(financeBodyId),
+        professionalIdName,
+        const DeepCollectionEquality().hash(months),
+        const DeepCollectionEquality().hash(_tikuGoodsDetails),
+        const DeepCollectionEquality().hash(_teachingSystem),
+        numText,
+        monthText,
+        tips
+      ]);
 
   @JsonKey(ignore: true)
   @override
@@ -535,6 +559,7 @@ abstract class _OrderModel implements OrderModel {
       @JsonKey(name: 'payable_amount') required final String payableAmount,
       @JsonKey(name: 'countdown') final dynamic countdown,
       @JsonKey(name: 'flow_id') final dynamic flowId,
+      @JsonKey(name: 'finance_body_id') final dynamic financeBodyId,
       @JsonKey(name: 'professional_id_name') final String? professionalIdName,
       @JsonKey(name: 'months') final dynamic months,
       @JsonKey(name: 'tiku_goods_details')
@@ -582,6 +607,9 @@ abstract class _OrderModel implements OrderModel {
   @JsonKey(name: 'flow_id')
   dynamic get flowId;
   @override // ✅ 可能是 String "0" 或 int 0
+  @JsonKey(name: 'finance_body_id')
+  dynamic get financeBodyId;
+  @override // ✅ 财务主体ID（继续支付时使用）
   @JsonKey(name: 'professional_id_name')
   String? get professionalIdName;
   @override

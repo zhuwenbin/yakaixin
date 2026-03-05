@@ -6,7 +6,7 @@ part of 'order_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$orderNotifierHash() => r'c87bf179592fdec398da9de83a43c05635cd060d';
+String _$orderNotifierHash() => r'63639a414ed735e6eb8ea49f5e1a6ca807971997';
 
 /// 订单 Provider
 /// 职责:

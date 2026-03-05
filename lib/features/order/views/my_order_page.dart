@@ -10,6 +10,7 @@ import '../models/order_model.dart';
 import '../providers/order_provider.dart';
 import '../providers/payment_provider.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../core/utils/safe_type_converter.dart';
 import '../../../core/widgets/common_state_widget.dart';
 import '../../../core/utils/error_message_mapper.dart';
 
@@ -574,6 +575,7 @@ class _OrderItem extends ConsumerWidget {
 
       final flowId = order.flowId?.toString() ?? '';
       final goodsId = order.goodsId?.toString() ?? '';
+      final financeBodyId = SafeTypeConverter.toSafeString(order.financeBodyId);
       final amount = double.tryParse(order.payableAmount) ?? 0.0;
 
       print('\n🔄 处理后的数据:');
@@ -622,7 +624,7 @@ class _OrderItem extends ConsumerWidget {
             'payable_amount': amount,
             'order_id': orderId,
             'flow_id': flowId,
-            'finance_body_id': '',
+            'finance_body_id': financeBodyId,
             'refresh_goods_id': goodsId,
             'professional_id_name': order.professionalIdName,
             'goods_type': order.goodsType,

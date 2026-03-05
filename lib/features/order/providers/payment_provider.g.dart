@@ -6,7 +6,7 @@ part of 'payment_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$paymentHash() => r'0d8595f6fefe8096a65a425965b974bfd3f33a18';
+String _$paymentHash() => r'7da7695b43e3e530c4ce3ffe8275a5fa9be3402a';
 
 /// 支付Provider - 处理订单支付流程
 /// 对应小程序的支付逻辑

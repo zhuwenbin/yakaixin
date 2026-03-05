@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../app/config/api_config.dart';
 import '../../../core/network/dio_client.dart';
 
 /// 个人资料服务
@@ -52,35 +55,33 @@ class ProfileService {
   /// 上传图片
   /// 对应小程序: upLoad (utils/index.js Line 574-608)
   /// 接口: POST /c/base/uploadfiles
-  /// 小程序参数: 
-  ///   - header: { Authorization: 'Basic ...' }
-  ///   - filePath: tempfileurl
-  ///   - name: 'file'
-  ///   - formData: {}
+  /// 小程序: header Authorization Basic、url、filePath、name: 'file'、formData: {}
+  /// 注意: 不设置 Content-Type，由 Dio 自动生成 multipart/form-data; boundary=... 否则服务端无法解析
   Future<String> uploadImage(String filePath) async {
     try {
       print('📡 [上传图片] 开始上传: $filePath');
-      
-      // ✅ 对应小程序 Line 596-606
-      // name: 'file' - 表单字段名
-      // formData: {} - 额外的表单数据（小程序为空对象）
+
+      final File file = File(filePath);
+      if (!file.existsSync()) {
+        throw Exception('本地文件不存在');
+      }
+      final int localSize = file.lengthSync();
+      if (localSize <= 0) {
+        throw Exception('请选择有效的图片文件');
+      }
+
       final formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(
           filePath,
-          filename: filePath.split('/').last,  // 提取文件名
+          filename: filePath.split('/').last,
         ),
       });
 
       print('📡 [上传图片] 请求 /c/base/uploadfiles');
-      
+
       final response = await _dioClient.post(
         '/c/base/uploadfiles',
         data: formData,
-        options: Options(
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        ),
       );
 
       print('📡 [上传图片] 响应: ${response.data}');
@@ -91,9 +92,6 @@ class ProfileService {
         throw Exception(errorMsg);
       }
 
-      // 小程序返回的是 data.data[0] (Line 586)
-      // let data = JSON.parse(uploadFileRes.data)
-      // return resolve(data.data[0])
       final data = response.data['data'];
       if (data == null) {
         print('❌ [上传图片] 返回数据为空');
@@ -112,6 +110,29 @@ class ProfileService {
       } else {
         print('❌ [上传图片] 返回数据格式错误: $data');
         throw Exception('上传返回数据格式错误');
+      }
+
+      // 校验 OSS 上是否真的写入了文件：HEAD 请求查 Content-Length，若为 0 则说明服务端未正确保存
+      final String fullUrl = ApiConfig.completeImageUrl(avatarPath);
+      try {
+        final Response<void> headResponse = await _dioClient.dio.head<void>(
+          fullUrl,
+          options: Options(
+            headers: ApiConfig.ossImageHeaders,
+            followRedirects: true,
+            validateStatus: (status) => status != null && status >= 200 && status < 400,
+          ),
+        );
+        final String? contentLengthHeader =
+            headResponse.headers.value(Headers.contentLengthHeader);
+        final int remoteSize = int.tryParse(contentLengthHeader ?? '') ?? 0;
+        if (localSize > 0 && remoteSize == 0) {
+          print('❌ [上传图片] 校验失败: 本地 ${localSize}B，OSS 返回 ${remoteSize}B');
+          throw Exception('上传文件失败！服务器未正确保存图片，请重试或联系客服。');
+        }
+      } on DioException catch (_) {
+        // HEAD 失败（如网络/防盗链）时不阻塞成功，仅打日志
+        print('⚠️ [上传图片] 校验 OSS 可访问性时请求失败，已忽略');
       }
 
       print('✅ [上传图片] 成功，路径: $avatarPath');

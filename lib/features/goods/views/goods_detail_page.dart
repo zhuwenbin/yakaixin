@@ -931,11 +931,9 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   }
 
   /// 3. 构建底部操作栏
-  /// 对应小程序: detail.vue Line 93-110
+  /// 对应小程序: detail.vue Line 93-110；无 prices 时与 Line 434-445 一致注入 0 元价，仍显示底部栏并支持购买
   Widget _buildBottomBar(GoodsDetailModel detail, int selectedIndex) {
-    if (detail.prices.isEmpty) return const SizedBox.shrink();
-
-    final selectedPrice = detail.prices[selectedIndex];
+    final GoodsPriceModel selectedPrice = _getEffectiveSelectedPrice(detail, selectedIndex);
     final permissionStatus = SafeTypeConverter.toSafeString(
       detail.permissionStatus,
     );
@@ -1082,6 +1080,21 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
     } else {
       return '立即测试'; // 试卷/模考
     }
+  }
+
+  /// 当前选中的价格，对应小程序 detail.vue：无 prices 时注入 { goods_months_price_id: '', month: '0', sale_price: '0.00' }（Line 434-445）
+  GoodsPriceModel _getEffectiveSelectedPrice(GoodsDetailModel detail, int selectedIndex) {
+    if (detail.prices.isNotEmpty && selectedIndex < detail.prices.length) {
+      return detail.prices[selectedIndex];
+    }
+    final topSale = SafeTypeConverter.toSafeString(detail.salePrice, defaultValue: '0.00');
+    return GoodsPriceModel(
+      goodsMonthsPriceId: '',
+      month: '0',
+      salePrice: topSale,
+      originalPrice: SafeTypeConverter.toSafeString(detail.originalPrice, defaultValue: '0.00'),
+      days: '0',
+    );
   }
 
   /// 处理购买 - 调用统一支付模块

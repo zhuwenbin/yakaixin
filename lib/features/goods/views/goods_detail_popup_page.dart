@@ -97,16 +97,25 @@ class _GoodsDetailPopupPageState extends ConsumerState<GoodsDetailPopupPage> {
     );
   }
 
-  /// 包一层：可滚动内容 + 底部固定栏 + 底部安全区白色
-  Widget _buildPopupBody(GoodsDetailModel detail) {
-    final prices = detail.prices;
-    if (prices.isEmpty) {
-      return Center(
-        child: Text('暂无价格', style: AppTextStyles.bodyMedium),
-      );
+  /// 当前选中价格，对应小程序：无 prices 时注入 goods_months_price_id: ''、sale_price: '0.00'（detail.vue Line 434-445）
+  GoodsPriceModel _getEffectiveSelectedPrice(GoodsDetailModel detail, int selectedIndex) {
+    if (detail.prices.isNotEmpty && selectedIndex < detail.prices.length) {
+      return detail.prices[selectedIndex];
     }
-    final selectedIndex = 0;
-    final selectedPrice = prices[selectedIndex];
+    final topSale = SafeTypeConverter.toSafeString(detail.salePrice, defaultValue: '0.00');
+    return GoodsPriceModel(
+      goodsMonthsPriceId: '',
+      month: '0',
+      salePrice: topSale,
+      originalPrice: SafeTypeConverter.toSafeString(detail.originalPrice, defaultValue: '0.00'),
+      days: '0',
+    );
+  }
+
+  /// 包一层：可滚动内容 + 底部固定栏 + 底部安全区白色
+  /// 对应小程序：无 prices 时注入 0 元价（detail.vue / secretRealDetail.vue Line 434-446），仍显示底栏并支持购买
+  Widget _buildPopupBody(GoodsDetailModel detail) {
+    final GoodsPriceModel selectedPrice = _getEffectiveSelectedPrice(detail, 0);
     final salePriceStr = SafeTypeConverter.toSafeString(
       selectedPrice.salePrice,
       defaultValue: '0',

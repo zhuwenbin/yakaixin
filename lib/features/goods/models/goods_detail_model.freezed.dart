@@ -50,6 +50,11 @@ mixin _$GoodsDetailModel {
   @JsonKey(name: 'data_type')
   dynamic get dataType =>
       throw _privateConstructorUsedError; // 1=普通 2=模考（支付成功页开始测验跳转用）
+  /// 顶层价格（API 返回；当 prices 为空时用于展示，如免费模考 is_free:1 时多为 0）
+  @JsonKey(name: 'sale_price')
+  dynamic get salePrice => throw _privateConstructorUsedError;
+  @JsonKey(name: 'original_price')
+  dynamic get originalPrice => throw _privateConstructorUsedError;
   @JsonKey(name: 'prices')
   List<GoodsPriceModel> get prices => throw _privateConstructorUsedError;
   @JsonKey(name: 'tiku_goods_details')
@@ -98,6 +103,8 @@ abstract class $GoodsDetailModelCopyWith<$Res> {
       @JsonKey(name: 'exam_title') String? examTitle,
       @JsonKey(name: 'details_type') dynamic detailsType,
       @JsonKey(name: 'data_type') dynamic dataType,
+      @JsonKey(name: 'sale_price') dynamic salePrice,
+      @JsonKey(name: 'original_price') dynamic originalPrice,
       @JsonKey(name: 'prices') List<GoodsPriceModel> prices,
       @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails,
       @JsonKey(name: 'teaching_system') TeachingSystem? teachingSystem,
@@ -143,6 +150,8 @@ class _$GoodsDetailModelCopyWithImpl<$Res, $Val extends GoodsDetailModel>
     Object? examTitle = freezed,
     Object? detailsType = freezed,
     Object? dataType = freezed,
+    Object? salePrice = freezed,
+    Object? originalPrice = freezed,
     Object? prices = null,
     Object? tikuGoodsDetails = freezed,
     Object? teachingSystem = freezed,
@@ -205,6 +214,14 @@ class _$GoodsDetailModelCopyWithImpl<$Res, $Val extends GoodsDetailModel>
       dataType: freezed == dataType
           ? _value.dataType
           : dataType // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      salePrice: freezed == salePrice
+          ? _value.salePrice
+          : salePrice // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      originalPrice: freezed == originalPrice
+          ? _value.originalPrice
+          : originalPrice // ignore: cast_nullable_to_non_nullable
               as dynamic,
       prices: null == prices
           ? _value.prices
@@ -317,6 +334,8 @@ abstract class _$$GoodsDetailModelImplCopyWith<$Res>
       @JsonKey(name: 'exam_title') String? examTitle,
       @JsonKey(name: 'details_type') dynamic detailsType,
       @JsonKey(name: 'data_type') dynamic dataType,
+      @JsonKey(name: 'sale_price') dynamic salePrice,
+      @JsonKey(name: 'original_price') dynamic originalPrice,
       @JsonKey(name: 'prices') List<GoodsPriceModel> prices,
       @JsonKey(name: 'tiku_goods_details') TikuGoodsDetails? tikuGoodsDetails,
       @JsonKey(name: 'teaching_system') TeachingSystem? teachingSystem,
@@ -364,6 +383,8 @@ class __$$GoodsDetailModelImplCopyWithImpl<$Res>
     Object? examTitle = freezed,
     Object? detailsType = freezed,
     Object? dataType = freezed,
+    Object? salePrice = freezed,
+    Object? originalPrice = freezed,
     Object? prices = null,
     Object? tikuGoodsDetails = freezed,
     Object? teachingSystem = freezed,
@@ -427,6 +448,14 @@ class __$$GoodsDetailModelImplCopyWithImpl<$Res>
           ? _value.dataType
           : dataType // ignore: cast_nullable_to_non_nullable
               as dynamic,
+      salePrice: freezed == salePrice
+          ? _value.salePrice
+          : salePrice // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      originalPrice: freezed == originalPrice
+          ? _value.originalPrice
+          : originalPrice // ignore: cast_nullable_to_non_nullable
+              as dynamic,
       prices: null == prices
           ? _value._prices
           : prices // ignore: cast_nullable_to_non_nullable
@@ -484,6 +513,8 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
       @JsonKey(name: 'exam_title') this.examTitle,
       @JsonKey(name: 'details_type') this.detailsType,
       @JsonKey(name: 'data_type') this.dataType,
+      @JsonKey(name: 'sale_price') this.salePrice,
+      @JsonKey(name: 'original_price') this.originalPrice,
       @JsonKey(name: 'prices') final List<GoodsPriceModel> prices = const [],
       @JsonKey(name: 'tiku_goods_details') this.tikuGoodsDetails,
       @JsonKey(name: 'teaching_system') this.teachingSystem,
@@ -544,8 +575,14 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
   @JsonKey(name: 'data_type')
   final dynamic dataType;
 // 1=普通 2=模考（支付成功页开始测验跳转用）
+  /// 顶层价格（API 返回；当 prices 为空时用于展示，如免费模考 is_free:1 时多为 0）
+  @override
+  @JsonKey(name: 'sale_price')
+  final dynamic salePrice;
+  @override
+  @JsonKey(name: 'original_price')
+  final dynamic originalPrice;
   final List<GoodsPriceModel> _prices;
-// 1=普通 2=模考（支付成功页开始测验跳转用）
   @override
   @JsonKey(name: 'prices')
   List<GoodsPriceModel> get prices {
@@ -594,7 +631,7 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
 
   @override
   String toString() {
-    return 'GoodsDetailModel(goodsId: $goodsId, name: $name, type: $type, materialCoverPath: $materialCoverPath, materialIntroPath: $materialIntroPath, longImgPath: $longImgPath, permissionStatus: $permissionStatus, professionalId: $professionalId, professionalIdName: $professionalIdName, year: $year, examTitle: $examTitle, detailsType: $detailsType, dataType: $dataType, prices: $prices, tikuGoodsDetails: $tikuGoodsDetails, teachingSystem: $teachingSystem, paperStatistics: $paperStatistics, recitationQuestionModel: $recitationQuestionModel, permissionOrderId: $permissionOrderId, detailPackageGoods: $detailPackageGoods, mkgoodsStatistics: $mkgoodsStatistics, confirmationPageData: $confirmationPageData)';
+    return 'GoodsDetailModel(goodsId: $goodsId, name: $name, type: $type, materialCoverPath: $materialCoverPath, materialIntroPath: $materialIntroPath, longImgPath: $longImgPath, permissionStatus: $permissionStatus, professionalId: $professionalId, professionalIdName: $professionalIdName, year: $year, examTitle: $examTitle, detailsType: $detailsType, dataType: $dataType, salePrice: $salePrice, originalPrice: $originalPrice, prices: $prices, tikuGoodsDetails: $tikuGoodsDetails, teachingSystem: $teachingSystem, paperStatistics: $paperStatistics, recitationQuestionModel: $recitationQuestionModel, permissionOrderId: $permissionOrderId, detailPackageGoods: $detailPackageGoods, mkgoodsStatistics: $mkgoodsStatistics, confirmationPageData: $confirmationPageData)';
   }
 
   @override
@@ -623,6 +660,9 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
             const DeepCollectionEquality()
                 .equals(other.detailsType, detailsType) &&
             const DeepCollectionEquality().equals(other.dataType, dataType) &&
+            const DeepCollectionEquality().equals(other.salePrice, salePrice) &&
+            const DeepCollectionEquality()
+                .equals(other.originalPrice, originalPrice) &&
             const DeepCollectionEquality().equals(other._prices, _prices) &&
             (identical(other.tikuGoodsDetails, tikuGoodsDetails) ||
                 other.tikuGoodsDetails == tikuGoodsDetails) &&
@@ -659,6 +699,8 @@ class _$GoodsDetailModelImpl implements _GoodsDetailModel {
         examTitle,
         const DeepCollectionEquality().hash(detailsType),
         const DeepCollectionEquality().hash(dataType),
+        const DeepCollectionEquality().hash(salePrice),
+        const DeepCollectionEquality().hash(originalPrice),
         const DeepCollectionEquality().hash(_prices),
         tikuGoodsDetails,
         teachingSystem,
@@ -700,6 +742,8 @@ abstract class _GoodsDetailModel implements GoodsDetailModel {
       @JsonKey(name: 'exam_title') final String? examTitle,
       @JsonKey(name: 'details_type') final dynamic detailsType,
       @JsonKey(name: 'data_type') final dynamic dataType,
+      @JsonKey(name: 'sale_price') final dynamic salePrice,
+      @JsonKey(name: 'original_price') final dynamic originalPrice,
       @JsonKey(name: 'prices') final List<GoodsPriceModel> prices,
       @JsonKey(name: 'tiku_goods_details')
       final TikuGoodsDetails? tikuGoodsDetails,
@@ -758,6 +802,13 @@ abstract class _GoodsDetailModel implements GoodsDetailModel {
   @JsonKey(name: 'data_type')
   dynamic get dataType;
   @override // 1=普通 2=模考（支付成功页开始测验跳转用）
+  /// 顶层价格（API 返回；当 prices 为空时用于展示，如免费模考 is_free:1 时多为 0）
+  @JsonKey(name: 'sale_price')
+  dynamic get salePrice;
+  @override
+  @JsonKey(name: 'original_price')
+  dynamic get originalPrice;
+  @override
   @JsonKey(name: 'prices')
   List<GoodsPriceModel> get prices;
   @override

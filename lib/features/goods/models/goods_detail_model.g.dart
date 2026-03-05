@@ -22,6 +22,8 @@ _$GoodsDetailModelImpl _$$GoodsDetailModelImplFromJson(
       examTitle: json['exam_title'] as String?,
       detailsType: json['details_type'],
       dataType: json['data_type'],
+      salePrice: json['sale_price'],
+      originalPrice: json['original_price'],
       prices: (json['prices'] as List<dynamic>?)
               ?.map((e) => GoodsPriceModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -66,6 +68,8 @@ Map<String, dynamic> _$$GoodsDetailModelImplToJson(
       'exam_title': instance.examTitle,
       'details_type': instance.detailsType,
       'data_type': instance.dataType,
+      'sale_price': instance.salePrice,
+      'original_price': instance.originalPrice,
       'prices': instance.prices,
       'tiku_goods_details': instance.tikuGoodsDetails,
       'teaching_system': instance.teachingSystem,

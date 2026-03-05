@@ -21,6 +21,7 @@ class OrderModel with _$OrderModel {
     @JsonKey(name: 'payable_amount') required String payableAmount,
     @JsonKey(name: 'countdown') dynamic countdown, // ✅ 倒计时秒数（可能是 String 或 int）
     @JsonKey(name: 'flow_id') dynamic flowId, // ✅ 可能是 String "0" 或 int 0
+    @JsonKey(name: 'finance_body_id') dynamic financeBodyId, // ✅ 财务主体ID（继续支付时使用）
     @JsonKey(name: 'professional_id_name') String? professionalIdName,
     @JsonKey(name: 'months') dynamic months, // ✅ 可能是 String "0" 或 int 0
     @JsonKey(name: 'tiku_goods_details') Map<String, dynamic>? tikuGoodsDetails,

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../app/constants/app_constants.dart';
 import '../../../core/utils/error_message_mapper.dart';
 import '../services/order_service.dart';
 import '../models/create_order_request.dart';
@@ -73,7 +74,7 @@ class OrderNotifier extends _$OrderNotifier {
         studentAdddatasId: '',
         studentId: studentId,
         totalAmount: payableAmount,
-        appId: '', // TODO: 获取微信AppID
+        appId: AppConstants.wechatAppId,
         payMethod: '',
         orderType: 10,
         discountAmount: 0,

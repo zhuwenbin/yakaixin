@@ -144,4 +144,10 @@ class ApiConfig {
     }
     return url;
   }
+
+  /// 加载 OSS 图片时的请求头，用于通过防盗链（Referer）校验
+  /// 阿里云 OSS 若开启防盗链且不允许空 Referer，需携带白名单内 Referer 才能返回图片内容
+  static Map<String, String> get ossImageHeaders => {
+    'Referer': ossBaseUrl,
+  };
 }

@@ -9,6 +9,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
+import '../../order/providers/payment_provider.dart';
 import '../services/unified_payment_service.dart';
 import '../services/wechat_payment_service.dart' as wechat_pay;
 
@@ -74,18 +75,15 @@ class _ConfirmPaymentPageState extends ConsumerState<ConfirmPaymentPage> {
     }
 
     setState(() => _isPaying = true);
-    
+    EasyLoading.show(status: '正在支付');
     try {
       final storage = ref.read(storageServiceProvider);
       final userInfo = storage.getJson(StorageKeys.userInfo);
       final studentId = userInfo?['student_id']?.toString() ?? '';
-      
       if (Platform.isIOS) {
         // 🍎 iOS: 使用内购（直接购买模式）
         print('\n🍎 ========== iOS内购支付 ==========');
         print('   💡 iOS内购是异步模式，需要等待回调');
-        EasyLoading.show(status: '正在支付...');
-        
         final paymentService = ref.read(unifiedPaymentServiceProvider);
         
         // 💡 使用 Completer 等待异步回调结果
@@ -129,59 +127,48 @@ class _ConfirmPaymentPageState extends ConsumerState<ConfirmPaymentPage> {
           return;
         }
       } else if (Platform.isAndroid) {
-        // 🤖 Android: 提示支付功能开发中
-        print('\n🤖 ========== Android支付 ==========');
-        EasyLoading.showInfo('支付功能开发中');
-        setState(() => _isPaying = false);
-        return;
-        
-        /* ⚠️ 以下Android微信支付代码暂时注释，待开发完成后启用
+        // 🤖 Android: 微信支付（与小程序一致：先通过配置接口获取 finance_body_id，再调 APP 支付）
         print('\n🤖 ========== Android微信支付 ==========');
-        
-        // 步骤1: 获取微信支付参数
-        EasyLoading.show(status: '获取支付参数...');
-        print('   订单ID: ${widget.orderId}');
-        print('   流水ID: ${widget.flowId}');
-        
         final paymentNotifier = ref.read(paymentProvider.notifier);
+        final financeBodyId = await paymentNotifier.getFinanceBodyIdForWechatPay(
+          orderId: widget.orderId,
+          goodsId: widget.goodsId,
+        );
+        if (financeBodyId == null || financeBodyId.isEmpty) {
+          EasyLoading.dismiss();
+          EasyLoading.showError('获取支付方式失败');
+          return;
+        }
         final payParams = await paymentNotifier.getWechatPayUrl(
           orderId: widget.orderId,
           flowId: widget.flowId,
+          financeBodyId: financeBodyId,
         );
-        
         if (payParams == null) {
           EasyLoading.dismiss();
           EasyLoading.showError('获取支付参数失败');
           return;
         }
-        
         print('✅ 支付参数获取成功');
-        
-        // 步骤2: 调用微信支付
-        EasyLoading.show(status: '正在支付...');
-        
         final paymentService = ref.read(unifiedPaymentServiceProvider);
         final result = await paymentService.pay(
           orderId: widget.orderId,
           flowId: widget.flowId,
           goodsId: widget.goodsId,
-          financeBodyId: widget.financeBodyId,  // ✅ 财务主体ID
+          financeBodyId: financeBodyId,
           amount: widget.payableAmount,
           studentId: studentId,
           goodsName: widget.goodsName,
           wechatParams: payParams,
           onResult: (success, errorMessage) {
-            // Android微信支付不使用回调
+            // Android微信支付同步返回，不使用此回调
           },
         );
-        
         EasyLoading.dismiss();
-        
         if (!result.isSuccess) {
           EasyLoading.showError(result.errorMessage ?? '支付失败');
           return;
         }
-        */
       } else {
         EasyLoading.showError('不支持的平台');
         return;

@@ -33,8 +33,9 @@ class ProfilePage extends ConsumerWidget {
             right: 0,
             child: Image.network(
               ApiConfig.completeImageUrl('my-background-img.png'),
-              height: statusBarHeight + 220.h, // 状态栏 + 头部区域高度
+              height: statusBarHeight + 220.h,
               fit: BoxFit.cover,
+              headers: ApiConfig.ossImageHeaders,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   height: statusBarHeight + 220.h,
@@ -113,19 +114,18 @@ class ProfilePage extends ConsumerWidget {
                 child: ClipOval(
                   child: isLoggedIn && user?.avatar != null && user!.avatar!.isNotEmpty
                       ? Image.network(
-                          // ✅ 修复：使用 ApiConfig.completeImageUrl() 拼接完整URL
-                          ApiConfig.completeImageUrl(user.avatar),
+                          ApiConfig.convertLegacyOssUrl(ApiConfig.completeImageUrl(user.avatar)),
                           fit: BoxFit.cover,
+                          headers: ApiConfig.ossImageHeaders,
                           errorBuilder: (context, error, stackTrace) => Container(
                             color: Colors.grey[300],
                             child: Icon(Icons.person, size: 30.w, color: Colors.white),
                           ),
                         )
                       : Image.network(
-                          // ✅ 修复：未登录时使用旧OSS域名的默认头像
-                          // 对应小程序: Line 10 (使用旧OSS域名)
                           'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixindf.png',
                           fit: BoxFit.cover,
+                          headers: ApiConfig.ossImageHeaders,
                         ),
                 ),
               ),
@@ -240,6 +240,7 @@ class ProfilePage extends ConsumerWidget {
                   tab['icon'] as String,
                   width: 32.w,
                   height: 32.w,
+                  headers: ApiConfig.ossImageHeaders,
                   errorBuilder: (context, error, stackTrace) => Icon(
                     Icons.image_not_supported,
                     size: 32.w,
@@ -337,6 +338,7 @@ class ProfilePage extends ConsumerWidget {
               icon,
               width: 24.w,
               height: 24.w,
+              headers: ApiConfig.ossImageHeaders,
               errorBuilder: (context, error, stackTrace) => Icon(
                 Icons.image_not_supported,
                 size: 24.w,
