@@ -1,4 +1,4 @@
-package com.yakaixin.yakaixin.android
+package com.jinyisheng.jinyisheng.android
 
 import android.os.Build
 import android.util.Log
@@ -8,15 +8,15 @@ import io.flutter.plugin.common.MethodChannel
 import java.lang.reflect.Method
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.yakaixin.yakaixin.android/device"
+    private val CHANNEL = "com.jinyisheng.jinyisheng.android/device"
     private var useSoftwareDecoder = false
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        
+
         // ✅ 禁用 MediaCodec 和 AudioTrack 的调试日志
         disableMediaCodecDebugLogs()
-        
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "isHarmonyOS" -> {
@@ -41,7 +41,7 @@ class MainActivity : FlutterActivity() {
             }
         }
     }
-    
+
     /**
      * 禁用 MediaCodec 和 AudioTrack 的调试日志
      * 这些日志是 Android 系统底层打印的，不是应用代码打印的
@@ -55,14 +55,14 @@ class MainActivity : FlutterActivity() {
                 String::class.java,
                 String::class.java
             )
-            
+
             // ✅ 禁用 MediaCodec 视频调试日志
             setMethod.invoke(null, "debug.media.codec.video", "0")
             // ✅ 禁用 MediaCodec 音频调试日志
             setMethod.invoke(null, "debug.media.codec.audio", "0")
             // ✅ 禁用 AudioTrack 调试日志
             setMethod.invoke(null, "debug.audio.track", "0")
-            
+
             Log.d("MainActivity", "已禁用 MediaCodec 和 AudioTrack 调试日志")
         } catch (e: Exception) {
             // ✅ 如果设置失败（可能是权限问题），不影响应用运行

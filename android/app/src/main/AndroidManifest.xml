@@ -70,7 +70,7 @@
             android:name=".wxapi.WXEntryActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:taskAffinity="com.yakaixin.yakaixin.android"
+            android:taskAffinity="com.jinyisheng.jinyisheng.android"
             android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

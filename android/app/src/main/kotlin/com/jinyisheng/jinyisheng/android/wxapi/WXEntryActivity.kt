@@ -1,10 +1,10 @@
-package com.yakaixin.yakaixin.android.wxapi
+package com.jinyisheng.jinyisheng.android.wxapi
 
 import com.jarvan.fluwx.wxapi.FluwxWXEntryActivity
 
 /**
  * 微信SDK回调Activity
- * 
+ *
  * 注意：
  * 1. 必须继承 FluwxWXEntryActivity
  * 2. 必须放在 {包名}.wxapi 包下

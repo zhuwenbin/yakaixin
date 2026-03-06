@@ -1,4 +1,4 @@
-package com.yakaixin.yakaixin.android
+package com.jinyisheng.jinyisheng.android
 
 /**
  * 占位实现（暂未使用自定义 RenderersFactory）。
@@ -9,4 +9,3 @@ package com.yakaixin.yakaixin.android
  * - 如需自定义 ExoPlayer RenderersFactory，请在引入对应依赖后补充实现。
  */
 object ExoPlayerConfig
-
