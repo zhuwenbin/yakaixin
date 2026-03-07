@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../core/config/debug_config.dart';
 import '../../../core/widgets/confirm_dialog.dart';
+import '../constants/profile_template_assets.dart';
 import '../providers/settings_provider.dart';
 import '../../payment/services/iap_service.dart';
 
@@ -235,7 +237,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   
                   // ✅ iOS 内购交易清理按钮
                   _buildDebugActionItem(
-                    icon: Icons.cleaning_services,
+                    iconPath: ProfileTemplateAssets.iconCleaning,
                     title: '清理未完成交易',
                     subtitle: '清理 iOS 内购的 pending transaction（仅 iOS）',
                     isLoading: _isClearing,
@@ -306,7 +308,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Widget _buildDebugActionItem({
-    required IconData icon,
+    required String iconPath,
     required String title,
     required String subtitle,
     required bool isLoading,
@@ -330,10 +332,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 color: Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(8.r),
               ),
-              child: Icon(
-                icon,
-                size: 20.sp,
-                color: Colors.orange,
+              child: SvgPicture.asset(
+                iconPath,
+                width: 20.sp,
+                height: 20.sp,
+                colorFilter: const ColorFilter.mode(Colors.orange, BlendMode.srcIn),
               ),
             ),
             SizedBox(width: 12.w),
@@ -370,10 +373,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ),
               )
             else
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16.sp,
-                color: const Color(0xFF787E8F),
+              SvgPicture.asset(
+                ProfileTemplateAssets.iconChevronRight,
+                width: 16.sp,
+                height: 16.sp,
+                colorFilter: const ColorFilter.mode(Color(0xFF787E8F), BlendMode.srcIn),
               ),
           ],
         ),
@@ -419,10 +423,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   ),
                 if (showArrow) ...[
                   SizedBox(width: 4.w),
-                  Icon(
-                    Icons.chevron_right,
-                    size: 18.sp,
-                    color: const Color(0xFF787E8F),
+                  SvgPicture.asset(
+                    ProfileTemplateAssets.iconChevronRight,
+                    width: 18.sp,
+                    height: 18.sp,
+                    colorFilter: const ColorFilter.mode(Color(0xFF787E8F), BlendMode.srcIn),
                   ),
                 ],
               ],

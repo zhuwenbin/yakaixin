@@ -140,6 +140,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                           lessonNum: lessonsData.lessonNum ?? '0',
                           attendanceNum: lessonsData.lessonAttendanceNum ?? '0',
                           lessons: lessonsData.lessonAttendance,
+                          styleTokens: tokens,
                         ),
                       if (showPlan)
                         StudyPlanSection(
@@ -147,6 +148,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                           isCourseListLoading: isCourseListLoading,
                           teachingType: _teachingType,
                           onTeachingTypeChanged: _handleTeachingTypeChange,
+                          styleTokens: tokens,
                         ),
                       if ((lessonsData == null ||
                               (lessonsData.lessonNum ?? '0') == '0') &&

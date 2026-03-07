@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yakaixin_app/app/routes/app_routes.dart';
+import '../../../core/style/app_style_provider.dart';
+import '../../../core/style/app_style_tokens.dart';
 import '../providers/course_detail_provider.dart';
 import '../models/course_detail_model.dart';
 import '../../../core/utils/safe_type_converter.dart';
@@ -59,7 +61,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
           ? const Center(child: CircularProgressIndicator())
           : state.error != null
           ? _buildError(state.error!)
-          : _buildContent(state),
+          : _buildContent(state, ref.watch(appStyleTokensProvider)),
       // ✅ 小程序中没有底部按钮，已删除
     );
   }
@@ -102,20 +104,19 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
     );
   }
 
-  Widget _buildContent(CourseDetailState state) {
+  Widget _buildContent(CourseDetailState state, AppStyleTokens tokens) {
     final courseInfo = state.courseInfo;
     final classList = state.classList;
     final recentlyData = state.recentlyData;
+    final primary = tokens.colors.primary;
+    final progressBar = tokens.colors.progressBar;
 
     return SingleChildScrollView(
       child: Column(
         children: [
-          // 课程头部信息
-          if (courseInfo != null) _buildCourseHeader(courseInfo),
-          // 继续学习卡片
-          if (recentlyData != null) _buildContinueLearning(recentlyData),
-          // 课程列表
-          ...classList.map((classItem) => _buildLessonClassCard(classItem)),
+          if (courseInfo != null) _buildCourseHeader(courseInfo, primary, progressBar),
+          if (recentlyData != null) _buildContinueLearning(recentlyData, primary),
+          ...classList.map((classItem) => _buildLessonClassCard(classItem, primary, progressBar)),
           SizedBox(height: 20.h),
         ],
       ),
@@ -123,7 +124,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
   }
 
   /// 课程头部信息
-  Widget _buildCourseHeader(CourseDetailModel courseInfo) {
+  Widget _buildCourseHeader(CourseDetailModel courseInfo, Color primary, Color progressBar) {
     final classInfo = courseInfo.classInfo ?? {};
     final lessonNum = SafeTypeConverter.toInt(classInfo['lesson_num']);
     final lessonAttendanceNum = SafeTypeConverter.toInt(
@@ -143,7 +144,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
           SizedBox(height: 12.h),
           _buildCourseDate(classInfo['date']?.toString() ?? ''),
           SizedBox(height: 16.h),
-          _buildProgress(progress),
+          _buildProgress(progress, progressBar),
           SizedBox(height: 16.h),
           _buildTeachers(classInfo['teacher'] as List? ?? []),
         ],
@@ -200,7 +201,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
   /// 头部学习进度条，与小程序 index-new.vue .learn-course-details-progress 一致
   /// 小程序：u-line-progress 默认背景 #ececec、填充 #018CFF、高度 12px、圆角 100px；
   /// 百分数 #018CFF，学习进度文案 12px #424b57，间距 9/14
-  Widget _buildProgress(int progress) {
+  Widget _buildProgress(int progress, Color progressBar) {
     return Row(
       children: [
         Text(
@@ -217,7 +218,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
             child: LinearProgressIndicator(
               value: progress / 100,
               backgroundColor: const Color(0xFFECECEC),
-              valueColor: const AlwaysStoppedAnimation(Color(0xFF018CFF)),
+              valueColor: AlwaysStoppedAnimation(progressBar),
               minHeight: 12.h,
             ),
           ),
@@ -227,7 +228,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
           '$progress%',
           style: TextStyle(
             fontSize: 12.sp,
-            color: const Color(0xFF018CFF),
+            color: progressBar,
           ),
         ),
       ],
@@ -281,7 +282,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
   }
 
   /// 继续学习卡片
-  Widget _buildContinueLearning(RecentlyDataModel recentlyData) {
+  Widget _buildContinueLearning(RecentlyDataModel recentlyData, Color primary) {
     final lessonName = recentlyData.lessonName ?? '';
     final displayName = lessonName.length > 12
         ? '${lessonName.substring(0, 12)}...'
@@ -304,7 +305,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
             errorBuilder: (_, __, ___) => Icon(
               Icons.play_circle,
               size: 20.sp,
-              color: const Color(0xFF018CFF),
+              color: primary,
             ),
           ),
           SizedBox(width: 10.w),
@@ -357,15 +358,14 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
               decoration: BoxDecoration(
-                // ✅ 与小程序一致：rgba(1, 163, 99, 0.07)
-                color: const Color(0xFF018CFF).withOpacity(0.07),
+                color: primary.withValues(alpha: 0.07),
                 borderRadius: BorderRadius.circular(14.r),
               ),
               child: Text(
                 '继续学习',
                 style: TextStyle(
                   fontSize: 12.sp,
-                  color: const Color(0xFF018CFF),
+                  color: primary,
                 ),
               ),
             ),
@@ -376,7 +376,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
   }
 
   /// 班级课程卡片
-  Widget _buildLessonClassCard(CourseClassModel classItem) {
+  Widget _buildLessonClassCard(CourseClassModel classItem, Color primary, Color progressBar) {
     final index = ref
         .read(courseDetailNotifierProvider)
         .classList
@@ -409,7 +409,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
       ),
       child: Column(
         children: [
-          _buildClassHeader(classItem, isClose, progress, index),
+          _buildClassHeader(classItem, isClose, progress, index, primary, progressBar),
           if (!isClose) _buildLessonList(classItem),
         ],
       ),
@@ -421,6 +421,8 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
     bool isClose,
     int progress,
     int index,
+    Color primary,
+    Color progressBar,
   ) {
     final lessonNum = SafeTypeConverter.toInt(classItem.lessonNum);
     final lessonAttendanceNum = SafeTypeConverter.toInt(
@@ -440,12 +442,12 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
           children: [
             Row(
               children: [
-                // 与小程序 .teaching-type 一致：蓝底白字 31×17px、圆角 2px、11px
+                // 与小程序 .teaching-type 一致：使用模板主色
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
                   constraints: BoxConstraints(minWidth: 31.w, minHeight: 17.h),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF018CFF),
+                    color: primary,
                     borderRadius: BorderRadius.circular(2.r),
                   ),
                   alignment: Alignment.center,
@@ -513,7 +515,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
               ),
             ],
             SizedBox(height: 12.h),
-            // 与学习进度一致：进度条底色 #ECECEC，填充 #018CFF、高 12、圆角 100
+            // 与学习进度一致：进度条底色 #ECECEC，填充使用模板 progressBar
             Row(
               children: [
                 Text(
@@ -530,9 +532,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
                     child: LinearProgressIndicator(
                       value: progress / 100,
                       backgroundColor: const Color(0xFFECECEC),
-                      valueColor: const AlwaysStoppedAnimation(
-                        Color(0xFF018CFF),
-                      ),
+                      valueColor: AlwaysStoppedAnimation(progressBar),
                       minHeight: 12.h,
                     ),
                   ),

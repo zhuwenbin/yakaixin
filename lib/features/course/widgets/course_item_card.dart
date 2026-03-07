@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/routes/app_routes.dart';
+import '../../../core/style/app_style_tokens.dart';
 import '../../../../app/config/api_config.dart';
 import '../models/course_model.dart';
 
@@ -17,10 +18,14 @@ class CourseItemCard extends StatelessWidget {
   /// 图片路径处理函数（可选，默认使用 ApiConfig.completeImageUrl）
   final String Function(String?)? completePath;
 
+  /// 样式令牌，用于主题色
+  final AppStyleTokens? styleTokens;
+
   const CourseItemCard({
     super.key,
     required this.courseData,
     this.completePath,
+    this.styleTokens,
   });
 
   /// 拼接完整图片URL
@@ -87,7 +92,7 @@ class CourseItemCard extends StatelessWidget {
                   width: 80.w,
                   height: 25.h,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF04C140),
+                    color: styleTokens?.colors.primary ?? const Color(0xFF04C140),
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(16.r),
                       bottomRight: Radius.circular(16.r),
@@ -132,7 +137,7 @@ class CourseItemCard extends StatelessWidget {
                       classDate,
                       style: TextStyle(
                         fontSize: 12.sp,
-                        color: const Color(0xFF4783DC),
+                        color: styleTokens?.colors.tagText ?? const Color(0xFF4783DC),
                       ),
                     ),
                   // ✅ 套餐信息（对应小程序 Line 20-23）
@@ -143,7 +148,7 @@ class CourseItemCard extends StatelessWidget {
                         text: TextSpan(
                           style: TextStyle(
                             fontSize: 11.sp,
-                            color: const Color(0xFF4783DC),
+                            color: styleTokens?.colors.tagText ?? const Color(0xFF4783DC),
                           ),
                           children: [
                             const TextSpan(text: '套餐：'),
@@ -222,7 +227,10 @@ class CourseItemCard extends StatelessWidget {
           height: 40.w,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.green, width: 2.w), // ✅ 小程序2rpx ÷ 2 = 2.w
+            border: Border.all(
+              color: styleTokens?.colors.primary ?? Colors.green,
+              width: 2.w,
+            ),
           ),
           child: ClipOval(
             // ✅ 使用 Image.network 避免 iOS Release 模式 Content-Disposition 问题

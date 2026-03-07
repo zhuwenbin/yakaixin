@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/routes/app_routes.dart';
+import '../../../core/style/app_style_tokens.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -18,12 +19,14 @@ class TodayLessonsSection extends StatelessWidget {
   final String lessonNum;
   final String attendanceNum;
   final List<LessonModel> lessons;
+  final AppStyleTokens? styleTokens;
 
   const TodayLessonsSection({
     super.key,
     required this.lessonNum,
     required this.attendanceNum,
     required this.lessons,
+    this.styleTokens,
   });
 
   @override
@@ -44,7 +47,7 @@ class TodayLessonsSection extends StatelessWidget {
         children: [
           _buildTitle(),
           SizedBox(height: 16.h),
-          ...lessons.map((lesson) => LessonItem(lesson: lesson)),
+          ...lessons.map((lesson) => LessonItem(lesson: lesson, styleTokens: styleTokens)),
         ],
       ),
     );
@@ -65,7 +68,7 @@ class TodayLessonsSection extends StatelessWidget {
         Text(
           lessonNum,
           style: AppTextStyles.heading4.copyWith(
-            color: const Color(0xFFFF860E),
+            color: styleTokens?.colors.primary ?? const Color(0xFFFF860E),
           ),
         ),
         Text('节课', style: AppTextStyles.heading4),
@@ -87,8 +90,9 @@ class TodayLessonsSection extends StatelessWidget {
 /// 课节列表项
 class LessonItem extends ConsumerWidget {
   final LessonModel lesson;
+  final AppStyleTokens? styleTokens;
 
-  const LessonItem({super.key, required this.lesson});
+  const LessonItem({super.key, required this.lesson, this.styleTokens});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -150,7 +154,7 @@ class LessonItem extends ConsumerWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTimeSection(startTime, teachingTypeName),
+              _buildTimeSection(startTime, teachingTypeName, styleTokens),
               SizedBox(width: 12.w),
               Expanded(
                 child: _buildLessonInfo(context, ref, lessonNum, lessonName),
@@ -215,40 +219,39 @@ class LessonItem extends ConsumerWidget {
     );
   }
 
-  /// 构建时间区域
-  /// 对应小程序: .today-lesson-item-left .start-time 和 .today-lesson-type-status
-  Widget _buildTimeSection(String startTime, String teachingTypeName) {
+  /// 构建时间区域（使用模板 primary / tagBorder / tagText）
+  Widget _buildTimeSection(String startTime, String teachingTypeName, AppStyleTokens? tokens) {
+    final primary = tokens?.colors.primary ?? const Color(0xFF009F32);
+    final tagBorder = tokens?.colors.tagBorder ?? const Color(0xFF0F4921);
+    final tagText = tokens?.colors.tagText ?? const Color(0xFF0F4921);
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 12.w),
       child: Column(
         children: [
-          SizedBox(height: 15.h), // ✅ 对应小程序 margin-top: 30rpx (15.h)
+          SizedBox(height: 15.h),
           Text(
             startTime,
             style: TextStyle(
-              fontSize: 16.sp, // ✅ 对应小程序 font-size: 32rpx (16.sp)
-              fontWeight: FontWeight.w700, // ✅ 对应小程序 font-weight: 700
-              color: const Color(0xFF009F32), // ✅ 对应小程序 color: #009F32
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w700,
+              color: primary,
             ),
           ),
-          SizedBox(height: 6.h), // ✅ 对应小程序 margin-top: 12rpx (6.h)
+          SizedBox(height: 6.h),
           Container(
-            width: 50.w, // ✅ 对应小程序 width: 100rpx (50.w)
-            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.5.h), // ✅ 对应小程序 padding: 3rpx 12rpx
+            width: 50.w,
+            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.5.h),
             decoration: BoxDecoration(
-              border: Border.all(
-                color: const Color(0xFF0F4921), // ✅ 对应小程序 border: 3rpx solid #0F4921
-                width: 1.5, // ✅ 对应小程序 3rpx = 1.5px
-              ),
-              borderRadius: BorderRadius.circular(4.r), // ✅ 对应小程序 border-radius: 8rpx (4.r)
+              border: Border.all(color: tagBorder, width: 1.5),
+              borderRadius: BorderRadius.circular(4.r),
             ),
             child: Text(
               teachingTypeName,
-              textAlign: TextAlign.center, // ✅ 对应小程序 text-align: center
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 12.sp, // ✅ 对应小程序 font-size: 24rpx (12.sp)
-                fontWeight: FontWeight.normal, // ✅ 对应小程序 font-weight: 400
-                color: const Color(0xFF0F4921), // ✅ 对应小程序 color: #0F4921
+                fontSize: 12.sp,
+                fontWeight: FontWeight.normal,
+                color: tagText,
               ),
             ),
           ),

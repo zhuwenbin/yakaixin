@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../core/style/app_style_tokens.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../models/question_bank_model.dart';
@@ -8,17 +9,19 @@ import 'section_title.dart';
 
 /// 章节练习区域
 /// 对应小程序: src/modules/jintiku/components/commen/index-nav.vue
-/// 注意：与每日一测使用相同的UI样式，但数据源和跳转逻辑不同
+/// 浅灰色「有效期」标签不使用模板色
 class ChapterPracticeSection extends StatelessWidget {
   final ChapterExerciseModel? chapterExercise;
   final bool isLoading;
   final VoidCallback onTap;
+  final AppStyleTokens? styleTokens;
 
   const ChapterPracticeSection({
     super.key,
     required this.chapterExercise,
     required this.isLoading,
     required this.onTap,
+    this.styleTokens,
   });
 
   @override
@@ -38,6 +41,7 @@ class ChapterPracticeSection extends StatelessWidget {
             _ChapterExerciseCard(
               chapterExercise: chapterExercise!,
               onTap: onTap,
+              styleTokens: styleTokens,
             ),
         ],
       ),
@@ -61,10 +65,12 @@ class ChapterPracticeSection extends StatelessWidget {
 class _ChapterExerciseCard extends StatelessWidget {
   final ChapterExerciseModel chapterExercise;
   final VoidCallback onTap;
+  final AppStyleTokens? styleTokens;
 
   const _ChapterExerciseCard({
     required this.chapterExercise,
     required this.onTap,
+    this.styleTokens,
   });
 
   @override
@@ -110,8 +116,8 @@ class _ChapterExerciseCard extends StatelessWidget {
               children: [
                 _buildTag(
                   '共${chapterExercise.questionNumber}道题目',
-                  backgroundColor: const Color(0xFFE0F0FF),
-                  textColor: const Color(0xFF4783DC),
+                  backgroundColor: styleTokens?.colors.tagBg ?? const Color(0xFFE0F0FF),
+                  textColor: styleTokens?.colors.tagText ?? const Color(0xFF4783DC),
                 ),
                 SizedBox(width: 6.w), // ✅ 修正：12rpx / 2 = 6.w
                 _buildTag(
@@ -148,13 +154,13 @@ class _ChapterExerciseCard extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(8.r),
                                   ),
                                 ),
-                                // 填充
+                                // 填充（使用模板 progressBar 色）
                                 if (fillWidth > 0)
                                   Container(
                                     width: fillWidth,
                                     height: 8.h,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF55C3FF),
+                                      color: styleTokens?.colors.progressBar ?? const Color(0xFF55C3FF),
                                       borderRadius: BorderRadius.circular(8.r),
                                     ),
                                   ),
@@ -182,10 +188,13 @@ class _ChapterExerciseCard extends StatelessWidget {
                   width: 99.w, // ✅ 修正：198rpx / 2 = 99.w
                   height: 35.h, // ✅ 修正：70rpx / 2 = 35.h
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Color(0xFFFF860E), Color(0xFFFF6912)],
+                      colors: [
+                        styleTokens?.colors.actionGradientStart ?? const Color(0xFFFF860E),
+                        styleTokens?.colors.actionGradientEnd ?? const Color(0xFFFF6912),
+                      ],
                     ),
                     borderRadius: BorderRadius.circular(18.r), // ✅ 修正：35rpx / 2 = 17.5 约等于 18.r
                   ),

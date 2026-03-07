@@ -4,29 +4,45 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../app/config/api_config.dart';
+import '../../../core/style/app_style_config.dart';
+import '../../../core/style/app_style_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/models/user_model.dart';
-import '../../main/main_tab_page.dart'; // 导入mainTabIndexProvider
+import '../../main/main_tab_page.dart';
+import '../constants/profile_template_assets.dart';
 
 /// 我的页面
 /// 对应小程序: src/modules/jintiku/pages/my/index.vue
+///
+/// 按模版区分:
+/// - 蓝色默认: 网络背景图、4 Tab + 3 菜单
+/// - 非默认(橙黄/绿/自定义): 渐变背景、右上装饰、7 个卡片菜单，使用 Template/mine 切图
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-    final isLoggedIn = authState.isLoggedIn;
-    final user = authState.user;
-    // 获取状态栏高度
-    final statusBarHeight = MediaQuery.of(context).padding.top;
+    final config = ref.watch(appStyleConfigProvider);
+    final isBlueDefault = config.template == AppStyleTemplate.blueDefault;
+    if (isBlueDefault) {
+      return const _ProfilePageBlueLayout();
+    }
+    return const _ProfilePageAlternativeLayout();
+  }
+}
 
+/// 蓝色默认模版 - 网络背景、4 Tab + 3 菜单
+class _ProfilePageBlueLayout extends ConsumerWidget {
+  const _ProfilePageBlueLayout();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final statusBarHeight = MediaQuery.of(context).padding.top;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6F8),
-      // ✅ 不使用 SafeArea,让背景图片充满状态栏
       body: Stack(
         children: [
-          // ✅ 背景图片 - 充满状态栏
           Positioned(
             top: 0,
             left: 0,
@@ -44,29 +60,22 @@ class ProfilePage extends ConsumerWidget {
               },
             ),
           ),
-          // 主内容区域
           CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              // 顶部占位(状态栏高度)
               SliverToBoxAdapter(
                 child: SizedBox(height: statusBarHeight + 38.h),
               ),
-              // 头部用户信息
               SliverToBoxAdapter(
-                child: _buildHeader(context, isLoggedIn, user),
+                child: _buildHeader(
+                  context,
+                  authState.isLoggedIn,
+                  authState.user,
+                ),
               ),
-              // 功能Tab
-              SliverToBoxAdapter(
-                child: _buildTabs(context, ref),
-              ),
-              // 功能列表
-              SliverToBoxAdapter(
-                child: _buildMenuList(context, ref),
-              ),
-              // 底部间距
-              SliverToBoxAdapter(
-                child: SizedBox(height: 20.h),
-              ),
+              SliverToBoxAdapter(child: _buildTabs(context, ref)),
+              SliverToBoxAdapter(child: _buildMenuList(context, ref)),
+              SliverToBoxAdapter(child: SizedBox(height: 20.h)),
             ],
           ),
         ],
@@ -90,7 +99,8 @@ class ProfilePage extends ConsumerWidget {
             } else {
               // ✅ 跳转到登录页面，登录后返回当前页面
               final router = GoRouter.of(context);
-              final currentPath = router.routerDelegate.currentConfiguration.uri.path;
+              final currentPath =
+                  router.routerDelegate.currentConfiguration.uri.path;
               context.push(
                 AppRoutes.loginCenter,
                 extra: {'returnPath': currentPath},
@@ -112,15 +122,25 @@ class ProfilePage extends ConsumerWidget {
                   ),
                 ),
                 child: ClipOval(
-                  child: isLoggedIn && user?.avatar != null && user!.avatar!.isNotEmpty
+                  child:
+                      isLoggedIn &&
+                          user?.avatar != null &&
+                          user!.avatar!.isNotEmpty
                       ? Image.network(
-                          ApiConfig.convertLegacyOssUrl(ApiConfig.completeImageUrl(user.avatar)),
+                          ApiConfig.convertLegacyOssUrl(
+                            ApiConfig.completeImageUrl(user.avatar),
+                          ),
                           fit: BoxFit.cover,
                           headers: ApiConfig.ossImageHeaders,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            color: Colors.grey[300],
-                            child: Icon(Icons.person, size: 30.w, color: Colors.white),
-                          ),
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                color: Colors.grey[300],
+                                child: Icon(
+                                  Icons.person,
+                                  size: 30.w,
+                                  color: Colors.white,
+                                ),
+                              ),
                         )
                       : Image.network(
                           'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixindf.png',
@@ -165,7 +185,7 @@ class ProfilePage extends ConsumerWidget {
                 Image.network(
                   // ✅ 使用小程序相同的完整URL（旧OSS）
                   'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/34e7174539261545097316_%E7%BC%96%E7%BB%84%204%E5%A4%87%E4%BB%BD%203%402x.png',
-                  width: 20.w,  // ✅ 对应小程序 width: 20px (20.w)
+                  width: 20.w, // ✅ 对应小程序 width: 20px (20.w)
                   height: 20.w, // ✅ 对应小程序 height: 20px (20.w)
                   errorBuilder: (context, error, stackTrace) {
                     // ✅ 图片加载失败时显示默认图标
@@ -250,10 +270,7 @@ class ProfilePage extends ConsumerWidget {
                 SizedBox(height: 8.h),
                 Text(
                   tab['text'] as String,
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Color(0xFF333333),
-                  ),
+                  style: TextStyle(fontSize: 12.sp, color: Color(0xFF333333)),
                 ),
               ],
             ),
@@ -349,17 +366,10 @@ class ProfilePage extends ConsumerWidget {
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(
-                  fontSize: 15.sp,
-                  color: Color(0xFF333333),
-                ),
+                style: TextStyle(fontSize: 15.sp, color: Color(0xFF333333)),
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              size: 20.sp,
-              color: Color(0xFF999999),
-            ),
+            Icon(Icons.chevron_right, size: 20.sp, color: Color(0xFF999999)),
           ],
         ),
       ),
@@ -367,6 +377,266 @@ class ProfilePage extends ConsumerWidget {
   }
 
   /// 格式化手机号
+  String _formatPhone(String phone) {
+    if (phone.length >= 11) {
+      return '${phone.substring(0, 3)}****${phone.substring(7)}';
+    }
+    return phone;
+  }
+}
+
+/// 非默认模版 - 渐变背景、右上装饰、7 个白色卡片菜单，使用 Template/mine 切图
+class _ProfilePageAlternativeLayout extends ConsumerWidget {
+  const _ProfilePageAlternativeLayout();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final tokens = ref.watch(appStyleTokensProvider);
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+    final topHeight = statusBarHeight + 220.h;
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F6F8),
+      body: Stack(
+        children: [
+          // 顶部背景图（与默认模版一致：铺满顶部，BoxFit.cover）
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Image.asset(
+              ProfileTemplateAssets.profileTopBg,
+              height: topHeight,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                height: topHeight,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      tokens.colors.cardLightBg,
+                      tokens.colors.primaryGradientStart.withValues(alpha: 0.3),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // 右上角装饰图（叠加在背景之上）
+          Positioned(
+            top: statusBarHeight + 16.h,
+            right: 0,
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.45,
+              height: 140.h,
+              child: Image.asset(
+                ProfileTemplateAssets.profileDecoration,
+                fit: BoxFit.contain,
+                alignment: Alignment.centerRight,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
+          ),
+          CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: SizedBox(height: statusBarHeight + 38.h),
+              ),
+              SliverToBoxAdapter(
+                child: _buildHeader(
+                  context,
+                  authState.isLoggedIn,
+                  authState.user,
+                ),
+              ),
+              SliverToBoxAdapter(child: SizedBox(height: 20.h)),
+              SliverToBoxAdapter(
+                child: _buildMenuCards(context, ref, tokens.colors.primary),
+              ),
+              SliverToBoxAdapter(child: SizedBox(height: 20.h)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, bool isLoggedIn, UserModel? user) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: GestureDetector(
+        onTap: () {
+          if (isLoggedIn) {
+            context.push(AppRoutes.personEdit);
+          } else {
+            final router = GoRouter.of(context);
+            final currentPath =
+                router.routerDelegate.currentConfiguration.uri.path;
+            context.push(
+              AppRoutes.loginCenter,
+              extra: {'returnPath': currentPath},
+            );
+          }
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Row(
+          children: [
+            Container(
+              width: 64.w,
+              height: 64.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 4.w),
+              ),
+              child: ClipOval(
+                child:
+                    isLoggedIn &&
+                        user?.avatar != null &&
+                        user!.avatar!.isNotEmpty
+                    ? Image.network(
+                        ApiConfig.convertLegacyOssUrl(
+                          ApiConfig.completeImageUrl(user.avatar),
+                        ),
+                        fit: BoxFit.cover,
+                        headers: ApiConfig.ossImageHeaders,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: Colors.grey[300],
+                          child: Icon(
+                            Icons.person,
+                            size: 30.w,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    : Image.network(
+                        'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixindf.png',
+                        fit: BoxFit.cover,
+                        headers: ApiConfig.ossImageHeaders,
+                      ),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isLoggedIn
+                        ? (user?.nickname ?? user?.studentName ?? '用户')
+                        : '请登录',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF03203D),
+                    ),
+                  ),
+                  if (isLoggedIn && user?.phone != null) ...[
+                    SizedBox(height: 4.h),
+                    Text(
+                      _formatPhone(user!.phone!),
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF03203D).withOpacity(0.85),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (isLoggedIn)
+              Icon(Icons.edit, color: const Color(0xFF03203D), size: 20.w),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuCards(
+    BuildContext context,
+    WidgetRef ref,
+    Color primaryColor,
+  ) {
+    const menuItems = [
+      (ProfileTemplateAssets.menuMyCourse, '我的课程'),
+      (ProfileTemplateAssets.menuMyReport, '我的报告'),
+      (ProfileTemplateAssets.menuCorrection, '纠错'),
+      (ProfileTemplateAssets.menuFavorites, '试题收藏'),
+      (ProfileTemplateAssets.menuOrders, '我的订单'),
+      (ProfileTemplateAssets.menuPractice, '我的练习'),
+      (ProfileTemplateAssets.menuSettings, '设置'),
+    ];
+    final taps = [
+      () => ref.read(mainTabIndexProvider.notifier).state = 2,
+      () => context.push(AppRoutes.reportCenter),
+      () => context.push(AppRoutes.wrongBookIndex),
+      () => context.push(AppRoutes.collectIndex),
+      () => context.push(AppRoutes.myOrder),
+      () => ref.read(mainTabIndexProvider.notifier).state = 0,
+      () => context.push(AppRoutes.settings),
+    ];
+    return Column(
+      children: List.generate(menuItems.length, (i) {
+        final item = menuItems[i];
+        return Container(
+          margin: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: _buildMenuCardItem(
+            iconPath: item.$1,
+            title: item.$2,
+            onTap: taps[i],
+            primaryColor: primaryColor,
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildMenuCardItem({
+    required String iconPath,
+    required String title,
+    required VoidCallback onTap,
+    required Color primaryColor,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+        child: Row(
+          children: [
+            Image.asset(
+              iconPath,
+              width: 24.w,
+              height: 24.w,
+              errorBuilder: (_, __, ___) => Icon(Icons.article_outlined, size: 24.w, color: primaryColor),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15.sp,
+                  color: const Color(0xFF333333),
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: 20.sp,
+              color: const Color(0xFF999999),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   String _formatPhone(String phone) {
     if (phone.length >= 11) {
       return '${phone.substring(0, 3)}****${phone.substring(7)}';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../core/style/app_style_tokens.dart';
 import '../models/question_bank_model.dart';
 import 'section_title.dart';
 
@@ -8,11 +9,13 @@ import 'section_title.dart';
 class DailyPracticeCard extends StatelessWidget {
   final DailyPracticeModel dailyPractice;
   final VoidCallback onTap;
+  final AppStyleTokens? styleTokens;
 
   const DailyPracticeCard({
     super.key,
     required this.dailyPractice,
     required this.onTap,
+    this.styleTokens,
   });
 
   @override
@@ -55,28 +58,35 @@ class DailyPracticeCard extends StatelessWidget {
                         height: 1.0,
                       ),
                     ),
-                    // 立即刷题按钮
-                    Container(
-                      width: 100.w,
-                      height: 35.h,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFFFF860E), Color(0xFFFF6912)],
-                        ),
-                        borderRadius: BorderRadius.circular(35.r),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '立即刷题',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w400,
+                    // 立即刷题按钮（使用模板 action 渐变）
+                    Builder(
+                      builder: (_) {
+                        final c = styleTokens?.colors;
+                        final start = c?.actionGradientStart ?? const Color(0xFFFF860E);
+                        final end = c?.actionGradientEnd ?? const Color(0xFFFF6912);
+                        return Container(
+                          width: 100.w,
+                          height: 35.h,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [start, end],
+                            ),
+                            borderRadius: BorderRadius.circular(35.r),
                           ),
-                        ),
-                      ),
+                          child: Center(
+                            child: Text(
+                              '立即刷题',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),

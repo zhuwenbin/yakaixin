@@ -2,10 +2,9 @@
 <resources>
     <!-- Theme applied to the Android Window while the process is starting when the OS's Dark Mode setting is on -->
     <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
-        <!-- ✅ 直接使用 background.png 作为窗口背景，系统会自动拉伸铺满屏幕 -->
+        <!-- ✅ 直接使用 background 作为窗口背景，不启用 Android 12 新 API，保持整张图显示 -->
         <item name="android:windowBackground">@drawable/background</item>
         <item name="android:forceDarkAllowed">false</item>
-        <!-- ✅ 启动图全屏显示，隐藏状态栏和导航栏 -->
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">false</item>
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>

@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ✅ 启动图全屏显示配置 - 整张图片铺满屏幕 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
-        <!-- ✅ 使用 fill 让整张图片拉伸铺满整个屏幕（与iOS效果一致） -->
-        <bitmap 
-            android:gravity="fill"
-            android:src="@drawable/background"/>
+        <bitmap android:gravity="fill" android:src="@drawable/background"/>
     </item>
 </layer-list>

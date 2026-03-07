@@ -75,7 +75,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
       body: SizedBox.expand(
         child: Image.asset(
           'assets/images/splash.png',
-          fit: BoxFit.cover, // ✅ 充满整个屏幕，保持宽高比
+          fit: BoxFit.contain, // ✅ 完整显示整张图片，不裁剪
           width: double.infinity,
           height: double.infinity,
           errorBuilder: (context, error, stackTrace) {

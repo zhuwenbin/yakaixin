@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/routes/app_routes.dart';
+import '../../../core/style/app_style_tokens.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -20,6 +21,7 @@ class StudyPlanSection extends ConsumerWidget {
   final bool isCourseListLoading;
   final String teachingType;
   final Function(String) onTeachingTypeChanged;
+  final AppStyleTokens? styleTokens;
 
   const StudyPlanSection({
     super.key,
@@ -27,6 +29,7 @@ class StudyPlanSection extends ConsumerWidget {
     required this.isCourseListLoading,
     required this.teachingType,
     required this.onTeachingTypeChanged,
+    this.styleTokens,
   });
 
   static final List<Map<String, String>> _teachingTypeOptions = [
@@ -62,7 +65,10 @@ class StudyPlanSection extends ConsumerWidget {
               padding: EdgeInsets.only(top: 10.h),
               child: Column(
                 children: courseList
-                    .map((course) => CourseItemCard(courseData: course))
+                    .map((course) => CourseItemCard(
+                          courseData: course,
+                          styleTokens: styleTokens,
+                        ))
                     .toList(),
               ),
             ),
@@ -161,7 +167,7 @@ class StudyPlanSection extends ConsumerWidget {
         style: TextStyle(
           fontSize: 14.sp,
           fontWeight: FontWeight.w400, // font-weight: 400
-          color: const Color(0xFF0075FF), // color: #0075FF
+          color: styleTokens?.colors.primary ?? const Color(0xFF0075FF),
         ),
       ),
     );

@@ -50,6 +50,7 @@ dependencies:
   
   # UI相关
   flutter_screenutil: ^5.9.0
+  flutter_svg: ^2.0.10+1
   cached_network_image: ^3.3.1
   pull_to_refresh: ^2.0.0
   flutter_easyloading: ^3.0.5
@@ -141,6 +142,7 @@ flutter:
     - assets/images/
     - assets/images/course_type/
     - assets/images/style/
+    - assets/images/Template/mine/
     - assets/images/secret.png
     # ✅ Mock 数据文件（仅开发环境使用）
     - assets/mock/
@@ -195,18 +197,14 @@ flutter_launcher_icons:
 
 # ============ 启动页配置 ============
 flutter_native_splash:
-  # ✅ 使用全屏背景图（充满屏幕）
+  # ✅ 使用全屏背景图，完整显示整张图片（不裁剪）
   background_image: "assets/images/splash.png"
-  
-  # 深色模式背景图
   background_image_dark: "assets/images/splash.png"
-  
-  # Android 12+ 配置（仍然需要居中图标）
-  android_12:
-    image: "assets/images/app_icon.png"
-    color: "#E8F4F8"
-    icon_background_color: "#E8F4F8"
-  
+  # 完整显示图片，不裁剪（老版本行为）
+  android_gravity: center
+  ios_content_mode: scaleAspectFit
+  # ⚠️ 不配置 android_12，保持 values-v31 仅用 windowBackground，使 Android 12+ 也显示整张图
+  # 若添加 android_12 会启用新 API，变成纯色+圆形图标拼接
   ios: true
   android: true
   web: false

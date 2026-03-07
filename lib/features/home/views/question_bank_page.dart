@@ -111,12 +111,12 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
           // 每日一测
           if (state.dailyPractice != null) ...[
             SliverToBoxAdapter(
-              child: _buildDailyPractice(context, state.dailyPractice!),
+              child: _buildDailyPractice(context, ref, state.dailyPractice!),
             ),
             SliverToBoxAdapter(child: SizedBox(height: 16.h)),
           ],
           // 章节练习
-          SliverToBoxAdapter(child: _buildChapterPractice(state)),
+          SliverToBoxAdapter(child: _buildChapterPractice(ref, state)),
           SliverToBoxAdapter(child: SizedBox(height: 16.h)),
           // 技能模拟
           if (state.skillMock != null) ...[
@@ -126,7 +126,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
             SliverToBoxAdapter(child: SizedBox(height: 16.h)),
           ],
           // 已购试题
-          SliverToBoxAdapter(child: _buildPurchasedQuestions(state)),
+          SliverToBoxAdapter(child: _buildPurchasedQuestions(ref, state)),
           SliverToBoxAdapter(child: SizedBox(height: 60.h)),
         ],
       ),
@@ -269,21 +269,24 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   /// 每日一测
   Widget _buildDailyPractice(
     BuildContext context,
+    WidgetRef ref,
     DailyPracticeModel dailyPractice,
   ) {
     return DailyPracticeCard(
       dailyPractice: dailyPractice,
       onTap: () => _handleDailyPractice(context),
+      styleTokens: ref.watch(appStyleTokensProvider),
     );
   }
 
   /// 章节练习
   /// 对应小程序: src/modules/jintiku/components/commen/index-nav.vue
-  Widget _buildChapterPractice(QuestionBankState state) {
+  Widget _buildChapterPractice(WidgetRef ref, QuestionBankState state) {
     return ChapterPracticeSection(
       chapterExercise: state.chapterExercise,
       isLoading: state.isLoadingChapters,
       onTap: () => _handleChapterPractice(context),
+      styleTokens: ref.watch(appStyleTokensProvider),
     );
   }
 
@@ -301,13 +304,14 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   }
 
   /// 已购试题
-  Widget _buildPurchasedQuestions(QuestionBankState state) {
+  Widget _buildPurchasedQuestions(WidgetRef ref, QuestionBankState state) {
     return PurchasedQuestionsSection(
       goods: state.purchasedGoods,
       isLoading: state.isLoadingPurchased,
       onItemTap: (goods) {
         _handlePurchasedItemTap(context, goods);
       },
+      styleTokens: ref.watch(appStyleTokensProvider),
     );
   }
 

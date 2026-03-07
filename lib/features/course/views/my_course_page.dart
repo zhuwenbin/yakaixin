@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/style/app_style_provider.dart';
 import '../providers/my_course_provider.dart';
 import '../../main/main_tab_page.dart';
 import '../../../../app/config/api_config.dart';
@@ -53,13 +54,14 @@ class _MyCoursePageState extends ConsumerState<MyCoursePage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(myCourseNotifierProvider);
+    final indicatorColor = ref.watch(appStyleTokensProvider).colors.primary;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F5F7),
       appBar: AppBar(title: const Text('我的课程'), backgroundColor: Colors.white),
       body: Column(
         children: [
-          _buildTeachingTypeTab(state.teachingType),
+          _buildTeachingTypeTab(state.teachingType, indicatorColor),
           Expanded(child: _buildCourseList(state)),
         ],
       ),
@@ -68,24 +70,22 @@ class _MyCoursePageState extends ConsumerState<MyCoursePage> {
 
   /// 授课方式Tab
   /// 对应小程序: teachingTypeTab.vue
-  /// 注意：小程序只有"录播课"(3)和"直播课"(1)，没有"全部"
-  Widget _buildTeachingTypeTab(String currentType) {
+  Widget _buildTeachingTypeTab(String currentType, Color indicatorColor) {
     return Container(
       color: Colors.white,
       padding: EdgeInsets.only(top: 16.h, bottom: 12.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildTabItem('3', '录播课', currentType),
-          _buildTabItem('1', '直播课', currentType),
+          _buildTabItem('3', '录播课', currentType, indicatorColor),
+          _buildTabItem('1', '直播课', currentType, indicatorColor),
         ],
       ),
     );
   }
 
-  /// Tab项
-  /// 对应小程序: teachingTypeTab.vue Line 9-16 (下划线样式)
-  Widget _buildTabItem(String value, String label, String currentType) {
+  /// Tab项（下划线使用模板主色）
+  Widget _buildTabItem(String value, String label, String currentType, Color indicatorColor) {
     final isSelected = currentType == value;
     return GestureDetector(
       onTap: () {
@@ -111,7 +111,7 @@ class _MyCoursePageState extends ConsumerState<MyCoursePage> {
               width: 22.w,
               height: 3.h,
               decoration: BoxDecoration(
-                color: const Color(0xFF018CFF),
+                color: indicatorColor,
                 borderRadius: BorderRadius.circular(1.5.r),
               ),
             ),
