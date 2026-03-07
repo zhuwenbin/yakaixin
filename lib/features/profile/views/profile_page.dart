@@ -212,7 +212,8 @@ class _ProfilePageBlueLayout extends ConsumerWidget {
         'text': '我的课程',
         'onTap': () {
           // 切换到课程 Tab
-          ref.read(mainTabIndexProvider.notifier).state = 2;
+          ref.read(mainTabIndexProvider.notifier).state =
+            tabIndexForPage(kPageIndexCourse, ref.read(appStyleTokensProvider).images.tabBarOrder);
         },
       },
       {
@@ -304,7 +305,8 @@ class _ProfilePageBlueLayout extends ConsumerWidget {
         'title': '我的练习',
         'onTap': () {
           // 切换到首页 Tab
-          ref.read(mainTabIndexProvider.notifier).state = 0;
+          ref.read(mainTabIndexProvider.notifier).state =
+            tabIndexForPage(kPageIndexHome, ref.read(appStyleTokensProvider).images.tabBarOrder);
         },
       },
       {
@@ -569,12 +571,14 @@ class _ProfilePageAlternativeLayout extends ConsumerWidget {
       (ProfileTemplateAssets.menuSettings, '设置'),
     ];
     final taps = [
-      () => ref.read(mainTabIndexProvider.notifier).state = 2,
+      () => ref.read(mainTabIndexProvider.notifier).state =
+          tabIndexForPage(kPageIndexCourse, ref.read(appStyleTokensProvider).images.tabBarOrder),
       () => context.push(AppRoutes.reportCenter),
       () => context.push(AppRoutes.wrongBookIndex),
       () => context.push(AppRoutes.collectIndex),
       () => context.push(AppRoutes.myOrder),
-      () => ref.read(mainTabIndexProvider.notifier).state = 0,
+      () => ref.read(mainTabIndexProvider.notifier).state =
+          tabIndexForPage(kPageIndexHome, ref.read(appStyleTokensProvider).images.tabBarOrder),
       () => context.push(AppRoutes.settings),
     ];
     return Column(

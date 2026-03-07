@@ -7,19 +7,28 @@ import '../home/views/question_bank_page.dart';
 import '../course/views/course_page.dart';
 import '../profile/views/profile_page.dart';
 
-/// Tab索引Provider - 用于全局控制Tab切换
+/// Tab索引Provider - 存的是底部 Tab 下标（0～3），顺序可能因模版为 题库/课程/首页/我的
 final mainTabIndexProvider = StateProvider<int>((ref) => 0);
 
+/// 页面下标：0首页 1题库 2课程 3我的。跳转时用 tabIndexForPage(pageIndex, tokens.images.tabBarOrder)
+const int kPageIndexHome = 0;
+const int kPageIndexQuestion = 1;
+const int kPageIndexCourse = 2;
+const int kPageIndexProfile = 3;
+
+const List<String> _kTabLabelsByPageIndex = ['首页', '题库', '课程', '我的'];
+
 /// 主页面 - TabBar导航
-/// 对应小程序: 4个Tab - 首页/题库/课程/我的
+/// 默认模版：首页、题库、课程、我的；非默认模版：题库、课程、首页、我的 + Template/main_tabbar 图标
 class MainTabPage extends ConsumerWidget {
   const MainTabPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentIndex = ref.watch(mainTabIndexProvider);
+    final currentTabIndex = ref.watch(mainTabIndexProvider);
     final tokens = ref.watch(appStyleTokensProvider);
     final primaryColor = tokens.colors.primary;
+    final tabOrder = tokens.images.tabBarOrder ?? [0, 1, 2, 3];
 
     final List<Widget> pages = const [
       HomePage(),
@@ -28,17 +37,26 @@ class MainTabPage extends ConsumerWidget {
       ProfilePage(),
     ];
 
+    final pageIndex = tabOrder.length == 4
+        ? tabOrder[currentTabIndex.clamp(0, 3)]
+        : currentTabIndex;
+
+    final labels = tokens.images.tabBarLabels;
     final items = tokens.images.tabBarUseMaterialIcons
-        ? _buildMaterialIconItems(primaryColor)
-        : _buildAssetIconItems(tokens.images.tabBarIconPaths!);
+        ? _buildMaterialIconItems(primaryColor, tabOrder, labels)
+        : _buildAssetIconItems(
+            tokens.images.tabBarIconPaths!,
+            tabOrder,
+            labels,
+          );
 
     return Scaffold(
       body: IndexedStack(
-        index: currentIndex,
+        index: pageIndex.clamp(0, pages.length - 1),
         children: pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
+        currentIndex: currentTabIndex,
         onTap: (index) {
           ref.read(mainTabIndexProvider.notifier).state = index;
         },
@@ -52,80 +70,62 @@ class MainTabPage extends ConsumerWidget {
     );
   }
 
-  static List<BottomNavigationBarItem> _buildMaterialIconItems(Color primary) {
-    return [
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.home_outlined),
-        activeIcon: Icon(Icons.home),
-        label: '首页',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.menu_book_outlined),
-        activeIcon: Icon(Icons.menu_book),
-        label: '题库',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.school_outlined),
-        activeIcon: Icon(Icons.school),
-        label: '课程',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.person_outline),
-        activeIcon: Icon(Icons.person),
-        label: '我的',
-      ),
+  static List<BottomNavigationBarItem> _buildMaterialIconItems(
+    Color primary,
+    List<int> tabOrder,
+    List<String>? tabBarLabels,
+  ) {
+    final icons = [
+      (Icon(Icons.home_outlined), Icon(Icons.home)),
+      (Icon(Icons.menu_book_outlined), Icon(Icons.menu_book)),
+      (Icon(Icons.school_outlined), Icon(Icons.school)),
+      (Icon(Icons.person_outline), Icon(Icons.person)),
     ];
+    return List.generate(4, (i) {
+      final pageIdx = tabOrder.length == 4 ? tabOrder[i] : i;
+      final label = (tabBarLabels != null && tabBarLabels.length == 4)
+          ? tabBarLabels[i]
+          : (pageIdx >= 0 && pageIdx < _kTabLabelsByPageIndex.length
+              ? _kTabLabelsByPageIndex[pageIdx]
+              : '');
+      final pair = icons[pageIdx.clamp(0, 3)];
+      return BottomNavigationBarItem(
+        icon: pair.$1,
+        activeIcon: pair.$2,
+        label: label,
+      );
+    });
   }
 
   static List<BottomNavigationBarItem> _buildAssetIconItems(
     List<String> paths,
+    List<int> tabOrder,
+    List<String>? tabBarLabels,
   ) {
     const size = 24.0;
-    return [
-      BottomNavigationBarItem(
-        icon: Image.asset(paths[0], width: size, height: size, errorBuilder:
-            (_, __, ___) {
-          return const Icon(Icons.home_outlined, size: size);
-        }),
-        activeIcon: Image.asset(paths[1], width: size, height: size,
-            errorBuilder: (_, __, ___) {
-          return const Icon(Icons.home, size: size);
-        }),
-        label: '首页',
-      ),
-      BottomNavigationBarItem(
-        icon: Image.asset(paths[2], width: size, height: size, errorBuilder:
-            (_, __, ___) {
-          return const Icon(Icons.menu_book_outlined, size: size);
-        }),
-        activeIcon: Image.asset(paths[3], width: size, height: size,
-            errorBuilder: (_, __, ___) {
-          return const Icon(Icons.menu_book, size: size);
-        }),
-        label: '题库',
-      ),
-      BottomNavigationBarItem(
-        icon: Image.asset(paths[4], width: size, height: size, errorBuilder:
-            (_, __, ___) {
-          return const Icon(Icons.school_outlined, size: size);
-        }),
-        activeIcon: Image.asset(paths[5], width: size, height: size,
-            errorBuilder: (_, __, ___) {
-          return const Icon(Icons.school, size: size);
-        }),
-        label: '课程',
-      ),
-      BottomNavigationBarItem(
-        icon: Image.asset(paths[6], width: size, height: size, errorBuilder:
-            (_, __, ___) {
-          return const Icon(Icons.person_outline, size: size);
-        }),
-        activeIcon: Image.asset(paths[7], width: size, height: size,
-            errorBuilder: (_, __, ___) {
-          return const Icon(Icons.person, size: size);
-        }),
-        label: '我的',
-      ),
-    ];
+    return List.generate(4, (i) {
+      final pageIdx = tabOrder.length == 4 ? tabOrder[i] : i;
+      final label = (tabBarLabels != null && tabBarLabels.length == 4)
+          ? tabBarLabels[i]
+          : (pageIdx >= 0 && pageIdx < _kTabLabelsByPageIndex.length
+              ? _kTabLabelsByPageIndex[pageIdx]
+              : '');
+      final base = i * 2;
+      return BottomNavigationBarItem(
+        icon: Image.asset(
+          paths[base],
+          width: size,
+          height: size,
+          errorBuilder: (_, __, ___) => const Icon(Icons.circle_outlined, size: size),
+        ),
+        activeIcon: Image.asset(
+          paths[base + 1],
+          width: size,
+          height: size,
+          errorBuilder: (_, __, ___) => const Icon(Icons.circle, size: size),
+        ),
+        label: label,
+      );
+    });
   }
 }

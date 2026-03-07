@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yakaixin_app/core/theme/app_colors.dart';
 import 'package:yakaixin_app/core/utils/safe_type_converter.dart';
+import 'package:yakaixin_app/core/style/app_style_provider.dart';
+import 'package:yakaixin_app/core/style/app_style_tokens.dart';
 import 'package:yakaixin_app/core/widgets/common_state_widget.dart';
 import 'package:yakaixin_app/app/routes/app_routes.dart';
 import 'package:yakaixin_app/app/config/api_config.dart';
@@ -19,8 +21,7 @@ import 'package:yakaixin_app/features/home/models/goods_model.dart';
 /// - professionalId: 专业ID
 /// - recitationQuestionModel: 背诵模式 ('1'=开启 '2'=关闭)
 ///
-/// 样式对齐小程序: 头部白底 #fff、共X份/年份/共X题 标签；列表项白底、12px 圆角、阴影；开始考试 #2E68FF
-const Color _kExamPageBlue = Color(0xFF2E68FF);
+/// 样式对齐小程序: 头部白底 #fff、共X份/年份/共X题 标签；列表项白底、12px 圆角、阴影；按钮与标签使用主题色
 
 class TestExamPage extends ConsumerStatefulWidget {
   final String? id;
@@ -64,6 +65,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
   @override
   Widget build(BuildContext context) {
     final examState = ref.watch(testExamNotifierProvider);
+    final tokens = ref.watch(appStyleTokensProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -72,11 +74,11 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
         elevation: 0, // 移除阴影
       ),
       backgroundColor: AppColors.background,
-      body: _buildBody(examState),
+      body: _buildBody(examState, tokens),
     );
   }
 
-  Widget _buildBody(TestExamState state) {
+  Widget _buildBody(TestExamState state, AppStyleTokens tokens) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -93,15 +95,15 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
       padding: EdgeInsets.zero,
       children: [
         // 商品信息头部 (对应小程序 Line 3-21)
-        _buildGoodsHeader(state.goodsInfo!),
+        _buildGoodsHeader(state.goodsInfo!, tokens),
         // 章节试卷列表 (对应小程序 Line 23-47)
         if (state.chapterPaperList.isNotEmpty)
           ...state.chapterPaperList.map(
-            (chapter) => _buildChapterPaperSection(chapter),
+            (chapter) => _buildChapterPaperSection(chapter, tokens),
           ),
         // 普通试卷列表 (对应小程序 Line 49-56)
-        if (state.paperList.isNotEmpty) _buildPaperListSection(state.paperList),
-        // 二维码区域 (对应小程序 Line 58)
+        if (state.paperList.isNotEmpty) _buildPaperListSection(state.paperList, tokens),
+        // 二维码区域 (对应小程序 Line 58)，暂用蓝色背景框图
         _buildQrcodeSection(),
         SizedBox(height: 40.h), // 小程序: 80rpx = 40.h (Line 60)
       ],
@@ -109,7 +111,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
   }
 
   /// 商品信息头部 (对应小程序 Line 3-21)
-  Widget _buildGoodsHeader(GoodsModel goods) {
+  Widget _buildGoodsHeader(GoodsModel goods, AppStyleTokens tokens) {
     // ✅ 对应小程序 exam.vue Line 9: completepath(info.material_intro_path)
     // 小程序使用 material_intro_path 作为封面图，并调用 completepath() 拼接完整URL
     String? coverImage = goods.materialIntroPath;
@@ -168,18 +170,19 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
                   ),
                 ),
                 SizedBox(height: 12.h), // 小程序 .name margin-bottom 24rpx = 12.h
-                // 标签行 (对应小程序 .tags .ee：共X份/年份/共X题，第一个 #ebf1ff+#2e68ff)
+                // 标签行 (对应小程序 .tags .ee：共X份/年份/共X题，主标签使用主题色)
                 Row(
                   children: [
                     _buildTag(
                       _getNumText(goods),
                       isPrimary: true,
+                      tokens: tokens,
                     ), // Line 16: info.num_text
                     SizedBox(width: 6.w),
                     if (_getYearText(goods).isNotEmpty)
-                      _buildTag(_getYearText(goods)), // Line 17: info.year
+                      _buildTag(_getYearText(goods), tokens: tokens), // Line 17: info.year
                     if (_getYearText(goods).isNotEmpty) SizedBox(width: 6.w),
-                    _buildTag(_getQuestionNumText(goods)), // Line 18: 共XX题
+                    _buildTag(_getQuestionNumText(goods), tokens: tokens), // Line 18: 共XX题
                   ],
                 ),
               ],
@@ -190,14 +193,14 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
     );
   }
 
-  /// 标签 Widget (对应小程序 .tags .ee：34rpx 高、4rpx 圆角、第一个 #ebf1ff+#2e68ff)
-  Widget _buildTag(String text, {bool isPrimary = false}) {
+  /// 标签 Widget (对应小程序 .tags .ee：34rpx 高、4rpx 圆角，主标签使用主题色)
+  Widget _buildTag(String text, {bool isPrimary = false, required AppStyleTokens tokens}) {
     return Container(
       height: 17.h, // 34rpx = 17.h
       padding: EdgeInsets.symmetric(horizontal: 6.w), // 12rpx = 6.w
       decoration: BoxDecoration(
         color: isPrimary
-            ? const Color(0xFFEBF1FF)
+            ? tokens.colors.tagBg
             : const Color(0xFFF5F6FA),
         borderRadius: BorderRadius.circular(2.r), // 4rpx = 2.r
       ),
@@ -207,7 +210,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
           style: TextStyle(
             fontSize: 10.sp, // 20rpx = 10.sp
             color: isPrimary
-                ? _kExamPageBlue
+                ? tokens.colors.tagText
                 : const Color(0xFF2C373D).withOpacity(0.71),
           ),
         ),
@@ -251,7 +254,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
   }
 
   /// 章节试卷区域 (对应小程序 Line 23-47)
-  Widget _buildChapterPaperSection(ChapterPaperModel chapter) {
+  Widget _buildChapterPaperSection(ChapterPaperModel chapter, AppStyleTokens tokens) {
     return Container(
       margin: EdgeInsets.only(
         left: 12.w, // 小程序: 24rpx = 12.w
@@ -299,6 +302,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
                   index + 1, // ✅ 序号从1开始（对应小程序 Line 109: let n = index + 1）
                   isLast: index == chapter.list.length - 1,
                   chapter: chapter, // ✅ 传递章节信息，用于跳转
+                  tokens: tokens,
                 ),
               ),
             ),
@@ -314,6 +318,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
     int displayNumber, { // ✅ 这是显示的序号(1,2,3...)
     bool isLast = false,
     ChapterPaperModel? chapter,
+    required AppStyleTokens tokens,
   }) {
     final isCompleted = paper.paperExerciseId != '0';
 
@@ -346,7 +351,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
               ),
             ),
             // 按钮 (对应小程序 Line 40-41, 294-306)
-            _buildPaperButton(isCompleted),
+            _buildPaperButton(isCompleted, tokens),
           ],
         ),
       ),
@@ -401,13 +406,13 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
     );
   }
 
-  /// 试卷按钮 (对应小程序 .but: 160rpx×56rpx、64rpx 圆角、#2e68ff、28rpx 白字)
-  Widget _buildPaperButton(bool isCompleted) {
+  /// 试卷按钮 (对应小程序 .but: 160rpx×56rpx、64rpx 圆角，使用主题色)
+  Widget _buildPaperButton(bool isCompleted, AppStyleTokens tokens) {
     return Container(
       width: 80.w, // 160rpx = 80.w
       height: 28.h, // 56rpx = 28.h
       decoration: BoxDecoration(
-        color: _kExamPageBlue,
+        color: tokens.colors.primary,
         borderRadius: BorderRadius.circular(32.r), // 64rpx = 32.r
       ),
       child: Center(
@@ -424,17 +429,17 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
   }
 
   /// 普通试卷列表区域 (对应小程序 Line 49-56)
-  Widget _buildPaperListSection(List<PaperModel> paperList) {
+  Widget _buildPaperListSection(List<PaperModel> paperList, AppStyleTokens tokens) {
     return Column(
       children: [
-        ...paperList.map((paper) => _buildPaperItem(paper)),
+        ...paperList.map((paper) => _buildPaperItem(paper, tokens)),
         SizedBox(height: 10.h), // 小程序: 20rpx = 10.h (Line 55)
       ],
     );
   }
 
   /// 普通试卷列表项 (对应小程序 .paperList .item: 白底、12px 圆角、阴影、名称+开始考试/查看报告)
-  Widget _buildPaperItem(PaperModel paper) {
+  Widget _buildPaperItem(PaperModel paper, AppStyleTokens tokens) {
     final isCompleted = paper.paperExerciseId != '0';
 
     return InkWell(
@@ -469,7 +474,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
                 ),
               ),
             ),
-            _buildPaperButton(isCompleted),
+            _buildPaperButton(isCompleted, tokens),
           ],
         ),
       ),
@@ -561,7 +566,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
     );
   }
 
-  /// 二维码区域 (对应小程序 kf-qrcode 组件)
+  /// 二维码区域 (对应小程序 kf-qrcode 组件)，暂用蓝色背景框图
   Widget _buildQrcodeSection() {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 12.w), // 小程序: 24rpx = 12.w
@@ -586,7 +591,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
               ),
             ),
           ),
-          // 二维码图片 (对应小程序 Line 4-9)
+          // 二维码图片 (对应小程序 Line 4-9)，蓝色框图
           Container(
             margin: EdgeInsets.only(top: 34.h), // 小程序: 68rpx = 34.h
             width: 155.w, // 小程序: 310rpx = 155.w

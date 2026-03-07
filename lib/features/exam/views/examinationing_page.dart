@@ -10,6 +10,7 @@ import 'package:yakaixin_app/app/constants/storage_keys.dart';
 import 'package:yakaixin_app/app/routes/app_routes.dart';
 import 'package:yakaixin_app/core/theme/app_colors.dart';
 import 'package:yakaixin_app/core/theme/app_text_styles.dart';
+import 'package:yakaixin_app/core/style/app_style_provider.dart';
 import 'package:yakaixin_app/core/utils/safe_type_converter.dart';
 import 'package:yakaixin_app/core/widgets/confirm_dialog.dart';
 import 'package:yakaixin_app/features/exam/models/question_model.dart';
@@ -23,8 +24,6 @@ import 'package:yakaixin_app/features/exam/providers/examinationing_provider.dar
 /// - 每日一练 → 开始做题 → 本页可带 recitation_question_model=1 显示答题/背题 Tab
 /// 布局与样式对齐小程序：头部交卷左、题号居中；Session/时间条；底部答题卡/标疑/上一题/下一题
 ///
-/// 背题模式蓝色 #387dfc（小程序 question-answer）
-const Color _recitationBlue = Color(0xFF387DFC);
 /// 答题卡/标疑图标（小程序 test.vue 同款，750rpx→375 故 17.w×20.w）
 const String _kAnswerCardIconUrl =
     'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/16950896298723a451695089629872551_dtk.png';
@@ -102,8 +101,8 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ 监听答题状态
     final examinationingState = ref.watch(examinationingNotifierProvider);
+    final tokens = ref.watch(appStyleTokensProvider);
 
     // ✅ 修复题目切换：监听 currentIndex 变化，同步 PageController
     ref.listen<int>(
@@ -196,22 +195,22 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
       body: SafeArea(
         child: Stack(
           children: [
-            _buildBody(examinationingState),
+            _buildBody(examinationingState, tokens),
             if (_showAnswerSheet) _buildAnswerSheetMask(),
-            if (_showAnswerSheet) _buildAnswerSheet(),
+            if (_showAnswerSheet) _buildAnswerSheet(tokens),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBody(ExaminationingState state) {
+  Widget _buildBody(ExaminationingState state, dynamic tokens) {
     return Column(
       children: [
-        _buildHeader(state),
-        _buildSessionInfo(state),
-        _buildQuestionArea(state),
-        _buildBottomBar(state),
+        _buildHeader(state, tokens),
+        _buildSessionInfo(state, tokens),
+        _buildQuestionArea(state, tokens),
+        _buildBottomBar(state, tokens),
       ],
     );
   }
@@ -221,15 +220,15 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
     return v == '1' || (v != null && v.toString() == '1');
   }
 
-  Widget _buildHeader(ExaminationingState state) {
+  Widget _buildHeader(ExaminationingState state, dynamic tokens) {
     if (_isRecitationEnabled) {
-      return _buildRecitationHeader(state);
+      return _buildRecitationHeader(state, tokens);
     }
-    return _buildNormalHeader(state);
+    return _buildNormalHeader(state, tokens);
   }
 
   /// 普通模式头部（对应小程序 .priview-time：交卷绝对左侧，题号居中，96rpx 高）
-  Widget _buildNormalHeader(ExaminationingState state) {
+  Widget _buildNormalHeader(ExaminationingState state, dynamic tokens) {
     return Container(
       height: 48.h, // 小程序 96rpx = 48.h
       width: double.infinity,
@@ -253,7 +252,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                   height: 22.h, // 44rpx = 22.h
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2E68FF),
+                    color: tokens.colors.primary,
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
@@ -283,7 +282,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
     );
   }
 
-  Widget _buildRecitationHeader(ExaminationingState state) {
+  Widget _buildRecitationHeader(ExaminationingState state, dynamic tokens) {
     final showSubmit = _recitationMode == _recitationModeAnswer;
     return Container(
       color: Colors.white,
@@ -296,7 +295,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: _recitationBlue,
+                  color: tokens.colors.primary,
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(
@@ -372,16 +371,17 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
     ref.read(examinationingNotifierProvider.notifier).resetRemainingTime();
   }
 
-  Widget _buildSessionInfo(ExaminationingState state) {
+  Widget _buildSessionInfo(ExaminationingState state, dynamic tokens) {
     final showTime =
         !_isRecitationEnabled || _recitationMode != _recitationModeRecite;
     if (_isRecitationEnabled) {
-      return _buildRecitationSessionInfo(state, showTime);
+      return _buildRecitationSessionInfo(state, showTime, tokens);
     }
-    return _buildNormalSessionInfo(state, showTime);
+    return _buildNormalSessionInfo(state, showTime, tokens);
   }
 
-  Widget _buildRecitationSessionInfo(ExaminationingState state, bool showTime) {
+  Widget _buildRecitationSessionInfo(
+      ExaminationingState state, bool showTime, dynamic tokens) {
     return Container(
       width: double.infinity,
       color: Colors.white,
@@ -425,14 +425,14 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
             Container(
               width: double.infinity,
               padding: EdgeInsets.symmetric(vertical: 8.h),
-              decoration: const BoxDecoration(color: Color(0xFFF5F8FF)),
+              decoration: BoxDecoration(color: tokens.colors.tagBg),
               alignment: Alignment.center,
               child: Text(
                 '剩余考试时间：${_formatTime(state.remainingTime)}',
                 style: TextStyle(
                   fontSize: 12.sp,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF2E68FF),
+                  color: tokens.colors.primary,
                 ),
               ),
             ),
@@ -443,7 +443,8 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
   }
 
   /// 普通模式 Session 信息（对应小程序 .title 32rpx/94rpx高 + .time 24rpx/64rpx高 #f5f8ff）
-  Widget _buildNormalSessionInfo(ExaminationingState state, bool showTime) {
+  Widget _buildNormalSessionInfo(
+      ExaminationingState state, bool showTime, dynamic tokens) {
     return Container(
       width: double.infinity,
       color: Colors.white,
@@ -471,14 +472,14 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
             Container(
               width: double.infinity,
               height: 32.h, // 小程序 .time height 64rpx = 32.h
-              decoration: const BoxDecoration(color: Color(0xFFF5F8FF)),
+              decoration: BoxDecoration(color: tokens.colors.tagBg),
               alignment: Alignment.center,
               child: Text(
                 '剩余考试时间：${_formatTime(state.remainingTime)}',
                 style: TextStyle(
                   fontSize: 12.sp, // 24rpx = 12.sp
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF2E68FF),
+                  color: tokens.colors.primary,
                 ),
               ),
             ),
@@ -488,7 +489,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
   }
 
   /// 题目区域
-  Widget _buildQuestionArea(ExaminationingState state) {
+  Widget _buildQuestionArea(ExaminationingState state, dynamic tokens) {
     if (state.questions.isEmpty) {
       return const Expanded(child: Center(child: Text('暂无试题')));
     }
@@ -507,6 +508,9 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
           return _QuestionCard(
             question: question,
             showAnswer: showAnswer,
+            primaryColor: tokens.colors.primary,
+            tagBg: tokens.colors.tagBg,
+            cardLightBg: tokens.colors.cardLightBg,
             onAnswerChanged: (answer) {
               ref
                   .read(examinationingNotifierProvider.notifier)
@@ -518,7 +522,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
     );
   }
 
-  Widget _buildBottomBar(ExaminationingState state) {
+  Widget _buildBottomBar(ExaminationingState state, dynamic tokens) {
     final currentQuestion = state.questions.isNotEmpty
         ? state.questions[state.currentIndex]
         : null;
@@ -556,13 +560,13 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
             ),
           ],
           const Spacer(),
-          _buildNavButton('上一题', false, () {
+          _buildNavButton(tokens.colors.primary, '上一题', false, () {
             ref
                 .read(examinationingNotifierProvider.notifier)
                 .previousQuestion();
           }),
           SizedBox(width: 12.w),
-          _buildNavButton('下一题', true, () {
+          _buildNavButton(tokens.colors.primary, '下一题', true, () {
             ref.read(examinationingNotifierProvider.notifier).nextQuestion();
           }),
         ],
@@ -624,9 +628,9 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
     );
   }
 
-  /// 上一题/下一题（对应小程序 .btn 192rpx×80rpx、40rpx 圆角、26rpx；上一题描边、下一题实心 #2e68ff）
-  Widget _buildNavButton(String label, bool isPrimary, VoidCallback onTap) {
-    const blue = Color(0xFF2E68FF);
+  /// 上一题/下一题（对应小程序 .btn 192rpx×80rpx、40rpx 圆角、26rpx；上一题描边、下一题实心）
+  Widget _buildNavButton(
+      Color primaryColor, String label, bool isPrimary, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20.r), // 40rpx = 20.r
@@ -635,15 +639,15 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
         height: 40.h, // 80rpx = 40.h
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isPrimary ? blue : Colors.white,
+          color: isPrimary ? primaryColor : Colors.white,
           borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(color: blue, width: 1),
+          border: Border.all(color: primaryColor, width: 1),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 13.sp, // 26rpx = 13.sp
-            color: isPrimary ? Colors.white : blue,
+            color: isPrimary ? Colors.white : primaryColor,
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -664,7 +668,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
   }
 
   /// 答题卡
-  Widget _buildAnswerSheet() {
+  Widget _buildAnswerSheet(dynamic tokens) {
     return Positioned(
       bottom: 0,
       left: 0,
@@ -681,7 +685,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
         child: Column(
           children: [
             _buildAnswerSheetHeader(),
-            Expanded(child: _buildAnswerSheetGrid()),
+            Expanded(child: _buildAnswerSheetGrid(tokens)),
           ],
         ),
       ),
@@ -722,7 +726,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
     );
   }
 
-  Widget _buildAnswerSheetGrid() {
+  Widget _buildAnswerSheetGrid(dynamic tokens) {
     final state = ref.watch(examinationingNotifierProvider);
 
     return Column(
@@ -733,7 +737,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildLegend(const Color(0xFF567DFA), '已做'),
+              _buildLegend(tokens.colors.primary, '已做'),
               SizedBox(width: 47.w),
               _buildLegend(const Color(0xFFE4E4E4), '未做'),
               SizedBox(width: 47.w),
@@ -780,7 +784,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                     color: isDoubt
                         ? const Color(0xFFFB9E0C)
                         : isAnswered
-                        ? const Color(0xFFE7F3FE)
+                        ? tokens.colors.cardLightBg
                         : const Color(0xFFF6F6F6),
                   ),
                   child: Text(
@@ -795,7 +799,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                       color: isDoubt
                           ? Colors.white
                           : isAnswered
-                          ? const Color(0xFF567DFA)
+                          ? tokens.colors.primary
                           : Colors.black,
                     ),
                   ),
@@ -837,6 +841,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
 
   void _showSubmitDialog() {
     final state = ref.read(examinationingNotifierProvider);
+    final tokens = ref.read(appStyleTokensProvider);
     final unansweredCount = state.questions
         .where((q) => q.userOption == null || q.userOption!.isEmpty)
         .length;
@@ -844,7 +849,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog(
+      builder: (dialogContext) => Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
         ),
@@ -863,12 +868,12 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                 ),
               ),
               SizedBox(height: 16.h),
-              // ✅ 剩余考试时间（蓝色文字）
+              // ✅ 剩余考试时间（主题色文字）
               Text(
                 '剩余考试时间：${_formatTime(state.remainingTime)}',
                 style: TextStyle(
                   fontSize: 14.sp,
-                  color: const Color(0xFF387DFC),
+                  color: tokens.colors.primary,
                 ),
               ),
               SizedBox(height: 24.h),
@@ -890,9 +895,9 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                   // ✅ 左侧：继续做题（蓝色实心按钮）
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.pop(dialogContext),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF387DFC),
+                        backgroundColor: tokens.colors.primary,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -908,7 +913,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () async {
-                        Navigator.pop(context);
+                        Navigator.pop(dialogContext);
                         // ✅ 从 SharedPreferences 中获取 studentId
                         final prefs = await SharedPreferences.getInstance();
                         final studentId =
@@ -954,11 +959,12 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
 
   void _showTimeUpDialog() {
     final state = ref.read(examinationingNotifierProvider);
+    final tokens = ref.read(appStyleTokensProvider);
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog(
+      builder: (dialogContext) => Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
         ),
@@ -982,7 +988,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                 '剩余考试时间：${_formatTime(state.remainingTime)}',
                 style: TextStyle(
                   fontSize: 14.sp,
-                  color: const Color(0xFF387DFC),
+                  color: tokens.colors.primary,
                 ),
               ),
               SizedBox(height: 24.h),
@@ -1003,11 +1009,11 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.pop(dialogContext);
                         context.pop();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF387DFC),
+                        backgroundColor: tokens.colors.primary,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -1023,7 +1029,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () async {
-                        Navigator.pop(context);
+                        Navigator.pop(dialogContext);
                         // ✅ 从 SharedPreferences 中获取 studentId
                         final prefs = await SharedPreferences.getInstance();
                         final studentId =
@@ -1072,11 +1078,17 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
 class _QuestionCard extends StatefulWidget {
   final QuestionModel question;
   final bool showAnswer;
+  final Color primaryColor;
+  final Color tagBg;
+  final Color cardLightBg;
   final Function(List<String>) onAnswerChanged;
 
   const _QuestionCard({
     required this.question,
     this.showAnswer = false,
+    required this.primaryColor,
+    required this.tagBg,
+    required this.cardLightBg,
     required this.onAnswerChanged,
   });
 
@@ -1136,7 +1148,10 @@ class _QuestionCardState extends State<_QuestionCard> {
           children: [
             _buildQuestionStem(),
             SizedBox(height: 16.h),
-            ..._buildOptions(isSingleChoice, correctLetters),
+            ..._buildOptions(isSingleChoice, correctLetters,
+                primaryColor: widget.primaryColor,
+                tagBg: widget.tagBg,
+                cardLightBg: widget.cardLightBg),
             if (widget.showAnswer) ...[
               SizedBox(height: 16.h),
               _buildRecitationAnswerSection(correctLetters),
@@ -1171,7 +1186,7 @@ class _QuestionCardState extends State<_QuestionCard> {
           Text(
             text,
             style: AppTextStyles.bodyLarge.copyWith(
-              color: _recitationBlue,
+              color: widget.primaryColor,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1192,7 +1207,7 @@ class _QuestionCardState extends State<_QuestionCard> {
               width: 4.w,
               height: 16.h,
               decoration: BoxDecoration(
-                color: _recitationBlue,
+                color: widget.primaryColor,
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
@@ -1201,7 +1216,7 @@ class _QuestionCardState extends State<_QuestionCard> {
               '名师解析',
               style: AppTextStyles.bodyLarge.copyWith(
                 fontWeight: FontWeight.w600,
-                color: _recitationBlue,
+                color: widget.primaryColor,
               ),
             ),
           ],
@@ -1235,7 +1250,7 @@ class _QuestionCardState extends State<_QuestionCard> {
               width: 4.w,
               height: 16.h,
               decoration: BoxDecoration(
-                color: _recitationBlue,
+                color: widget.primaryColor,
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
@@ -1244,7 +1259,7 @@ class _QuestionCardState extends State<_QuestionCard> {
               '知识点',
               style: AppTextStyles.bodyLarge.copyWith(
                 fontWeight: FontWeight.w600,
-                color: _recitationBlue,
+                color: widget.primaryColor,
               ),
             ),
           ],
@@ -1319,13 +1334,16 @@ class _QuestionCardState extends State<_QuestionCard> {
       '[$typeName题型]', // ✅ 显示格式：[A1题型]
       style: TextStyle(
         fontSize: 16.sp, // ✅ 对应小程序 32rpx (Line 327)
-        color: const Color(0xFF387DFC), // ✅ 对应小程序蓝色 (Line 332)
+        color: widget.primaryColor,
         fontWeight: FontWeight.normal,
       ),
     );
   }
 
-  List<Widget> _buildOptions(bool isSingleChoice, List<String> correctLetters) {
+  List<Widget> _buildOptions(bool isSingleChoice, List<String> correctLetters,
+      {required Color primaryColor,
+      required Color tagBg,
+      required Color cardLightBg}) {
     final firstStem = widget.question.stemList.isNotEmpty
         ? widget.question.stemList.first
         : null;
@@ -1359,16 +1377,16 @@ class _QuestionCardState extends State<_QuestionCard> {
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 15.h),
           decoration: BoxDecoration(
             color: isCorrectAnswer
-                ? const Color(0xFFF0E6FF)
+                ? cardLightBg
                 : isSelected
-                    ? const Color(0x2E7CBFF7)
+                    ? primaryColor.withValues(alpha: 0.18)
                     : Colors.white,
             borderRadius: BorderRadius.circular(25.r),
             border: Border.all(
               color: isCorrectAnswer
-                  ? const Color(0xFF8B7CB3)
+                  ? primaryColor
                   : isSelected
-                      ? const Color(0xFF567DFA)
+                      ? primaryColor
                       : const Color(0xFFECECEC),
               width: 1,
             ),

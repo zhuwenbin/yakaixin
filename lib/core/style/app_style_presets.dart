@@ -61,11 +61,18 @@ class AppImagePackConfig {
   final List<String> studyCardUrls;
   final bool tabBarUseMaterialIcons;
   final List<String>? tabBarIconPaths;
+  /// Tab 顺序：tabBarOrder[tabIndex] = 页面下标（0首页 1题库 2课程 3我的）
+  /// null 或 [0,1,2,3] 为默认顺序；非默认如 [1,2,0,3] 表示 题库、课程、首页、我的
+  final List<int>? tabBarOrder;
+  /// Tab 文案（按 Tab 下标顺序）：如 ['刷题','上课','购课','我的']。null 则用默认 首页/题库/课程/我的
+  final List<String>? tabBarLabels;
 
   const AppImagePackConfig({
     required this.studyCardUrls,
     this.tabBarUseMaterialIcons = true,
     this.tabBarIconPaths,
+    this.tabBarOrder,
+    this.tabBarLabels,
   });
 }
 
@@ -124,24 +131,30 @@ class AppStylePresets {
     );
   }
 
+  static const String _mainTabBar = 'assets/images/Template/main_tabbar';
+  static const String _tiku = 'assets/images/Template/tiku';
+
+  /// 非默认模版：顺序 题库、课程、首页、我的，设计图图标 Template/main_tabbar，四个功能图标 Template/tiku
   static AppImagePackConfig imagePackB() {
-    return const AppImagePackConfig(
+    return AppImagePackConfig(
       studyCardUrls: [
-        'assets/images/style/pack_b/predict.png',
-        'assets/images/style/pack_b/test.png',
-        'assets/images/style/pack_b/exam.png',
-        'assets/images/style/pack_b/report.png',
+        '$_tiku/tiku_func_1.png',
+        '$_tiku/tiku_func_2.png',
+        '$_tiku/tiku_func_3.png',
+        '$_tiku/tiku_func_4.png',
       ],
       tabBarUseMaterialIcons: false,
+      tabBarOrder: const [1, 2, 0, 3],
+      tabBarLabels: const ['刷题', '上课', '购课', '我的'],
       tabBarIconPaths: [
-        'assets/images/style/pack_b/tab_home.png',
-        'assets/images/style/pack_b/tab_home_active.png',
-        'assets/images/style/pack_b/tab_question.png',
-        'assets/images/style/pack_b/tab_question_active.png',
-        'assets/images/style/pack_b/tab_course.png',
-        'assets/images/style/pack_b/tab_course_active.png',
-        'assets/images/style/pack_b/tab_profile.png',
-        'assets/images/style/pack_b/tab_profile_active.png',
+        '$_mainTabBar/main_tabbar_goods.png',
+        '$_mainTabBar/main_tabbar_goods.png',
+        '$_mainTabBar/main_tabbar_course.png',
+        '$_mainTabBar/main_tabbar_course.png',
+        '$_mainTabBar/main_tabbar_home.png',
+        '$_mainTabBar/main_tabbar_home.png',
+        '$_mainTabBar/main_tabbar_mine.png',
+        '$_mainTabBar/main_tabbar_mine.png',
       ],
     );
   }

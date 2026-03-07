@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yakaixin_app/app/routes/app_routes.dart';
 import 'package:go_router/go_router.dart';
+import 'package:yakaixin_app/core/style/app_style_provider.dart';
+import 'package:yakaixin_app/core/style/app_style_tokens.dart';
 // import 已移除 - 现在使用API调用，MockInterceptor会自动处理Mock数据
 
 /// 考试页面 - 对应小程序 test/exam.vue
@@ -35,10 +37,11 @@ class _ExamPageState extends ConsumerState<ExamPage> {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = ref.watch(appStyleTokensProvider);
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: _buildAppBar(),
-      body: _buildBody(),
+      body: _buildBody(tokens),
     );
   }
 
@@ -51,13 +54,13 @@ class _ExamPageState extends ConsumerState<ExamPage> {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(AppStyleTokens tokens) {
     return SingleChildScrollView(
       child: Column(
         children: [
-          _buildInfoSection(),
-          if (_mockInfo['data_type'] == '3') ..._buildChapterPaperList(),
-          if (_mockInfo['data_type'] == '1') ..._buildPaperList(),
+          _buildInfoSection(tokens),
+          if (_mockInfo['data_type'] == '3') ..._buildChapterPaperList(tokens),
+          if (_mockInfo['data_type'] == '1') ..._buildPaperList(tokens),
           SizedBox(height: 40.h),
         ],
       ),
@@ -65,7 +68,7 @@ class _ExamPageState extends ConsumerState<ExamPage> {
   }
 
   /// 商品信息部分
-  Widget _buildInfoSection() {
+  Widget _buildInfoSection(AppStyleTokens tokens) {
     return Container(
       color: Colors.white,
       padding: EdgeInsets.all(16.w),
@@ -81,7 +84,7 @@ class _ExamPageState extends ConsumerState<ExamPage> {
               children: [
                 _buildTitle(),
                 SizedBox(height: 12.h),
-                _buildTags(),
+                _buildTags(tokens),
               ],
             ),
           ),
@@ -120,24 +123,27 @@ class _ExamPageState extends ConsumerState<ExamPage> {
     );
   }
 
-  Widget _buildTags() {
+  Widget _buildTags(AppStyleTokens tokens) {
     return Wrap(
       spacing: 6.w,
       runSpacing: 8.h,
       children: [
-        _buildTag(_mockInfo['num_text'] ?? '', isHighlight: true),
-        _buildTag(_mockInfo['year'] ?? ''),
+        _buildTag(_mockInfo['num_text'] ?? '', isHighlight: true, tokens: tokens),
+        _buildTag(_mockInfo['year'] ?? '', tokens: tokens),
         _buildTag(
-            '共${_mockInfo['tiku_goods_details']['question_num'] ?? 0}题'),
+            '共${_mockInfo['tiku_goods_details']['question_num'] ?? 0}题',
+            tokens: tokens),
       ],
     );
   }
 
-  Widget _buildTag(String text, {bool isHighlight = false}) {
+  Widget _buildTag(String text, {bool isHighlight = false, required AppStyleTokens tokens}) {
+    final tagBg = tokens.colors.tagBg;
+    final tagText = tokens.colors.tagText;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: isHighlight ? const Color(0xFFEBF1FF) : const Color(0xFFF5F6FA),
+        color: isHighlight ? tagBg : const Color(0xFFF5F6FA),
         borderRadius: BorderRadius.circular(2.r),
       ),
       child: Text(
@@ -145,7 +151,7 @@ class _ExamPageState extends ConsumerState<ExamPage> {
         style: TextStyle(
           fontSize: 10.sp,
           color: isHighlight
-              ? const Color(0xFF2E68FF)
+              ? tagText
               : const Color(0xFF2C373D).withOpacity(0.71),
         ),
       ),
@@ -153,21 +159,25 @@ class _ExamPageState extends ConsumerState<ExamPage> {
   }
 
   /// 章节试卷列表
-  List<Widget> _buildChapterPaperList() {
+  List<Widget> _buildChapterPaperList(AppStyleTokens tokens) {
+    final primaryColor = tokens.colors.primary;
     return _mockChapterPaperList.map((chapter) {
       return _ChapterPaperSection(
         chapter: chapter,
         onItemTap: _handlePaperTap,
+        primaryColor: primaryColor,
       );
     }).toList();
   }
 
   /// 普通试卷列表
-  List<Widget> _buildPaperList() {
+  List<Widget> _buildPaperList(AppStyleTokens tokens) {
+    final primaryColor = tokens.colors.primary;
     return _mockPaperList.map((paper) {
       return _PaperListItem(
         paper: paper,
         onTap: () => _handlePaperTap(paper, null),
+        primaryColor: primaryColor,
       );
     }).toList();
   }
@@ -213,10 +223,12 @@ class _ExamPageState extends ConsumerState<ExamPage> {
 class _ChapterPaperSection extends StatelessWidget {
   final Map<String, dynamic> chapter;
   final Function(Map<String, dynamic>, Map<String, dynamic>) onItemTap;
+  final Color primaryColor;
 
   const _ChapterPaperSection({
     required this.chapter,
     required this.onItemTap,
+    this.primaryColor = const Color(0xFF2E68FF),
   });
 
   @override
@@ -280,6 +292,7 @@ class _ChapterPaperSection extends StatelessWidget {
             index: index,
             showDivider: !isLast,
             onTap: () => onItemTap(paper, chapter),
+            primaryColor: primaryColor,
           );
         }).toList(),
       ),
@@ -293,12 +306,14 @@ class _ChapterPaperItem extends StatelessWidget {
   final int index;
   final bool showDivider;
   final VoidCallback onTap;
+  final Color primaryColor;
 
   const _ChapterPaperItem({
     required this.paper,
     required this.index,
     required this.showDivider,
     required this.onTap,
+    this.primaryColor = const Color(0xFF2E68FF),
   });
 
   @override
@@ -383,7 +398,7 @@ class _ChapterPaperItem extends StatelessWidget {
       height: 28.h,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: const Color(0xFF2E68FF),
+        color: primaryColor,
         borderRadius: BorderRadius.circular(32.r),
       ),
       child: Text(
@@ -402,10 +417,12 @@ class _ChapterPaperItem extends StatelessWidget {
 class _PaperListItem extends StatelessWidget {
   final Map<String, dynamic> paper;
   final VoidCallback onTap;
+  final Color primaryColor;
 
   const _PaperListItem({
     required this.paper,
     required this.onTap,
+    this.primaryColor = const Color(0xFF2E68FF),
   });
 
   @override
@@ -446,7 +463,7 @@ class _PaperListItem extends StatelessWidget {
               height: 28.h,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: const Color(0xFF2E68FF),
+                color: primaryColor,
                 borderRadius: BorderRadius.circular(32.r),
               ),
               child: Text(

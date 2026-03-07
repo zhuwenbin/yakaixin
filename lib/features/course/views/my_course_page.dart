@@ -171,7 +171,8 @@ class _MyCoursePageState extends ConsumerState<MyCoursePage> {
         // MainTabPage的Tab索引：0=首页, 1=题库, 2=课程, 3=我的
         context.go('/main-tab');
         // 切换到课程Tab
-        ref.read(mainTabIndexProvider.notifier).state = 2;
+        ref.read(mainTabIndexProvider.notifier).state =
+        tabIndexForPage(kPageIndexCourse, ref.read(appStyleTokensProvider).images.tabBarOrder);
       },
     );
   }

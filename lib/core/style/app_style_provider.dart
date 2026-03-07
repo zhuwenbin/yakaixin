@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../storage/storage_service.dart';
 import '../../app/constants/storage_keys.dart';
 import '../../app/config/api_config.dart';
+import '../../app/config/app_build_config.dart';
 import 'app_style_config.dart';
 import 'app_style_tokens.dart';
 
@@ -21,12 +22,29 @@ final appStyleTokensProvider = Provider<AppStyleTokens>((ref) {
   );
 });
 
+/// 主 Tab 顺序：tabOrder[tabIndex] = 页面下标；用于根据当前 tab 显示对应页面
+const List<int> _defaultTabOrder = [0, 1, 2, 3];
+
+/// 根据「页面下标」得到「Tab 下标」，用于跳转到指定 Tab（如 课程=页面2）
+int tabIndexForPage(int pageIndex, List<int>? tabBarOrder) {
+  final order = tabBarOrder ?? _defaultTabOrder;
+  if (order.length != 4) return pageIndex;
+  final i = order.indexOf(pageIndex);
+  return i >= 0 ? i : pageIndex;
+}
+
 class AppStyleController extends StateNotifier<AppStyleConfig> {
   final StorageService _storage;
 
   AppStyleController(this._storage) : super(_loadConfig(_storage));
 
   static AppStyleConfig _loadConfig(StorageService s) {
+    // 始终使用开发者配置的模版（Debug / Release 均走配置）
+    if (AppBuildConfig.forceProductionTemplate) {
+      return AppStyleConfig(
+        template: AppBuildConfig.resolvedProductionTemplate,
+      );
+    }
     final json = s.getJson(StorageKeys.appStyleConfig);
     if (json == null) return const AppStyleConfig();
     try {
