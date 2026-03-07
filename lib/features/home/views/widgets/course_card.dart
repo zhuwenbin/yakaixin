@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../core/style/app_style_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -9,14 +10,16 @@ import '../../../../core/utils/safe_type_converter.dart';
 import '../../models/goods_model.dart';
 
 /// 课程卡片组件（网课/直播）
-/// 对应小程序: examination-course-item.vue (.card样式)
+/// [styleTokens] 不为空时标签使用模板色
 class CourseCard extends StatelessWidget {
   final GoodsModel goods;
   final VoidCallback? onTap;
+  final AppStyleTokens? styleTokens;
 
   const CourseCard({
     required this.goods,
     this.onTap,
+    this.styleTokens,
     super.key,
   });
 
@@ -175,8 +178,10 @@ class CourseCard extends StatelessWidget {
     );
   }
 
-  /// 标签
+  /// 标签（styleTokens 不为空时使用模板 tagBg/tagText）
   Widget _buildTags() {
+    final tagBg = styleTokens?.colors.tagBg ?? AppColors.courseTagBg;
+    final tagText = styleTokens?.colors.tagText;
     return Wrap(
       spacing: AppSpacing.sm,
       children: [
@@ -184,12 +189,14 @@ class CourseCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
             decoration: BoxDecoration(
-              color: AppColors.courseTagBg,
+              color: tagBg,
               borderRadius: BorderRadius.circular(2.r),
             ),
             child: Text(
               goods.teachingTypeName!,
-              style: AppTextStyles.courseTag,
+              style: tagText != null
+                  ? AppTextStyles.courseTag.copyWith(color: tagText)
+                  : AppTextStyles.courseTag,
             ),
           ),
         if (goods.serviceTypeName != null)

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../core/style/app_style_config.dart';
+import '../../../../core/style/app_style_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -9,11 +11,18 @@ import '../../models/goods_model.dart';
 
 /// 商品卡片组件（题库）
 /// 对应小程序: examination-test-item (普通模式)
+/// [styleTokens] 不为空时标签使用模板色 tagBg/tagText/tagBorder
 class GoodsCard extends StatelessWidget {
   final GoodsModel goods;
   final VoidCallback? onTap;
+  final AppStyleTokens? styleTokens;
 
-  const GoodsCard({required this.goods, this.onTap, super.key});
+  const GoodsCard({
+    required this.goods,
+    this.onTap,
+    this.styleTokens,
+    super.key,
+  });
 
   /// 格式化价格：去除小数点后不必要的0
   /// 例如：9.90 → 9.9, 199.00 → 199, 199.0 → 199, 29.9 → 29.9
@@ -54,6 +63,11 @@ class GoodsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isBlueDefault = styleTokens?.config.template == AppStyleTemplate.blueDefault;
+    final cardBg = (styleTokens != null && !isBlueDefault)
+        ? const Color(0xFFF7F9FC)
+        : AppColors.card;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -66,7 +80,7 @@ class GoodsCard extends StatelessWidget {
           AppSpacing.mdV,
         ),
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: cardBg,
           borderRadius: AppRadius.radiusLg,
           boxShadow: [
             BoxShadow(
@@ -354,143 +368,90 @@ class GoodsCard extends StatelessWidget {
     return null;
   }
 
-  /// 标签
-  /// 对应小程序 Line 29-50
-  /// 标签顺序：
-  /// 1. 第一个标签（未购买时显示）：num_text，样式 .ee:nth-child(1)
-  /// 2. 第二个标签（type == 8 && 未购买）：共X题，样式 .ee-tag-class
-  /// 3. 第三个标签（permission_status == '2'）：month_text，样式 .ee-tag-class
-  /// 4. 第四个标签（permission_status == '1' && validity_start_date）：有效期，样式 .ee
-  /// ⚠️ 已购试题（permission_status == '1'）只显示有效期标签，不显示"共几份"
+  /// 标签（styleTokens 不为空时使用模板 tagBg/tagText/tagBorder）
   Widget _buildTags() {
     final typeInt = int.tryParse(goods.type?.toString() ?? '') ?? 0;
     final permissionStatus = goods.permissionStatus?.toString() ?? '';
     final numText = _getNumText();
     final monthText = _getMonthText();
+    final c = styleTokens?.colors;
+
+    final Color tagBgColor = c?.tagBg ?? const Color(0xFFEBF1FF);
+    final Color tagTextColor = c?.tagText ?? const Color(0xFF2E68FF);
+    final Color tagBorderColor = c?.tagBorder ?? const Color(0xFF4981D7);
 
     return Padding(
-      padding: EdgeInsets.only(
-        top: 10.h, // ✅ 小程序 margin-top: 20rpx ÷ 2 = 10.h
-        bottom: 12.h, // ✅ 小程序 padding-bottom: 24rpx ÷ 2 = 12.h
-      ),
+      padding: EdgeInsets.only(top: 10.h, bottom: 12.h),
       child: Wrap(
-        spacing: 6.w, // ✅ 小程序 margin-right: 12rpx ÷ 2 = 6.w
+        spacing: 6.w,
         children: [
-          // ✅ 第一个标签：未购买时显示 num_text（对应小程序 Line 30-40）
-          // ⚠️ 已购试题（permission_status == '1'）不显示此标签
-          // 样式：.ee:nth-child(1) - 背景 #ebf1ff，文字 #2e68ff
           if (permissionStatus != '1')
             Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 8.w, // ✅ 小程序 padding: 16rpx ÷ 2 = 8.w
-                vertical: 2.h, // ✅ 小程序 padding: 4rpx ÷ 2 = 2.h
-              ),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
               decoration: BoxDecoration(
-                color: const Color(
-                  0xFFEBF1FF,
-                ), // ✅ 小程序 .ee:nth-child(1) background
-                borderRadius: BorderRadius.circular(
-                  4.r,
-                ), // ✅ 小程序 border-radius: 8rpx ÷ 2 = 4.r
+                color: tagBgColor,
+                borderRadius: BorderRadius.circular(4.r),
               ),
               child: Text(
                 numText,
                 style: TextStyle(
-                  fontSize: 10.sp, // ✅ 小程序 font-size: 20rpx ÷ 2 = 10.sp
-                  fontWeight: FontWeight.w400, // ✅ 小程序 font-weight: 400
-                  color: const Color(
-                    0xFF2E68FF,
-                  ), // ✅ 小程序 .ee:nth-child(1) color
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.w400,
+                  color: tagTextColor,
                 ),
               ),
             ),
-          // ✅ 第二个标签：type == 8 && 未购买时显示"共X题"（对应小程序 Line 41-43）
-          // ⚠️ 已购试题（permission_status == '1'）不显示此标签
-          // 样式：.ee-tag-class - 蓝色边框，透明背景，文字 #4981D7
-          // 小程序样式: .ee-tag-class { border: 3rpx solid #4981D7 !important; }
-          // 注意: 小程序 3rpx 在标准设备上约等于 1.5px，但 Flutter 渲染可能更粗，使用 1.0 更接近视觉效果
           if (typeInt == 8 &&
               goods.tikuGoodsDetails?.questionNum != null &&
               permissionStatus != '1')
             Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 8.w, // ✅ 小程序 padding: 16rpx ÷ 2 = 8.w
-                vertical: 2.h, // ✅ 小程序 padding: 4rpx ÷ 2 = 2.h
-              ),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: const Color(
-                    0xFF4981D7,
-                  ), // ✅ 小程序 .ee-tag-class border color
-                  width: 1.0, // ✅ 小程序 border: 3rpx，调整为 1.0 以匹配小程序视觉效果
-                ),
-                borderRadius: BorderRadius.circular(
-                  4.r,
-                ), // ✅ 小程序 border-radius: 8rpx ÷ 2 = 4.r
-                color: Colors.transparent, // ✅ 小程序 background: transparent
+                border: Border.all(color: tagBorderColor, width: 1.0),
+                borderRadius: BorderRadius.circular(4.r),
+                color: Colors.transparent,
               ),
               child: Text(
                 '共${goods.tikuGoodsDetails!.questionNum}题',
                 style: TextStyle(
-                  fontSize: 10.sp, // ✅ 小程序 font-size: 20rpx ÷ 2 = 10.sp
+                  fontSize: 10.sp,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF4981D7), // ✅ 小程序 .ee-tag-class color
+                  color: tagTextColor,
                 ),
               ),
             ),
-          // ✅ 第三个标签：permission_status == '2' 时显示 month_text（对应小程序 Line 44-46）
-          // 样式：.ee-tag-class - 蓝色边框，透明背景，文字 #4981D7
-          // 小程序样式: .ee-tag-class { border: 3rpx solid #4981D7 !important; }
           if (permissionStatus == '2' && monthText != null)
             Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 8.w, // ✅ 小程序 padding: 16rpx ÷ 2 = 8.w
-                vertical: 2.h, // ✅ 小程序 padding: 4rpx ÷ 2 = 2.h
-              ),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: const Color(0xFF4981D7),
-                  width: 1.0, // ✅ 小程序 border: 3rpx，调整为 1.0 以匹配小程序视觉效果
-                ),
-                borderRadius: BorderRadius.circular(
-                  4.r,
-                ), // ✅ 小程序 border-radius: 8rpx ÷ 2 = 4.r
+                border: Border.all(color: tagBorderColor, width: 1.0),
+                borderRadius: BorderRadius.circular(4.r),
                 color: Colors.transparent,
               ),
               child: Text(
                 monthText,
                 style: TextStyle(
-                  fontSize: 10.sp, // ✅ 小程序 font-size: 20rpx ÷ 2 = 10.sp
+                  fontSize: 10.sp,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF4981D7),
+                  color: tagTextColor,
                 ),
               ),
             ),
-          // ✅ 第四个标签：permission_status == '1' && validity_start_date 时显示有效期（对应小程序 Line 47-49）
-          // ⚠️ 已购试题只显示此标签，不显示"共几份"
-          // 样式：.ee - 默认样式（灰色背景 #f5f6fa，文字 rgba(44, 55, 61, 0.71)）
           if (goods.validityStartDate != null &&
               goods.validityStartDate!.isNotEmpty &&
               permissionStatus == '1')
             Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 8.w, // ✅ 小程序 padding: 16rpx ÷ 2 = 8.w
-                vertical: 2.h, // ✅ 小程序 padding: 4rpx ÷ 2 = 2.h
-              ),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F6FA), // ✅ 小程序 .ee background
-                borderRadius: BorderRadius.circular(
-                  4.r,
-                ), // ✅ 小程序 border-radius: 8rpx ÷ 2 = 4.r
+                color: tagBgColor,
+                borderRadius: BorderRadius.circular(4.r),
               ),
               child: Text(
                 _formatValidity(goods.validityStartDate, goods.validityEndDate),
                 style: TextStyle(
-                  fontSize: 10.sp, // ✅ 小程序 font-size: 20rpx ÷ 2 = 10.sp
+                  fontSize: 10.sp,
                   fontWeight: FontWeight.w400,
-                  color: const Color(
-                    0xFF2C373D,
-                  ).withOpacity(0.71), // ✅ 小程序 .ee color
+                  color: tagTextColor,
                 ),
               ),
             ),

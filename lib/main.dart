@@ -15,6 +15,7 @@ import 'features/payment/services/unified_payment_service.dart';
 import 'app/routes/app_router.dart';
 import 'app/constants/app_constants.dart';
 import 'app/config/api_config.dart';
+import 'core/style/app_style_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,8 +58,8 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 监听路由 Provider
     final router = ref.watch(appRouterProvider);
+    final tokens = ref.watch(appStyleTokensProvider);
 
     return ScreenUtilInit(
       designSize: const Size(375, 812), // iPhone X 设计稿尺寸(正确配置)
@@ -82,7 +83,10 @@ class MyApp extends ConsumerWidget {
           ],
           locale: const Locale('zh', 'CN'),
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: tokens.colors.primary,
+              brightness: Brightness.light,
+            ),
             useMaterial3: true,
           ),
           routerConfig: router,

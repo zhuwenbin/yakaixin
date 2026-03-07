@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/routes/app_routes.dart';
+import '../../../core/style/app_style_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -97,6 +98,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               HomeContent(
                 state: state,
                 tabIndex: _tabIndex,
+                styleTokens: ref.watch(appStyleTokensProvider),
                 onTabChanged: _handleTabChanged,
                 onSeckillTap: _handleSeckillCardTap,
                 onGoodsTap: _handleGoodsCardTap,

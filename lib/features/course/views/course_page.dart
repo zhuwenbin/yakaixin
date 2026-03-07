@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../core/style/app_style_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -45,6 +46,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   void _toggleCalendarOverlay() {
     // ✅ 获取当前 dotDates
     final dotDates = ref.read(courseNotifierProvider).dotDates;
+    final tokens = ref.read(appStyleTokensProvider);
 
     // ✅ 显示日历弹窗（和专业选择下拉动画效果一致）
     // 不传递 topOffset，让 Dialog 在 build 方法中使用 Dialog 的 context 计算位置
@@ -53,6 +55,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
       context,
       selectedDate: _selectedDate,
       dotDates: dotDates,
+      datePrimaryColor: tokens.colors.courseDateSelected,
       onDaySelected: (selectedDay) async {
         setState(() {
           _selectedDate = selectedDay;
@@ -95,6 +98,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   @override
   Widget build(BuildContext context) {
     final courseState = ref.watch(courseNotifierProvider);
+    final tokens = ref.watch(appStyleTokensProvider);
     final dotDates = courseState.dotDates;
     final lessonsData = courseState.lessonsData;
     final courseList = courseState.courseList;
@@ -118,6 +122,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
           WeekCalendar(
             selectedDate: _selectedDate,
             dotDates: dotDates,
+            datePrimaryColor: tokens.colors.courseDateSelected,
             layerLink: LayerLink(), // ✅ 保留参数以保持兼容性，但不再使用
             onDateSelected: _handleDateSelected,
             onShowFullCalendar: _toggleCalendarOverlay,

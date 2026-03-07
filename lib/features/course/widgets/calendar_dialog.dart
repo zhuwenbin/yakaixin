@@ -10,6 +10,7 @@ class CalendarDialog extends StatefulWidget {
   final Function(DateTime) onDaySelected;
   final Function(DateTime) onPageChanged;
   final double? topOffset; // 弹窗顶部偏移量（可选）
+  final Color datePrimaryColor;
 
   const CalendarDialog({
     super.key,
@@ -18,6 +19,7 @@ class CalendarDialog extends StatefulWidget {
     required this.onDaySelected,
     required this.onPageChanged,
     this.topOffset,
+    this.datePrimaryColor = const Color(0xFF018CFF),
   });
 
   @override
@@ -126,6 +128,7 @@ class _CalendarDialogState extends State<CalendarDialog>
                     child: FullCalendar(
                       selectedDate: widget.selectedDate,
                       dotDates: widget.dotDates,
+                      datePrimaryColor: widget.datePrimaryColor,
                       onDaySelected: (selectedDay) {
                         widget.onDaySelected(selectedDay);
                         _close();
@@ -152,6 +155,7 @@ Future<void> showCalendarDialog(
   required List<String> dotDates,
   required Function(DateTime) onDaySelected,
   required Function(DateTime) onPageChanged,
+  Color datePrimaryColor = const Color(0xFF018CFF),
   double? topOffset,
 }) {
   return showDialog(
@@ -162,6 +166,7 @@ Future<void> showCalendarDialog(
       dotDates: dotDates,
       onDaySelected: onDaySelected,
       onPageChanged: onPageChanged,
+      datePrimaryColor: datePrimaryColor,
       topOffset: topOffset,
     ),
   );

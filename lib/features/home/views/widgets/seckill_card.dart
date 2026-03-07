@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/style/app_style_provider.dart';
+import '../../../../core/style/app_style_presets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../models/goods_model.dart';
@@ -158,7 +160,10 @@ class _SeckillCardState extends ConsumerState<SeckillCard> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [_buildHeader(), _buildTags()],
+              children: [
+                _buildHeader(),
+                _buildTags(ref.watch(appStyleTokensProvider).colors),
+              ],
             ),
             _buildCountdown(), // ✅ 倒计时区域使用Positioned定位，延伸到卡片右边缘
           ],
@@ -309,14 +314,9 @@ class _SeckillCardState extends ConsumerState<SeckillCard> {
     );
   }
 
-  /// 标签区域
+  /// 标签区域（使用样式模板 tagBg/tagText/tagBorder）
   /// ✅ 对应小程序: .tags (Line 29-50)
-  /// 小程序标签显示逻辑：
-  /// 1. 第一个标签（总是显示）：秒杀时显示黄色背景的"共 X 题"
-  /// 2. 第二个标签（条件显示）：如果 type == 8，显示蓝色边框的"共X题"
-  /// 3. 第三个标签（条件显示）：如果 permission_status == '2'，显示蓝色边框的 month_text
-  /// 4. 第四个标签（条件显示）：如果 validity_start_date && permission_status == '1'，显示有效期
-  Widget _buildTags() {
+  Widget _buildTags(AppColorPalette colors) {
     final goods = widget.goods;
     final typeInt = int.tryParse(goods.type?.toString() ?? '') ?? 0;
 
@@ -390,90 +390,69 @@ class _SeckillCardState extends ConsumerState<SeckillCard> {
       child: Wrap(
         spacing: 12.w, // ✅ 小程序margin-right: 12rpx ÷ 2 = 12.w
         children: [
-          // ✅ 第一个标签：秒杀时显示"共 X 题"，背景色 #FFD27C
-          // 对应小程序 Line 30-36: .ee-seckill-q (seckill时)
+          // ✅ 第一个标签：秒杀时显示"共 X 题"，使用模板 tagBg/tagText
           if (goods.tikuGoodsDetails?.questionNum != null)
             Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 8.w,
-                vertical: 2.h,
-              ), // ✅ 小程序padding: 4rpx 16rpx ÷ 2
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFD27C), // ✅ 小程序.ee-seckill-q背景色
-                borderRadius: BorderRadius.circular(
-                  4.r,
-                ), // ✅ 小程序border-radius: 8rpx ÷ 2 = 4.r
+                color: colors.tagBg,
+                borderRadius: BorderRadius.circular(4.r),
               ),
               child: RichText(
                 text: TextSpan(
                   style: TextStyle(
-                    fontSize: 10.sp, // ✅ 小程序20rpx ÷ 2 = 10.sp
-                    fontWeight: FontWeight
-                        .w600, // ✅ 小程序.ee-seckill-q-row font-weight: 600
-                    color: Colors.black, // ✅ 小程序.ee-seckill-q-row color: black
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w600,
+                    color: colors.tagText,
                   ),
                   children: [
                     const TextSpan(text: '共 '),
                     TextSpan(
                       text: '${goods.tikuGoodsDetails!.questionNum}',
-                      style: const TextStyle(
-                        color: Colors.red,
-                      ), // ✅ 小程序color: red
+                      style: TextStyle(color: colors.tagText),
                     ),
                     const TextSpan(text: ' 题'),
                   ],
                 ),
               ),
             ),
-          // ✅ 第二个标签：如果 type == 8，显示蓝色边框的"共X题"
-          // 对应小程序 Line 41-43: v-if="item.type == 8"
-          // 小程序样式: .ee-tag-class { border: 3rpx solid #4981D7 !important; }
-          // 注意: 小程序 3rpx 在标准设备上约等于 1.5px，但 Flutter 渲染可能更粗，使用 1.0 更接近视觉效果
+          // ✅ 第二个标签：type == 8 时显示边框样式的"共X题"
           if (typeInt == 8 && goods.tikuGoodsDetails?.questionNum != null)
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: const Color(0xFF4981D7), // ✅ 小程序.ee-tag-class border颜色
-                  width: 1.0, // ✅ 小程序border: 3rpx，调整为 1.0 以匹配小程序视觉效果
-                ),
+                border: Border.all(color: colors.tagBorder, width: 1.0),
                 borderRadius: BorderRadius.circular(4.r),
-                color: Colors.transparent, // ✅ 小程序background: transparent
+                color: Colors.transparent,
               ),
               child: Text(
                 '共${goods.tikuGoodsDetails!.questionNum}题',
                 style: TextStyle(
-                  fontSize: 10.sp, // ✅ 小程序20rpx ÷ 2 = 10.sp
-                  fontWeight: FontWeight.w400, // ✅ 小程序font-weight: 400
-                  color: const Color(0xFF4981D7), // ✅ 小程序.ee-tag-class color
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.w400,
+                  color: colors.tagText,
                 ),
               ),
             ),
-          // ✅ 第三个标签：如果 permission_status == '2'，显示蓝色边框的 month_text
-          // 对应小程序 Line 44-46: v-if="item.permission_status == '2'"
-          // 小程序样式: .ee-tag-class { border: 3rpx solid #4981D7 !important; }
+          // ✅ 第三个标签：permission_status == '2' 时显示 month_text
           if (permissionStatus == '2' && monthText != null)
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: const Color(0xFF4981D7), // ✅ 小程序.ee-tag-class border颜色
-                  width: 1.0, // ✅ 小程序border: 3rpx，调整为 1.0 以匹配小程序视觉效果
-                ),
+                border: Border.all(color: colors.tagBorder, width: 1.0),
                 borderRadius: BorderRadius.circular(4.r),
-                color: Colors.transparent, // ✅ 小程序background: transparent
+                color: Colors.transparent,
               ),
               child: Text(
                 monthText,
                 style: TextStyle(
-                  fontSize: 10.sp, // ✅ 小程序20rpx ÷ 2 = 10.sp
-                  fontWeight: FontWeight.w400, // ✅ 小程序font-weight: 400
-                  color: const Color(0xFF4981D7), // ✅ 小程序.ee-tag-class color
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.w400,
+                  color: colors.tagText,
                 ),
               ),
             ),
-          // ✅ 第四个标签：如果 validity_start_date && permission_status == '1'，显示有效期
-          // 对应小程序 Line 47-49: v-if="item.validity_start_date && item.permission_status == '1'"
+          // ✅ 第四个标签：validity_start_date && permission_status == '1' 时显示有效期
           if (goods.validityStartDate != null &&
               goods.validityStartDate!.isNotEmpty &&
               permissionStatus == '1')
@@ -488,7 +467,7 @@ class _SeckillCardState extends ConsumerState<SeckillCard> {
                 style: TextStyle(
                   fontSize: 10.sp,
                   fontWeight: FontWeight.w400,
-                  color: Colors.black,
+                  color: colors.tagText,
                 ),
               ),
             ),
@@ -590,21 +569,23 @@ class _SeckillCardState extends ConsumerState<SeckillCard> {
                       Text(
                         '秒杀倒计时',
                         style: TextStyle(
-                          fontSize: 14.sp, // ✅ 小程序28rpx ÷ 2 = 14.sp
-                          fontWeight: FontWeight.w400, // ✅ 小程序font-weight: 400
-                          color: const Color(0xFF082980), // ✅ 小程序color: #082980
-                          letterSpacing:
-                              3.w, // ✅ 小程序letter-spacing: 6rpx ÷ 2 = 3.w
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF000000),
+                          letterSpacing: 3.w,
                         ),
                       ),
                       SizedBox(
                         width: 5.w,
                       ), // ✅ 小程序margin-right: 10rpx ÷ 2 = 5.w
-                      // ✅ 倒计时组件（对应小程序 count-down.vue）
+                      // ✅ 倒计时组件（对应小程序 count-down.vue），数字块背景使用模板主色
                       CountdownTimer(
                         durationSeconds: countdownSeconds,
+                        boxBackgroundColor: ref
+                            .watch(appStyleTokensProvider)
+                            .colors
+                            .primary,
                         onFinish: () {
-                          // ✅ 倒计时结束，重新开始8小时倒计时（对应小程序 @finish="setTime()"）
                           _restartCountdown();
                         },
                       ),

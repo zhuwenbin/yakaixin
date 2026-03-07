@@ -10,6 +10,8 @@ import '../network/network_logger_interceptor.dart';
 import '../network/dio_client.dart';
 import '../network/mock_interceptor.dart';
 import '../../app/config/api_config.dart';
+import '../style/app_style_provider.dart';
+import '../style/app_style_config.dart';
 import '../config/debug_config.dart';
 import '../../features/payment/providers/iap_debug_provider.dart';
 
@@ -48,6 +50,9 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
   
   // 是否显示内购调试页面
   bool _showingIAPDebug = false;
+
+  // 是否显示样式模板选择器
+  bool _showingStyleSelector = false;
 
   @override
   void initState() {
@@ -133,6 +138,10 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
         // 内购调试页面
         if (_showingIAPDebug && Platform.isIOS)
           Positioned.fill(child: _buildIAPDebugOverlay()),
+
+        // 样式模板选择器
+        if (_showingStyleSelector)
+          Positioned.fill(child: _buildStyleSelectorOverlay()),
       ],
     );
   }
@@ -180,10 +189,11 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
           children: [
             // 标题栏
             Container(
-              height: 50.h,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               color: Colors.black,
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     '网络调试 (${logs.length})',
@@ -193,65 +203,94 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Spacer(),
-                  // 💳 内购调试按钮（仅iOS显示）
-                  if (Platform.isIOS)
-                    IconButton(
-                      icon: Icon(
-                        Icons.receipt_long,
-                        color: Colors.green.shade300,
-                        size: 20.sp,
-                      ),
-                      onPressed: _showIAPDebug,
-                      tooltip: '内购调试',
+                  SizedBox(height: 8.h),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Wrap(
+                      spacing: 4.w,
+                      runSpacing: 4.h,
+                      children: [
+                        // 💳 内购调试按钮（仅iOS显示）
+                        if (Platform.isIOS)
+                          IconButton(
+                            icon: Icon(
+                              Icons.receipt_long,
+                              color: Colors.green.shade300,
+                              size: 20.sp,
+                            ),
+                            onPressed: _showIAPDebug,
+                            tooltip: '内购调试',
+                          ),
+                        // 调试工具全局开关（眼睛图标）
+                        IconButton(
+                          icon: Icon(
+                            Icons.visibility,
+                            color: Colors.green,
+                            size: 20.sp,
+                          ),
+                          onPressed: _toggleDebugTools,
+                          tooltip: '隐藏调试工具（用于截图）',
+                        ),
+                        // Mock 开关
+                        IconButton(
+                          icon: Icon(
+                            isMockEnabled
+                                ? Icons.science
+                                : Icons.science_outlined,
+                            color: isMockEnabled ? Colors.amber : Colors.white,
+                            size: 20.sp,
+                          ),
+                          onPressed: _toggleMock,
+                          tooltip: 'Mock',
+                        ),
+                        // 样式模板切换
+                        IconButton(
+                          icon: Icon(
+                            Icons.palette,
+                            color: Colors.white,
+                            size: 20.sp,
+                          ),
+                          onPressed: _showStyleSelector,
+                          tooltip: '样式模板',
+                        ),
+                        // 环境切换按钮
+                        IconButton(
+                          icon: Icon(
+                            Icons.settings,
+                            color: Colors.white,
+                            size: 20.sp,
+                          ),
+                          onPressed: _showEnvSelector,
+                          tooltip: '环境切换',
+                        ),
+                        // 清空按钮
+                        IconButton(
+                          icon: Icon(
+                            Icons.delete_outline,
+                            color: Colors.white,
+                            size: 20.sp,
+                          ),
+                          onPressed: () {
+                            ref.read(networkLogsProvider.notifier).clearLogs();
+                          },
+                          tooltip: '清空',
+                        ),
+                        // 关闭按钮
+                        IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 20.sp,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isExpanded = false;
+                            });
+                          },
+                          tooltip: '关闭',
+                        ),
+                      ],
                     ),
-                  // 调试工具全局开关（眼睛图标）
-                  IconButton(
-                    icon: Icon(
-                      Icons.visibility,
-                      color: Colors.green,
-                      size: 20.sp,
-                    ),
-                    onPressed: _toggleDebugTools,
-                    tooltip: '隐藏调试工具（用于截图）',
-                  ),
-                  // Mock 开关
-                  IconButton(
-                    icon: Icon(
-                      isMockEnabled ? Icons.science : Icons.science_outlined,
-                      color: isMockEnabled ? Colors.amber : Colors.white,
-                      size: 20.sp,
-                    ),
-                    onPressed: _toggleMock,
-                  ),
-                  // 环境切换按钮
-                  IconButton(
-                    icon: Icon(
-                      Icons.settings,
-                      color: Colors.white,
-                      size: 20.sp,
-                    ),
-                    onPressed: _showEnvSelector,
-                  ),
-                  // 清空按钮
-                  IconButton(
-                    icon: Icon(
-                      Icons.delete_outline,
-                      color: Colors.white,
-                      size: 20.sp,
-                    ),
-                    onPressed: () {
-                      ref.read(networkLogsProvider.notifier).clearLogs();
-                    },
-                  ),
-                  // 关闭按钮
-                  IconButton(
-                    icon: Icon(Icons.close, color: Colors.white, size: 20.sp),
-                    onPressed: () {
-                      setState(() {
-                        _isExpanded = false;
-                      });
-                    },
                   ),
                 ],
               ),
@@ -354,6 +393,7 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
     setState(() {
       _isExpanded = false;
       _showingEnvSelector = false;
+      _showingStyleSelector = false;
       _selectedLog = null;
     });
   }
@@ -524,6 +564,180 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
         ),
       ),
     );
+  }
+
+  void _showStyleSelector() {
+    setState(() {
+      _showingStyleSelector = true;
+    });
+  }
+
+  Widget _buildStyleSelectorOverlay() {
+    final config = ref.watch(appStyleConfigProvider);
+    final controller = ref.read(appStyleConfigProvider.notifier);
+
+    return Material(
+      color: Colors.black.withOpacity(0.7),
+      child: Center(
+        child: Container(
+          width: 320.w,
+          margin: EdgeInsets.symmetric(horizontal: 30.w),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade900,
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Colors.white10, width: 1),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      '样式模板',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Spacer(),
+                    IconButton(
+                      icon: Icon(Icons.close, color: Colors.white, size: 20.sp),
+                      onPressed: () {
+                        setState(() => _showingStyleSelector = false);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildStyleOption(
+                      controller,
+                      AppStyleTemplate.blueDefault,
+                      '蓝（默认）',
+                      Color(0xFF2E68FF),
+                    ),
+                    SizedBox(height: 12.h),
+                    _buildStyleOption(
+                      controller,
+                      AppStyleTemplate.orangeYellow,
+                      '橙黄色',
+                      Color(0xFFFF8C00),
+                    ),
+                    SizedBox(height: 12.h),
+                    _buildStyleOption(
+                      controller,
+                      AppStyleTemplate.green,
+                      '绿色',
+                      Color(0xFF22C55E),
+                    ),
+                    SizedBox(height: 12.h),
+                    _buildStyleOption(
+                      controller,
+                      AppStyleTemplate.custom,
+                      '自定义',
+                      Colors.grey,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.w),
+                child: Text(
+                  '当前: ${_getTemplateName(config.template)}',
+                  style: TextStyle(color: Colors.white54, fontSize: 12.sp),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStyleOption(
+    AppStyleController controller,
+    AppStyleTemplate template,
+    String name,
+    Color color,
+  ) {
+    final isSelected = ref.watch(appStyleConfigProvider).template == template;
+    return InkWell(
+      onTap: () async {
+        await controller.setTemplate(template);
+        if (mounted) {
+          setState(() => _showingStyleSelector = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('已切换到 $name'),
+              duration: Duration(seconds: 1),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color.withOpacity(0.2)
+              : Colors.grey.shade800,
+          border: Border.all(
+            color: isSelected ? color : Colors.transparent,
+            width: 2,
+          ),
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 24.w,
+              height: 24.w,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Text(
+              name,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14.sp,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+            if (isSelected) ...[
+              Spacer(),
+              Icon(Icons.check_circle, color: color, size: 16.sp),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getTemplateName(AppStyleTemplate t) {
+    switch (t) {
+      case AppStyleTemplate.blueDefault:
+        return '蓝（默认）';
+      case AppStyleTemplate.orangeYellow:
+        return '橙黄色';
+      case AppStyleTemplate.green:
+        return '绿色';
+      case AppStyleTemplate.custom:
+        return '自定义';
+    }
   }
 
   /// 获取环境名称

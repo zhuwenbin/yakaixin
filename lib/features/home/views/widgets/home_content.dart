@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../core/style/app_style_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -17,6 +18,7 @@ import 'course_card.dart';
 class HomeContent extends StatelessWidget {
   final HomeState state;
   final int tabIndex;
+  final AppStyleTokens? styleTokens;
   final ValueChanged<int> onTabChanged;
   final void Function(GoodsModel) onSeckillTap;
   final void Function(GoodsModel) onGoodsTap;
@@ -25,6 +27,7 @@ class HomeContent extends StatelessWidget {
   const HomeContent({
     required this.state,
     required this.tabIndex,
+    this.styleTokens,
     required this.onTabChanged,
     required this.onSeckillTap,
     required this.onGoodsTap,
@@ -125,6 +128,7 @@ class HomeContent extends StatelessWidget {
           .map((goods) => GoodsCard(
                 goods: goods,
                 onTap: () => onGoodsTap(goods),
+                styleTokens: styleTokens,
               ))
           .toList(),
     );
@@ -140,6 +144,7 @@ class HomeContent extends StatelessWidget {
           .map((goods) => CourseCard(
                 goods: goods,
                 onTap: () => onCourseTap(goods),
+                styleTokens: styleTokens,
               ))
           .toList(),
     );

@@ -11,12 +11,26 @@ class StudyCalendarCard extends StatelessWidget {
   final LearningDataModel? learningData;
   final bool isLoadingLearningData;
   final VoidCallback onCheckIn;
+  final Color actionPrimaryColor;
+  final Color actionPrimarySoftBgColor;
+  final Color actionPrimarySoftTextColor;
+  final Color statsHighlightColor;
+  final double cardRadius;
+  final double contentPadding;
+  final double horizontalMargin;
 
   const StudyCalendarCard({
     super.key,
     required this.learningData,
     required this.isLoadingLearningData,
     required this.onCheckIn,
+    this.actionPrimaryColor = const Color(0xFFFF5500),
+    this.actionPrimarySoftBgColor = const Color(0xFFFFEEE7),
+    this.actionPrimarySoftTextColor = const Color(0xFFF44900),
+    this.statsHighlightColor = const Color(0xFFFF5500),
+    this.cardRadius = 16,
+    this.contentPadding = 20,
+    this.horizontalMargin = 12,
   });
 
   @override
@@ -27,19 +41,19 @@ class StudyCalendarCard extends StatelessWidget {
     final isCheckin = (learningData?.isCheckin ?? 0) == 1;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 12.w), // ✅ 对应小程序 25rpx = 12.5.w
+      margin: EdgeInsets.symmetric(horizontal: horizontalMargin.w), // ✅ 对应小程序 25rpx = 12.5.w
       child: Stack(
         clipBehavior: Clip.none, // ✅ 允许装饰图溢出
         children: [
           // 主卡片内容
           Material(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16.r), // ✅ 对应小程序 32rpx = 16.r
+            borderRadius: BorderRadius.circular(cardRadius.r), // ✅ 对应小程序 32rpx = 16.r
             elevation: 2,
             shadowColor: Colors.black.withValues(alpha: 0.05),
             clipBehavior: Clip.antiAliasWithSaveLayer,
             child: Padding(
-              padding: EdgeInsets.all(20.w), // ✅ 对应小程序 40rpx = 20.w
+              padding: EdgeInsets.all(contentPadding.w), // ✅ 对应小程序 40rpx = 20.w
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -72,9 +86,19 @@ class StudyCalendarCard extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _StatItem(label: '累计坚持天数', value: '$checkinNum', unit: '天'),
+        _StatItem(
+          label: '累计坚持天数',
+          value: '$checkinNum',
+          unit: '天',
+          highlightColor: statsHighlightColor,
+        ),
         _buildDivider(),
-        _StatItem(label: '考试倒计时天数', value: _calculateCountdown(), unit: '天'),
+        _StatItem(
+          label: '考试倒计时天数',
+          value: _calculateCountdown(),
+          unit: '天',
+          highlightColor: statsHighlightColor,
+        ),
         _buildDivider(),
         _ThirdStatItem(totalNum: totalNum, correctRate: correctRate),
       ],
@@ -110,7 +134,7 @@ class StudyCalendarCard extends StatelessWidget {
     final isDisabled = isCheckin || isLoadingLearningData;
 
     return Material(
-      color: isCheckin ? const Color(0xFFFFEEE7) : const Color(0xFFFF5500),
+      color: isCheckin ? actionPrimarySoftBgColor : actionPrimaryColor,
       borderRadius: BorderRadius.circular(8.r),
       clipBehavior: Clip.antiAliasWithSaveLayer, // ✅ 使用更强的抗锯齿模式
       child: InkWell(
@@ -126,7 +150,9 @@ class StudyCalendarCard extends StatelessWidget {
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      isCheckin ? const Color(0xFFF44900) : AppColors.textWhite,
+                      isCheckin
+                          ? actionPrimarySoftTextColor
+                          : AppColors.textWhite,
                     ),
                   ),
                 )
@@ -134,7 +160,7 @@ class StudyCalendarCard extends StatelessWidget {
                   isCheckin ? '已打卡' : '打卡',
                   style: AppTextStyles.buttonMedium.copyWith(
                     color: isCheckin
-                        ? const Color(0xFFF44900)
+                        ? actionPrimarySoftTextColor
                         : AppColors.textWhite,
                   ),
                 ),
@@ -210,11 +236,13 @@ class _StatItem extends StatelessWidget {
   final String label;
   final String value;
   final String unit;
+  final Color highlightColor;
 
   const _StatItem({
     required this.label,
     required this.value,
     required this.unit,
+    required this.highlightColor,
   });
 
   @override
@@ -230,7 +258,7 @@ class _StatItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 24.sp,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFFFF5500),
+                color: highlightColor,
               ),
             ),
             SizedBox(width: 2.w),

@@ -7,6 +7,8 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/utils/safe_type_converter.dart';
+import '../../../core/style/app_style_provider.dart';
+import '../../../core/style/app_style_tokens.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -201,6 +203,7 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   /// 对应小程序: detail.vue Line 4-71
   Widget _buildGoodsInfo(GoodsDetailModel detail) {
     final state = ref.watch(goodsDetailNotifierProvider);
+    final tokens = ref.watch(appStyleTokensProvider);
 
     return Container(
       width: double.infinity,
@@ -209,14 +212,14 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 封面图片
-          _buildCoverImage(detail),
+          _buildCoverImage(detail, tokens),
 
           // 秒杀信息区（如果未购买）
           if (detail.permissionStatus == '2')
-            _buildSeckillArea(detail, state.selectedPriceIndex),
+            _buildSeckillArea(detail, state.selectedPriceIndex, tokens),
 
           // 商品信息区
-          _buildInfoBox(detail, state.selectedPriceIndex),
+          _buildInfoBox(detail, state.selectedPriceIndex, tokens),
         ],
       ),
     );
@@ -225,8 +228,9 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   /// 封面图片
   /// 对应小程序: .swiper-image (Line 8)
   /// ⚠️ 注意：封面路径已在 provider 中处理（路径互换、默认图片）
-  Widget _buildCoverImage(GoodsDetailModel detail) {
+  Widget _buildCoverImage(GoodsDetailModel detail, AppStyleTokens tokens) {
     final coverPath = detail.materialCoverPath ?? '';
+    final cardBg = tokens.colors.cardLightBg;
 
     // ✅ 调试日志：打印完整URL
     print('🖼️ [商品详情页] 封面图片URL: $coverPath');
@@ -240,14 +244,14 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Container(
-            color: AppColors.card,
+            color: cardBg,
             child: const Center(child: CircularProgressIndicator()),
           );
         },
         errorBuilder: (context, error, stackTrace) {
           print('❌ [商品详情页] 封面图片加载失败: $coverPath, error: $error');
           return Container(
-            color: AppColors.card,
+            color: cardBg,
             child: Icon(Icons.image, size: 50.sp, color: AppColors.textHint),
           );
         },
@@ -257,7 +261,8 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
 
   /// 秒杀信息区
   /// 对应小程序: detail.vue Line 10-44, CSS Line 675-770
-  Widget _buildSeckillArea(GoodsDetailModel detail, int selectedIndex) {
+  Widget _buildSeckillArea(
+      GoodsDetailModel detail, int selectedIndex, AppStyleTokens tokens) {
     if (detail.prices.isEmpty) return const SizedBox.shrink();
 
     final selectedPrice = detail.prices[selectedIndex];
@@ -369,7 +374,8 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                         // ✅ 秒杀倒计时（对应小程序 count-down2.vue）
                         // ⚠️ 注意：秒杀区域的倒计时样式与首页不同
                         // 背景：白色 #ffffff，文字：深色 #1f232e，分隔符：白色 #ffffff
-                        _buildSeckillCountdown(countdownSeconds),
+                        _buildSeckillCountdown(
+                            countdownSeconds, tokens.colors.countdownTextColor),
                       ],
                     ),
                   ],
@@ -423,10 +429,11 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
 
   /// 秒杀倒计时（对应小程序 count-down2.vue）
   /// ⚠️ 注意：秒杀区域的倒计时样式与首页不同
-  /// 背景：白色 #ffffff，文字：深色 #1f232e，分隔符：白色 #ffffff
-  Widget _buildSeckillCountdown(int durationSeconds) {
+  /// 背景：白色 #ffffff，文字：countdownTextColor，分隔符：白色 #ffffff
+  Widget _buildSeckillCountdown(int durationSeconds, Color countdownTextColor) {
     return _SeckillCountdownTimer(
       durationSeconds: durationSeconds,
+      countdownTextColor: countdownTextColor,
       onFinish: () {
         // 倒计时结束，重新开始
       },
@@ -526,7 +533,8 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
 
   /// 商品信息框
   /// 对应小程序: detail.vue Line 45-70
-  Widget _buildInfoBox(GoodsDetailModel detail, int selectedIndex) {
+  Widget _buildInfoBox(
+      GoodsDetailModel detail, int selectedIndex, AppStyleTokens tokens) {
     return Container(
       width: double.infinity,
       padding: AppSpacing.allMd,
@@ -541,9 +549,10 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
             spacing: 12.w,
             runSpacing: 8.h,
             children: [
-              if (detail.numText.isNotEmpty) _buildTag(detail.numText),
+              if (detail.numText.isNotEmpty)
+                _buildTag(detail.numText, tokens.colors.tagBg, tokens.colors.tagText),
               if (detail.year != null && detail.year!.isNotEmpty)
-                _buildTag(detail.year!),
+                _buildTag(detail.year!, tokens.colors.tagBg, tokens.colors.tagText),
             ],
           ),
           // 提示信息
@@ -560,29 +569,35 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
           Divider(height: 1, color: AppColors.divider),
           SizedBox(height: AppSpacing.mdV),
           // 有效期选择
-          _buildPriceOptions(detail, selectedIndex),
+          _buildPriceOptions(detail, selectedIndex, tokens),
         ],
       ),
     );
   }
 
-  Widget _buildTag(String text) {
+  Widget _buildTag(String text, Color tagBg, Color tagText) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: AppColors.courseTagBg,
+        color: tagBg,
         borderRadius: BorderRadius.circular(AppRadius.xs),
       ),
-      child: Text(text, style: AppTextStyles.courseTag),
+      child: Text(
+        text,
+        style: AppTextStyles.courseTag.copyWith(color: tagText),
+      ),
     );
   }
 
   /// 有效期选择
   /// 对应小程序: test/detail.vue .prices / .ee / .ee.active
-  /// 未选: 背景 #f5f6fa, 字 rgba(3,32,61,0.85); 选中: 背景 #2e68ff, 字 #ffffff
+  /// 未选: 背景 #f5f6fa, 字 rgba(3,32,61,0.85); 选中: 背景 primary, 字 #ffffff
   /// 尺寸: 宽 222rpx, 高 64rpx, 圆角 8rpx, 字号 24rpx; 文案「有效期 永久」/「有效期 X个月」
-  Widget _buildPriceOptions(GoodsDetailModel detail, int selectedIndex) {
+  Widget _buildPriceOptions(
+      GoodsDetailModel detail, int selectedIndex, AppStyleTokens tokens) {
     if (detail.prices.isEmpty) return const SizedBox.shrink();
+
+    final selectedBg = tokens.colors.primary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -616,7 +631,7 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? const Color(0xFF2E68FF)
+                      ? selectedBg
                       : const Color(0xFFF5F6FA),
                   borderRadius: BorderRadius.circular(4.r),
                 ),
@@ -938,6 +953,7 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
       detail.permissionStatus,
     );
     final isNotPurchased = permissionStatus == '2';
+    final tokens = ref.watch(appStyleTokensProvider);
 
     // 🔍 调试日志：打印购买状态
     print('\n🔍 底部栏渲染状态：');
@@ -976,7 +992,7 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                           '¥',
                           style: TextStyle(
                             fontSize: 16.sp,
-                            color: AppColors.tikuPrice,
+                            color: tokens.colors.actionPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -984,7 +1000,7 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                           selectedPrice.salePrice ?? '0.00',
                           style: TextStyle(
                             fontSize: 24.sp,
-                            color: AppColors.tikuPrice,
+                            color: tokens.colors.actionPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -1015,21 +1031,20 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                     width: double.infinity,
                     height: double.infinity,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         // ✅ 163deg 对应角度计算
                         colors: [
-                          Color(0xFFFF8928), // #ff8928
-                          Color(0xFFFF5430), // #ff5430
+                          tokens.colors.actionGradientStart,
+                          tokens.colors.actionGradientEnd,
                         ],
                       ),
                       borderRadius: BorderRadius.circular(20.r),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(
-                            0xFFFF5932,
-                          ).withOpacity(0.45), // rgba(255, 89, 50, 0.45)
+                          color: tokens.colors.actionShadowColor
+                              .withValues(alpha: 0.45),
                           offset: const Offset(0, 2),
                           blurRadius: 6,
                         ),
@@ -1053,7 +1068,7 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
                 child: ElevatedButton(
                   onPressed: () => _handleStartPractice(detail),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: tokens.colors.actionPrimary,
                     padding: EdgeInsets.symmetric(vertical: 14.h),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -1360,12 +1375,17 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
 }
 
 /// 秒杀倒计时组件（对应小程序 count-down2.vue）
-/// 样式：白色背景，深色文字，白色分隔符
+/// 样式：白色背景，主色/深色文字，白色分隔符
 class _SeckillCountdownTimer extends StatefulWidget {
   final int durationSeconds;
+  final Color countdownTextColor;
   final VoidCallback? onFinish;
 
-  const _SeckillCountdownTimer({required this.durationSeconds, this.onFinish});
+  const _SeckillCountdownTimer({
+    required this.durationSeconds,
+    required this.countdownTextColor,
+    this.onFinish,
+  });
 
   @override
   State<_SeckillCountdownTimer> createState() => _SeckillCountdownTimerState();
@@ -1427,7 +1447,7 @@ class _SeckillCountdownTimerState extends State<_SeckillCountdownTimer> {
             style: TextStyle(
               fontSize: 12.sp, // font-size: 24rpx ÷ 2 = 12.sp
               fontWeight: FontWeight.w400, // font-weight: 400
-              color: const Color(0xFF1F232E), // ✅ 小程序 color: #1f232e
+              color: widget.countdownTextColor,
             ),
           ),
         ),
@@ -1457,7 +1477,7 @@ class _SeckillCountdownTimerState extends State<_SeckillCountdownTimer> {
             style: TextStyle(
               fontSize: 12.sp,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFF1F232E),
+              color: widget.countdownTextColor,
             ),
           ),
         ),
@@ -1484,7 +1504,7 @@ class _SeckillCountdownTimerState extends State<_SeckillCountdownTimer> {
             style: TextStyle(
               fontSize: 12.sp,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFF1F232E),
+              color: widget.countdownTextColor,
             ),
           ),
         ),

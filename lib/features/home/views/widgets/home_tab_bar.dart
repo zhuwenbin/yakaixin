@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../core/style/app_style_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -8,7 +10,7 @@ import '../../../../core/theme/app_radius.dart';
 
 /// 首页Tab切换栏
 /// 对应小程序: .tabs
-class HomeTabBar extends StatelessWidget {
+class HomeTabBar extends ConsumerWidget {
   final List<String> tabs;
   final int activeIndex;
   final ValueChanged<int> onTap;
@@ -21,7 +23,10 @@ class HomeTabBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final indicatorColor =
+        ref.watch(appStyleTokensProvider).colors.primaryGradientStart;
+
     return SizedBox(
       height: 40.h,
       child: SingleChildScrollView(
@@ -39,6 +44,7 @@ class HomeTabBar extends StatelessWidget {
                 child: _buildTabItem(
                   tabs[index],
                   isActive: isActive,
+                  indicatorColor: indicatorColor,
                 ),
               ),
             );
@@ -48,7 +54,11 @@ class HomeTabBar extends StatelessWidget {
     );
   }
 
-  Widget _buildTabItem(String label, {bool isActive = false}) {
+  static Widget _buildTabItem(
+    String label, {
+    bool isActive = false,
+    required Color indicatorColor,
+  }) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -66,7 +76,7 @@ class HomeTabBar extends StatelessWidget {
             width: 40.w,
             height: 4.h,
             decoration: BoxDecoration(
-              color: AppColors.primaryGradientStart,
+              color: indicatorColor,
               borderRadius: AppRadius.radiusXs,
             ),
           ),

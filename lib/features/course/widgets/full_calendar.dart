@@ -13,6 +13,7 @@ class FullCalendar extends StatelessWidget {
   final List<String> dotDates;
   final Function(DateTime) onDaySelected;
   final Function(DateTime)? onPageChanged;
+  final Color datePrimaryColor;
 
   const FullCalendar({
     super.key,
@@ -20,6 +21,7 @@ class FullCalendar extends StatelessWidget {
     required this.dotDates,
     required this.onDaySelected,
     this.onPageChanged,
+    this.datePrimaryColor = AppColors.courseDatePrimary,
   });
 
   @override
@@ -79,7 +81,7 @@ class FullCalendar extends StatelessWidget {
         width: 52.w, // ✅ 对应小程序 width: 52px
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: AppColors.courseDatePrimary, // 对应小程序 #018CFF
+          color: datePrimaryColor, // 对应小程序 #018CFF
           borderRadius: BorderRadius.circular(25.r), // 对应小程序 border-radius: 25px
         ),
         child: Text(
@@ -126,15 +128,15 @@ class FullCalendar extends StatelessWidget {
   CalendarStyle _buildCalendarStyle() {
     return CalendarStyle(
       todayDecoration: BoxDecoration(
-        color: AppColors.courseDatePrimary.withValues(alpha: 0.3),
+        color: datePrimaryColor.withValues(alpha: 0.3),
         shape: BoxShape.circle,
       ),
       selectedDecoration: BoxDecoration(
-        color: AppColors.courseDatePrimary,
+        color: datePrimaryColor,
         shape: BoxShape.circle,
       ),
       todayTextStyle: TextStyle(
-        color: AppColors.courseDatePrimary,
+        color: datePrimaryColor,
         fontSize: 14.sp,
         fontWeight: FontWeight.w500,
       ),
@@ -185,8 +187,8 @@ class FullCalendar extends StatelessWidget {
             child: Container(
               width: 6.w,
               height: 6.w,
-              decoration: const BoxDecoration(
-                color: AppColors.courseDatePrimary,
+              decoration: BoxDecoration(
+                color: datePrimaryColor,
                 shape: BoxShape.circle,
               ),
             ),

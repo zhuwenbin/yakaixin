@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 import '../../../app/routes/app_routes.dart';
+import '../../../core/style/app_style_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -199,10 +200,18 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
 
   /// 学习日历卡片
   Widget _buildStudyCalendar(QuestionBankState state, WidgetRef ref) {
+    final tokens = ref.watch(appStyleTokensProvider);
     return StudyCalendarCard(
       learningData: state.learningData,
       isLoadingLearningData: state.isLoadingLearning,
       onCheckIn: () => _handleCheckIn(context, ref),
+      actionPrimaryColor: tokens.colors.actionPrimary,
+      actionPrimarySoftBgColor: tokens.colors.actionPrimarySoftBg,
+      actionPrimarySoftTextColor: tokens.colors.actionPrimarySoftText,
+      statsHighlightColor: tokens.colors.statsHighlight,
+      cardRadius: tokens.layout.cardRadius,
+      contentPadding: tokens.layout.cardPadding + 4,
+      horizontalMargin: (tokens.layout.cardPadding - 4).clamp(8, 16),
     );
   }
 
@@ -221,37 +230,40 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
 
   /// 学习卡片网格(绝密押题、科目模考、模拟考试、学习报告)
   Widget _buildStudyCardGrid(BuildContext context, WidgetRef ref) {
+    final tokens = ref.watch(appStyleTokensProvider);
+    final urls = tokens.images.studyCardUrls;
     final cards = [
       StudyCardData(
         title: '绝密押题',
         subtitle: '名师密押 考后即焚',
-        imageUrl:
-            'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/predictIcon.png',
+        imageUrl: urls.isNotEmpty ? urls[0] : 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/predictIcon.png',
         onTap: () => _handleCardClick(context, ref, 0),
       ),
       StudyCardData(
         title: '科目模考',
         subtitle: '查漏补缺 直击重点',
-        imageUrl:
-            'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/test-icon.png',
+        imageUrl: urls.length > 1 ? urls[1] : 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/test-icon.png',
         onTap: () => _handleCardClick(context, ref, 1),
       ),
       StudyCardData(
         title: '模拟考试',
         subtitle: '全真模拟 还原考场',
-        imageUrl:
-            'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/exam-icon.png',
+        imageUrl: urls.length > 2 ? urls[2] : 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/exam-icon.png',
         onTap: () => _handleCardClick(context, ref, 2),
       ),
       StudyCardData(
         title: '学习报告',
         subtitle: '实时学习情况',
-        imageUrl: ApiConfig.completeImageUrl('col-4.png'),
+        imageUrl: urls.length > 3 ? urls[3] : ApiConfig.completeImageUrl('col-4.png'),
         onTap: () => _handleCardClick(context, ref, 3),
       ),
     ];
 
-    return StudyCardGrid(cards: cards);
+    return StudyCardGrid(
+      cards: cards,
+      cardRadius: tokens.layout.cardRadius,
+      cardPadding: tokens.layout.cardPadding,
+    );
   }
 
   /// 每日一测

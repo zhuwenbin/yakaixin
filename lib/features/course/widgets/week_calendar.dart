@@ -14,6 +14,7 @@ class WeekCalendar extends StatelessWidget {
   final Function(DateTime) onDateSelected;
   final VoidCallback onShowFullCalendar;
   final LayerLink layerLink;
+  final Color datePrimaryColor;
 
   const WeekCalendar({
     super.key,
@@ -22,6 +23,7 @@ class WeekCalendar extends StatelessWidget {
     required this.onDateSelected,
     required this.onShowFullCalendar,
     required this.layerLink,
+    this.datePrimaryColor = AppColors.courseDatePrimary,
   });
 
   @override
@@ -46,6 +48,7 @@ class WeekCalendar extends StatelessWidget {
                           day: day,
                           selectedDate: selectedDate,
                           dotDates: dotDates,
+                          datePrimaryColor: datePrimaryColor,
                           onTap: () => onDateSelected(day),
                         ),
                       )
@@ -72,12 +75,14 @@ class _WeekDayItem extends StatelessWidget {
   final DateTime day;
   final DateTime selectedDate;
   final List<String> dotDates;
+  final Color datePrimaryColor;
   final VoidCallback onTap;
 
   const _WeekDayItem({
     required this.day,
     required this.selectedDate,
     required this.dotDates,
+    required this.datePrimaryColor,
     required this.onTap,
   });
 
@@ -92,7 +97,7 @@ class _WeekDayItem extends StatelessWidget {
       child: Container(
         width: 45.w,
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.courseDatePrimary : Colors.transparent,
+          color: isSelected ? datePrimaryColor : Colors.transparent,
           borderRadius: AppRadius.radiusSm,
         ),
         padding: EdgeInsets.symmetric(vertical: 2.h),
@@ -124,7 +129,7 @@ class _WeekDayItem extends StatelessWidget {
                 width: 5.w,
                 height: 5.h,
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.textWhite : AppColors.courseDatePrimary,
+                  color: isSelected ? AppColors.textWhite : datePrimaryColor,
                   shape: BoxShape.circle,
                 ),
               ),

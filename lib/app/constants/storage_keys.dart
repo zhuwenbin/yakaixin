@@ -28,4 +28,7 @@ class StorageKeys {
   
   // 秒杀倒计时 (对应小程序: __tiku_goods_time__)
   static const String seckillCountdownTime = '__tiku_goods_time__';
+
+  // 样式模板（颜色/排版/图片一键切换）
+  static const String appStyleConfig = 'app_style_config';
 }

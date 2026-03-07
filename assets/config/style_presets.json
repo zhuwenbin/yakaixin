@@ -1,0 +1,35 @@
+{
+  "version": "1.0.0",
+  "description": "样式模板配置 - 用于一键切换颜色/排版/图片",
+  "current_template": "blueDefault",
+  "templates": {
+    "blueDefault": {
+      "name": "蓝（默认）",
+      "colors": "主色 #2E68FF",
+      "layout": "layoutA",
+      "images": "packA"
+    },
+    "orangeYellow": {
+      "name": "橙黄色",
+      "colors": "主色 #FF8C00",
+      "layout": "layoutB",
+      "images": "packB"
+    },
+    "green": {
+      "name": "绿色",
+      "colors": "主色 #22C55E",
+      "layout": "layoutB",
+      "images": "packB"
+    },
+    "custom": {
+      "name": "自定义",
+      "colors": "可自由搭配",
+      "layout": "可自由搭配",
+      "images": "可自由搭配"
+    }
+  },
+  "image_packs": {
+    "packA": "网络图 + Material Icons（当前默认）",
+    "packB": "assets/images/style/pack_b/ 需自行添加 8 个 TabBar 图标 + 4 个学习卡片图标"
+  }
+}
