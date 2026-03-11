@@ -43,7 +43,7 @@ class _AboutUsPageState extends ConsumerState<AboutUsPage> {
         child: Column(
           children: [
             SizedBox(height: 40.h),
-            
+
             // 应用图标
             Container(
               width: 120.w,
@@ -77,9 +77,9 @@ class _AboutUsPageState extends ConsumerState<AboutUsPage> {
                 ),
               ),
             ),
-            
+
             SizedBox(height: 24.h),
-            
+
             // 应用名称
             Text(
               '牙开心学堂',
@@ -89,20 +89,17 @@ class _AboutUsPageState extends ConsumerState<AboutUsPage> {
                 color: const Color(0xFF161F30),
               ),
             ),
-            
+
             SizedBox(height: 8.h),
-            
+
             // 版本号
             Text(
               _version,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: const Color(0xFF787E8F),
-              ),
+              style: TextStyle(fontSize: 14.sp, color: const Color(0xFF787E8F)),
             ),
-            
+
             SizedBox(height: 40.h),
-            
+
             // 应用简介
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 30.w),
@@ -120,9 +117,9 @@ class _AboutUsPageState extends ConsumerState<AboutUsPage> {
                 ),
               ),
             ),
-            
+
             SizedBox(height: 60.h),
-            
+
             // 协议链接
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -162,18 +159,15 @@ class _AboutUsPageState extends ConsumerState<AboutUsPage> {
                 ),
               ],
             ),
-            
+
             SizedBox(height: 40.h),
-            
+
             // 版权信息
             Text(
               'Copyright@2006 - ${DateTime.now().year}',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: const Color(0xFFCCCCCC),
-              ),
+              style: TextStyle(fontSize: 12.sp, color: const Color(0xFFCCCCCC)),
             ),
-            
+
             SizedBox(height: 40.h),
           ],
         ),

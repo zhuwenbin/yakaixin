@@ -190,6 +190,9 @@ class AppRoutes {
   /// P6-4 设置 - 系统设置
   static const String settings = '/settings';
 
+  /// P6-4-1 意见反馈
+  static const String feedback = '/feedback';
+
   /// P6-5 隐私协议
   static const String privacyPolicy = '/privacy-policy';
 

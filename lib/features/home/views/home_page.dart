@@ -111,7 +111,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   void _handleMajorSelector() {
     showMajorSelector(
       context,
-      onChanged: () => ref.read(homeProvider.notifier).loadHomeData(),
+      onChanged: () {}, // 刷新由 MajorSelectorDialog 内统一调用 LoginRefreshHelper 完成
     );
   }
 

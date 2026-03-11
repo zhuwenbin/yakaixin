@@ -6,7 +6,6 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 import '../../../app/routes/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/confirm_dialog.dart';
 import '../providers/question_bank_provider.dart';
@@ -169,10 +168,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
         onTap: () {
           showMajorSelector(
             context,
-            onChanged: () {
-              // 专业变更后刷新题库数据
-              ref.read(questionBankProvider.notifier).loadAllData();
-            },
+            onChanged: () {}, // 刷新由 MajorSelectorDialog 内统一调用 LoginRefreshHelper 完成
           );
         },
         behavior: HitTestBehavior.opaque,
@@ -181,7 +177,9 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
           children: [
             Text(
               majorName,
-              style: AppTextStyles.heading3.copyWith(
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w500,
                 color: AppColors.textPrimary,
               ),
             ),

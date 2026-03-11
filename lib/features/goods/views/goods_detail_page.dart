@@ -1166,7 +1166,6 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
               .refresh(refreshGoodsId);
         }
 
-        // 2. 跳转支付成功页
         final professionalIdName = SafeTypeConverter.toSafeString(
           detail.professionalIdName,
           defaultValue: '',
@@ -1175,12 +1174,14 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
           detail.type,
           defaultValue: '',
         );
+        final isCourse = goodsType == '2' || goodsType == '3';
         context.push(
           AppRoutes.paySuccess,
           extra: {
             'goods_id': goodsId,
             'professional_id_name': professionalIdName,
-            'goods_type': goodsType, // ✅ 传递商品类型，避免支付成功页再次调用API
+            'goods_type': goodsType,
+            'isLearnButton': isCourse ? 1 : 0,
           },
         );
       } else if (!result.isFreeOrder && result.isSuccess) {
@@ -1212,7 +1213,6 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
           },
         );
 
-        // 🔄 支付成功：先刷新详情，再跳转支付成功页（与小程序一致：getGoodsDetail 后 push paySuccess）
         if (paymentResult != null && paymentResult['success'] == true) {
           print('\n🔄 支付成功，刷新商品详情并跳转支付成功页...');
           final refreshGoodsId =
@@ -1221,13 +1221,14 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
               .read(goodsDetailNotifierProvider.notifier)
               .refresh(refreshGoodsId);
           if (!mounted) return;
+          final isCourse = goodsType == '2' || goodsType == '3';
           context.push(
             AppRoutes.paySuccess,
             extra: {
               'goods_id': goodsId,
               'professional_id_name': professionalIdName,
               'goods_type': goodsType,
-              'isLearnButton': 0,
+              'isLearnButton': isCourse ? 1 : 0,
             },
           );
         }

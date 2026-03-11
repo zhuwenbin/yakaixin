@@ -63,6 +63,7 @@ import '../../features/profile/views/report_center_page.dart';
 import '../../features/profile/views/privacy_policy_page.dart';
 import '../../features/profile/views/user_service_agreement_page.dart';
 import '../../features/profile/views/about_us_page.dart';
+import '../../features/profile/views/feedback_page.dart';
 import '../../features/auth/views/delete_account_risk_page.dart';
 import '../../features/auth/views/delete_account_verification_page.dart';
 import '../../features/auth/views/delete_account_confirm_page.dart';
@@ -622,6 +623,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.feedback,
+        builder: (context, state) => const FeedbackPage(),
       ),
       GoRoute(
         path: AppRoutes.privacyPolicy,

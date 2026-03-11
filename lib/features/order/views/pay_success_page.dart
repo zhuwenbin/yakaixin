@@ -6,6 +6,7 @@ import '../../../app/routes/app_routes.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
 import '../../../core/utils/safe_type_converter.dart';
+import '../../../core/utils/login_refresh_helper.dart';
 import '../../main/main_tab_page.dart';
 import '../../goods/services/goods_service.dart';
 
@@ -56,6 +57,10 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
   void initState() {
     super.initState();
     _initQrcode();
+    // 购买成功后通知首页、题库、课程刷新数据，返回主 Tab 时显示最新列表
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      LoginRefreshHelper.refreshAllPages(ref);
+    });
   }
 
   /// 初始化二维码
@@ -257,27 +262,28 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
   }
 
   /// 按钮组
-  /// 对应小程序 Line 20-24 + Line 237-262: .but-group
+  /// 统一以 goodsType 判断：课程(2,3)→「开始学习」+ 去学习，试卷/题库等→「开始测验」+ 开始测验
+  /// goodsType 为空时用 isLearnButton 兜底（兼容旧入口）
   Widget _buildButtonGroup() {
-    final showLearnButton = widget.isLearnButton == 1;
-    
+    final gt = widget.goodsType;
+    final fallbackLearn = widget.isLearnButton == 1;
+    final isCourseType = gt == '2' || gt == '3' || (gt == null && fallbackLearn);
+    final primaryButtonText = isCourseType ? '开始学习' : '开始测验';
+    final onPrimaryTap = isCourseType ? _onGoLearn : _onGoTest;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // ✅ 返回按钮
-        // 对应小程序 Line 21: @click="home"
         _buildButton(
           text: '返回',
           isPrimary: false,
           onTap: _onBack,
         ),
-        SizedBox(width: 12.0), // ✅ 小程序: 12px (Line 255: margin-right)
-        // ✅ 右侧按钮（去学习 或 开始测验）
-        // 对应小程序 Line 22-23
+        SizedBox(width: 12.0),
         _buildButton(
-          text: showLearnButton ? '去学习' : '开始测验',
+          text: primaryButtonText,
           isPrimary: true,
-          onTap: showLearnButton ? _onGoLearn : _onGoTest,
+          onTap: onPrimaryTap,
         ),
       ],
     );

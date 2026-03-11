@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../../app/constants/storage_keys.dart';
 import '../../../core/storage/storage_service.dart';
+import '../../../core/utils/login_refresh_helper.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/models/user_model.dart' as auth_model;
 import '../models/major_model.dart';
@@ -333,10 +334,12 @@ class _MajorSelectorDialogState extends ConsumerState<MajorSelectorDialog>
         majorId: item.id,
         majorName: item.dataName,
       );
-      // ✅ 必须 await，确保状态更新后再触发 onChanged，否则 loadHomeData() 会读到旧专业 ID
+      // ✅ 必须 await，确保状态更新后再触发刷新，否则会读到旧专业 ID
       await ref.read(authProvider.notifier).switchMajor(majorModel);
 
-      // 回调（此时 currentMajorProvider 已为新专业，loadHomeData 会加载正确数据）
+      // ✅ 切换专业后同时刷新首页、题库、课程，与登录/购买成功一致
+      LoginRefreshHelper.refreshAllPages(ref);
+
       if (widget.onChanged != null) {
         widget.onChanged!();
       }

@@ -43,9 +43,10 @@ class PaymentFlowManager {
   /// - goodsName: 商品名称（用于确认订单页显示）
   /// - professionalIdName: 专业名称（用于支付成功页）
   /// - refreshGoodsId: 需要刷新的商品ID（通常与goodsId相同）
-  /// - isLearnButton: 支付成功页显示按钮类型（1=去学习，0=开始测验）
-  /// - onSuccess: 支付成功回调（可选，用于自定义处理）
-  /// - onError: 支付失败回调（可选，用于自定义处理）
+  /// - isLearnButton: 支付成功页行为（1=去学习/课程Tab，0=开始测验）
+  /// - goodsType: 商品类型（2=网课 3=直播），用于支付成功页按钮文案
+  /// - onSuccess: 支付成功回调（可选）
+  /// - onError: 支付失败回调（可选）
   Future<void> startPaymentFlow({
     required String goodsId,
     required String goodsMonthsPriceId,
@@ -55,6 +56,7 @@ class PaymentFlowManager {
     String? professionalIdName,
     String? refreshGoodsId,
     int? isLearnButton,
+    String? goodsType,
     VoidCallback? onSuccess,
     ValueChanged<String>? onError,
   }) async {
@@ -102,10 +104,10 @@ class PaymentFlowManager {
             refreshGoodsId: refreshGoodsId,
             professionalIdName: professionalIdName,
             isLearnButton: isLearnButton,
+            goodsType: goodsType,
             onSuccess: onSuccess,
           );
         },
-        // 需要支付
         needPayment: (orderId, flowId) async {
           await _handleNeedPayment(
             orderId: orderId,
@@ -116,6 +118,7 @@ class PaymentFlowManager {
             refreshGoodsId: refreshGoodsId,
             professionalIdName: professionalIdName,
             isLearnButton: isLearnButton,
+            goodsType: goodsType,
             onSuccess: onSuccess,
             onError: onError,
           );
@@ -141,19 +144,16 @@ class PaymentFlowManager {
     String? refreshGoodsId,
     String? professionalIdName,
     int? isLearnButton,
+    String? goodsType,
     VoidCallback? onSuccess,
   }) async {
     print('✅ [支付流程] 0元订单，直接成功');
 
-    // 1. 刷新商品详情（如果提供了refreshGoodsId）
     if (refreshGoodsId != null && refreshGoodsId.isNotEmpty) {
       await _refreshGoodsDetail(refreshGoodsId);
     }
-
-    // 2. 执行成功回调
     onSuccess?.call();
 
-    // 3. 跳转支付成功页
     if (context.mounted) {
       context.push(
         AppRoutes.paySuccess,
@@ -162,6 +162,7 @@ class PaymentFlowManager {
           'order_id': orderId,
           'professional_id_name': professionalIdName,
           'isLearnButton': isLearnButton ?? 0,
+          if (goodsType != null && goodsType.isNotEmpty) 'goods_type': goodsType,
         },
       );
     }
@@ -177,6 +178,7 @@ class PaymentFlowManager {
     String? refreshGoodsId,
     String? professionalIdName,
     int? isLearnButton,
+    String? goodsType,
     VoidCallback? onSuccess,
     ValueChanged<String>? onError,
   }) async {
@@ -222,6 +224,7 @@ class PaymentFlowManager {
             'order_id': orderId,
             'professional_id_name': professionalIdName,
             'isLearnButton': isLearnButton ?? 0,
+            if (goodsType != null && goodsType.isNotEmpty) 'goods_type': goodsType,
           },
         );
       }
@@ -332,6 +335,7 @@ extension PaymentFlowExtension on BuildContext {
     String? professionalIdName,
     String? refreshGoodsId,
     int? isLearnButton,
+    String? goodsType,
     VoidCallback? onSuccess,
     ValueChanged<String>? onError,
   }) async {
@@ -345,6 +349,7 @@ extension PaymentFlowExtension on BuildContext {
       professionalIdName: professionalIdName,
       refreshGoodsId: refreshGoodsId,
       isLearnButton: isLearnButton,
+      goodsType: goodsType,
       onSuccess: onSuccess,
       onError: onError,
     );

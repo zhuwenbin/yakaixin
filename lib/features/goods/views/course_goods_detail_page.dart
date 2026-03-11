@@ -981,7 +981,10 @@ class _CourseGoodsDetailPageState extends ConsumerState<CourseGoodsDetailPage> {
       defaultValue: '0',
     );
 
-    // ✅ 使用统一支付流程管理器
+    final goodsTypeStr = SafeTypeConverter.toSafeString(
+      _goodsDetail?.type,
+      defaultValue: '2',
+    );
     await context.startPayment(
       ref: ref,
       goodsId: goodsId,
@@ -991,7 +994,8 @@ class _CourseGoodsDetailPageState extends ConsumerState<CourseGoodsDetailPage> {
       goodsName: _goodsDetail?.name ?? '课程',
       professionalIdName: _goodsDetail?.professionalIdName,
       refreshGoodsId: goodsId,
-      isLearnButton: 0, // 支付成功页显示"开始测验"按钮
+      isLearnButton: 1,
+      goodsType: goodsTypeStr,
       onSuccess: () async {
         // 支付成功：刷新商品详情
         print('✅ [课程商品] 支付成功，刷新商品详情');

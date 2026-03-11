@@ -197,6 +197,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             },
           ),
           _buildSettingItem(
+            title: '意见反馈',
+            onTap: () {
+              context.push(AppRoutes.feedback);
+            },
+          ),
+          _buildSettingItem(
             title: '删除账户',
             onTap: () {
               context.push(AppRoutes.deleteAccountRisk);

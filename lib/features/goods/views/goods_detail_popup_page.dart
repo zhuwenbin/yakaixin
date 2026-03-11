@@ -471,12 +471,14 @@ class _GoodsDetailPopupPageState extends ConsumerState<GoodsDetailPopupPage> {
           detail.type,
           defaultValue: '',
         );
+        final isCourse = goodsType == '2' || goodsType == '3';
         context.push(
           AppRoutes.paySuccess,
           extra: {
             'goods_id': goodsId,
             'professional_id_name': professionalIdName,
             'goods_type': goodsType,
+            'isLearnButton': isCourse ? 1 : 0,
           },
         );
       } else if (!result.isFreeOrder && result.isSuccess) {
@@ -511,13 +513,14 @@ class _GoodsDetailPopupPageState extends ConsumerState<GoodsDetailPopupPage> {
               .read(goodsDetailNotifierProvider.notifier)
               .refresh(refreshGoodsId);
           if (!mounted) return;
+          final isCourse = goodsType == '2' || goodsType == '3';
           context.push(
             AppRoutes.paySuccess,
             extra: {
               'goods_id': goodsId,
               'professional_id_name': professionalIdName,
               'goods_type': goodsType,
-              'isLearnButton': 0,
+              'isLearnButton': isCourse ? 1 : 0,
             },
           );
         }
