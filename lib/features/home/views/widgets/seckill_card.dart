@@ -8,7 +8,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../models/goods_model.dart';
 import 'countdown_timer.dart';
-import '../../../../../app/config/api_config.dart';
 import '../../../../../app/constants/storage_keys.dart';
 import '../../../../core/storage/storage_service.dart';
 
@@ -390,12 +389,13 @@ class _SeckillCardState extends ConsumerState<SeckillCard> {
       child: Wrap(
         spacing: 12.w, // ✅ 小程序margin-right: 12rpx ÷ 2 = 12.w
         children: [
-          // ✅ 第一个标签：秒杀时显示"共 X 题"，使用模板 tagBg/tagText
+          // ✅ 第一个标签：秒杀时「共 X 题」与小程序 .ee-seckill-q / .ee-seckill-q-row 一致
+          // 小程序：background #FFD27C，共/题 黑色，数字 红色，font-weight 600，border-radius 8rpx，padding 4rpx 16rpx
           if (goods.tikuGoodsDetails?.questionNum != null)
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
               decoration: BoxDecoration(
-                color: colors.tagBg,
+                color: const Color(0xFFFFD27C),
                 borderRadius: BorderRadius.circular(4.r),
               ),
               child: RichText(
@@ -403,13 +403,16 @@ class _SeckillCardState extends ConsumerState<SeckillCard> {
                   style: TextStyle(
                     fontSize: 10.sp,
                     fontWeight: FontWeight.w600,
-                    color: colors.tagText,
+                    color: const Color(0xFF000000),
                   ),
                   children: [
                     const TextSpan(text: '共 '),
                     TextSpan(
                       text: '${goods.tikuGoodsDetails!.questionNum}',
-                      style: TextStyle(color: colors.tagText),
+                      style: const TextStyle(
+                        color: Color(0xFFFF0000),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const TextSpan(text: ' 题'),
                   ],
@@ -521,34 +524,21 @@ class _SeckillCardState extends ConsumerState<SeckillCard> {
               // 小程序：display: flex; align-items: center; justify-content: center; padding-top: 22rpx;
               // ⚠️ 注意：小程序虽然有 padding-top: 22rpx，但 align-items: center 会让内容垂直居中
               // 在 Flutter 中，使用 alignment: Alignment.center 实现完全居中，不使用 padding-top
+              // ✅ 与小程序 .pay-time 一致：width 70%，height 94rpx → 47.h
               Positioned(
                 right: 0,
-                bottom:
-                    -1.h, // ✅ 小程序bottom: -2rpx ÷ 2 = -1.h（相对于.bottom-time底部）
+                bottom: -1.h,
                 child: Container(
-                  width: countdownWidth, // ✅ 小程序width: 70%（动态计算）
-                  height: 47
-                      .h, // ✅ 小程序height: 94rpx ÷ 2 = 47.h（单位转换：94rpx = 47.w，但高度用.h）
+                  width: countdownWidth,
+                  height: 47.h,
                   decoration: BoxDecoration(
-                    // ✅ 倒计时背景色：与小程序背景图片底色保持一致
-                    // 小程序使用背景图片，这里添加fallback背景色确保视觉效果一致
-                    // 从图片观察，倒计时背景是浅蓝色/白色，使用更浅的蓝色接近白色
-                    color: const Color(
-                      0xFFF0F7FF,
-                    ), // ✅ 倒计时背景底色（浅蓝色，与小程序背景图片底色一致）
-                    // ✅ 倒计时背景圆角：与卡片右下角圆角保持一致
-                    // 小程序卡片 border-radius: 32rpx，倒计时背景在右下角，需要匹配右下角圆角
                     borderRadius: BorderRadius.only(
-                      bottomRight: Radius.circular(
-                        16.r,
-                      ), // ✅ 小程序32rpx ÷ 2 = 16.r（右下角圆角）
-                      // 注意：顶部可能有波浪形状，由背景图片本身提供，不需要设置圆角
+                      topLeft: Radius.circular(16.r),
+                      bottomRight: Radius.circular(16.r),
                     ),
                     image: DecorationImage(
                       image: NetworkImage(
-                        ApiConfig.completeImageUrl(
-                          'public/5e91174186068572265789_daojishiback.png',
-                        ),
+                        'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/5e91174186068572265789_daojishiback.png',
                       ),
                       fit: BoxFit.cover,
                       onError: (_, __) {},

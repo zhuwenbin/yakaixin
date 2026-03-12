@@ -139,11 +139,14 @@ class ApiInterceptor extends Interceptor {
     final majorId = _storage.getString(StorageKeys.currentMajorId);
     Map<String, dynamic> professionalParams = {};
     
-    if (shouldAddProfessionalId && majorId != null && majorId.isNotEmpty) {
-      professionalParams = {
-        'professional_id': majorId,
-      };
-    } 
+    if (shouldAddProfessionalId) {
+      final effectiveProfessionalId =
+          (majorId != null && majorId.isNotEmpty) ? majorId : ApiConfig.defaultProfessionalId;
+      professionalParams = {'professional_id': effectiveProfessionalId};
+      if (majorId == null || majorId.isEmpty) {
+        print('🦷 [API拦截器] 未选择专业，使用默认 professional_id=$effectiveProfessionalId');
+      }
+    }
     
     // ✅ 合并所有默认参数
     final allDefaultParams = {

@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../models/question_bank_model.dart';
-import '../../../../app/config/api_config.dart';
 
 /// 学习日历卡片
 class StudyCalendarCard extends StatelessWidget {
@@ -170,17 +169,18 @@ class StudyCalendarCard extends StatelessWidget {
   }
 
   /// 右上角装饰背景图（对应小程序 decoration-image）
-  /// 小程序：position: absolute; top: 0; right: 0; width: 260rpx; height: 64rpx;
-  /// ✅ 图片本身带有圆角设计，只需简单定位，不做裁剪处理
+  /// 小程序 study-calendar.vue 使用旧 OSS：xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com
   Widget _buildDecoration() {
+    const String decorationImageUrl =
+        'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/study-card-color.png';
     return Positioned(
       top: -1,
       right: -1,
       child: Image.network(
-        ApiConfig.completeImageUrl('study-card-color.png'),
+        decorationImageUrl,
         width: 130.w,
         height: 32.h,
-        fit: BoxFit.contain, // ✅ 保持图片原有形状
+        fit: BoxFit.contain,
         opacity: const AlwaysStoppedAnimation(0.8),
         errorBuilder: (context, error, stackTrace) {
           return SizedBox(width: 130.w, height: 32.h);
@@ -203,9 +203,9 @@ class StudyCalendarCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // ✅ 使用图片图标（对应小程序 check-icon）
+            // ✅ 使用图片图标（对应小程序 check-icon，旧 OSS）
             Image.network(
-              ApiConfig.completeImageUrl('study-card-zan.png'),
+              'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/study-card-zan.png',
               width: 16.w,
               height: 16.w,
               errorBuilder: (context, error, stackTrace) {

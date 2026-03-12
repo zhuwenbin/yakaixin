@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../core/style/app_style_config.dart';
 import '../../../core/style/app_style_tokens.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -80,24 +81,49 @@ class _ChapterExerciseCard extends StatelessWidget {
     final questionNumber = chapterExercise.questionNumber;
     final progress = questionNumber > 0 ? (doQuestionNum / questionNumber) : 0.0;
 
+    final isGreen = styleTokens?.config.template == AppStyleTemplate.green;
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        // ✅ 移除固定高度，让内容自适应
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
-        decoration: BoxDecoration(
-          // 对应小程序渐变背景
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFEBF8FF), Colors.white],
-            stops: [0.0, 0.4],
-          ),
-          borderRadius: BorderRadius.circular(16.r), // ✅ 修正：32rpx / 2 = 16.r
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16.r),
+        child: Stack(
+          clipBehavior: Clip.none,
           children: [
+            // 渐变背景（Positioned.fill 避免无界高度导致 parentData 断言）
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: isGreen
+                        ? const [Color(0xFFCFFAE8), Color(0xFFFFFFFF)]
+                        : const [Color(0xFFEBF8FF), Colors.white],
+                    stops: const [0.0, 1.0],
+                  ),
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+              ),
+            ),
+            // 绿色模版：右侧装饰背景图
+            if (isGreen)
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: 160.w,
+                child: Image.asset(
+                  'assets/images/Template/tiku/mokao_back.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+            // 前景内容（决定 Stack 尺寸）
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
             // 标题行
             Text(
               chapterExercise.name,
@@ -209,6 +235,9 @@ class _ChapterExerciseCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+                ],
+              ),
             ),
           ],
         ),

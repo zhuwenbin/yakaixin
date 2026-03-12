@@ -92,7 +92,7 @@ class CourseItemCard extends StatelessWidget {
                   width: 80.w,
                   height: 25.h,
                   decoration: BoxDecoration(
-                    color: styleTokens?.colors.primary ?? const Color(0xFF04C140),
+                    color: styleTokens?.colors.primary ?? const Color(0xFFFF860E),
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(16.r),
                       bottomRight: Radius.circular(16.r),

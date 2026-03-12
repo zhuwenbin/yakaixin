@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 import '../../../app/routes/app_routes.dart';
+import '../../../core/style/app_style_config.dart';
 import '../../../core/style/app_style_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -73,11 +74,12 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       }
     });
 
+    final template = ref.watch(appStyleTokensProvider).config.template;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          _buildGradientBackground(),
+          _buildGradientBackground(template),
           _buildMainContent(context, ref, state, statusBarHeight),
         ],
       ),
@@ -135,19 +137,29 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
 
   /// 渐变背景（绝对定位，不滚动）
   /// 对应小程序: .backgroud-color-blue
-  Widget _buildGradientBackground() {
+  /// 绿色模版：设计图 #C9F9E5(100%) → #FAFCFB(0% 透明度)
+  Widget _buildGradientBackground(AppStyleTemplate template) {
+    final bool isGreen = template == AppStyleTemplate.green;
     return Positioned(
       top: 0,
       left: 0,
       right: 0,
       height: 250.h,
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFB8E8FC), Color(0xFFE9F7FF)],
-            stops: [0.0, 1.0],
+            colors: isGreen
+                ? const [
+                    Color(0xFFC9F9E5), // 浅绿 100%
+                    Color(0x00FAFCFB), // 0% 透明度，渐变到底部透明
+                  ]
+                : const [
+                    Color(0xFFB8E8FC),
+                    Color(0xFFE9F7FF),
+                  ],
+            stops: const [0.0, 1.0],
           ),
         ),
       ),

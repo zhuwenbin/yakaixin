@@ -1,5 +1,6 @@
 import 'dart:convert'; // ✅ 用于json.decode
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -408,11 +409,12 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
           color: Colors.black.withOpacity(0.65),
         ),
         children: [
+          // ✅ 用时、排名数字 - 小程序 .blue-text #3068FB，.number #2e68ff，统一用 #2E68FF
           if (hours > 0) ...[
             TextSpan(
               text: '$hours',
               style: const TextStyle(
-                color: Color(0xFF3068FB),
+                color: Color(0xFF2E68FF),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -422,7 +424,7 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
             TextSpan(
               text: '$minutes',
               style: const TextStyle(
-                color: Color(0xFF3068FB),
+                color: Color(0xFF2E68FF),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -431,7 +433,7 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
           TextSpan(
             text: '$secs',
             style: const TextStyle(
-              color: Color(0xFF3068FB),
+              color: Color(0xFF2E68FF),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -439,7 +441,7 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
           TextSpan(
             text: rank,
             style: const TextStyle(
-              color: Color(0xFF3068FB),
+              color: Color(0xFF2E68FF),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -470,11 +472,12 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           SizedBox(height: 20.h), // margin-top: 40rpx → 20.h
+          // ✅ 分数徽章数字 - 小程序 .grade_number color #2e68ff
           Text(
             score,
-            textAlign: TextAlign.center, // text-align: center
+            textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 15.sp, // 30rpx → 15.sp
+              fontSize: 15.sp,
               fontWeight: FontWeight.w500,
               color: const Color(0xFF2E68FF),
             ),
@@ -568,6 +571,7 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
           style: TextStyle(fontSize: 13.sp, color: const Color(0xFF787E8F)),
         ),
         SizedBox(height: 10.h),
+        // ✅ 成绩明细数值 - 小程序 .number color #2e68ff
         Text(
           value,
           style: TextStyle(fontSize: 14.sp, color: const Color(0xFF2E68FF)),
@@ -673,13 +677,28 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
     final sort = _toSafeString(question['sort']);
     final questionType = _toSafeString(question['type']);
     final stemList = (question['stem_list'] ?? []) as List;
-    final parse = _toSafeString(question['parse']);
+    final resourceInfo = _parseResourceInfo(question['resource_info']);
+    final imgPath = _toSafeString(resourceInfo['img']?['path']);
+    final videoPath = _toSafeString(resourceInfo['video']?['path']);
+    // 解析：与小程序一致用题目级 parse；若无则从 stem_list 取第一个非空（兼容牙开心接口）
+    String parse = _toSafeString(question['parse']);
+    if (parse.isEmpty) {
+      for (final s in stemList) {
+        if (s is Map<String, dynamic>) {
+          final p = _toSafeString(s['parse']);
+          if (p.isNotEmpty) {
+            parse = p;
+            break;
+          }
+        }
+      }
+    }
     final knowledgeIdsName = _toSafeString(question['knowledge_ids_name']);
     final level = _toInt(question['level']);
 
     return Container(
       margin: EdgeInsets.only(top: 12.h),
-      padding: EdgeInsets.all(12.w),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: const Color(0xFFEEEEEE)),
@@ -690,6 +709,13 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
         children: [
           // ✅ 题目标题 - 对应小程序 Line 11-38
           _buildQuestionTitle(sort, stemList),
+
+          // ✅ A1 常见：题干图片/视频在 resource_info（牙开心小程序 questionTmp.vue 的 RenderImgAndVideo）
+          if (imgPath.isNotEmpty || videoPath.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(bottom: 12.h),
+              child: _buildResourceMedia(imgPath: imgPath, videoPath: videoPath),
+            ),
 
           // ✅ 遍历每个小题 - 对应小程序 Line 61-173
           ...stemList.asMap().entries.map((entry) {
@@ -711,6 +737,49 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
           _buildDifficultyLevel(level),
         ],
       ),
+    );
+  }
+
+  Map<String, dynamic> _parseResourceInfo(dynamic value) {
+    if (value == null) return <String, dynamic>{};
+    if (value is Map<String, dynamic>) return value;
+    if (value is String) {
+      final raw = value.trim();
+      if (raw.isEmpty) return <String, dynamic>{};
+      try {
+        final decoded = json.decode(raw);
+        return decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
+      } catch (_) {
+        return <String, dynamic>{};
+      }
+    }
+    return <String, dynamic>{};
+  }
+
+  Widget _buildResourceMedia({required String imgPath, required String videoPath}) {
+    final imageUrl = ApiConfig.completeImageUrl(imgPath);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (imageUrl.isNotEmpty)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6.r),
+            child: Image.network(
+              imageUrl,
+              headers: ApiConfig.ossImageHeaders,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+          ),
+        if (videoPath.isNotEmpty)
+          Padding(
+            padding: EdgeInsets.only(top: 8.h),
+            child: Text(
+              '视频：${ApiConfig.completeImageUrl(videoPath)}',
+              style: TextStyle(fontSize: 12.sp, color: const Color(0xFF666666)),
+            ),
+          ),
+      ],
     );
   }
 
@@ -844,65 +913,77 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
     );
   }
 
-  /// 答题状态和得分 - 对应小程序 Line 103-136
+  /// 答题状态和得分 - 答案错误时按设计图：标签尺寸/背景色、得分字体与颜色
+  /// 小程序 .is_right: font-size 14px; .is_right_button: 50px×28px, radius 4px, margin-right 10px
   Widget _buildAnswerStatus(
     int answerStatus,
     String getScore,
     bool isSubjective,
     dynamic isCorrect,
   ) {
-    Color statusColor;
+    Color statusBgColor;
     Color scoreColor;
     String statusText;
 
     switch (answerStatus) {
       case 1: // 正确
-        statusColor = const Color(0xFF52C41A);
-        scoreColor = const Color(0xFF3068FB);
+        statusBgColor = const Color(0xFF2E68FF);
+        scoreColor = const Color(0xFF2E68FF);
         statusText = '正确';
         break;
-      case 2: // 错误
-        statusColor = const Color(0xFFFF4D4F);
-        scoreColor = const Color(0xFFFF4D4F);
+      case 2: // 错误 - 标签背景 #E53935；得分与小程序一致为红色 #f04f54
+        statusBgColor = const Color(0xFFE53935);
+        scoreColor = const Color(0xFFF04F54);
         statusText = '错误';
         break;
       case 3: // 半对
-        statusColor = const Color(0xFFFAAD14);
-        scoreColor = const Color(0xFFFAAD14);
+        statusBgColor = const Color(0xFFF99300);
+        scoreColor = const Color(0xFFF99300);
         statusText = '半对';
         break;
       default:
-        statusColor = const Color(0xFF999999);
+        statusBgColor = const Color(0xFF999999);
         scoreColor = const Color(0xFF999999);
         statusText = '--';
     }
 
     return Padding(
-      padding: EdgeInsets.only(top: 8.h, bottom: 8.h),
+      padding: EdgeInsets.only(top: 10.h, bottom: 13.h),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ✅ 答题状态标签
           if (answerStatus != 0)
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              width: 50.w,
+              height: 28.h,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
+                color: statusBgColor,
                 borderRadius: BorderRadius.circular(4.r),
               ),
               child: Text(
                 statusText,
-                style: TextStyle(fontSize: 12.sp, color: statusColor),
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          SizedBox(width: 12.w),
-          // ✅ 得分
+          if (answerStatus != 0) SizedBox(width: 10.w),
           Text(
             '得分：',
-            style: TextStyle(fontSize: 13.sp, color: const Color(0xFF161F30)),
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: scoreColor,
+            ),
           ),
           Text(
             _getScoreText(isSubjective, isCorrect, getScore),
-            style: TextStyle(fontSize: 13.sp, color: scoreColor),
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: scoreColor,
+            ),
           ),
         ],
       ),
@@ -920,7 +1001,7 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
     }
   }
 
-  /// 答案对比 - 对应小程序 Line 137-173
+  /// 答案对比 - 对应小程序 Line 137-173；正确答案与您的答案一行显示
   Widget _buildAnswerComparison(
     List answer,
     List subAnswer,
@@ -929,7 +1010,6 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
   ) {
     const selectList = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
-    // 转换答案为字母
     final answerNames = answer.map((a) {
       final index = int.tryParse(a.toString()) ?? 0;
       return index < selectList.length ? selectList[index] : a.toString();
@@ -940,60 +1020,45 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
       return index < selectList.length ? selectList[index] : a.toString();
     }).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ✅ 正确答案 - 只在答错时显示
-        if (answerStatus != 1)
-          Padding(
-            padding: EdgeInsets.only(bottom: 4.h),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '正确答案：',
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    color: const Color(0xFF3068FB),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    answerNames.join('、'),
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      color: const Color(0xFF3068FB),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        // ✅ 您的答案
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '您的答案：',
-              style: TextStyle(fontSize: 13.sp, color: const Color(0xFF000000)),
-            ),
-            Expanded(
+    final correctPart = answerStatus != 1
+        ? '正确答案：${answerNames.join('、')}'
+        : null;
+    final yourPart = '您的答案：${subAnswerNames.isNotEmpty ? subAnswerNames.join('、') : '未作答'}';
+
+    return Padding(
+      padding: EdgeInsets.only(top: 4.h),
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 0,
+        runSpacing: 4.h,
+        children: [
+          if (correctPart != null)
+            Padding(
+              padding: EdgeInsets.only(right: 11.w),
               child: Text(
-                subAnswerNames.isNotEmpty ? subAnswerNames.join('、') : '未作答',
+                correctPart,
                 style: TextStyle(
-                  fontSize: 13.sp,
-                  color: const Color(0xFF000000),
+                  fontSize: 14.sp,
+                  color: const Color(0xFF1976D2),
                 ),
               ),
             ),
-          ],
-        ),
-      ],
+          Text(
+            yourPart,
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: const Color(0xFF000000),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  /// 解析框 - 对应小程序 Line 175-201
+  /// 解析框 - 对应小程序 questionTmp.vue Line 173-176，解析用 v-html 渲染
   Widget _buildExplainBox(String label, String content) {
+    final isParse = label.startsWith('解析');
+    final hasHtml = content.trim().isNotEmpty && content.contains('<');
     return Padding(
       padding: EdgeInsets.only(top: 12.h),
       child: Row(
@@ -1008,10 +1073,30 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
             ),
           ),
           Expanded(
-            child: Text(
-              _stripHtmlTags(content),
-              style: TextStyle(fontSize: 13.sp, color: const Color(0xFF666666)),
-            ),
+            child: isParse && hasHtml
+                ? Html(
+                    data: content,
+                    style: {
+                      'body': Style(
+                        margin: Margins.zero,
+                        padding: HtmlPaddings.zero,
+                        fontSize: FontSize(13.sp),
+                        color: const Color(0xFF161F30),
+                        lineHeight: const LineHeight(1.5),
+                      ),
+                      'p': Style(
+                        margin: Margins.zero,
+                        padding: HtmlPaddings.zero,
+                      ),
+                    },
+                  )
+                : Text(
+                    content.isEmpty ? (isParse ? '暂无解析' : '暂无') : _stripHtmlTags(content),
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: const Color(0xFF161F30),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -1032,6 +1117,7 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
               fontWeight: FontWeight.w500,
             ),
           ),
+          // ✅ 难易度星星 - 参照图片：填充 #FFC107，未填充 #CCCCCC
           ...List.generate(5, (index) {
             final isFilled = index < level;
             return Padding(
@@ -1040,8 +1126,8 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
                 Icons.star,
                 size: 16.sp,
                 color: isFilled
-                    ? const Color(0xFFFAAD14)
-                    : const Color(0xFFE0E0E0),
+                    ? const Color(0xFFFFC107)
+                    : const Color(0xFFCCCCCC),
               ),
             );
           }),
