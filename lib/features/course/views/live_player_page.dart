@@ -206,6 +206,31 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
     }
   }
   
+  /// 停止 H5 直播媒体播放
+  /// ✅ 解决 iOS 返回后直播间声音继续响的问题
+  /// - 注入 JS 暂停所有 video/audio 元素
+  /// - 加载 about:blank 卸载页面以释放媒体资源
+  Future<void> _stopH5Media() async {
+    if (_webViewController == null) return;
+    try {
+      await _webViewController!.runJavaScript('''
+        (function(){
+          try {
+            document.querySelectorAll('video, audio').forEach(function(el){
+              el.pause();
+              el.src = '';
+              el.load();
+            });
+          } catch(e) { console.warn('stop media:', e); }
+        })();
+      ''');
+      await _webViewController!.loadRequest(Uri.parse('about:blank'));
+      debugPrint('✅ [直播H5] 已停止媒体播放');
+    } catch (e) {
+      debugPrint('⚠️ [直播H5] 停止媒体时出错: $e');
+    }
+  }
+
   /// 处理全屏事件
   void _handleFullscreenEvent(String message) {
     debugPrint('📺 [直播H5] 全屏事件: $message');
@@ -377,13 +402,25 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
   @override
   void dispose() {
     _learningTimer?.cancel(); // ✅ 清除学习记录定时器
-    
+    // ✅ 停止 H5 直播媒体（解决 iOS 返回后声音继续响的问题）
+    if (LiveManager.instance.currentMode == LiveMode.h5) {
+      _webViewController?.runJavaScript('''
+        (function(){
+          try {
+            document.querySelectorAll('video, audio').forEach(function(el){
+              el.pause();
+              el.src = '';
+              el.load();
+            });
+          } catch(e) {}
+        })();
+      ''');
+      _webViewController?.loadRequest(Uri.parse('about:blank'));
+    }
     // ✅ 根据模式释放资源
     if (LiveManager.instance.currentMode == LiveMode.native) {
       VideoPlayerManager.instance.markBaijiayunInactive();
     }
-    // WebView会自动释放
-    
     super.dispose();
   }
   
@@ -453,7 +490,14 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
         elevation: 0.5,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new, size: 20.sp),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () async {
+            if (LiveManager.instance.currentMode == LiveMode.h5) {
+              await _stopH5Media();
+            }
+            if (mounted && context.mounted) {
+              Navigator.pop(context);
+            }
+          },
         ),
       ),
       body: _buildBody(),
