@@ -231,31 +231,43 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
   Widget _buildCoverImage(GoodsDetailModel detail, AppStyleTokens tokens) {
     final coverPath = detail.materialCoverPath ?? '';
     final cardBg = tokens.colors.cardLightBg;
+    final useLocalAsset = coverPath.startsWith('assets/');
 
-    // ✅ 调试日志：打印完整URL
-    print('🖼️ [商品详情页] 封面图片URL: $coverPath');
+    print('🖼️ [商品详情页] 封面图片: $coverPath');
 
     return AspectRatio(
       aspectRatio: 16 / 9,
-      // ✅ 使用 Image.network 避免 iOS Release 模式 Content-Disposition 问题
-      child: Image.network(
-        coverPath,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            color: cardBg,
-            child: const Center(child: CircularProgressIndicator()),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          print('❌ [商品详情页] 封面图片加载失败: $coverPath, error: $error');
-          return Container(
-            color: cardBg,
-            child: Icon(Icons.image, size: 50.sp, color: AppColors.textHint),
-          );
-        },
-      ),
+      child: useLocalAsset
+          ? Image.asset(
+              coverPath,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: cardBg,
+                  child: Icon(Icons.image, size: 50.sp, color: AppColors.textHint),
+                );
+              },
+            )
+          : Image.network(
+              coverPath,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  color: cardBg,
+                  child: const Center(child: CircularProgressIndicator()),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: cardBg,
+                  child: Image.asset(
+                    'assets/images/app_icon.png',
+                    fit: BoxFit.cover,
+                  ),
+                );
+              },
+            ),
     );
   }
 

@@ -185,6 +185,7 @@ class _GoodsDetailPopupPageState extends ConsumerState<GoodsDetailPopupPage> {
   /// 封面图（与商品详情页一致：有网络图则显示，无或加载失败则默认图）
   Widget _buildCoverImage(GoodsDetailModel detail) {
     final coverPath = detail.materialCoverPath ?? '';
+    final useLocalAsset = coverPath.startsWith('assets/');
     final hasNetworkImage =
         coverPath.isNotEmpty && coverPath.startsWith(RegExp(r'https?://'));
 
@@ -197,22 +198,32 @@ class _GoodsDetailPopupPageState extends ConsumerState<GoodsDetailPopupPage> {
         borderRadius: BorderRadius.circular(10.r),
         child: AspectRatio(
           aspectRatio: 16 / 9,
-          child: hasNetworkImage
-              ? Image.network(
+          child: useLocalAsset
+              ? Image.asset(
                   coverPath,
                   fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      color: const Color(0xFFF5F6FA),
-                      child: const Center(child: CircularProgressIndicator()),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return _buildDefaultCover();
-                  },
+                  errorBuilder: (_, __, ___) => _buildDefaultCover(),
                 )
-              : _buildDefaultCover(),
+              : hasNetworkImage
+                  ? Image.network(
+                      coverPath,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: const Color(0xFFF5F6FA),
+                          child: const Center(
+                              child: CircularProgressIndicator()),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Image.asset(
+                          'assets/images/app_icon.png',
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    )
+                  : _buildDefaultCover(),
         ),
       ),
     );

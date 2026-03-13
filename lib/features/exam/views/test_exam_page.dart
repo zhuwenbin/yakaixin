@@ -116,15 +116,15 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
     // 小程序使用 material_intro_path 作为封面图，并调用 completepath() 拼接完整URL
     String? coverImage = goods.materialIntroPath;
 
+    final bool useLocalAsset;
     if (coverImage == null || coverImage.isEmpty) {
-      coverImage =
-          'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixinshare.png';
-      print('🖼️ [试卷页] 封面路径为空，使用默认图片: $coverImage');
+      coverImage = 'assets/images/app_icon.png';
+      useLocalAsset = true;
+      print('🖼️ [试卷页] 封面路径为空，使用本地默认图片');
     } else {
-      // ✅ 调用 completeImageUrl 拼接完整URL（对应小程序 completepath()）
-      final originalPath = coverImage;
       coverImage = ApiConfig.completeImageUrl(coverImage);
-      print('🖼️ [试卷页] 封面路径处理后: $originalPath → $coverImage');
+      useLocalAsset = false;
+      print('🖼️ [试卷页] 封面路径处理后: $coverImage');
     }
 
     return Container(
@@ -137,23 +137,39 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
           Container(
             width: 50.w, // 100rpx = 50.w
             margin: EdgeInsets.only(right: 12.w), // 24rpx = 12.w
-            child: Image.network(
-              coverImage,
-              fit: BoxFit.fitWidth,
-              errorBuilder: (context, error, stackTrace) {
-                print('❌ [试卷页] 封面图片加载失败: $coverImage, error: $error');
-                return Container(
-                  width: 50.w,
-                  height: 50.w,
-                  color: AppColors.card,
-                  child: Icon(
-                    Icons.image,
-                    color: AppColors.textHint,
-                    size: 25.sp,
+            child: useLocalAsset
+                ? Image.asset(
+                    coverImage,
+                    fit: BoxFit.fitWidth,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 50.w,
+                        height: 50.w,
+                        color: AppColors.card,
+                        child: Icon(
+                          Icons.image,
+                          color: AppColors.textHint,
+                          size: 25.sp,
+                        ),
+                      );
+                    },
+                  )
+                : Image.network(
+                    coverImage,
+                    fit: BoxFit.fitWidth,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 50.w,
+                        height: 50.w,
+                        color: AppColors.card,
+                        child: Icon(
+                          Icons.image,
+                          color: AppColors.textHint,
+                          size: 25.sp,
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
           // 商品信息 - 上下结构 (对应小程序 Line 13-20 .info-l)
           Expanded(

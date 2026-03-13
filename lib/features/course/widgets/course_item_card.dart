@@ -233,17 +233,19 @@ class CourseItemCard extends StatelessWidget {
             ),
           ),
           child: ClipOval(
-            // ✅ 使用 Image.network 避免 iOS Release 模式 Content-Disposition 问题
-            child: Image.network(
-              avatarUrl.isNotEmpty
-                  ? avatarUrl
-                  : 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/teacher_avatar.png',
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Image.network(
-                'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/teacher_avatar.png',
-                fit: BoxFit.cover,
-              ),
-            ),
+            child: avatarUrl.isEmpty
+                ? Image.asset(
+                    'assets/images/app_icon.png',
+                    fit: BoxFit.cover,
+                  )
+                : Image.network(
+                    avatarUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Image.asset(
+                      'assets/images/app_icon.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
           ),
         ),
         SizedBox(width: 5.w), // ✅ 小程序10rpx ÷ 2 = 5.w

@@ -195,14 +195,9 @@ class RankHeader extends StatelessWidget {
                 color: Colors.white,
               ),
               child: ClipOval(
-                child: Image.network(
-                  rank['avatar'] ?? '',
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Icon(
-                    Icons.person,
-                    size: avatarSize * 0.5,
-                    color: Colors.grey,
-                  ),
+                child: _buildAvatarImage(
+                  rank['avatar']?.toString() ?? '',
+                  avatarSize,
                 ),
               ),
             ),
@@ -240,19 +235,37 @@ class RankHeader extends StatelessWidget {
     );
   }
 
+  /// 头像图片（支持本地 asset 与网络 URL）
+  Widget _buildAvatarImage(String avatarPath, double size) {
+    if (avatarPath.startsWith('assets/')) {
+      return Image.asset(
+        avatarPath,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) =>
+            Icon(Icons.person, size: size * 0.5, color: Colors.grey),
+      );
+    }
+    return Image.network(
+      avatarPath,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) =>
+          Icon(Icons.person, size: size * 0.5, color: Colors.grey),
+    );
+  }
+
   /// 获取排名数据
   Map<String, dynamic> _getRankData(int index) {
     if (rankData.length > index) {
       final data = rankData[index];
       final avatar = data['avatar']?.toString() ?? '';
-      final fullAvatar = avatar.isNotEmpty 
+      final fullAvatar = avatar.isNotEmpty
           ? ApiConfig.completeImageUrl(avatar)
-          : 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixindf.png';
-      
+          : 'assets/images/app_icon.png';
+
       final name = data['nickname']?.toString() ?? data['name']?.toString() ?? '';
       final score = data['score']?.toString() ?? '';
       final time = _formatSeconds(data['kaoshi_time']);
-      
+
       return {
         'avatar': fullAvatar,
         'name': name,
@@ -260,9 +273,9 @@ class RankHeader extends StatelessWidget {
         'time': time,
       };
     }
-    
+
     return {
-      'avatar': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixindf.png',
+      'avatar': 'assets/images/app_icon.png',
       'name': '',
       'score': '',
       'time': '',

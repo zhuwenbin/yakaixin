@@ -142,10 +142,9 @@ class _ProfilePageBlueLayout extends ConsumerWidget {
                                 ),
                               ),
                         )
-                      : Image.network(
-                          'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixindf.png',
+                      : Image.asset(
+                          'assets/images/app_icon.png',
                           fit: BoxFit.cover,
-                          headers: ApiConfig.ossImageHeaders,
                         ),
                 ),
               ),
@@ -512,10 +511,9 @@ class _ProfilePageAlternativeLayout extends ConsumerWidget {
                           ),
                         ),
                       )
-                    : Image.network(
-                        'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixindf.png',
+                    : Image.asset(
+                        'assets/images/app_icon.png',
                         fit: BoxFit.cover,
-                        headers: ApiConfig.ossImageHeaders,
                       ),
               ),
             ),

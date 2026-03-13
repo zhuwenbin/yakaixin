@@ -96,8 +96,8 @@ class GoodsDetailNotifier extends _$GoodsDetailNotifier {
     // 对应小程序 Line 485-492: this.info.material_cover_path = this.completepath(this.info.material_cover_path)
     print('🖼️ [商品详情] 封面路径处理前: coverPath=$coverPath, introPath=$introPath');
     if (coverPath == null || coverPath.isEmpty) {
-      coverPath = 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/yakaixinshare.png';
-      print('🖼️ [商品详情] 封面路径为空，使用默认图片: $coverPath');
+      coverPath = 'assets/images/app_icon.png';
+      print('🖼️ [商品详情] 封面路径为空，使用本地默认图片');
     } else {
       // ✅ 调用 completeImageUrl 拼接完整URL（对应小程序 completepath()）
       final originalCoverPath = coverPath;

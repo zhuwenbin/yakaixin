@@ -155,10 +155,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
                     Color(0xFFC9F9E5), // 浅绿 100%
                     Color(0x00FAFCFB), // 0% 透明度，渐变到底部透明
                   ]
-                : const [
-                    Color(0xFFB8E8FC),
-                    Color(0xFFE9F7FF),
-                  ],
+                : const [Color(0xFFB8E8FC), Color(0xFFE9F7FF)],
             stops: const [0.0, 1.0],
           ),
         ),
@@ -248,25 +245,33 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       StudyCardData(
         title: '绝密押题',
         subtitle: '名师密押 考后即焚',
-        imageUrl: urls.isNotEmpty ? urls[0] : 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/predictIcon.png',
+        imageUrl: urls.isNotEmpty
+            ? urls[0]
+            : 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/predictIcon.png',
         onTap: () => _handleCardClick(context, ref, 0),
       ),
       StudyCardData(
         title: '科目模考',
         subtitle: '查漏补缺 直击重点',
-        imageUrl: urls.length > 1 ? urls[1] : 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/test-icon.png',
+        imageUrl: urls.length > 1
+            ? urls[1]
+            : 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/test-icon.png',
         onTap: () => _handleCardClick(context, ref, 1),
       ),
       StudyCardData(
         title: '模拟考试',
         subtitle: '全真模拟 还原考场',
-        imageUrl: urls.length > 2 ? urls[2] : 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/exam-icon.png',
+        imageUrl: urls.length > 2
+            ? urls[2]
+            : 'https://yakaixin.oss-cn-beijing.aliyuncs.com/public/exam-icon.png',
         onTap: () => _handleCardClick(context, ref, 2),
       ),
       StudyCardData(
         title: '学习报告',
         subtitle: '实时学习情况',
-        imageUrl: urls.length > 3 ? urls[3] : ApiConfig.completeImageUrl('col-4.png'),
+        imageUrl: urls.length > 3
+            ? urls[3]
+            : ApiConfig.completeImageUrl('col-4.png'),
         onTap: () => _handleCardClick(context, ref, 3),
       ),
     ];
