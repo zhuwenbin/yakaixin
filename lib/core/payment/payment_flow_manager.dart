@@ -43,7 +43,8 @@ class PaymentFlowManager {
   /// - goodsName: 商品名称（用于确认订单页显示）
   /// - professionalIdName: 专业名称（用于支付成功页）
   /// - refreshGoodsId: 需要刷新的商品ID（通常与goodsId相同）
-  /// - isLearnButton: 支付成功页显示按钮类型（1=去学习，0=开始测验）
+  /// - goodsType: 商品类型（2/3=课程→显示「开始学习」）
+  /// - isLearnButton: 支付成功页按钮兜底（1=去学习，0=开始测验）
   /// - onSuccess: 支付成功回调（可选，用于自定义处理）
   /// - onError: 支付失败回调（可选，用于自定义处理）
   Future<void> startPaymentFlow({
@@ -54,6 +55,7 @@ class PaymentFlowManager {
     required String goodsName,
     String? professionalIdName,
     String? refreshGoodsId,
+    String? goodsType,
     int? isLearnButton,
     VoidCallback? onSuccess,
     ValueChanged<String>? onError,
@@ -101,6 +103,7 @@ class PaymentFlowManager {
             goodsId: goodsId,
             refreshGoodsId: refreshGoodsId,
             professionalIdName: professionalIdName,
+            goodsType: goodsType,
             isLearnButton: isLearnButton,
             onSuccess: onSuccess,
           );
@@ -115,6 +118,7 @@ class PaymentFlowManager {
             payableAmount: payableAmount,
             refreshGoodsId: refreshGoodsId,
             professionalIdName: professionalIdName,
+            goodsType: goodsType,
             isLearnButton: isLearnButton,
             onSuccess: onSuccess,
             onError: onError,
@@ -140,6 +144,7 @@ class PaymentFlowManager {
     required String goodsId,
     String? refreshGoodsId,
     String? professionalIdName,
+    String? goodsType,
     int? isLearnButton,
     VoidCallback? onSuccess,
   }) async {
@@ -161,6 +166,7 @@ class PaymentFlowManager {
           'goods_id': goodsId,
           'order_id': orderId,
           'professional_id_name': professionalIdName,
+          'goods_type': goodsType,
           'isLearnButton': isLearnButton ?? 0,
         },
       );
@@ -176,6 +182,7 @@ class PaymentFlowManager {
     required double payableAmount,
     String? refreshGoodsId,
     String? professionalIdName,
+    String? goodsType,
     int? isLearnButton,
     VoidCallback? onSuccess,
     ValueChanged<String>? onError,
@@ -193,11 +200,12 @@ class PaymentFlowManager {
         'order_id': orderId,
         'flow_id': flowId,
         'goods_id': goodsId,
-        'finance_body_id': '', // 在确认订单页内部获取
+        'finance_body_id': '',
         'goods_name': goodsName,
         'payable_amount': payableAmount,
         'refresh_goods_id': refreshGoodsId ?? goodsId,
         'professional_id_name': professionalIdName,
+        'goods_type': goodsType,
       },
     );
 
@@ -221,6 +229,7 @@ class PaymentFlowManager {
             'goods_id': paymentResult['goods_id'] ?? goodsId,
             'order_id': orderId,
             'professional_id_name': professionalIdName,
+            'goods_type': paymentResult['goods_type'] ?? goodsType,
             'isLearnButton': isLearnButton ?? 0,
           },
         );
@@ -331,6 +340,7 @@ extension PaymentFlowExtension on BuildContext {
     required String goodsName,
     String? professionalIdName,
     String? refreshGoodsId,
+    String? goodsType,
     int? isLearnButton,
     VoidCallback? onSuccess,
     ValueChanged<String>? onError,
@@ -344,6 +354,7 @@ extension PaymentFlowExtension on BuildContext {
       goodsName: goodsName,
       professionalIdName: professionalIdName,
       refreshGoodsId: refreshGoodsId,
+      goodsType: goodsType,
       isLearnButton: isLearnButton,
       onSuccess: onSuccess,
       onError: onError,

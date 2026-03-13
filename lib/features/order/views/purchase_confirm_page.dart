@@ -20,6 +20,7 @@ class PurchaseConfirmPage extends ConsumerWidget {
   final double payableAmount;
   final String? professionalIdName;
   final String? refreshGoodsId;
+  final String? goodsType;
   final int? isLearnButton;
 
   const PurchaseConfirmPage({
@@ -31,6 +32,7 @@ class PurchaseConfirmPage extends ConsumerWidget {
     required this.payableAmount,
     this.professionalIdName,
     this.refreshGoodsId,
+    this.goodsType,
     this.isLearnButton,
   });
 
@@ -166,6 +168,7 @@ class PurchaseConfirmPage extends ConsumerWidget {
       goodsName: goodsName,
       professionalIdName: professionalIdName,
       refreshGoodsId: refreshGoodsId ?? goodsId,
+      goodsType: goodsType,
       isLearnButton: isLearnButton ?? 1,
       onSuccess: () {
         if (context.mounted) {

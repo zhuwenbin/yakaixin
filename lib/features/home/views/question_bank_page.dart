@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 import '../../../app/routes/app_routes.dart';
+import '../../../core/utils/login_refresh_helper.dart';
 import '../../../core/style/app_style_config.dart';
 import '../../../core/style/app_style_provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -179,10 +180,7 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
         onTap: () {
           showMajorSelector(
             context,
-            onChanged: () {
-              // 专业变更后刷新题库数据
-              ref.read(questionBankProvider.notifier).loadAllData();
-            },
+            onChanged: () => LoginRefreshHelper.refreshAllPages(ref),
           );
         },
         behavior: HitTestBehavior.opaque,

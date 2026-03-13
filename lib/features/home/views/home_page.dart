@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/routes/app_routes.dart';
+import '../../../core/utils/login_refresh_helper.dart';
 import '../../../core/style/app_style_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -113,7 +114,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   void _handleMajorSelector() {
     showMajorSelector(
       context,
-      onChanged: () => ref.read(homeProvider.notifier).loadHomeData(),
+      onChanged: () => LoginRefreshHelper.refreshAllPages(ref),
     );
   }
 

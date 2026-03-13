@@ -114,7 +114,7 @@ class _TestHomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('牙开心题库'),
+        title: Text('金医圣题库'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Center(

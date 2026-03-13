@@ -67,7 +67,7 @@ class DeleteAccountRiskPage extends ConsumerWidget {
             // 风险列表
             // 对应 tiku: SKDeleteAccountRiskVC.xib - 风险提示内容
             _buildRiskItem(
-              '1、账号信息（包含牙开心学堂、身份信息、认证信息等）将清空且无法恢复；',
+              '1、账号信息（包含金医圣、身份信息、认证信息等）将清空且无法恢复；',
             ),
             SizedBox(height: 30.h),
 

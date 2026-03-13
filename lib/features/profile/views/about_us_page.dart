@@ -82,7 +82,7 @@ class _AboutUsPageState extends ConsumerState<AboutUsPage> {
             
             // 应用名称
             Text(
-              '牙开心学堂',
+              '金医圣',
               style: TextStyle(
                 fontSize: 22.sp,
                 fontWeight: FontWeight.bold,
@@ -107,11 +107,11 @@ class _AboutUsPageState extends ConsumerState<AboutUsPage> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 30.w),
               child: Text(
-                '牙开心学堂 APP 是为广大医考、药考、护考生打造的在线学习应用。\n\n'
+                '金医圣 APP 是为广大医考、药考、护考生打造的在线学习应用。\n\n'
                 '用户可以随时随地在线学习、下载学习全年、全阶段免费网课、教辅直播课。在学习过程中有任何问题可以随时在线咨询教辅老师。\n\n'
                 '在线题库为用户提供了海量的章节练习题、历年真题、模拟考场等，有效的检验、巩固学习效果。\n\n'
                 '图书商城为用户提供了各阶段学习的图书、学习包等。\n\n'
-                '牙开心学堂致力于打造医学教育云平台，为每个用户提供平等的教育机会。',
+                '金医圣致力于打造医学教育云平台，为每个用户提供平等的教育机会。',
                 textAlign: TextAlign.left,
                 style: TextStyle(
                   fontSize: 14.sp,

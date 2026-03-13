@@ -183,6 +183,7 @@ class _ConfirmPaymentPageState extends ConsumerState<ConfirmPaymentPage> {
         'success': true,
         'goods_id': widget.goodsId,
         'refresh_goods_id': widget.refreshGoodsId,
+        'goods_type': widget.goodsType,
       });
     } catch (e) {
       print('\n❌ 支付异常: $e');

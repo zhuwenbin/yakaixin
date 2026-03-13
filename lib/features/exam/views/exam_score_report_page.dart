@@ -680,7 +680,7 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
     final resourceInfo = _parseResourceInfo(question['resource_info']);
     final imgPath = _toSafeString(resourceInfo['img']?['path']);
     final videoPath = _toSafeString(resourceInfo['video']?['path']);
-    // 解析：与小程序一致用题目级 parse；若无则从 stem_list 取第一个非空（兼容牙开心接口）
+    // 解析：与小程序一致用题目级 parse；若无则从 stem_list 取第一个非空（兼容金医圣接口）
     String parse = _toSafeString(question['parse']);
     if (parse.isEmpty) {
       for (final s in stemList) {
@@ -710,7 +710,7 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
           // ✅ 题目标题 - 对应小程序 Line 11-38
           _buildQuestionTitle(sort, stemList),
 
-          // ✅ A1 常见：题干图片/视频在 resource_info（牙开心小程序 questionTmp.vue 的 RenderImgAndVideo）
+          // ✅ A1 常见：题干图片/视频在 resource_info（金医圣小程序 questionTmp.vue 的 RenderImgAndVideo）
           if (imgPath.isNotEmpty || videoPath.isNotEmpty)
             Padding(
               padding: EdgeInsets.only(bottom: 12.h),

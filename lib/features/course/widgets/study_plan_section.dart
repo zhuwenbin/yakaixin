@@ -65,10 +65,12 @@ class StudyPlanSection extends ConsumerWidget {
               padding: EdgeInsets.only(top: 10.h),
               child: Column(
                 children: courseList
-                    .map((course) => CourseItemCard(
-                          courseData: course,
-                          styleTokens: styleTokens,
-                        ))
+                    .map(
+                      (course) => CourseItemCard(
+                        courseData: course,
+                        styleTokens: styleTokens,
+                      ),
+                    )
                     .toList(),
               ),
             ),
@@ -80,14 +82,14 @@ class StudyPlanSection extends ConsumerWidget {
   Widget _buildTitle() {
     return Row(
       children: [
-        Image.network(
-          ApiConfig.completeImageUrl('title-icon.png'),
-          width: 15.w,
-          height: 15.w,
-          errorBuilder: (context, error, stackTrace) =>
-              Icon(Icons.star, size: 15.w, color: AppColors.primary),
-        ),
-        SizedBox(width: 5.w),
+        // Image.network(
+        //   ApiConfig.completeImageUrl('title-icon.png'),
+        //   width: 15.w,
+        //   height: 15.w,
+        //   errorBuilder: (context, error, stackTrace) =>
+        //       Icon(Icons.star, size: 15.w, color: AppColors.primary),
+        // ),
+        // SizedBox(width: 5.w),
         Text('学习计划', style: AppTextStyles.heading4),
       ],
     );
@@ -106,10 +108,7 @@ class StudyPlanSection extends ConsumerWidget {
   Widget _buildTeachingTypeFilter(BuildContext context) {
     // ✅ 暂时显示为文本，但保留原有功能代码
     // TODO: 后续需要恢复筛选功能时，取消注释下面的代码，删除上面的 Text widget
-    return Text(
-      '授课形式',
-      style: AppTextStyles.bodyMedium,
-    );
+    return Text('授课形式', style: AppTextStyles.bodyMedium);
 
     // ⚠️ 保留原有筛选功能代码（暂时注释）
     // return PopupMenuButton<String>(

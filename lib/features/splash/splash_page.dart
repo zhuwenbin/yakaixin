@@ -108,7 +108,7 @@ class TempHomePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('牙开心题库'),
+        title: const Text('金医圣题库'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Center(

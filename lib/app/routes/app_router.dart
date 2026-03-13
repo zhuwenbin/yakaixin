@@ -585,6 +585,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 : double.tryParse(extra?['payable_amount']?.toString() ?? '0') ?? 0,
             professionalIdName: extra?['professional_id_name']?.toString(),
             refreshGoodsId: extra?['refresh_goods_id']?.toString(),
+            goodsType: extra?['goods_type']?.toString(),
             isLearnButton: extra?['is_learn_button'] as int?,
           );
         },

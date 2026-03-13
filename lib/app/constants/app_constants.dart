@@ -4,7 +4,7 @@ class AppConstants {
   // ==================== 应用信息 ====================
 
   /// 应用名称
-  static const String appName = '牙开心题库';
+  static const String appName = '金医圣题库';
 
   /// 应用版本号
   static const String appVersion = '1.4.14';
@@ -178,7 +178,8 @@ class AppConstants {
   static const String userAgreementUrl = 'https://www.yakaixin.com/agreement';
 
   /// 隐私政策URL
-  static const String privacyPolicyUrl = 'http://www.yakaixin.com/data/yakaixin/static/privacy.html';
+  static const String privacyPolicyUrl =
+      'https://erp.5ijys.com/data/sys/static/privacy.html';
 
   // ==================== 调试配置 ====================
 

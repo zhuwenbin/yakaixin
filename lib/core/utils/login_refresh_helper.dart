@@ -8,8 +8,8 @@ import '../../features/course/providers/course_provider.dart';
 /// 用于在登录成功后自动刷新各个页面的数据
 class LoginRefreshHelper {
   /// 刷新所有主要页面的数据
-  /// 在登录成功后调用
-  static void refreshAllPages(Ref ref) {
+  /// 在登录成功后调用（支持 Ref / WidgetRef）
+  static void refreshAllPages(dynamic ref) {
     print('🔄 [登录刷新] 开始刷新所有页面数据...');
     
     // ✅ 刷新首页数据

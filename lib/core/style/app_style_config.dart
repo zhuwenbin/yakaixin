@@ -1,6 +1,6 @@
 /// 预设模板
 enum AppStyleTemplate {
-  /// 蓝 - 默认（当前牙开心样式）
+  /// 蓝 - 默认（当前金医圣样式）
   blueDefault,
   /// 橙黄色
   orangeYellow,

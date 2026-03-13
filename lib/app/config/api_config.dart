@@ -69,8 +69,10 @@ class ApiConfig {
 
   // 基础URL
   // 金医圣(小程序 mini-jys) 正式环境: VUE_APP_BASE_API=https://jys.yunsop.com/api
-  static const String baseUrlProd = 'https://jys.yunsop.com/api';
-  // 数据来源：mini-dev_250812/.env.production (VUE_APP_BASE_API)
+  // static const String baseUrlProd = 'https://jys.yunsop.com/api';
+  static const String baseUrlProd = 'https://erp.5ijys.com/api';
+
+  // 数据来源：mini-dev_250812/.env.production (VUE_APP_BASE_API) https://erp.5ijys.com/api
   // static const String baseUrlProd = 'https://yakaixin.yunsop.com/api';
 
   static const String baseUrlTest =

@@ -991,7 +991,8 @@ class _CourseGoodsDetailPageState extends ConsumerState<CourseGoodsDetailPage> {
       goodsName: _goodsDetail?.name ?? '课程',
       professionalIdName: _goodsDetail?.professionalIdName,
       refreshGoodsId: goodsId,
-      isLearnButton: 0, // 支付成功页显示"开始测验"按钮
+      goodsType: SafeTypeConverter.toSafeString(_goodsDetail?.type),
+      isLearnButton: 1, // 课程类型显示"开始学习"
       onSuccess: () async {
         // 支付成功：刷新商品详情
         print('✅ [课程商品] 支付成功，刷新商品详情');
@@ -1047,7 +1048,8 @@ class _CourseGoodsDetailPageState extends ConsumerState<CourseGoodsDetailPage> {
         'payable_amount': payableAmount,
         'professional_id_name': _goodsDetail?.professionalIdName,
         'refresh_goods_id': goodsId,
-        'is_learn_button': 0,
+        'goods_type': SafeTypeConverter.toSafeString(_goodsDetail?.type),
+        'is_learn_button': 1,
       },
     );
   }

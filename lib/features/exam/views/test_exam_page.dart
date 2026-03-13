@@ -597,7 +597,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
           Padding(
             padding: EdgeInsets.only(top: 20.h), // 小程序: 40rpx = 20.h
             child: Text(
-              '扫码加牙开心刷题小助手，获取最新备考资料',
+              '扫码加金医圣刷题小助手，获取最新备考资料',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14.sp, // 小程序: 28rpx = 14.sp
