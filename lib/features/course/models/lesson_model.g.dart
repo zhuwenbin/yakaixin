@@ -19,6 +19,10 @@ _$LessonModelImpl _$$LessonModelImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as Map<String, dynamic>)
               .toList() ??
           const [],
+      orderId: json['order_id'],
+      systemId: json['system_id'],
+      orderGoodsDetailId: json['order_goods_detail_id'],
+      paperGoodsId: json['paper_goods_id'],
     );
 
 Map<String, dynamic> _$$LessonModelImplToJson(_$LessonModelImpl instance) =>
@@ -31,6 +35,10 @@ Map<String, dynamic> _$$LessonModelImplToJson(_$LessonModelImpl instance) =>
       'teaching_type_name': instance.teachingTypeName,
       'resource_document': instance.resourceDocument,
       'evaluation_type': instance.evaluationType,
+      'order_id': instance.orderId,
+      'system_id': instance.systemId,
+      'order_goods_detail_id': instance.orderGoodsDetailId,
+      'paper_goods_id': instance.paperGoodsId,
     };
 
 _$LessonsDataImpl _$$LessonsDataImplFromJson(Map<String, dynamic> json) =>

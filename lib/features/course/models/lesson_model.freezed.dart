@@ -30,14 +30,22 @@ mixin _$LessonModel {
   String? get startTime => throw _privateConstructorUsedError;
   @JsonKey(name: 'teaching_type')
   dynamic get teachingType =>
-      throw _privateConstructorUsedError; // ✅ 授课类型: 1-直播, 2-面授, 3-录播
+      throw _privateConstructorUsedError; // 授课类型: 1-直播, 2-面授, 3-录播
   @JsonKey(name: 'teaching_type_name')
   String? get teachingTypeName => throw _privateConstructorUsedError;
   @JsonKey(name: 'resource_document')
   List<dynamic> get resourceDocument => throw _privateConstructorUsedError;
   @JsonKey(name: 'evaluation_type')
   List<Map<String, dynamic>> get evaluationType =>
-      throw _privateConstructorUsedError;
+      throw _privateConstructorUsedError; // 课前测/课后测跳转 answertest/answer 所需（与小程序 goAnswer 参数一致）
+  @JsonKey(name: 'order_id')
+  dynamic get orderId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'system_id')
+  dynamic get systemId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'order_goods_detail_id')
+  dynamic get orderGoodsDetailId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'paper_goods_id')
+  dynamic get paperGoodsId => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -60,7 +68,11 @@ abstract class $LessonModelCopyWith<$Res> {
       @JsonKey(name: 'teaching_type_name') String? teachingTypeName,
       @JsonKey(name: 'resource_document') List<dynamic> resourceDocument,
       @JsonKey(name: 'evaluation_type')
-      List<Map<String, dynamic>> evaluationType});
+      List<Map<String, dynamic>> evaluationType,
+      @JsonKey(name: 'order_id') dynamic orderId,
+      @JsonKey(name: 'system_id') dynamic systemId,
+      @JsonKey(name: 'order_goods_detail_id') dynamic orderGoodsDetailId,
+      @JsonKey(name: 'paper_goods_id') dynamic paperGoodsId});
 }
 
 /// @nodoc
@@ -84,6 +96,10 @@ class _$LessonModelCopyWithImpl<$Res, $Val extends LessonModel>
     Object? teachingTypeName = freezed,
     Object? resourceDocument = null,
     Object? evaluationType = null,
+    Object? orderId = freezed,
+    Object? systemId = freezed,
+    Object? orderGoodsDetailId = freezed,
+    Object? paperGoodsId = freezed,
   }) {
     return _then(_value.copyWith(
       lessonId: freezed == lessonId
@@ -118,6 +134,22 @@ class _$LessonModelCopyWithImpl<$Res, $Val extends LessonModel>
           ? _value.evaluationType
           : evaluationType // ignore: cast_nullable_to_non_nullable
               as List<Map<String, dynamic>>,
+      orderId: freezed == orderId
+          ? _value.orderId
+          : orderId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      systemId: freezed == systemId
+          ? _value.systemId
+          : systemId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      orderGoodsDetailId: freezed == orderGoodsDetailId
+          ? _value.orderGoodsDetailId
+          : orderGoodsDetailId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      paperGoodsId: freezed == paperGoodsId
+          ? _value.paperGoodsId
+          : paperGoodsId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
     ) as $Val);
   }
 }
@@ -139,7 +171,11 @@ abstract class _$$LessonModelImplCopyWith<$Res>
       @JsonKey(name: 'teaching_type_name') String? teachingTypeName,
       @JsonKey(name: 'resource_document') List<dynamic> resourceDocument,
       @JsonKey(name: 'evaluation_type')
-      List<Map<String, dynamic>> evaluationType});
+      List<Map<String, dynamic>> evaluationType,
+      @JsonKey(name: 'order_id') dynamic orderId,
+      @JsonKey(name: 'system_id') dynamic systemId,
+      @JsonKey(name: 'order_goods_detail_id') dynamic orderGoodsDetailId,
+      @JsonKey(name: 'paper_goods_id') dynamic paperGoodsId});
 }
 
 /// @nodoc
@@ -161,6 +197,10 @@ class __$$LessonModelImplCopyWithImpl<$Res>
     Object? teachingTypeName = freezed,
     Object? resourceDocument = null,
     Object? evaluationType = null,
+    Object? orderId = freezed,
+    Object? systemId = freezed,
+    Object? orderGoodsDetailId = freezed,
+    Object? paperGoodsId = freezed,
   }) {
     return _then(_$LessonModelImpl(
       lessonId: freezed == lessonId
@@ -195,6 +235,22 @@ class __$$LessonModelImplCopyWithImpl<$Res>
           ? _value._evaluationType
           : evaluationType // ignore: cast_nullable_to_non_nullable
               as List<Map<String, dynamic>>,
+      orderId: freezed == orderId
+          ? _value.orderId
+          : orderId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      systemId: freezed == systemId
+          ? _value.systemId
+          : systemId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      orderGoodsDetailId: freezed == orderGoodsDetailId
+          ? _value.orderGoodsDetailId
+          : orderGoodsDetailId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
+      paperGoodsId: freezed == paperGoodsId
+          ? _value.paperGoodsId
+          : paperGoodsId // ignore: cast_nullable_to_non_nullable
+              as dynamic,
     ));
   }
 }
@@ -212,7 +268,11 @@ class _$LessonModelImpl implements _LessonModel {
       @JsonKey(name: 'resource_document')
       final List<dynamic> resourceDocument = const [],
       @JsonKey(name: 'evaluation_type')
-      final List<Map<String, dynamic>> evaluationType = const []})
+      final List<Map<String, dynamic>> evaluationType = const [],
+      @JsonKey(name: 'order_id') this.orderId,
+      @JsonKey(name: 'system_id') this.systemId,
+      @JsonKey(name: 'order_goods_detail_id') this.orderGoodsDetailId,
+      @JsonKey(name: 'paper_goods_id') this.paperGoodsId})
       : _resourceDocument = resourceDocument,
         _evaluationType = evaluationType;
 
@@ -234,7 +294,7 @@ class _$LessonModelImpl implements _LessonModel {
   @override
   @JsonKey(name: 'teaching_type')
   final dynamic teachingType;
-// ✅ 授课类型: 1-直播, 2-面授, 3-录播
+// 授课类型: 1-直播, 2-面授, 3-录播
   @override
   @JsonKey(name: 'teaching_type_name')
   final String? teachingTypeName;
@@ -257,9 +317,23 @@ class _$LessonModelImpl implements _LessonModel {
     return EqualUnmodifiableListView(_evaluationType);
   }
 
+// 课前测/课后测跳转 answertest/answer 所需（与小程序 goAnswer 参数一致）
+  @override
+  @JsonKey(name: 'order_id')
+  final dynamic orderId;
+  @override
+  @JsonKey(name: 'system_id')
+  final dynamic systemId;
+  @override
+  @JsonKey(name: 'order_goods_detail_id')
+  final dynamic orderGoodsDetailId;
+  @override
+  @JsonKey(name: 'paper_goods_id')
+  final dynamic paperGoodsId;
+
   @override
   String toString() {
-    return 'LessonModel(lessonId: $lessonId, lessonNum: $lessonNum, lessonName: $lessonName, startTime: $startTime, teachingType: $teachingType, teachingTypeName: $teachingTypeName, resourceDocument: $resourceDocument, evaluationType: $evaluationType)';
+    return 'LessonModel(lessonId: $lessonId, lessonNum: $lessonNum, lessonName: $lessonName, startTime: $startTime, teachingType: $teachingType, teachingTypeName: $teachingTypeName, resourceDocument: $resourceDocument, evaluationType: $evaluationType, orderId: $orderId, systemId: $systemId, orderGoodsDetailId: $orderGoodsDetailId, paperGoodsId: $paperGoodsId)';
   }
 
   @override
@@ -282,7 +356,13 @@ class _$LessonModelImpl implements _LessonModel {
             const DeepCollectionEquality()
                 .equals(other._resourceDocument, _resourceDocument) &&
             const DeepCollectionEquality()
-                .equals(other._evaluationType, _evaluationType));
+                .equals(other._evaluationType, _evaluationType) &&
+            const DeepCollectionEquality().equals(other.orderId, orderId) &&
+            const DeepCollectionEquality().equals(other.systemId, systemId) &&
+            const DeepCollectionEquality()
+                .equals(other.orderGoodsDetailId, orderGoodsDetailId) &&
+            const DeepCollectionEquality()
+                .equals(other.paperGoodsId, paperGoodsId));
   }
 
   @JsonKey(ignore: true)
@@ -296,7 +376,11 @@ class _$LessonModelImpl implements _LessonModel {
       const DeepCollectionEquality().hash(teachingType),
       teachingTypeName,
       const DeepCollectionEquality().hash(_resourceDocument),
-      const DeepCollectionEquality().hash(_evaluationType));
+      const DeepCollectionEquality().hash(_evaluationType),
+      const DeepCollectionEquality().hash(orderId),
+      const DeepCollectionEquality().hash(systemId),
+      const DeepCollectionEquality().hash(orderGoodsDetailId),
+      const DeepCollectionEquality().hash(paperGoodsId));
 
   @JsonKey(ignore: true)
   @override
@@ -322,7 +406,12 @@ abstract class _LessonModel implements LessonModel {
       @JsonKey(name: 'teaching_type_name') final String? teachingTypeName,
       @JsonKey(name: 'resource_document') final List<dynamic> resourceDocument,
       @JsonKey(name: 'evaluation_type')
-      final List<Map<String, dynamic>> evaluationType}) = _$LessonModelImpl;
+      final List<Map<String, dynamic>> evaluationType,
+      @JsonKey(name: 'order_id') final dynamic orderId,
+      @JsonKey(name: 'system_id') final dynamic systemId,
+      @JsonKey(name: 'order_goods_detail_id') final dynamic orderGoodsDetailId,
+      @JsonKey(name: 'paper_goods_id')
+      final dynamic paperGoodsId}) = _$LessonModelImpl;
 
   factory _LessonModel.fromJson(Map<String, dynamic> json) =
       _$LessonModelImpl.fromJson;
@@ -342,7 +431,7 @@ abstract class _LessonModel implements LessonModel {
   @override
   @JsonKey(name: 'teaching_type')
   dynamic get teachingType;
-  @override // ✅ 授课类型: 1-直播, 2-面授, 3-录播
+  @override // 授课类型: 1-直播, 2-面授, 3-录播
   @JsonKey(name: 'teaching_type_name')
   String? get teachingTypeName;
   @override
@@ -351,6 +440,18 @@ abstract class _LessonModel implements LessonModel {
   @override
   @JsonKey(name: 'evaluation_type')
   List<Map<String, dynamic>> get evaluationType;
+  @override // 课前测/课后测跳转 answertest/answer 所需（与小程序 goAnswer 参数一致）
+  @JsonKey(name: 'order_id')
+  dynamic get orderId;
+  @override
+  @JsonKey(name: 'system_id')
+  dynamic get systemId;
+  @override
+  @JsonKey(name: 'order_goods_detail_id')
+  dynamic get orderGoodsDetailId;
+  @override
+  @JsonKey(name: 'paper_goods_id')
+  dynamic get paperGoodsId;
   @override
   @JsonKey(ignore: true)
   _$$LessonModelImplCopyWith<_$LessonModelImpl> get copyWith =>

@@ -367,6 +367,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               type: extra?['type'] ?? '',
               timeLimit: extra?['time_limit'] ?? 7200,
               recitationQuestionModel: extra?['recitation_question_model'],
+              systemId: extra?['system_id']?.toString(),
+              orderDetailId: extra?['order_detail_id']?.toString(),
             ),
           );
         },
@@ -404,6 +406,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             title: extra?['title'] ?? '',
             professionalId: extra?['professional_id'] ?? '',
             recitationQuestionModel: extra?['recitation_question_model'],
+            systemId: extra?['system_id']?.toString(),
           );
         },
       ),

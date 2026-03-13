@@ -44,10 +44,12 @@ class ExaminationingPage extends ConsumerStatefulWidget {
   final String orderId;
   final String title;
   final String professionalId;
-  final String evaluationTypeId; // ✅ 测评分类ID
+  final String evaluationTypeId; // 测评分类ID（课前测/课后测交卷必传）
   final String type;
   final int timeLimit; // 考试时长（秒）（备用，优先使用API返回的时间）
   final String? recitationQuestionModel;
+  final String? systemId; // 测评交卷：teaching_system_relation_id
+  final String? orderDetailId; // 测评交卷：order_detail_id
 
   const ExaminationingPage({
     super.key,
@@ -56,10 +58,12 @@ class ExaminationingPage extends ConsumerStatefulWidget {
     required this.orderId,
     required this.title,
     required this.professionalId,
-    required this.evaluationTypeId, // ✅ 测评分类ID
+    required this.evaluationTypeId,
     required this.type,
     required this.timeLimit,
     this.recitationQuestionModel,
+    this.systemId,
+    this.orderDetailId,
   });
 
   @override
@@ -142,6 +146,10 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
             'title': widget.title,
             'professional_id': widget.professionalId,
             'recitation_question_model': widget.recitationQuestionModel,
+            if (widget.type == '8' &&
+                widget.systemId != null &&
+                widget.systemId!.isNotEmpty)
+              'system_id': widget.systemId,
           },
         );
       }
@@ -920,13 +928,20 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                             .submitAnswers(
                               goodsId: widget.goodsId,
                               orderId: widget.orderId,
-                              productId: widget
-                                  .paperVersionId, // ✅ product_id = goods_id
+                              productId: widget.paperVersionId,
                               professionalId: widget.professionalId,
                               type: widget.type,
-                              userId: studentId, // ✅ user_id
-                              studentId: studentId, // ✅ student_id
+                              userId: studentId,
+                              studentId: studentId,
                               totalTime: widget.timeLimit,
+                              evaluationTypeId: widget.type == '8'
+                                  ? widget.evaluationTypeId
+                                  : null,
+                              orderDetailId:
+                                  widget.type == '8' ? widget.orderDetailId : null,
+                              teachingSystemRelationId: widget.type == '8'
+                                  ? widget.systemId
+                                  : null,
                             );
                       },
                       style: OutlinedButton.styleFrom(
@@ -1035,13 +1050,20 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                             .submitAnswers(
                               goodsId: widget.goodsId,
                               orderId: widget.orderId,
-                              productId:
-                                  widget.goodsId, // ✅ product_id = goods_id
+                              productId: widget.paperVersionId,
                               professionalId: widget.professionalId,
                               type: widget.type,
-                              userId: studentId, // ✅ user_id
-                              studentId: studentId, // ✅ student_id
+                              userId: studentId,
+                              studentId: studentId,
                               totalTime: widget.timeLimit,
+                              evaluationTypeId: widget.type == '8'
+                                  ? widget.evaluationTypeId
+                                  : null,
+                              orderDetailId:
+                                  widget.type == '8' ? widget.orderDetailId : null,
+                              teachingSystemRelationId: widget.type == '8'
+                                  ? widget.systemId
+                                  : null,
                             );
                       },
                       style: OutlinedButton.styleFrom(

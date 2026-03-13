@@ -19,6 +19,8 @@ class ExamScoreReportPage extends ConsumerStatefulWidget {
   final String title;
   final String professionalId;
   final String? recitationQuestionModel;
+  /// 测评（课前测/课后测）成绩报告需传，对应小程序 answerResult getScorereporting
+  final String? systemId;
 
   const ExamScoreReportPage({
     super.key,
@@ -28,6 +30,7 @@ class ExamScoreReportPage extends ConsumerStatefulWidget {
     required this.title,
     required this.professionalId,
     this.recitationQuestionModel,
+    this.systemId,
   });
 
   @override
@@ -77,13 +80,17 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
       // ✅ 调用成绩报告接口
       // 对应小程序: scorereporting(data) Line 216
       // ⚠️ 注意：使用 GET 请求，参数在 queryParameters 中
+      final queryParams = <String, String>{
+        'paper_version_id': widget.paperVersionId,
+        'master_order_id': widget.orderId,
+        'goods_id': widget.goodsId,
+      };
+      if (widget.systemId != null && widget.systemId!.isNotEmpty) {
+        queryParams['teaching_system_relation_id'] = widget.systemId!;
+      }
       final response = await dio.get(
         '/c/tiku/servicehall/scorereporting',
-        queryParameters: {
-          'paper_version_id': widget.paperVersionId,
-          'master_order_id': widget.orderId,
-          'goods_id': widget.goodsId,
-        },
+        queryParameters: queryParams,
       );
 
       if (response.data['code'] == 100000) {
@@ -855,20 +862,21 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
     Color scoreColor;
     String statusText;
 
+    // 与小程序 questionTmp.vue .correct/.error/.half 一致
     switch (answerStatus) {
       case 1: // 正确
-        statusColor = const Color(0xFF52C41A);
-        scoreColor = const Color(0xFF3068FB);
+        statusColor = const Color(0xFF2E68FF);
+        scoreColor = const Color(0xFF2E68FF);
         statusText = '正确';
         break;
       case 2: // 错误
-        statusColor = const Color(0xFFFF4D4F);
-        scoreColor = const Color(0xFFFF4D4F);
+        statusColor = const Color(0xFFF04F54);
+        scoreColor = const Color(0xFFF04F54);
         statusText = '错误';
         break;
       case 3: // 半对
-        statusColor = const Color(0xFFFAAD14);
-        scoreColor = const Color(0xFFFAAD14);
+        statusColor = const Color(0xFFF99300);
+        scoreColor = const Color(0xFFF99300);
         statusText = '半对';
         break;
       default:
@@ -881,24 +889,30 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
       padding: EdgeInsets.only(top: 8.h, bottom: 8.h),
       child: Row(
         children: [
-          // ✅ 答题状态标签
+          // ✅ 答题状态标签 - 参照小程序 questionTmp.vue .is_right_button（实心背景、白字、50×28）
           if (answerStatus != 0)
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              width: 50.w,
+              height: 28.h,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
+                color: statusColor,
                 borderRadius: BorderRadius.circular(4.r),
               ),
               child: Text(
                 statusText,
-                style: TextStyle(fontSize: 12.sp, color: statusColor),
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: const Color(0xFFFFFFFF),
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           SizedBox(width: 12.w),
-          // ✅ 得分
+          // ✅ 得分（标签与分值同色）
           Text(
             '得分：',
-            style: TextStyle(fontSize: 13.sp, color: const Color(0xFF161F30)),
+            style: TextStyle(fontSize: 13.sp, color: scoreColor),
           ),
           Text(
             _getScoreText(isSubjective, isCorrect, getScore),
@@ -940,53 +954,40 @@ class _ExamScoreReportPageState extends ConsumerState<ExamScoreReportPage> {
       return index < selectList.length ? selectList[index] : a.toString();
     }).toList();
 
-    return Column(
+    // ✅ 正确答案、您的答案 一行显示
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ✅ 正确答案 - 只在答错时显示
-        if (answerStatus != 1)
-          Padding(
-            padding: EdgeInsets.only(bottom: 4.h),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '正确答案：',
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    color: const Color(0xFF3068FB),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    answerNames.join('、'),
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      color: const Color(0xFF3068FB),
-                    ),
-                  ),
-                ),
-              ],
+        if (answerStatus != 1) ...[
+          Text(
+            '正确答案：',
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: const Color(0xFF3068FB),
             ),
           ),
-        // ✅ 您的答案
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '您的答案：',
-              style: TextStyle(fontSize: 13.sp, color: const Color(0xFF000000)),
+          Text(
+            answerNames.join('、'),
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: const Color(0xFF3068FB),
             ),
-            Expanded(
-              child: Text(
-                subAnswerNames.isNotEmpty ? subAnswerNames.join('、') : '未作答',
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  color: const Color(0xFF000000),
-                ),
-              ),
+          ),
+          SizedBox(width: 16.w),
+        ],
+        Text(
+          '您的答案：',
+          style: TextStyle(fontSize: 13.sp, color: const Color(0xFF000000)),
+        ),
+        Flexible(
+          child: Text(
+            subAnswerNames.isNotEmpty ? subAnswerNames.join('、') : '未作答',
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: const Color(0xFF000000),
             ),
-          ],
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );

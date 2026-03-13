@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:yakaixin_app/core/network/dio_client.dart';
-import 'package:yakaixin_app/core/utils/error_message_mapper.dart';
 import 'package:yakaixin_app/features/exam/models/question_model.dart';
 import 'package:yakaixin_app/features/exam/services/exam_service.dart';
 
@@ -57,7 +56,7 @@ class ExaminationingNotifier extends _$ExaminationingNotifier {
   }
 
   /// 加载试题
-  /// 对应小程序: examinationing.vue Line 519-523
+  /// 对应小程序: examinationing.vue（正式考）/ answertest/answer.vue（课前测/课后测 type=8）
   Future<void> loadQuestions({
     required String examinationId,
     required String examinationSessionId,
@@ -69,30 +68,40 @@ class ExaminationingNotifier extends _$ExaminationingNotifier {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      // 1. 获取试题列表
       final examService = ref.read(examServiceProvider);
-      final questions = await examService.getQuestionList(
-        examinationId: examinationId,
-        examinationSessionId: examinationSessionId,
-        professionalId: professionalId,
-        paperVersionId: paperVersionId,
-        type: type,
-      );
+      final List<QuestionModel> questions;
+      final bool isEvaluation = type.isEmpty || type == '8';
 
-      // 2. 一拆多题：多子题拆成多条展示，一题一页（对应 make_question_page 拆分配伍题逻辑）
+      if (isEvaluation) {
+        // 课前测/课后测等：GET /c/tiku/question/getquestionlist?paper_version_id&type=8
+        questions = await examService.getQuestionListForEvaluation(
+          paperVersionId: paperVersionId,
+        );
+      } else {
+        // 正式考试/模拟考：GET /c/tiku/chapter/getquestionlist
+        questions = await examService.getQuestionList(
+          examinationId: examinationId,
+          examinationSessionId: examinationSessionId,
+          professionalId: professionalId,
+          paperVersionId: paperVersionId,
+          type: type,
+        );
+      }
+
+      // 2. 一拆多题：多子题拆成多条展示，一题一页
       final expandedQuestions = _expandQuestions(questions);
-      // 3. 处理试题编号（对应小程序的setQuestionLists方法）
       final processedQuestions = _processQuestions(expandedQuestions);
 
-      // 4. 获取考试信息（时间、状态）
-      final examInfo = await examService.getStudentExamInfo(
-        examId: examinationId,
-        examRoundId: examinationSessionId,
-      );
+      int remainingTime = 0;
+      ExamInfoModel? examInfo;
 
-      // 5. 计算剩余时间
-      // ✅ 修复：优先使用 API 返回的时间，如果为空则使用传入的 timeLimit
-      final remainingTime = _calculateRemainingTime(examInfo, timeLimit);
+      if (!isEvaluation) {
+        examInfo = await examService.getStudentExamInfo(
+          examId: examinationId,
+          examRoundId: examinationSessionId,
+        );
+        remainingTime = _calculateRemainingTime(examInfo, timeLimit);
+      }
 
       state = state.copyWith(
         questions: processedQuestions,
@@ -102,8 +111,9 @@ class ExaminationingNotifier extends _$ExaminationingNotifier {
         isLoading: false,
       );
 
-      // 6. 启动倒计时
-      _startTimer();
+      if (remainingTime > 0) {
+        _startTimer();
+      }
     } on DioException catch (e) {
       // ✅ 使用拦截器已处理好的用户友好错误信息
       final errorMsg = e.error?.toString() ?? '加载试题失败，请稍后重试';
@@ -297,17 +307,19 @@ class ExaminationingNotifier extends _$ExaminationingNotifier {
   }
 
   /// 提交答案（交卷）
-  /// 对应小程序: examinationing.vue Line 390-455
-  /// 对应小程序: test.vue Line 376-450
+  /// 对应小程序: examinationing.vue / answertest/answer.vue postAnswer
   Future<void> submitAnswers({
     required String goodsId,
     required String orderId,
     required String productId,
     required String professionalId,
     required String type,
-    required String userId, // ⚠️ 新增：用户ID
-    required String studentId, // ⚠️ 新增：学生ID
+    required String userId,
+    required String studentId,
     required int totalTime,
+    String? evaluationTypeId, // 测评交卷必传
+    String? orderDetailId,
+    String? teachingSystemRelationId, // system_id
   }) async {
     if (state.isSubmitted) {
       return;
@@ -371,7 +383,6 @@ class ExaminationingNotifier extends _$ExaminationingNotifier {
         print(jsonEncode(questionInfo.last));
       }
 
-      // ✅ 提交答案（完全对照抓包curl）
       await examService.submitAnswer(
         productId: productId,
         professionalId: professionalId,
@@ -382,6 +393,9 @@ class ExaminationingNotifier extends _$ExaminationingNotifier {
         orderId: orderId,
         userId: userId,
         studentId: studentId,
+        evaluationTypeId: evaluationTypeId,
+        orderDetailId: orderDetailId,
+        teachingSystemRelationId: teachingSystemRelationId,
       );
 
       // 4. 停止计时器

@@ -96,7 +96,48 @@ class ExamService {
     }
   }
 
-  /// 获取试题列表
+  /// 获取测评试题列表（课前测/课后测等）
+  /// 对应小程序: answertest/answer.vue getList() → getQuestionList({ paper_version_id, type: "8" })
+  /// 接口: GET /c/tiku/question/getquestionlist
+  Future<List<QuestionModel>> getQuestionListForEvaluation({
+    required String paperVersionId,
+  }) async {
+    try {
+      final response = await _dioClient.get(
+        '/c/tiku/question/getquestionlist',
+        queryParameters: {
+          'paper_version_id': paperVersionId,
+          'type': '8',
+        },
+      );
+
+      if (response.data['code'] != 100000) {
+        throw Exception(response.data['msg']?.first ?? '获取试题列表失败');
+      }
+
+      final data = response.data['data'];
+      if (data == null) {
+        throw Exception('试题数据为空');
+      }
+
+      final sectionInfo = data['section_info'];
+      if (sectionInfo == null || sectionInfo is! List) {
+        return [];
+      }
+
+      return (sectionInfo as List).map((item) {
+        final questionData = item as Map<String, dynamic>;
+        if (!questionData.containsKey('question_id')) {
+          questionData['question_id'] = questionData['id'];
+        }
+        return QuestionModel.fromJson(questionData);
+      }).toList();
+    } catch (e) {
+      throw Exception('获取试题列表失败: $e');
+    }
+  }
+
+  /// 获取试题列表（正式考试/模拟考）
   /// 对应小程序接口: /c/tiku/chapter/getquestionlist
   /// 对应小程序调用: examinationing.vue Line 519-522
   ///
@@ -283,16 +324,9 @@ class ExamService {
   /// 对应小程序调用: examinationing.vue Line 434-450
   ///
   /// 参数说明（参照抓包curl）：
-  /// - productId: 产品ID
-  /// - professionalId: 专业ID
-  /// - costTime: 答题耗时（秒）
-  /// - type: 类型（8-每日一练）
-  /// - questionInfo: 题目信息（JSON字符串）
-  /// - goodsId: 商品ID
-  /// - orderId: 订单ID
-  /// - userId: 用户ID
-  /// - studentId: 学生ID
-  /// - teachingSystemPackageId: 教学包ID（可选）
+  /// - productId: 产品ID（即 paper_version_id）
+  /// - type: 类型（8-课前测/课后测等测评）
+  /// - evaluationTypeId/orderDetailId/teachingSystemRelationId: 测评交卷必传（与小程序 postAnswer 一致）
   Future<void> submitAnswer({
     required String productId,
     required String professionalId,
@@ -303,26 +337,38 @@ class ExamService {
     required String orderId,
     required String userId,
     required String studentId,
-    String? teachingSystemPackageId,  // ✅ 添加可选参数
+    String? teachingSystemPackageId,
+    String? evaluationTypeId, // 测评交卷：evaluation_type_id
+    String? orderDetailId, // 测评交卷：order_detail_id、sub_order_id
+    String? teachingSystemRelationId, // 测评交卷：teaching_system_relation_id (system_id)
   }) async {
     try {
-      // ✅ 完全对照抓包curl的参数顺序和字段
-      // ✅ 修复后（直接使用 Map）
       final Map<String, dynamic> data = {
         'product_id': productId,
         'professional_id': professionalId,
         'cost_time': costTime,
         'type': type,
-        'question_info': questionInfo, // JSON 字符串，Dio 会自动 URL 编码
+        'question_info': questionInfo,
         'goods_id': goodsId,
         'order_id': orderId,
         'user_id': userId,
         'student_id': studentId,
       };
-      
-      // ✅ 只有当 teachingSystemPackageId 不为空时才添加
-      if (teachingSystemPackageId != null && teachingSystemPackageId.isNotEmpty) {
+
+      if (teachingSystemPackageId != null &&
+          teachingSystemPackageId.isNotEmpty) {
         data['teaching_system_package_id'] = teachingSystemPackageId;
+      }
+      if (evaluationTypeId != null && evaluationTypeId.isNotEmpty) {
+        data['evaluation_type_id'] = evaluationTypeId;
+      }
+      if (orderDetailId != null && orderDetailId.isNotEmpty) {
+        data['order_detail_id'] = orderDetailId;
+        data['sub_order_id'] = orderDetailId;
+      }
+      if (teachingSystemRelationId != null &&
+          teachingSystemRelationId.isNotEmpty) {
+        data['teaching_system_relation_id'] = teachingSystemRelationId;
       }
       
       final response = await _dioClient.post(

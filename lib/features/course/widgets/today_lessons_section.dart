@@ -141,7 +141,7 @@ class LessonItem extends ConsumerWidget {
       margin: EdgeInsets.only(bottom: 10.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF4F9FF),
+        color: const Color(0xFFF7F9FC), // 与小程序 .today-lesson-item 一致
         borderRadius: AppRadius.radiusLg,
       ),
       child: Column(
@@ -150,7 +150,13 @@ class LessonItem extends ConsumerWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTimeSection(startTime, teachingTypeName),
+              _buildTimeSection(
+                startTime,
+                teachingTypeName,
+                onTypeTap: teachingTypeName == '录播'
+                    ? () => _handleLessonTap(context, ref)
+                    : null,
+              ),
               SizedBox(width: 12.w),
               Expanded(
                 child: _buildLessonInfo(context, ref, lessonNum, lessonName),
@@ -164,44 +170,79 @@ class LessonItem extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  // ✅ 课前作业按钮：当 resource_document 存在且不为空时显示
+                  // ✅ 课前作业：资料类型（非试卷），与小程序 goDataDownload(path) 一致——有 path 则直接打开 PDF
                   if (hasDocument)
                     _LessonButton(
                       text: '课前作业',
                       isHighlight: true,
                       onTap: () {
-                        context.push(
-                          AppRoutes.dataDownload,
-                          extra: {'lesson_id': lessonId},
-                        );
+                        final firstDoc = lesson.resourceDocument.isNotEmpty
+                            ? lesson.resourceDocument[0]
+                            : null;
+                        final path = firstDoc is Map
+                            ? firstDoc['path']?.toString()
+                            : null;
+                        if (path != null && path.isNotEmpty) {
+                          final fullUrl = ApiConfig.completeImageUrl(path);
+                          context.push(
+                            AppRoutes.pdfIndex,
+                            extra: {'pdf_url': fullUrl},
+                          );
+                        } else {
+                          context.push(
+                            AppRoutes.dataDownload,
+                            extra: {'lesson_id': lessonId},
+                          );
+                        }
                       },
                     ),
                   if (hasDocument && validEvaluations.isNotEmpty)
                     SizedBox(width: 8.w),
-                  // ✅ 评测按钮：遍历 evaluation_type，且 paper_version_id 存在且不等于 "0" 时显示
-                  // ✅ 对应小程序：v-if="btn.paper_version_id != 0" 和过滤逻辑：btn.paper_version_id && btn.paper_version_id != "0"
+                  // ✅ 评测按钮（课前测、课后测等）：跳转与小程序 goAnswer 一致 → pages/answertest/answer → Flutter ExaminationingPage
                   ...validEvaluations.asMap().entries.map((entry) {
                     final evaluationType = entry.value;
-                    final evaluationId = evaluationType['id']?.toString() ?? '';
                     final validIndex = entry.key;
+                    final paperVersionId =
+                        evaluationType['paper_version_id']?.toString() ?? '';
+                    final evaluationTypeId =
+                        evaluationType['id']?.toString() ?? '';
+                    final professionalId =
+                        evaluationType['professional_id']?.toString() ?? '';
+                    final title = evaluationType['name']?.toString() ?? '';
+                    final orderId = lesson.orderId?.toString() ?? '';
+                    final paperGoodsId = lesson.paperGoodsId?.toString() ?? '';
+                    final systemId = lesson.systemId?.toString();
+                    final orderDetailId =
+                        lesson.orderGoodsDetailId?.toString();
 
                     return Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _LessonButton(
-                          text: evaluationType['name']?.toString() ?? '',
+                          text: title,
+                          isHighlight: false,
                           onTap: () {
                             context.push(
-                              AppRoutes.makeQuestion,
+                              AppRoutes.examinationing,
                               extra: {
-                                'lesson_id': lessonId,
-                                'evaluation_id': evaluationId,
-                                'type': 'evaluation',
+                                'paper_version_id': paperVersionId,
+                                'evaluation_type_id': evaluationTypeId,
+                                'professional_id': professionalId,
+                                'goods_id': paperGoodsId,
+                                'order_id': orderId,
+                                'title': title,
+                                'type': '8', // 课前测/课后测等测评，与小程序 answertest/answer 一致
+                                'time_limit': 0, // 测评无倒计时
+                                if (systemId != null &&
+                                    systemId.isNotEmpty)
+                                  'system_id': systemId,
+                                if (orderDetailId != null &&
+                                    orderDetailId.isNotEmpty)
+                                  'order_detail_id': orderDetailId,
                               },
                             );
                           },
                         ),
-                        // ✅ 只在不是最后一个有效按钮时显示间距
                         if (validIndex < validEvaluations.length - 1)
                           SizedBox(width: 8.w),
                       ],
@@ -216,42 +257,53 @@ class LessonItem extends ConsumerWidget {
   }
 
   /// 构建时间区域
-  /// 对应小程序: .today-lesson-item-left .start-time 和 .today-lesson-type-status
-  Widget _buildTimeSection(String startTime, String teachingTypeName) {
+  /// 对应小程序: .today-lesson-item-left；录播标签可点击进课（与小程序 @click="goLookCourse(item, 'video')" 一致）
+  Widget _buildTimeSection(
+    String startTime,
+    String teachingTypeName, {
+    VoidCallback? onTypeTap,
+  }) {
+    final typeLabel = Container(
+      width: 50.w,
+      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.5.h),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: const Color(0xFF0F4921),
+          width: 1.5,
+        ),
+        borderRadius: BorderRadius.circular(4.r),
+      ),
+      child: Text(
+        teachingTypeName,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 12.sp,
+          fontWeight: FontWeight.normal,
+          color: const Color(0xFF0F4921),
+        ),
+      ),
+    );
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 12.w),
       child: Column(
         children: [
-          SizedBox(height: 15.h), // ✅ 对应小程序 margin-top: 30rpx (15.h)
+          SizedBox(height: 15.h),
           Text(
             startTime,
             style: TextStyle(
-              fontSize: 16.sp, // ✅ 对应小程序 font-size: 32rpx (16.sp)
-              fontWeight: FontWeight.w700, // ✅ 对应小程序 font-weight: 700
-              color: const Color(0xFF009F32), // ✅ 对应小程序 color: #009F32
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF3C5548),
             ),
           ),
-          SizedBox(height: 6.h), // ✅ 对应小程序 margin-top: 12rpx (6.h)
-          Container(
-            width: 50.w, // ✅ 对应小程序 width: 100rpx (50.w)
-            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.5.h), // ✅ 对应小程序 padding: 3rpx 12rpx
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: const Color(0xFF0F4921), // ✅ 对应小程序 border: 3rpx solid #0F4921
-                width: 1.5, // ✅ 对应小程序 3rpx = 1.5px
-              ),
-              borderRadius: BorderRadius.circular(4.r), // ✅ 对应小程序 border-radius: 8rpx (4.r)
-            ),
-            child: Text(
-              teachingTypeName,
-              textAlign: TextAlign.center, // ✅ 对应小程序 text-align: center
-              style: TextStyle(
-                fontSize: 12.sp, // ✅ 对应小程序 font-size: 24rpx (12.sp)
-                fontWeight: FontWeight.normal, // ✅ 对应小程序 font-weight: 400
-                color: const Color(0xFF0F4921), // ✅ 对应小程序 color: #0F4921
-              ),
-            ),
-          ),
+          SizedBox(height: 6.h),
+          onTypeTap != null
+              ? GestureDetector(
+                  onTap: onTypeTap,
+                  behavior: HitTestBehavior.opaque,
+                  child: typeLabel,
+                )
+              : typeLabel,
         ],
       ),
     );
@@ -330,7 +382,8 @@ class LessonItem extends ConsumerWidget {
   }
 }
 
-/// 课节按钮（课前作业、评测等）
+/// 课节按钮（课前作业、课前测、课后测等）
+/// 与小程序 .button-group-child / .full-class 一致：课前作业绿色填充，评测绿色描边
 class _LessonButton extends StatelessWidget {
   final String text;
   final bool isHighlight;
@@ -342,22 +395,18 @@ class _LessonButton extends StatelessWidget {
     this.onTap,
   });
 
+  static const Color _green = Color(0xFF00A788);
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: EdgeInsets.only(right: 8.w),
-        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
         decoration: BoxDecoration(
-          gradient: isHighlight
-              ? const LinearGradient(
-                  colors: [Color(0xFFFF860E), Color(0xFFFF6912)],
-                )
-              : null,
-          border: isHighlight
-              ? null
-              : Border.all(color: const Color(0xFFFF5500)),
+          color: isHighlight ? _green : null,
+          border: isHighlight ? null : Border.all(color: _green, width: 1),
           borderRadius: BorderRadius.circular(15.r),
         ),
         child: Text(
@@ -365,7 +414,7 @@ class _LessonButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 13.sp,
             fontWeight: FontWeight.w500,
-            color: isHighlight ? AppColors.textWhite : const Color(0xFFFF5500),
+            color: isHighlight ? Colors.white : _green,
           ),
         ),
       ),
