@@ -34,24 +34,9 @@ class PaySuccessPage extends ConsumerStatefulWidget {
 class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
   String _qrcodeUrl = '';
 
-  // ✅ 对应小程序 Line 40-56: qrcodeList
-  // ⚠️ 使用完整URL，与小程序保持一致
-  static final List<Map<String, dynamic>> _qrcodeList = [
-    {
-      'keys': ['口腔'],
-      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/60dc174341121431254320_b597430dda7e46cc7fe564a6aa6416a.png'
-    },
-    {
-      'keys': ['临床', '乡村'],
-      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/WechatIMG357.jpg'
-    },
-    {
-      'keys': ['中医', '护士', '药师', '西医', '中西医'],
-      'src': 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/WechatIMG357.jpg'
-    },
-  ];
-
-  static const String _defaultQrcodePath = 'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/public/2ec4174341105901736218_tongyongma.png';
+  // ✅ 金医圣：所有学习群二维码统一使用 jys-qrcode.jpg（与 mini-jys template 一致）
+  static const String _jysQrcodeUrl =
+      'https://jys-prod.oss-cn-beijing.aliyuncs.com/public/jys-qrcode.jpg';
 
   @override
   void initState() {
@@ -64,37 +49,10 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
   }
 
   /// 初始化二维码
-  /// 对应小程序 Line 63-76: 根据专业名称匹配二维码
-  /// ✅ 修复：从Storage读取专业名称，参考小程序 Line 64
+  /// 金医圣：统一使用 jys-qrcode.jpg（与 mini-jys paySuccess.vue template 一致）
   void _initQrcode() async {
-    // ✅ 对应小程序 Line 64: 从Storage读取专业名称
-    final storage = ref.read(storageServiceProvider);
-    final majorInfo = storage.getJson(StorageKeys.majorInfo);
-    String majorName = majorInfo?['major_name']?.toString() ?? '';
-    
-    // ✅ 对应小程序 Line 65-67: 如果参数中有专业名称，则使用参数的
-    if (widget.professionalIdName != null && widget.professionalIdName!.isNotEmpty) {
-      majorName = widget.professionalIdName!;
-    }
-    
-    // 默认使用通用二维码
-    String qrcodePath = _defaultQrcodePath;
-    
-    // 根据专业名称匹配二维码
-    for (var item in _qrcodeList) {
-      final keys = item['keys'] as List;
-      for (var key in keys) {
-        // ✅ 对应小程序 Line 70-73: 使用正则匹配
-        if (majorName.contains(key)) {
-          qrcodePath = item['src'];
-          break;
-        }
-      }
-    }
-    
-    // ✅ 对应小程序 Line 68-76: 直接使用完整URL，不需要拼接
     setState(() {
-      _qrcodeUrl = qrcodePath;
+      _qrcodeUrl = _jysQrcodeUrl;
     });
   }
 

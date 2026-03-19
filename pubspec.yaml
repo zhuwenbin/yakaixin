@@ -145,6 +145,7 @@ flutter:
     - assets/images/Template/mine/
     - assets/images/Template/main_tabbar/
     - assets/images/Template/tiku/
+    - assets/images/Template/coursedetail/
     - assets/images/secret.png
     # ✅ Mock 数据文件（仅开发环境使用）
     - assets/mock/

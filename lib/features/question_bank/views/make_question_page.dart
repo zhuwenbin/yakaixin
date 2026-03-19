@@ -785,10 +785,11 @@ class _MakeQuestionPageState extends ConsumerState<MakeQuestionPage> {
         
         // ✅ 显示返回确认对话框（使用统一样式）
         // 对应小程序 enableAlertBeforeUnload
+        // 章节练习使用专属提示文案
         final shouldPop = await ConfirmDialog.show(
           context,
           title: '提示',
-          content: '好题配好课跟着名师学习开心过',
+          content: _chapterId != null ? '是否确认退出，【章节练习】' : '是否确认退出？',
         );
         
         if (shouldPop != true) return;
@@ -1203,10 +1204,11 @@ https://yakaixin.yunsop.com/
   Future<void> _handleBackButton() async {
     // ✅ 显示返回确认对话框（使用统一样式）
     // 对应小程序 enableAlertBeforeUnload
+    // 章节练习使用专属提示文案
     final shouldPop = await ConfirmDialog.show(
       context,
       title: '提示',
-      content: '好题配好课跟着名师学习开心过',
+      content: _chapterId != null ? '是否确认退出，【章节练习】' : '是否确认退出？',
     );
     
     if (shouldPop != true) return;

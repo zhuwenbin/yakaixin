@@ -12,10 +12,13 @@ import '../utils/error_message_mapper.dart';
 /// 2. 添加Token
 /// 3. 添加默认参数(platform_id, merchant_id等)
 /// 4. 统一错误处理
+/// 5. 单点登录：401 或 code 100002 时，仅当本地有 token（真实登录状态）才执行登录失效流程
+///    - 游客无 token 时 100002：不处理，仅把错误抛给调用方，避免重复循环
 class ApiInterceptor extends Interceptor {
   final StorageService _storage;
+  final void Function()? _onLoginExpired;
 
-  ApiInterceptor(this._storage);
+  ApiInterceptor(this._storage, [this._onLoginExpired]);
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
@@ -214,10 +217,10 @@ class ApiInterceptor extends Interceptor {
           final msg = data['msg'];
           final errorMessage = _extractErrorMessage(msg);
           
-          // 特殊错误码处理
+          // 特殊错误码处理：100002 表示登录失效
+          // 仅当本地有 token（真实登录状态）时执行：避免游客无 token 时 100002 触发循环
           if (code == 100002) {
-            // 登录失效 (对应小程序: handlerStatusCode[100002])
-            _handleLoginExpired();
+            _handleLoginExpiredIfHadToken();
           }
           
           handler.reject(
@@ -283,9 +286,10 @@ class ApiInterceptor extends Interceptor {
     // ✅ 使用 ErrorMessageMapper 将错误转换为用户友好提示
     final userFriendlyMessage = ErrorMessageMapper.mapDioException(err);
     
-    // ✅ 特殊处理：401 登录失效
-    if (err.response?.statusCode == 401 || err.type == DioExceptionType.badResponse && err.response?.statusCode == 401) {
-      _handleLoginExpired();
+    // ✅ 特殊处理：401 登录失效（仅当本地有 token 时执行）
+    if (err.response?.statusCode == 401 ||
+        (err.type == DioExceptionType.badResponse && err.response?.statusCode == 401)) {
+      _handleLoginExpiredIfHadToken();
     }
 
     // 创建新的DioException,包含用户友好的错误信息
@@ -299,12 +303,19 @@ class ApiInterceptor extends Interceptor {
     super.onError(newError, handler);
   }
 
-  /// 处理登录失效
-  /// 对应小程序: 清除token,跳转登录页
-  void _handleLoginExpired() {
-    // 注意：已移除终端日志输出
+  /// 处理登录失效（单点登录：token过期/账号被其他设备登录）
+  /// 对应小程序: handlerStatusCode[100002]
+  /// 仅当本地 isLoggedIn 为 true 时执行，游客（false）收到 100002 时不处理，避免循环
+  void _handleLoginExpiredIfHadToken() {
+    final hadLoggedIn = _storage.getBool(StorageKeys.isLoggedIn) ?? false;
+    if (!hadLoggedIn) {
+      print('⚠️ [API拦截器] 100002/401 但本地未登录，跳过登录失效流程（游客访问需登录接口）');
+      return;
+    }
     _storage.remove(StorageKeys.token);
     _storage.remove(StorageKeys.userInfo);
-    // TODO: 跳转到登录页 (需要在Provider中实现)
+    _storage.remove(StorageKeys.studentId);
+    _storage.setBool(StorageKeys.isLoggedIn, false);
+    _onLoginExpired?.call();
   }
 }

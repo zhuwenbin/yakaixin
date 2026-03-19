@@ -2,7 +2,11 @@
 class StorageKeys {
   // Token
   static const String token = 'token';
-  
+
+  /// 本地真实登录状态（与 token 同步，用于 401/100002 时判断是否执行登录失效流程）
+  /// 登录成功=true，退出/被顶=false
+  static const String isLoggedIn = 'auth_is_logged_in';
+
   // 用户信息
   static const String userInfo = 'user_info';
   static const String studentId = 'student_id';

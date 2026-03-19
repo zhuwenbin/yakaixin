@@ -182,6 +182,10 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
     );
   }
 
+  /// 金医圣：分享海报二维码（与 mini-jys test/detail.vue targetShare 一致）
+  static const String _jysQrcodeUrl =
+      'https://jys-prod.oss-cn-beijing.aliyuncs.com/public/jys-qrcode.jpg';
+
   /// 构建内容
   Widget _buildContent(GoodsDetailModel detail) {
     return SingleChildScrollView(
@@ -192,8 +196,56 @@ class _GoodsDetailPageState extends ConsumerState<GoodsDetailPage> {
           _buildGoodsInfo(detail),
           // 2. 中间内容区（根据type显示不同内容）
           _buildContentArea(detail),
+          // 3. 加群学习二维码（金医圣：与 mini-jys detail.vue qrcode-box 一致）
+          _buildShareQrcodeSection(),
           // 底部占位（避免被底部栏遮挡）
           SizedBox(height: 100.h),
+        ],
+      ),
+    );
+  }
+
+  /// 加群学习二维码区域
+  /// 对应 mini-jys test/detail.vue targetShare .qrcode-box
+  Widget _buildShareQrcodeSection() {
+    return Container(
+      width: double.infinity,
+      padding: AppSpacing.allMd,
+      color: AppColors.surface,
+      child: Column(
+        children: [
+          Divider(height: 1, color: AppColors.divider),
+          SizedBox(height: 24.h),
+          Text(
+            '长按图片识别小程序码\n加入我们一起学习',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: const Color(0xFF202020).withOpacity(0.85),
+              height: 1.4,
+            ),
+          ),
+          SizedBox(height: 24.h),
+          Container(
+            width: 155.w,
+            height: 155.h,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE4E8ED),
+              borderRadius: BorderRadius.circular(4.r),
+            ),
+            child: Image.network(
+              _jysQrcodeUrl,
+              width: 119.w,
+              height: 119.h,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => Icon(
+                Icons.qr_code,
+                size: 60.w,
+                color: AppColors.textHint,
+              ),
+            ),
+          ),
+          SizedBox(height: 24.h),
         ],
       ),
     );

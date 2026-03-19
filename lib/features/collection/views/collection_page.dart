@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yakaixin_app/core/theme/app_colors.dart';
 import 'package:yakaixin_app/core/theme/app_text_styles.dart';
-import 'package:yakaixin_app/core/theme/app_spacing.dart';
 import 'package:yakaixin_app/core/widgets/common_state_widget.dart';
 import '../models/collection_question_model.dart';
 import '../providers/collection_provider.dart';
 import '../widgets/question_type_selector.dart';
-import '../widgets/time_range_selector.dart';
+import '../widgets/time_range_selector_dialog.dart';
 import '../widgets/collection_question_card.dart';
 import 'collection_detail_page.dart';
 
@@ -24,7 +23,6 @@ class CollectionPage extends ConsumerStatefulWidget {
 class _CollectionPageState extends ConsumerState<CollectionPage> {
   final ScrollController _scrollController = ScrollController();
   bool _showTypeSelector = false;
-  bool _showTimeSelector = false;
 
   @override
   void initState() {
@@ -95,25 +93,6 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
                 );
               },
             ),
-          
-          // 时间选择器
-          if (_showTimeSelector)
-            TimeRangeSelector(
-              selectedRange: state.timeRange,
-              selectedName: state.timeRangeName ?? '时间',
-              startDate: state.startDate,
-              endDate: state.endDate,
-              onClose: () => setState(() => _showTimeSelector = false),
-              onConfirm: (range, name, startDate, endDate) {
-                setState(() => _showTimeSelector = false);
-                ref.read(collectionNotifierProvider.notifier).updateFilter(
-                  timeRange: range,
-                  timeRangeName: name,
-                  startDate: startDate,
-                  endDate: endDate,
-                );
-              },
-            ),
         ],
       ),
     );
@@ -143,7 +122,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
             Expanded(
               child: _buildFilterButton(
                 label: state.timeRangeName ?? '时间',
-                onTap: () => setState(() => _showTimeSelector = true),
+                onTap: () => _showTimeRangeSelector(context, ref),
               ),
             ),
           ],
@@ -318,6 +297,28 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
         ),
       ),
     );
+  }
+
+  /// 显示时间范围选择器（与题型、错题本使用统一样式：遮罩+底部滑出）
+  void _showTimeRangeSelector(BuildContext context, WidgetRef ref) async {
+    final state = ref.read(collectionNotifierProvider);
+
+    final result = await showTimeRangeSelectorDialog(
+      context,
+      selectedRange: state.timeRange,
+      selectedName: state.timeRangeName ?? '时间',
+      startDate: state.startDate,
+      endDate: state.endDate,
+    );
+
+    if (result != null) {
+      ref.read(collectionNotifierProvider.notifier).updateFilter(
+        timeRange: result['range'] as String,
+        timeRangeName: result['name'] as String,
+        startDate: result['startDate'] as String?,
+        endDate: result['endDate'] as String?,
+      );
+    }
   }
 
   /// 错误状态

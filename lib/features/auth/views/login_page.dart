@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/utils/toast_util.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/style/app_style_provider.dart';
 import '../providers/auth_provider.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../payment/services/unified_payment_service.dart';
@@ -255,6 +256,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final primaryColor = ref.watch(appStyleTokensProvider).colors.primary;
 
     return GestureDetector(
       // ✅ 点击空白区域隐藏键盘
@@ -270,7 +272,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                // 无法返回说明栈中仅剩登录页（多因 401/100002 重定向）
+                // 此时跳 mainTab 会再次触发需登录接口 → 100002 → 又回登录页，形成循环
+                // 改为停留登录页并提示
+                ToastUtil.showBottomBlack('请先登录后使用');
+              }
+            },
           ),
         ),
         body: Column(
@@ -302,7 +313,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             return Icon(
                               Icons.account_circle,
                               size: 80.sp,
-                              color: AppColors.primary,
+                              color: primaryColor,
                             );
                           },
                         ),
@@ -459,7 +470,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                       fontSize: 14.sp,
                                       color: _countdown > 0
                                           ? AppColors.textDisabled
-                                          : AppColors.primary,
+                                          : primaryColor,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -558,7 +569,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   _isCodeLogin ? '密码登录' : '验证码登录',
                                   style: TextStyle(
                                     fontSize: 13.sp,
-                                    color: AppColors.primary,
+                                    color: primaryColor,
                                   ),
                                 ),
                               ),
@@ -588,7 +599,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     '忘记密码？',
                                     style: TextStyle(
                                       fontSize: 13.sp,
-                                      color: AppColors.textHint,
+                                      color: primaryColor,
                                     ),
                                   ),
                                 ),
@@ -606,7 +617,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         child: ElevatedButton(
                           onPressed: authState.isLoading ? null : _handleLogin,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: primaryColor,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(24.r),
@@ -665,7 +676,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             _agreeProtocol = value ?? false;
                           });
                         },
-                        activeColor: AppColors.primary,
+                        activeColor: primaryColor,
                         shape: const CircleBorder(),
                       ),
                     ),
@@ -689,7 +700,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               '《用户服务协议》',
                               style: TextStyle(
                                 fontSize: 12.sp,
-                                color: AppColors.primary,
+                                color: primaryColor,
                               ),
                             ),
                           ),
@@ -701,7 +712,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               '《隐私政策》',
                               style: TextStyle(
                                 fontSize: 12.sp,
-                                color: AppColors.primary,
+                                color: primaryColor,
                               ),
                             ),
                           ),

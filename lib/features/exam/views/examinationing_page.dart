@@ -240,13 +240,13 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
         alignment: Alignment.center,
         children: [
           // 交卷：绝对左侧（小程序 .success position absolute left 40rpx）
-          Positioned(
+            Positioned(
             left: 20.w, // 40rpx = 20.w
             top: 0,
             bottom: 0,
             child: Center(
               child: GestureDetector(
-                onTap: () => _showSubmitDialog(),
+                onTap: () => _onSubmitButtonTap(),
                 child: Container(
                   width: 60.w, // 120rpx = 60.w
                   height: 22.h, // 44rpx = 22.h
@@ -291,7 +291,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
         children: [
           if (showSubmit)
             GestureDetector(
-              onTap: () => _showSubmitDialog(),
+              onTap: () => _onSubmitButtonTap(),
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
                 decoration: BoxDecoration(
@@ -567,7 +567,14 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
           }),
           SizedBox(width: 12.w),
           _buildNavButton(tokens.colors.primary, '下一题', true, () {
-            ref.read(examinationingNotifierProvider.notifier).nextQuestion();
+            final notifier = ref.read(examinationingNotifierProvider.notifier);
+            final currentState = ref.read(examinationingNotifierProvider);
+            // 参照小程序 last()：最后一题点击下一题时弹出交卷确认
+            if (currentState.currentIndex >= currentState.questions.length - 1) {
+              _showSubmitDialog(isFromLastQuestion: true);
+            } else {
+              notifier.nextQuestion();
+            }
           }),
         ],
       ),
@@ -839,12 +846,48 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
-  void _showSubmitDialog() {
+  /// 主动点击交卷按钮（参照小程序 showModelfn）
+  void _onSubmitButtonTap() {
+    final state = ref.read(examinationingNotifierProvider);
+    final unansweredCount = state.questions
+        .where((q) => q.userOption == null || q.userOption!.isEmpty)
+        .length;
+    if (unansweredCount == 0) {
+      _submitAnswersDirectly();
+      return;
+    }
+    _showSubmitDialog(isFromLastQuestion: false);
+  }
+
+  void _submitAnswersDirectly() async {
+    final prefs = await SharedPreferences.getInstance();
+    final studentId = prefs.getString(StorageKeys.studentId) ?? '';
+    ref.read(examinationingNotifierProvider.notifier).submitAnswers(
+      goodsId: widget.goodsId,
+      orderId: widget.orderId,
+      productId: widget.paperVersionId,
+      professionalId: widget.professionalId,
+      type: widget.type,
+      userId: studentId,
+      studentId: studentId,
+      totalTime: widget.timeLimit,
+    );
+  }
+
+  /// 交卷确认弹窗（参照小程序：无剩余时间显示）
+  void _showSubmitDialog({required bool isFromLastQuestion}) {
     final state = ref.read(examinationingNotifierProvider);
     final tokens = ref.read(appStyleTokensProvider);
     final unansweredCount = state.questions
         .where((q) => q.userOption == null || q.userOption!.isEmpty)
         .length;
+    final String contentText = unansweredCount > 0
+        ? '还有$unansweredCount道题未作答，确定要交卷吗?'
+        : (isFromLastQuestion
+            ? '已经是最后一道题了，是否确认交卷?'
+            : '确定要交卷吗？');
+    final String cancelText =
+        (isFromLastQuestion && unansweredCount == 0) ? '再看看' : '继续做题';
 
     showDialog(
       context: context,
@@ -858,7 +901,6 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ✅ 标题（对应小程序图片）
               Text(
                 '确认交卷?',
                 style: TextStyle(
@@ -867,21 +909,9 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                   color: const Color(0xFF000000),
                 ),
               ),
-              SizedBox(height: 16.h),
-              // ✅ 剩余考试时间（主题色文字）
-              Text(
-                '剩余考试时间：${_formatTime(state.remainingTime)}',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: tokens.colors.primary,
-                ),
-              ),
               SizedBox(height: 24.h),
-              // ✅ 提示文字
               Text(
-                unansweredCount > 0
-                    ? '还有$unansweredCount道题未作答，确定要交卷吗？'
-                    : '确定要交卷吗？',
+                contentText,
                 style: TextStyle(
                   fontSize: 14.sp,
                   color: const Color(0xFF666666),
@@ -905,7 +935,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                           borderRadius: BorderRadius.circular(25.r),
                         ),
                       ),
-                      child: Text('继续做题', style: TextStyle(fontSize: 15.sp)),
+                      child: Text(cancelText, style: TextStyle(fontSize: 15.sp)),
                     ),
                   ),
                   SizedBox(width: 12.w),
@@ -914,25 +944,7 @@ class _ExaminationingPageState extends ConsumerState<ExaminationingPage> {
                     child: OutlinedButton(
                       onPressed: () async {
                         Navigator.pop(dialogContext);
-                        // ✅ 从 SharedPreferences 中获取 studentId
-                        final prefs = await SharedPreferences.getInstance();
-                        final studentId =
-                            prefs.getString(StorageKeys.studentId) ?? '';
-
-                        // 调用Provider的提交方法（包含所有必填参数）
-                        ref
-                            .read(examinationingNotifierProvider.notifier)
-                            .submitAnswers(
-                              goodsId: widget.goodsId,
-                              orderId: widget.orderId,
-                              productId: widget
-                                  .paperVersionId, // ✅ product_id = goods_id
-                              professionalId: widget.professionalId,
-                              type: widget.type,
-                              userId: studentId, // ✅ user_id
-                              studentId: studentId, // ✅ student_id
-                              totalTime: widget.timeLimit,
-                            );
+                        _submitAnswersDirectly();
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF666666),

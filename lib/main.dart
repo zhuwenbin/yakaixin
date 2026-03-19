@@ -11,6 +11,8 @@ import 'core/widgets/loading_hud.dart';
 import 'core/widgets/network_debug_overlay.dart';
 import 'core/network/dio_client.dart';
 import 'core/config/debug_config.dart';
+import 'app/routes/app_routes.dart';
+import 'features/auth/providers/auth_provider.dart';
 import 'features/payment/services/unified_payment_service.dart';
 import 'app/routes/app_router.dart';
 import 'app/constants/app_constants.dart';
@@ -28,6 +30,15 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
+  // ✅ Android 首次进入时避免状态栏半透明黑色遮罩
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ),
+  );
+
   // ✅ 1. 初始化 SharedPreferences
   final prefs = await SharedPreferences.getInstance();
   final storage = StorageService(prefs);
@@ -44,10 +55,23 @@ void main() async {
 
   print('🚀 应用初始化完成');
 
-  // ✅ 5. 启动应用（传递 storage override）
+  // ✅ 5. 启动应用（传递 storage override + 单点登录失效的完整处理）
   runApp(
     ProviderScope(
-      overrides: [storageServiceProvider.overrideWithValue(storage)],
+      overrides: [
+        storageServiceProvider.overrideWithValue(storage),
+        dioClientProvider.overrideWith((ref) {
+          final storageService = ref.read(storageServiceProvider);
+          final router = ref.read(appRouterProvider);
+          void onLoginExpired() {
+            ref
+                .read(authProvider.notifier)
+                .logoutDueToSessionExpired()
+                .then((_) => router.go(AppRoutes.loginCenter));
+          }
+          return DioClient(storageService, ref, onLoginExpired);
+        }),
+      ],
       child: const MyApp(),
     ),
   );

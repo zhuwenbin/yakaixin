@@ -36,20 +36,14 @@ class _ReportCenterPageState extends State<ReportCenterPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6F8),
-      appBar: AppBar(
-        title: const Text('报告中心'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('报告中心'), elevation: 0),
       body: Column(
         children: [
           _buildTabBar(),
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: const [
-                _StudyDataView(),
-                _ScoreReportView(),
-              ],
+              children: const [_StudyDataView(), _ScoreReportView()],
             ),
           ),
         ],
@@ -77,8 +71,9 @@ class _ReportCenterPageState extends State<ReportCenterPage>
                       '学习数据',
                       style: TextStyle(
                         fontSize: isActive ? 16.sp : 14.sp,
-                        fontWeight:
-                            isActive ? FontWeight.w800 : FontWeight.normal,
+                        fontWeight: isActive
+                            ? FontWeight.w800
+                            : FontWeight.normal,
                         color: isActive
                             ? const Color(0xFF2E68FF)
                             : const Color(0xFF787E8F),
@@ -101,8 +96,9 @@ class _ReportCenterPageState extends State<ReportCenterPage>
                       '成绩报告',
                       style: TextStyle(
                         fontSize: isActive ? 16.sp : 14.sp,
-                        fontWeight:
-                            isActive ? FontWeight.w800 : FontWeight.normal,
+                        fontWeight: isActive
+                            ? FontWeight.w800
+                            : FontWeight.normal,
                         color: isActive
                             ? const Color(0xFF2E68FF)
                             : const Color(0xFF787E8F),
@@ -196,15 +192,25 @@ class _StudyDataViewState extends ConsumerState<_StudyDataView> {
             children: [
               Expanded(
                 child: _buildStatItem(
-                  SafeTypeConverter.toSafeString(data.totalNum, defaultValue: '0'),
+                  SafeTypeConverter.toSafeString(
+                    data.totalNum,
+                    defaultValue: '0',
+                  ),
                   '道',
                   '刷题量',
                 ),
               ),
-              Container(width: 1.w, height: 40.h, color: const Color(0xFFD7E5FE)),
+              Container(
+                width: 1.w,
+                height: 40.h,
+                color: const Color(0xFFD7E5FE),
+              ),
               Expanded(
                 child: _buildStatItem(
-                  SafeTypeConverter.toSafeString(data.todayLearnTime, defaultValue: '0'),
+                  SafeTypeConverter.toSafeString(
+                    data.todayLearnTime,
+                    defaultValue: '0',
+                  ),
                   '天',
                   '坚持天数',
                 ),
@@ -311,7 +317,9 @@ class _StudyDataViewState extends ConsumerState<_StudyDataView> {
           SizedBox(height: 20.h),
           _buildChartTab(
             state.questionNumType,
-            (type) => ref.read(learningDataProvider.notifier).setQuestionNumType(type),
+            (type) => ref
+                .read(learningDataProvider.notifier)
+                .setQuestionNumType(type),
           ),
           SizedBox(height: 10.h),
           _buildChartData(
@@ -349,17 +357,16 @@ class _StudyDataViewState extends ConsumerState<_StudyDataView> {
           SizedBox(height: 20.h),
           _buildChartTab(
             state.questionHourType,
-            (type) => ref.read(learningDataProvider.notifier).setQuestionHourType(type),
+            (type) => ref
+                .read(learningDataProvider.notifier)
+                .setQuestionHourType(type),
           ),
           SizedBox(height: 10.h),
           _buildLearnTimeData(
             ref.read(learningDataProvider.notifier).getLearnTimeData(),
           ),
           SizedBox(height: 22.h),
-          _buildCurrentStat(
-            '今日学习',
-            '${data.todayLearnTime ?? '0'}h',
-          ),
+          _buildCurrentStat('今日学习', '${data.todayLearnTime ?? '0'}h'),
         ],
       ),
     );
@@ -377,7 +384,9 @@ class _StudyDataViewState extends ConsumerState<_StudyDataView> {
                 '最近一周',
                 style: TextStyle(
                   fontSize: 13.sp,
-                  fontWeight: currentType == 1 ? FontWeight.w800 : FontWeight.normal,
+                  fontWeight: currentType == 1
+                      ? FontWeight.w800
+                      : FontWeight.normal,
                   color: currentType == 1
                       ? const Color(0xFF161F30)
                       : const Color(0xFF787E8F),
@@ -394,7 +403,9 @@ class _StudyDataViewState extends ConsumerState<_StudyDataView> {
                 '按月查看',
                 style: TextStyle(
                   fontSize: 13.sp,
-                  fontWeight: currentType == 2 ? FontWeight.w800 : FontWeight.normal,
+                  fontWeight: currentType == 2
+                      ? FontWeight.w800
+                      : FontWeight.normal,
                   color: currentType == 2
                       ? const Color(0xFF161F30)
                       : const Color(0xFF787E8F),
@@ -407,39 +418,67 @@ class _StudyDataViewState extends ConsumerState<_StudyDataView> {
     );
   }
 
+  /// 横轴日期格式与小程序一致：yyyy-MM-dd（如 2026-03-13）
+  String _formatChartDateLabel(String? date) {
+    if (date == null || date.isEmpty) return '';
+    // 已是完整日期（如 2026-03-13）则原样返回
+    if (date.length >= 10 && RegExp(r'^\d{4}-\d{2}-\d{2}').hasMatch(date)) {
+      return date.length > 10 ? date.substring(0, 10) : date;
+    }
+    // 仅 MM-dd 时补全年份
+    return '${DateTime.now().year}-$date';
+  }
+
   /// 刷题量数据展示（使用fl_chart）
   Widget _buildChartData(List<DailyQuestionModel> dataList) {
     final chartData = dataList
-        .map((item) => ChartData(
-              label: item.date ?? '',
-              value: SafeTypeConverter.toDouble(item.num),
-            ))
+        .map(
+          (item) => ChartData(
+            label: _formatChartDateLabel(item.date),
+            value: SafeTypeConverter.toDouble(item.num),
+          ),
+        )
         .toList();
 
     return ColumnChartWidget(
       data: chartData,
       barColor: const Color(0xFF2E68FF),
+      valueLabelPosition: ChartValueLabelPosition.aboveBar,
     );
   }
 
   /// 学习时长数据展示（使用fl_chart）
   Widget _buildLearnTimeData(List<DailyLearnTimeModel> dataList) {
     final chartData = dataList
-        .map((item) => ChartData(
-              label: item.date ?? '',
-              value: SafeTypeConverter.toDouble(item.learnTime),
-            ))
+        .map(
+          (item) => ChartData(
+            label: _formatChartDateLabel(item.date),
+            value: SafeTypeConverter.toDouble(item.learnTime),
+          ),
+        )
         .toList();
 
     return ColumnChartWidget(
       data: chartData,
       barColor: const Color(0xFF2E68FF),
+      valueLabelPosition: ChartValueLabelPosition.onBaseline,
     );
   }
 
   Widget _buildCurrentStat(String label, String value) {
+    // 使用系统图标并设置明确尺寸，避免部分机型图标不显示（如 ttf/asset 未加载）
+    final bool showIcon = label == '今日学习';
+    final double iconSize = 18.sp > 0 ? 18.sp : 18.0;
     return Row(
       children: [
+        if (showIcon) ...[
+          Icon(
+            Icons.access_time,
+            size: iconSize,
+            color: const Color(0xFF787E8F),
+          ),
+          SizedBox(width: 8.w),
+        ],
         Text(
           label,
           style: TextStyle(fontSize: 13.sp, color: const Color(0xFF787E8F)),
@@ -454,15 +493,22 @@ class _StudyDataViewState extends ConsumerState<_StudyDataView> {
   }
 
   /// 易错知识点卡片
+  /// 使用最小内边距与固定右侧宽度，避免部分机型 ScreenUtil 差异导致位置错乱
   Widget _buildErrorKnowledgeCard(LearningDataModel data) {
+    final double horizontalPadding = (10.w > 0 ? 10.w : 10.0).clamp(8.0, 24.0);
+    final double verticalPadding = (10.h > 0 ? 10.h : 10.0).clamp(8.0, 24.0);
     return Container(
-      padding: EdgeInsets.all(10.w),
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10.r),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             '易错知识点',
@@ -487,43 +533,44 @@ class _StudyDataViewState extends ConsumerState<_StudyDataView> {
             ...data.knowledgeErrList.asMap().entries.map((entry) {
               final index = entry.key;
               final item = entry.value;
-              return Container(
+              return Padding(
                 padding: EdgeInsets.symmetric(vertical: 8.h),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Text(
-                            '${index + 1}',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Expanded(
-                            child: Text(
-                              item.knowledgeIdName ?? '',
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.black,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                    SizedBox(
+                      width: 24.w > 0 ? 24.w : 24.0,
+                      child: Text(
+                        '${index + 1}',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
-                    Text(
-                      '${SafeTypeConverter.toSafeString(item.faultSum, defaultValue: '0')}次',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: const Color(0xFF787E8F),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Text(
+                        item.knowledgeIdName ?? '',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 52.w > 0 ? 52.w : 52.0,
+                      child: Text(
+                        '${SafeTypeConverter.toSafeString(item.faultSum, defaultValue: '0')}次',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          color: const Color(0xFF787E8F),
+                        ),
+                        textAlign: TextAlign.right,
                       ),
                     ),
                   ],
@@ -575,9 +622,7 @@ class _ScoreReportViewState extends ConsumerState<_ScoreReportView> {
           padding: EdgeInsets.all(10.w),
           child: _buildSearchBar(state),
         ),
-        Expanded(
-          child: _buildReportList(state),
-        ),
+        Expanded(child: _buildReportList(state)),
       ],
     );
   }
@@ -710,7 +755,10 @@ class _ScoreReportViewState extends ConsumerState<_ScoreReportView> {
                             SizedBox(width: 29.w),
                             _buildScoreItem(
                               '排名',
-                              SafeTypeConverter.toSafeString(report.rank, defaultValue: '-'),
+                              SafeTypeConverter.toSafeString(
+                                report.rank,
+                                defaultValue: '-',
+                              ),
                             ),
                           ],
                         ),
@@ -752,14 +800,12 @@ class _ScoreReportViewState extends ConsumerState<_ScoreReportView> {
   /// 及格/不及格图标
   Widget _buildPassIcon(String? isPass) {
     final isPassBool = isPass == '1';
-    
+
     return Container(
       width: 75.w,
       height: 73.h,
       decoration: BoxDecoration(
-        color: isPassBool 
-            ? const Color(0xFFE8F5E9) 
-            : const Color(0xFFFFEBEE),
+        color: isPassBool ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
         borderRadius: BorderRadius.circular(8.r),
       ),
       alignment: Alignment.center,
@@ -768,8 +814,8 @@ class _ScoreReportViewState extends ConsumerState<_ScoreReportView> {
         children: [
           Icon(
             isPassBool ? Icons.check_circle : Icons.cancel,
-            color: isPassBool 
-                ? const Color(0xFF4CAF50) 
+            color: isPassBool
+                ? const Color(0xFF4CAF50)
                 : const Color(0xFFF44336),
             size: 32.sp,
           ),
@@ -779,8 +825,8 @@ class _ScoreReportViewState extends ConsumerState<_ScoreReportView> {
             style: TextStyle(
               fontSize: 12.sp,
               fontWeight: FontWeight.w600,
-              color: isPassBool 
-                  ? const Color(0xFF4CAF50) 
+              color: isPassBool
+                  ? const Color(0xFF4CAF50)
                   : const Color(0xFFF44336),
             ),
           ),

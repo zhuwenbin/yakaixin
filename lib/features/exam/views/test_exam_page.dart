@@ -607,7 +607,8 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
               ),
             ),
           ),
-          // 二维码图片 (对应小程序 Line 4-9)，蓝色框图
+          // 二维码图片 (对应小程序 kf-qrcode.vue)
+          // 金医圣：统一使用 jys-qrcode.jpg
           Container(
             margin: EdgeInsets.only(top: 34.h), // 小程序: 68rpx = 34.h
             width: 155.w, // 小程序: 310rpx = 155.w
@@ -622,7 +623,7 @@ class _TestExamPageState extends ConsumerState<TestExamPage> {
             ),
             child: Center(
               child: Image.network(
-                'https://xy-shunshun-pro.oss-cn-hangzhou.aliyuncs.com/WechatIMG357.jpg',
+                'https://jys-prod.oss-cn-beijing.aliyuncs.com/public/jys-qrcode.jpg',
                 width: 119.w, // 小程序: 238rpx = 119.w
                 height: 119.w,
                 fit: BoxFit.cover,

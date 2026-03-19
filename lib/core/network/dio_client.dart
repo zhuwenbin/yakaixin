@@ -1,10 +1,10 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/config/api_config.dart';
-import '../../app/constants/storage_keys.dart';
+import '../../app/routes/app_router.dart';
+import '../../app/routes/app_routes.dart';
 import '../storage/storage_service.dart';
 import '../utils/logger.dart';
 import 'api_interceptor.dart';
@@ -16,10 +16,11 @@ import 'mock_interceptor.dart';
 class DioClient {
   late Dio _dio;
   final StorageService _storage;
-  final Ref? _ref; // 用于网络日志
-  MockInterceptor? _mockInterceptor; // ✅ 保存 Mock 拦截器引用
+  final Ref? _ref;
+  final void Function()? _onLoginExpired;
+  MockInterceptor? _mockInterceptor;
 
-  DioClient(this._storage, [this._ref]) {
+  DioClient(this._storage, [this._ref, this._onLoginExpired]) {
     _initDio();
   }
 
@@ -76,8 +77,8 @@ class DioClient {
       }
     }
 
-    // 3. API拦截器（添加token、签名等）
-    _dio.interceptors.add(ApiInterceptor(_storage));
+    // 3. API拦截器（添加token、签名等；需注入 onLoginExpired 在 Provider 层完成）
+    _dio.interceptors.add(ApiInterceptor(_storage, _onLoginExpired));
 
     // 注意：已移除 LogInterceptor，避免终端输出过多日志
     // 网络请求详情请在调试面板中查看
@@ -257,7 +258,12 @@ class DioClient {
 }
 
 /// Dio Provider
+/// 单点登录失效时的完整处理（退出登录+跳转）通过 main.dart 的 override 注入
 final dioClientProvider = Provider<DioClient>((ref) {
   final storage = ref.read(storageServiceProvider);
-  return DioClient(storage, ref);
+  final router = ref.read(appRouterProvider);
+  void onLoginExpired() {
+    router.go(AppRoutes.loginCenter);
+  }
+  return DioClient(storage, ref, onLoginExpired);
 });

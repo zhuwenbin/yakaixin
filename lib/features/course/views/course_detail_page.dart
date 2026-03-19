@@ -297,11 +297,12 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
       ),
       child: Row(
         children: [
-          // ✅ 使用图片图标（与小程序一致）
-          Image.network(
-            ApiConfig.completeImageUrl('public/5022173314276286241077_播放.png'),
+          // ✅ 统一使用本地播放按钮
+          Image.asset(
+            'assets/images/Template/coursedetail/coursedetail-play.png',
             width: 20.w,
             height: 20.w,
+            fit: BoxFit.contain,
             errorBuilder: (_, __, ___) => Icon(
               Icons.play_circle,
               size: 20.sp,
@@ -410,7 +411,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
       child: Column(
         children: [
           _buildClassHeader(classItem, isClose, progress, index, primary, progressBar),
-          if (!isClose) _buildLessonList(classItem),
+          if (!isClose) _buildLessonList(classItem, primary),
         ],
       ),
     );
@@ -554,7 +555,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
   }
 
   /// 与小程序 .learn-course-list-content 一致：白底、左右 2px 边距、padding 18px 16px 0（上18 左16 右16 下0），小节无额外左右 padding
-  Widget _buildLessonList(CourseClassModel classItem) {
+  Widget _buildLessonList(CourseClassModel classItem, Color themePrimary) {
     final lessons = classItem.lessons ?? [];
     final total = lessons.length;
 
@@ -572,6 +573,7 @@ class _CourseDetailPageState extends ConsumerState<CourseDetailPage> {
             isFirst: index == 0,
             isLast: index == total - 1,
             teachingType: classItem.teachingType ?? '',
+            themePrimary: themePrimary,
             onTap:
                 (
                   String lessonId,
@@ -814,6 +816,7 @@ class _LessonItem extends StatefulWidget {
   final bool isFirst;
   final bool isLast;
   final String teachingType;
+  final Color themePrimary;
   final Function(String, String, Map<String, dynamic>) onTap;
   final Function(Map<String, dynamic>, Map<String, dynamic>) onHomeworkTap;
 
@@ -823,6 +826,7 @@ class _LessonItem extends StatefulWidget {
     required this.isFirst,
     required this.isLast,
     required this.teachingType,
+    required this.themePrimary,
     required this.onTap,
     required this.onHomeworkTap,
   });
@@ -910,12 +914,18 @@ class _LessonItemState extends State<_LessonItem> {
               child: Row(
                 children: [
                   if (widget.teachingType == '1') ...[
-                    Icon(
-                      widget.lesson['lesson_status'] == '3'
-                          ? Icons.play_circle
-                          : Icons.videocam,
-                      size: 14.sp,
-                      color: const Color(0xFF424B57),
+                    Image.asset(
+                      'assets/images/Template/coursedetail/coursedetail-play.png',
+                      width: 14.w,
+                      height: 14.w,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => Icon(
+                        widget.lesson['lesson_status'] == '3'
+                            ? Icons.play_circle
+                            : Icons.videocam,
+                        size: 14.sp,
+                        color: const Color(0xFF424B57),
+                      ),
                     ),
                     SizedBox(width: 4.w),
                     Text(
@@ -948,7 +958,7 @@ class _LessonItemState extends State<_LessonItem> {
                       fontSize: 11.sp,
                       color: isFinished
                           ? const Color(0xFF999999)
-                          : const Color(0xFF018CFF),
+                          : widget.themePrimary,
                     ),
                   ),
                 ],

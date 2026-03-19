@@ -95,6 +95,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           print('⚠️ [专业恢复] majorJson为null');
         }
 
+        await _storage.setBool(StorageKeys.isLoggedIn, true);
         state = state.copyWith(
           user: user,
           currentMajor: major,
@@ -114,6 +115,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } else {
       print('⚠️ [启动恢复] 未找到登录信息（userJson或token为null）');
 
+      await _storage.setBool(StorageKeys.isLoggedIn, false);
       // ✅ 游客模式：确保有默认专业
       await _ensureGuestDefaultMajor();
       final guestMajorJson = _storage.getJson(StorageKeys.majorInfo);
@@ -381,7 +383,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       majors: null,
     );
 
-    // 7. 更新状态
+    // 7. 更新状态 + 写入本地真实登录状态（供 API 拦截器 401/100002 判断）
+    await _storage.setBool(StorageKeys.isLoggedIn, true);
     state = state.copyWith(
       user: user,
       currentMajor: currentMajor,
@@ -502,6 +505,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // 5. 清除旧的答题缓存
       await _storage.remove(StorageKeys.answersList);
 
+      // 5.1 写入本地真实登录状态
+      await _storage.setBool(StorageKeys.isLoggedIn, true);
+
       // 6. 创建 UserModel
       final user = UserModel(
         token: token,
@@ -614,6 +620,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   /// 登出
   Future<void> logout() async {
+    await _storage.setBool(StorageKeys.isLoggedIn, false);
     await _storage.remove(StorageKeys.token);
     await _storage.remove(StorageKeys.userInfo);
     await _storage.remove(StorageKeys.studentId); // ✅ 关键修复：清除 studentId，避免 API 拦截器继续添加 user_id
@@ -624,8 +631,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _ensureGuestDefaultMajor();
     state = AuthState(currentMajor: DefaultMajor.model);
     ToastUtil.show('已退出登录');
-    
+
     // ✅ 退出登录后刷新所有页面数据（确保显示游客数据）
+    _refreshAllPagesAfterLogout();
+  }
+
+  /// 单点登录失效（token 过期 / 账号被其他设备登录）
+  /// 执行与 logout 相同的数据清理和页面刷新，再跳转登录由 DioClient.onLoginExpired 处理
+  Future<void> logoutDueToSessionExpired() async {
+    await _storage.setBool(StorageKeys.isLoggedIn, false);
+    await _storage.remove(StorageKeys.token);
+    await _storage.remove(StorageKeys.userInfo);
+    await _storage.remove(StorageKeys.studentId);
+    await _storage.remove(StorageKeys.majorInfo);
+    await _storage.remove(StorageKeys.currentMajorId);
+
+    await _ensureGuestDefaultMajor();
+    state = AuthState(currentMajor: DefaultMajor.model);
+
+    ToastUtil.show('登录已失效，请重新登录');
+
     _refreshAllPagesAfterLogout();
   }
 

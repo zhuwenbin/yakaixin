@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/routes/app_routes.dart';
+import '../../../core/style/app_style_config.dart';
 import '../../../core/style/app_style_tokens.dart';
 import '../../../../app/config/api_config.dart';
 import '../models/course_model.dart';
@@ -34,6 +35,15 @@ class CourseItemCard extends StatelessWidget {
       return completePath!(path);
     }
     return ApiConfig.completeImageUrl(path);
+  }
+
+  /// 授课形式标签背景色：非默认模版（金医圣 green 等）固定 #FF860E
+  Color _teachingTypeBadgeColor() {
+    const nonDefaultColor = Color(0xFFFF860E);
+    if (styleTokens == null) return nonDefaultColor;
+    final template = styleTokens!.config.template;
+    if (template != AppStyleTemplate.blueDefault) return nonDefaultColor;
+    return styleTokens!.colors.primary;
   }
 
   @override
@@ -84,6 +94,7 @@ class CourseItemCard extends StatelessWidget {
         child: Stack(
           children: [
             // ✅ 左上角标签（对应小程序 Line 7-9）
+            // 非默认模版（金医圣 green 等）背景色固定 #FF860E
             if (teachingTypeName.isNotEmpty)
               Positioned(
                 left: 0,
@@ -92,7 +103,7 @@ class CourseItemCard extends StatelessWidget {
                   width: 80.w,
                   height: 25.h,
                   decoration: BoxDecoration(
-                    color: styleTokens?.colors.primary ?? const Color(0xFFFF860E),
+                    color: _teachingTypeBadgeColor(),
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(16.r),
                       bottomRight: Radius.circular(16.r),
@@ -105,7 +116,7 @@ class CourseItemCard extends StatelessWidget {
                       fontSize: 12.sp,
                       color: Colors.white,
                       fontWeight: FontWeight.w500,
-                      letterSpacing: 5.w,
+                      letterSpacing: 3.w,
                     ),
                   ),
                 ),
@@ -137,7 +148,9 @@ class CourseItemCard extends StatelessWidget {
                       classDate,
                       style: TextStyle(
                         fontSize: 12.sp,
-                        color: styleTokens?.colors.tagText ?? const Color(0xFF4783DC),
+                        color:
+                            styleTokens?.colors.tagText ??
+                            const Color(0xFF4783DC),
                       ),
                     ),
                   // ✅ 套餐信息（对应小程序 Line 20-23）
@@ -148,7 +161,9 @@ class CourseItemCard extends StatelessWidget {
                         text: TextSpan(
                           style: TextStyle(
                             fontSize: 11.sp,
-                            color: styleTokens?.colors.tagText ?? const Color(0xFF4783DC),
+                            color:
+                                styleTokens?.colors.tagText ??
+                                const Color(0xFF4783DC),
                           ),
                           children: [
                             const TextSpan(text: '套餐：'),
@@ -195,15 +210,11 @@ class CourseItemCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ✅ 第一个教师
-              Expanded(
-                child: _buildTeacherItem(group[0]),
-              ),
+              Expanded(child: _buildTeacherItem(group[0])),
               // ✅ 如果有第二个教师，显示第二个
               if (group.length > 1) ...[
                 SizedBox(width: 12.w), // ✅ 两个教师之间的间距
-                Expanded(
-                  child: _buildTeacherItem(group[1]),
-                ),
+                Expanded(child: _buildTeacherItem(group[1])),
               ],
             ],
           ),
@@ -234,10 +245,7 @@ class CourseItemCard extends StatelessWidget {
           ),
           child: ClipOval(
             child: avatarUrl.isEmpty
-                ? Image.asset(
-                    'assets/images/app_icon.png',
-                    fit: BoxFit.cover,
-                  )
+                ? Image.asset('assets/images/app_icon.png', fit: BoxFit.cover)
                 : Image.network(
                     avatarUrl,
                     fit: BoxFit.cover,
@@ -270,7 +278,9 @@ class CourseItemCard extends StatelessWidget {
                 title,
                 style: TextStyle(
                   fontSize: 12.sp,
-                  color: const Color(0xFF262629).withOpacity(0.6), // ✅ 小程序rgba(38, 38, 41, 0.6)
+                  color: const Color(
+                    0xFF262629,
+                  ).withOpacity(0.6), // ✅ 小程序rgba(38, 38, 41, 0.6)
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
