@@ -17,6 +17,7 @@ import '../widgets/answer_sheet/answer_sheet_dialog.dart';  // ✅ 导入答题�
 import '../widgets/make_question/error_correction_dialog.dart';  // ✅ 导入纠错弹窗
 import '../widgets/question/bottom_toolbar.dart';  // ✅ 导入底部工具栏
 import '../../../core/widgets/confirm_dialog.dart';  // ✅ 导入统一对话框组件
+import '../../../core/widgets/common_state_widget.dart';
 
 /// 做题页面
 /// 对应小程序: src/modules/jintiku/pages/makeQuestion/makeQuestion.vue
@@ -37,6 +38,8 @@ class _MakeQuestionPageState extends ConsumerState<MakeQuestionPage> {
   bool _showAnswer = false;
   bool _showOnlyError = false;
   bool _isLoading = true;
+  String? _errorMessage;
+  bool _isNetworkError = false;
   // bool _showAnswerSheet = false; // 显示答题卡（已使用新组件替代）
   
   // 路由参数
@@ -71,54 +74,7 @@ class _MakeQuestionPageState extends ConsumerState<MakeQuestionPage> {
   // QuestionCardSwiper 控制器
   final GlobalKey _swiperKey = GlobalKey();
   
-  // Mock题目数据（备用）
-  final List<Map<String, dynamic>> _mockQuestions = [
-    {
-      'id': '1',
-      'question': '牙釉质的主要成分是？',
-      'type': '1', // 1=单选 2=多选 3=判断
-      'options': [
-        {'label': 'A', 'text': '羟基磷灰石'},
-        {'label': 'B', 'text': '胶原蛋白'},
-        {'label': 'C', 'text': '钙盐'},
-        {'label': 'D', 'text': '磷酸钙'},
-      ],
-      'answer': 'A',
-      'analysis': '牙釉质的主要成分是羟基磷灰石，约占釉质重量的96%。',
-      'user_answer': null,
-      'is_correct': null,
-    },
-    {
-      'id': '2',
-      'question': '牙本质小管的走向是？',
-      'type': '1',
-      'options': [
-        {'label': 'A', 'text': '从牙髓向外放射'},
-        {'label': 'B', 'text': '从外向牙髓放射'},
-        {'label': 'C', 'text': '平行排列'},
-        {'label': 'D', 'text': '无规则分布'},
-      ],
-      'answer': 'A',
-      'analysis': '牙本质小管从牙髓腔向外呈放射状排列，贯穿整个牙本质层。',
-      'user_answer': null,
-      'is_correct': null,
-    },
-    {
-      'id': '3',
-      'question': '牙周膜的主要功能包括（多选）',
-      'type': '2', // 多选
-      'options': [
-        {'label': 'A', 'text': '固定牙齿'},
-        {'label': 'B', 'text': '缓冲咬合压力'},
-        {'label': 'C', 'text': '营养作用'},
-        {'label': 'D', 'text': '感觉作用'},
-      ],
-      'answer': 'ABCD',
-      'analysis': '牙周膜具有固定、支持、营养、感觉和修复等多种功能。',
-      'user_answer': null,
-      'is_correct': null,
-    },
-  ];
+
 
   @override
   void initState() {
@@ -343,16 +299,20 @@ class _MakeQuestionPageState extends ConsumerState<MakeQuestionPage> {
       print('❌ [MakeQuestionPage] 缺少必要参数');
       setState(() {
         _isLoading = false;
-        // 使用Mock数据
-        _questions = _mockQuestions;
-        _allQuestions = _mockQuestions;
-        _total = _mockQuestions.length;
+        _isNetworkError = false;
+        _errorMessage = '缺少必要参数，无法加载题目';
       });
       return;
     }
     
     print('🔍 [MakeQuestionPage] 开始加载题目...');
     EasyLoading.show(status: '加载中...');
+    
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _isNetworkError = false;
+    });
     
     try {
       final service = ref.read(questionServiceProvider);
@@ -396,14 +356,18 @@ class _MakeQuestionPageState extends ConsumerState<MakeQuestionPage> {
       EasyLoading.dismiss();
     } catch (e) {
       print('❌ [MakeQuestionPage] 加载题目失败: $e');
-      EasyLoading.showError('加载失败: $e');
+      EasyLoading.dismiss();
+      
+      final errorStr = e.toString().toLowerCase();
+      final isNetwork = errorStr.contains('socket') ||
+          errorStr.contains('timeout') ||
+          errorStr.contains('connection') ||
+          errorStr.contains('network');
       
       setState(() {
         _isLoading = false;
-        // 失败后使用Mock数据
-        _questions = _mockQuestions;
-        _allQuestions = _mockQuestions;
-        _total = _mockQuestions.length;
+        _isNetworkError = isNetwork;
+        _errorMessage = isNetwork ? null : e.toString();
       });
     }
   }
@@ -755,6 +719,22 @@ class _MakeQuestionPageState extends ConsumerState<MakeQuestionPage> {
       );
     }
     
+    if (_errorMessage != null || _isNetworkError) {
+      return Scaffold(
+        backgroundColor: AppColors.surface,
+        appBar: AppBar(
+          title: Text(_chapterName ?? '做题'),
+          backgroundColor: AppColors.surface,
+        ),
+        body: _isNetworkError
+            ? CommonStateWidget.networkError(onRetry: _loadQuestions)
+            : CommonStateWidget.loadError(
+                message: _errorMessage,
+                onRetry: _loadQuestions,
+              ),
+      );
+    }
+    
     if (_questions.isEmpty) {
       return Scaffold(
         backgroundColor: AppColors.surface,
@@ -793,8 +773,8 @@ class _MakeQuestionPageState extends ConsumerState<MakeQuestionPage> {
         
         if (shouldPop != true) return;
         
-        // ✅ 异步提交答案（后台执行，不等待）
-        unawaited(_submitAnswers());
+        // ✅ 每做一题已经实时提交，返回时只需保存进度即可
+        await _saveQuestionProgress();
         
         // ✅ 立即返回页面
         if (context.mounted) {
@@ -827,7 +807,20 @@ class _MakeQuestionPageState extends ConsumerState<MakeQuestionPage> {
                 onAnswerChanged: (data) {
                   final index = data['index'] as int;
                   final answer = data['answer'] as String;
-                  print('👆 [选项点击] 题目${_questions[index]['id']}, 答案: $answer');
+                  final questionId = data['questionId']?.toString() ?? '';
+                  print('👆 [选项点击] 题目${questionId}, 答案: $answer');
+                  
+                  // ✅ 每做一题就提交一次（只提交本题的答案）
+                  // 找到题目在 _allQuestions 中的真实索引
+                  final realIndex = _allQuestions.indexWhere((q) => 
+                    (q['question_id']?.toString() ?? q['id']?.toString()) == questionId
+                  );
+                  if (realIndex != -1) {
+                    unawaited(_submitSingleAnswer(realIndex));
+                  } else {
+                    print('⚠️ [选项点击] 未找到题目在_allQuestions中的索引，使用当前索引$index');
+                    unawaited(_submitSingleAnswer(index));
+                  }
                 },
               ),
             ),
@@ -1210,10 +1203,10 @@ https://yakaixin.yunsop.com/
     );
     
     if (shouldPop != true) return;
-    
-    // ✅ 异步提交答案（后台执行，不等待）
-    unawaited(_submitAnswers());
-    
+
+    // ✅ 每做一题已经实时提交，返回时只需保存进度即可
+    await _saveQuestionProgress();
+
     // ✅ 立即返回页面
     if (mounted) {
       Navigator.of(context).pop();
@@ -1239,7 +1232,96 @@ https://yakaixin.yunsop.com/
     );
   }
   
-  /// 提交答案到后端
+  /// 提交单个题目的答案（每做一题提交一次）
+  /// ✅ 只提交指定索引题目的答案
+  Future<void> _submitSingleAnswer(int questionIndex) async {
+    if (!mounted) return;
+    
+    final examService = ref.read(examServiceProvider);
+    final storage = ref.read(storageServiceProvider);
+    
+    try {
+      // 获取当前题目
+      final question = _allQuestions[questionIndex];
+      final userAnswer = question['user_answer']?.toString() ?? '';
+      
+      // 如果没有答案，不提交
+      if (userAnswer.isEmpty) {
+        print('⚠️ [_submitSingleAnswer] 题目${questionIndex + 1}没有答案，跳过提交');
+        return;
+      }
+      
+      // 构建单个题目的提交数据
+      final questionId = question['question_id']?.toString() ?? '';
+      final originalStemList = question['original_stem_list'] as List? ?? [];
+      final currentStemIndex = question['current_stem_index'] as int? ?? 0;
+      
+      print('📝 [_submitSingleAnswer] 提交题目${questionIndex + 1}: question_id=$questionId');
+      
+      // 构建 user_option（只包含当前已答的小题）
+      final userOption = originalStemList.asMap().entries.map((entry) {
+        final index = entry.key;
+        final stem = entry.value;
+        final subQuestionId = stem['id']?.toString() ?? '';
+        
+        List<String> answerList = [];
+        
+        // 只提交当前小题的答案
+        if (index == currentStemIndex && userAnswer.isNotEmpty) {
+          // userAnswer 是 String 类型（如 "A" 或 "AB"）
+          // 需要将每个字母转换为索引（A->0, B->1, C->2）
+          answerList = userAnswer.split('').map((letter) {
+            final idx = letter.codeUnitAt(0) - 65;  // 'A'=65
+            return idx.toString();
+          }).toList();
+          print('   - 小题$index: sub_question_id=$subQuestionId, answer=$answerList');
+        } else {
+          // 其他小题提交空答案
+          answerList = [];
+        }
+        
+        return {
+          'sub_question_id': subQuestionId,
+          'answer': answerList,
+        };
+      }).toList();
+      
+      // 构建单个题目的 question_info
+      final singleQuestionInfo = [{
+        'question_id': questionId,
+        'cost_time': 1,  // 单个题目的做题时间
+        'user_option': userOption,
+      }];
+      
+      // 获取用户ID
+      final studentId = storage.getString('student_id') ?? '';
+      final userId = studentId;
+      
+      print('📤 [_submitSingleAnswer] 提交数据:');
+      print('   - question_info: ${jsonEncode(singleQuestionInfo)}');
+      
+      // 提交答案
+      await examService.submitAnswer(
+        productId: _productId ?? '',
+        professionalId: _professionalId ?? '',
+        costTime: 1,  // 单个题目耗时
+        type: '1',  // 章节练习
+        questionInfo: jsonEncode(singleQuestionInfo),
+        goodsId: _goodsId ?? '',
+        orderId: '',
+        userId: userId,
+        studentId: studentId,
+        teachingSystemPackageId: _teachingSystemPackageId,
+      );
+      
+      print('✅ [_submitSingleAnswer] 题目${questionIndex + 1}提交成功');
+    } catch (e) {
+      print('❌ [_submitSingleAnswer] 提交题目${questionIndex + 1}失败: $e');
+      // 静默失败，不提示用户
+    }
+  }
+
+  /// 提交答案到后端（批量提交，用于返回页面时）
   /// 对应小程序: makeQuestion.vue Line 346-367
   /// ✅ 静默提交，无论成功失败都不显示任何提示
   /// ✅ 使用 ExamService.submitAnswer() 统一提交（与试卷考试相同）
@@ -1252,7 +1334,17 @@ https://yakaixin.yunsop.com/
     final storage = ref.read(storageServiceProvider);
     
     try {
-      // 过滤出已作答的题目
+      if (_currentMode == 2 && _savedAnswerStates.isNotEmpty) {
+        for (var question in _allQuestions) {
+          final questionId = question['id']?.toString();
+          if (questionId != null && _savedAnswerStates.containsKey(questionId)) {
+            final savedState = _savedAnswerStates[questionId]!;
+            question['user_answer'] = savedState['user_answer'];
+            question['is_correct'] = savedState['is_correct'];
+          }
+        }
+      }
+
       final answeredQuestions = _allQuestions.where((q) {
         return q['user_answer'] != null && q['user_answer'].toString().isNotEmpty;
       }).toList();

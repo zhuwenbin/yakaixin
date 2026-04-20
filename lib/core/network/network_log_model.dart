@@ -51,7 +51,6 @@ class NetworkLogModel {
       id: id,
       timestamp: timestamp,
       method: method,
-      // ✅ 使用 response.requestOptions.uri.toString() 获取完整的 URL（包括拦截器添加的查询参数）
       url: response.requestOptions.uri.toString(),
       // ✅ 使用 response.requestOptions.headers 获取完整的 headers（包括拦截器添加的）
       headers: response.requestOptions.headers.map((key, value) => MapEntry(key, value.toString())),
@@ -72,7 +71,6 @@ class NetworkLogModel {
       id: id,
       timestamp: timestamp,
       method: method,
-      // ✅ 使用 error.requestOptions.uri.toString() 获取完整的 URL（包括拦截器添加的查询参数）
       url: error.requestOptions.uri.toString(),
       // ✅ 使用 error.requestOptions.headers 获取完整的 headers（包括拦截器添加的）
       headers: error.requestOptions.headers.map((key, value) => MapEntry(key, value.toString())),

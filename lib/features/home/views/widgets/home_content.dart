@@ -34,7 +34,7 @@ class HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = ['题库', '网课', '直播'];
+    final tabs = ['题库', '网课', '直播', '面授'];
     final currentList = _getCurrentList();
 
     return SliverToBoxAdapter(
@@ -102,6 +102,8 @@ class HomeContent extends StatelessWidget {
         return state.onlineCourseList;
       case 3:
         return state.liveList;
+      case 4:
+        return state.offlineList;
       default:
         return state.questionBankList;
     }

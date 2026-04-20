@@ -94,7 +94,7 @@ dependencies:
   webview_flutter: ^4.10.0
   
   # 视频播放器（使用 Better Player，更好的性能和鸿蒙系统支持）
-  better_player: ^0.0.84
+  better_player_plus: ^1.1.2
 
   # 工具
   json_annotation: ^4.9.0

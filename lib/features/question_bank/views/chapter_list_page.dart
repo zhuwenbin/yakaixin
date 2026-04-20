@@ -595,6 +595,15 @@ class _ChapterListPageState extends ConsumerState<ChapterListPage> {
     final notAnsweredNum =
         chapter['not_answered_question_num']?.toString() ?? '0';
 
+    // ⚠️ 调试日志：追踪专业ID传递
+    final chapterProId = chapter['professional_id'];
+    print('\n' + '=' * 50);
+    print('📝 [ChapterListPage] _startPractice 专业ID追踪:');
+    print('   - chapter[professional_id]: $chapterProId');
+    print('   - _professionalId (路由参数): $_professionalId');
+    print('   - 最终使用: ${chapterProId ?? _professionalId}');
+    print('=' * 50 + '\n');
+
     // ✅ 1. 检查是否有题目
     if (questionNum == '0') {
       ScaffoldMessenger.of(

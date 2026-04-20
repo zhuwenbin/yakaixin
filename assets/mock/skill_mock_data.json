@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "api": "GET /c/exam/chapterpackage",
   "update_time": "2025-11-25",
-  "description": "技能模拟数据 - position_identify=jinengmoni",
+  "description": "技能模拟和章节练习数据 - position_identify=jinengmoni/zhangjielianxi",
   "data": [
     {
       "id": "skill_mock_001",
@@ -74,6 +74,36 @@
           "status": "locked"
         }
       ],
+      "status": "1"
+    },
+    {
+      "id": "chapter_exercise_001",
+      "name": "2026口腔执业医师章节练习",
+      "position_identify": "zhangjielianxi",
+      "professional_id": "524033912737962623",
+      "description": "按章节系统练习，巩固基础知识",
+      "question_num": 1500,
+      "done_num": 320,
+      "permission_status": "1",
+      "year": "2026",
+      "student_finish": {
+        "do_num": 320
+      },
+      "status": "1"
+    },
+    {
+      "id": "chapter_exercise_002",
+      "name": "口腔助理医师章节练习",
+      "position_identify": "zhangjielianxi",
+      "professional_id": "524033614019566207",
+      "description": "助理医师章节系统练习",
+      "question_num": 1200,
+      "done_num": 0,
+      "permission_status": "2",
+      "year": "2026",
+      "student_finish": {
+        "do_num": 0
+      },
       "status": "1"
     }
   ]

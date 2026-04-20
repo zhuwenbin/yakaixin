@@ -7,7 +7,7 @@ part of 'examinationing_provider.dart';
 // **************************************************************************
 
 String _$examinationingNotifierHash() =>
-    r'bb572ea0352fe6e869357b4b480595f7b627d17c';
+    r'ce353c7547f3c32323d64d9b64b1fa1c146584ca';
 
 /// 答题页面Provider
 ///

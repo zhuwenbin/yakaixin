@@ -20,6 +20,7 @@ mixin _$HomeState {
   List<GoodsModel> get questionBankList => throw _privateConstructorUsedError;
   List<GoodsModel> get onlineCourseList => throw _privateConstructorUsedError;
   List<GoodsModel> get liveList => throw _privateConstructorUsedError;
+  List<GoodsModel> get offlineList => throw _privateConstructorUsedError;
   bool get isLoading => throw _privateConstructorUsedError;
   String? get error => throw _privateConstructorUsedError;
 
@@ -38,6 +39,7 @@ abstract class $HomeStateCopyWith<$Res> {
       List<GoodsModel> questionBankList,
       List<GoodsModel> onlineCourseList,
       List<GoodsModel> liveList,
+      List<GoodsModel> offlineList,
       bool isLoading,
       String? error});
 }
@@ -59,6 +61,7 @@ class _$HomeStateCopyWithImpl<$Res, $Val extends HomeState>
     Object? questionBankList = null,
     Object? onlineCourseList = null,
     Object? liveList = null,
+    Object? offlineList = null,
     Object? isLoading = null,
     Object? error = freezed,
   }) {
@@ -78,6 +81,10 @@ class _$HomeStateCopyWithImpl<$Res, $Val extends HomeState>
       liveList: null == liveList
           ? _value.liveList
           : liveList // ignore: cast_nullable_to_non_nullable
+              as List<GoodsModel>,
+      offlineList: null == offlineList
+          ? _value.offlineList
+          : offlineList // ignore: cast_nullable_to_non_nullable
               as List<GoodsModel>,
       isLoading: null == isLoading
           ? _value.isLoading
@@ -104,6 +111,7 @@ abstract class _$$HomeStateImplCopyWith<$Res>
       List<GoodsModel> questionBankList,
       List<GoodsModel> onlineCourseList,
       List<GoodsModel> liveList,
+      List<GoodsModel> offlineList,
       bool isLoading,
       String? error});
 }
@@ -123,6 +131,7 @@ class __$$HomeStateImplCopyWithImpl<$Res>
     Object? questionBankList = null,
     Object? onlineCourseList = null,
     Object? liveList = null,
+    Object? offlineList = null,
     Object? isLoading = null,
     Object? error = freezed,
   }) {
@@ -142,6 +151,10 @@ class __$$HomeStateImplCopyWithImpl<$Res>
       liveList: null == liveList
           ? _value._liveList
           : liveList // ignore: cast_nullable_to_non_nullable
+              as List<GoodsModel>,
+      offlineList: null == offlineList
+          ? _value._offlineList
+          : offlineList // ignore: cast_nullable_to_non_nullable
               as List<GoodsModel>,
       isLoading: null == isLoading
           ? _value.isLoading
@@ -163,12 +176,14 @@ class _$HomeStateImpl implements _HomeState {
       final List<GoodsModel> questionBankList = const [],
       final List<GoodsModel> onlineCourseList = const [],
       final List<GoodsModel> liveList = const [],
+      final List<GoodsModel> offlineList = const [],
       this.isLoading = false,
       this.error})
       : _recommendList = recommendList,
         _questionBankList = questionBankList,
         _onlineCourseList = onlineCourseList,
-        _liveList = liveList;
+        _liveList = liveList,
+        _offlineList = offlineList;
 
   final List<GoodsModel> _recommendList;
   @override
@@ -208,6 +223,15 @@ class _$HomeStateImpl implements _HomeState {
     return EqualUnmodifiableListView(_liveList);
   }
 
+  final List<GoodsModel> _offlineList;
+  @override
+  @JsonKey()
+  List<GoodsModel> get offlineList {
+    if (_offlineList is EqualUnmodifiableListView) return _offlineList;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_offlineList);
+  }
+
   @override
   @JsonKey()
   final bool isLoading;
@@ -216,7 +240,7 @@ class _$HomeStateImpl implements _HomeState {
 
   @override
   String toString() {
-    return 'HomeState(recommendList: $recommendList, questionBankList: $questionBankList, onlineCourseList: $onlineCourseList, liveList: $liveList, isLoading: $isLoading, error: $error)';
+    return 'HomeState(recommendList: $recommendList, questionBankList: $questionBankList, onlineCourseList: $onlineCourseList, liveList: $liveList, offlineList: $offlineList, isLoading: $isLoading, error: $error)';
   }
 
   @override
@@ -231,6 +255,8 @@ class _$HomeStateImpl implements _HomeState {
             const DeepCollectionEquality()
                 .equals(other._onlineCourseList, _onlineCourseList) &&
             const DeepCollectionEquality().equals(other._liveList, _liveList) &&
+            const DeepCollectionEquality()
+                .equals(other._offlineList, _offlineList) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
             (identical(other.error, error) || other.error == error));
@@ -243,6 +269,7 @@ class _$HomeStateImpl implements _HomeState {
       const DeepCollectionEquality().hash(_questionBankList),
       const DeepCollectionEquality().hash(_onlineCourseList),
       const DeepCollectionEquality().hash(_liveList),
+      const DeepCollectionEquality().hash(_offlineList),
       isLoading,
       error);
 
@@ -259,6 +286,7 @@ abstract class _HomeState implements HomeState {
       final List<GoodsModel> questionBankList,
       final List<GoodsModel> onlineCourseList,
       final List<GoodsModel> liveList,
+      final List<GoodsModel> offlineList,
       final bool isLoading,
       final String? error}) = _$HomeStateImpl;
 
@@ -270,6 +298,8 @@ abstract class _HomeState implements HomeState {
   List<GoodsModel> get onlineCourseList;
   @override
   List<GoodsModel> get liveList;
+  @override
+  List<GoodsModel> get offlineList;
   @override
   bool get isLoading;
   @override

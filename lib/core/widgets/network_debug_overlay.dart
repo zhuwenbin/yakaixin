@@ -1015,10 +1015,29 @@ class _NetworkDebugOverlayState extends ConsumerState<NetworkDebugOverlay> {
     }
   }
 
-  /// 获取短URL
+  /// 获取短URL（包含关键查询参数）
   String _getShortUrl(String url) {
     final uri = Uri.parse(url);
-    return uri.path.isEmpty ? '/' : uri.path;
+    final path = uri.path.isEmpty ? '/' : uri.path;
+    
+    // ✅ 显示关键查询参数，帮助区分不同请求
+    final queryParams = uri.queryParameters;
+    if (queryParams.isNotEmpty) {
+      // 只显示关键的查询参数（如 position_identify）
+      final keyParams = <String>[];
+      if (queryParams.containsKey('position_identify')) {
+        keyParams.add('position_identify=${queryParams['position_identify']}');
+      }
+      if (queryParams.containsKey('professional_id')) {
+        keyParams.add('professional_id=${queryParams['professional_id']}');
+      }
+      
+      if (keyParams.isNotEmpty) {
+        return '$path?${keyParams.join('&')}';
+      }
+    }
+    
+    return path;
   }
 
   /// 格式化时间

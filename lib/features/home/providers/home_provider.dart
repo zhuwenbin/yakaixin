@@ -24,6 +24,7 @@ class HomeState with _$HomeState {
     @Default([]) List<GoodsModel> questionBankList,
     @Default([]) List<GoodsModel> onlineCourseList,
     @Default([]) List<GoodsModel> liveList,
+    @Default([]) List<GoodsModel> offlineList,
     @Default(false) bool isLoading,
     String? error,
   }) = _HomeState;
@@ -60,7 +61,8 @@ class HomeNotifier extends StateNotifier<HomeState> {
       // 1. getGoods({ type: '8,10,18' }) - 一次性获取题库数据(试卷+模考+章节练习)
       // 2. getGoods({ teaching_type: '3', type: '2,3' }) - 网课列表
       // 3. getGoods({ teaching_type: '1', type: '2,3' }) - 直播列表
-      print('🌐 [API请求] 开始并发请求3个接口...');
+      // 4. getGoods({ teaching_type: '2', type: '2,3' }) - 面授列表
+      print('🌐 [API请求] 开始并发请求4个接口...');
       final results = await Future.wait([
         // 1. ✅ 获取题库数据 (type: '8,10,18') - 与小程序一致
         _goodsService.getGoodsList(
@@ -80,6 +82,12 @@ class HomeNotifier extends StateNotifier<HomeState> {
           teachingType: '1',
           type: '2,3',
         ),
+        // 4. 获取面授列表 (teaching_type: '2', type: '2,3')
+        _goodsService.getGoodsList(
+          shelfPlatformId: ApiConfig.shelfPlatformId,
+          teachingType: '2',
+          type: '2,3',
+        ),
       ]);
 
       // ✅ 题库数据 - 直接使用第一个结果
@@ -93,6 +101,10 @@ class HomeNotifier extends StateNotifier<HomeState> {
       // ✅ 直播列表 - 增强数据处理（对应小程序 Line 313-332）
       final liveList = _enhanceCourseData(results[2].list);
       print('📡 [直播数据] 获取到 ${liveList.length} 条数据（已增强）');
+
+      // ✅ 面授列表 - 增强数据处理
+      final offlineList = _enhanceCourseData(results[3].list);
+      print('🏫 [面授数据] 获取到 ${offlineList.length} 条数据（已增强）');
 
       // ✅ 筛选秒杀推荐商品 (首页推荐 且 **未购买**)
       // 参考小程序 Line 258-262:
@@ -112,6 +124,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
         recommendList: recommendList,
         onlineCourseList: onlineCourseList,
         liveList: liveList,
+        offlineList: offlineList,
         isLoading: false,
       );
     } on DioException catch (e, stackTrace) {
