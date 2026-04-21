@@ -17,6 +17,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../home/services/goods_service.dart';
 import '../../home/models/goods_model.dart';
 import '../../main/main_tab_page.dart';
+import '../../main/main_tab_provider.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../app/constants/storage_keys.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -506,10 +507,15 @@ class _CourseGoodsDetailPageState extends ConsumerState<CourseGoodsDetailPage> {
     final salePrice = _goodsDetail?.salePrice;
     final studentNum = _goodsDetail?.studentNum;
 
+    // ✅ 确保价格保留2位小数
+    final displayPrice = salePrice != null
+        ? (double.tryParse(salePrice) ?? 0.0).toStringAsFixed(2)
+        : null;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        if (permissionStatus == '2' && salePrice != null)
+        if (permissionStatus == '2' && displayPrice != null)
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
@@ -523,7 +529,7 @@ class _CourseGoodsDetailPageState extends ConsumerState<CourseGoodsDetailPage> {
                 ),
               ),
               Text(
-                salePrice,
+                displayPrice,
                 style: TextStyle(
                   fontSize: 22.sp,
                   fontWeight: FontWeight.w600,
@@ -1007,12 +1013,12 @@ class _CourseGoodsDetailPageState extends ConsumerState<CourseGoodsDetailPage> {
   }
 
   /// 去学习
-  /// ✅ 返回主页面并切换到课程 Tab（索引 2）
-  /// 参考: pay_success_page.dart Line 327-334
+  /// ✅ 返回主页面并切换到上课 Tab
+  /// 参考: pay_success_page.dart
   void _onGoCourse() {
     if (mounted) {
-      // 1. 设置 Tab 索引为课程页（索引 2）
-      ref.read(mainTabIndexProvider.notifier).state = 2;
+      // 1. 设置 Tab 索引为上课页（通过名称自动查找对应下标）
+      switchToTabByName(ref, '上课');
       // 2. 返回主 Tab 页面
       context.go(AppRoutes.mainTab);
     }

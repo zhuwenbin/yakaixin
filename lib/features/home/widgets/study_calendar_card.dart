@@ -119,8 +119,9 @@ class StudyCalendarCard extends StatelessWidget {
       targetDate = DateTime(currentYear + 1, 8, 22);
     }
 
-    // 计算天数差
-    final daysDiff = targetDate.difference(today).inDays;
+    // 计算天数差（与小程序一致：Math.ceil(timeDiff / (1000 * 3600 * 24))）
+    final timeDiff = targetDate.millisecondsSinceEpoch - today.millisecondsSinceEpoch;
+    final daysDiff = (timeDiff / (1000 * 3600 * 24)).ceil();
 
     return daysDiff.toString();
   }

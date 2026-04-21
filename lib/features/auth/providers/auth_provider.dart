@@ -47,9 +47,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final StorageService _storage;
   final Ref? _ref;
 
-  AuthNotifier(this._authService, this._storage, {Ref? ref}) 
-      : _ref = ref,
-        super(AuthState()) {
+  AuthNotifier(this._authService, this._storage, {Ref? ref})
+    : _ref = ref,
+      super(AuthState()) {
     _loadUserFromStorage();
   }
 
@@ -57,7 +57,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final currentMajorId = _storage.getString(StorageKeys.currentMajorId);
     final majorJson = _storage.getJson(StorageKeys.majorInfo);
 
-    if (currentMajorId != null && currentMajorId.isNotEmpty && majorJson != null) {
+    if (currentMajorId != null &&
+        currentMajorId.isNotEmpty &&
+        majorJson != null) {
       return;
     }
 
@@ -123,10 +125,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           ? MajorModel.fromJson(guestMajorJson)
           : DefaultMajor.model;
 
-      state = state.copyWith(
-        currentMajor: guestMajor,
-        isLoggedIn: false,
-      );
+      state = state.copyWith(currentMajor: guestMajor, isLoggedIn: false);
     }
   }
 
@@ -264,7 +263,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
 
     if (needDefaultNickname && savedPhone != null && savedPhone.length >= 7) {
-      nickname = '牙开心${savedPhone.substring(savedPhone.length - 4)}';
+      nickname = '金医圣${savedPhone.substring(savedPhone.length - 4)}';
     }
 
     // 3. 保存用户信息（保存完整的登录响应数据）
@@ -467,7 +466,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _storage.setString(StorageKeys.token, token);
 
       // 2. 处理昵称
-      final nickname = mockData['nickname'] as String? ?? '牙开心用户';
+      final nickname = mockData['nickname'] as String? ?? '金医圣用户';
 
       // 3. 保存用户信息
       final userJson = {
@@ -582,7 +581,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final majorIdToUse = state.currentMajor?.majorId;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       print('🔄 [登录刷新] 开始刷新所有页面数据... majorId=$majorIdToUse');
-      
+
       // ✅ 显式传入当前专业 ID，确保首页/题库按登录账号专业加载
       try {
         ref.read(homeProvider.notifier).loadHomeData(majorId: majorIdToUse);
@@ -590,22 +589,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
       } catch (e) {
         print('⚠️ [登录刷新] 首页数据刷新失败: $e');
       }
-      
+
       try {
-        ref.read(questionBankProvider.notifier).loadAllData(majorId: majorIdToUse);
+        ref
+            .read(questionBankProvider.notifier)
+            .loadAllData(majorId: majorIdToUse);
         print('✅ [登录刷新] 题库页面数据刷新已触发');
       } catch (e) {
         print('⚠️ [登录刷新] 题库页面数据刷新失败: $e');
       }
-      
+
       // ✅ 刷新课程页面数据
       try {
-        ref.read(courseNotifierProvider.notifier).loadInitialData(DateTime.now(), '');
+        ref
+            .read(courseNotifierProvider.notifier)
+            .loadInitialData(DateTime.now(), '');
         print('✅ [登录刷新] 课程页面数据刷新已触发');
       } catch (e) {
         print('⚠️ [登录刷新] 课程页面数据刷新失败: $e');
       }
-      
+
       print('✅ [登录刷新] 所有页面数据刷新完成');
     });
   }
@@ -623,7 +626,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _storage.setBool(StorageKeys.isLoggedIn, false);
     await _storage.remove(StorageKeys.token);
     await _storage.remove(StorageKeys.userInfo);
-    await _storage.remove(StorageKeys.studentId); // ✅ 关键修复：清除 studentId，避免 API 拦截器继续添加 user_id
+    await _storage.remove(
+      StorageKeys.studentId,
+    ); // ✅ 关键修复：清除 studentId，避免 API 拦截器继续添加 user_id
     await _storage.remove(StorageKeys.majorInfo);
     await _storage.remove(StorageKeys.currentMajorId);
 
@@ -661,11 +666,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       print('⚠️ [退出登录刷新] Ref 为空，无法刷新页面数据');
       return;
     }
-    
+
     // 延迟一下，确保状态已更新
     Future.microtask(() {
       print('🔄 [退出登录刷新] 开始刷新所有页面数据...');
-      
+
       // ✅ 刷新首页数据
       try {
         ref.read(homeProvider.notifier).loadHomeData();
@@ -673,7 +678,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       } catch (e) {
         print('⚠️ [退出登录刷新] 首页数据刷新失败: $e');
       }
-      
+
       // ✅ 刷新题库页面数据
       try {
         ref.read(questionBankProvider.notifier).loadAllData();
@@ -681,15 +686,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
       } catch (e) {
         print('⚠️ [退出登录刷新] 题库页面数据刷新失败: $e');
       }
-      
+
       // ✅ 刷新课程页面数据
       try {
-        ref.read(courseNotifierProvider.notifier).loadInitialData(DateTime.now(), '');
+        ref
+            .read(courseNotifierProvider.notifier)
+            .loadInitialData(DateTime.now(), '');
         print('✅ [退出登录刷新] 课程页面数据刷新已触发');
       } catch (e) {
         print('⚠️ [退出登录刷新] 课程页面数据刷新失败: $e');
       }
-      
+
       print('✅ [退出登录刷新] 所有页面数据刷新完成');
     });
   }

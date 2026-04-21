@@ -12,6 +12,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/confirm_dialog.dart';
+import '../../../core/storage/storage_service.dart';
+import '../../../app/constants/storage_keys.dart';
 import '../providers/question_bank_provider.dart';
 import '../models/question_bank_model.dart';
 import '../models/goods_model.dart';
@@ -40,9 +42,20 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
   @override
   void initState() {
     super.initState();
-    // 页面加载时自动加载数据
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(questionBankProvider.notifier).loadAllData();
+      // 正常逻辑：未选择专业时才跳转
+      // 直接从本地存储读取（同步），避免 authProvider 异步恢复导致误判
+      final storage = ref.read(storageServiceProvider);
+      final majorId = storage.getString(StorageKeys.currentMajorId);
+      
+      if (majorId == null || majorId.isEmpty) {
+        print('🎯 [题库页] 未检测到已选专业，跳转专业选择页');
+        context.push(AppRoutes.selectMajor);
+        return;
+      }
+      
+      print('✅ [题库页] 已选专业: $majorId，加载题库数据');
+      ref.read(questionBankProvider.notifier).loadAllData(majorId: majorId);
     });
   }
 
@@ -367,8 +380,9 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
       EasyLoading.show(status: '加载中...');
 
       // 获取当前用户的专业ID
-      final authState = ref.read(authProvider);
-      final professionalId = authState.currentMajor?.majorId ?? '';
+      // ✅ 直接从本地存储读取（同步），避免 authProvider 异步恢复导致读到旧值
+      final storage = ref.read(storageServiceProvider);
+      final professionalId = storage.getString(StorageKeys.currentMajorId) ?? '';
 
       // 通过API获取商品数据（与小程序 study-card-grid.vue 一致：/c/goods/v2 + shelf_platform_id + professional_id + position_identify）
       final goodsService = ref.read(goods_service.goodsServiceProvider);
@@ -716,11 +730,11 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
     }
 
     // 获取当前专业ID
-    final authState = ref.read(authProvider);
-    final currentMajor = authState.currentMajor;
-    final professionalId = currentMajor?.majorId;
+    // ✅ 直接从本地存储读取（同步），避免 authProvider 异步恢复导致读到旧值
+    final storage = ref.read(storageServiceProvider);
+    final professionalId = storage.getString(StorageKeys.currentMajorId) ?? '';
 
-    if (professionalId == null || professionalId.isEmpty) {
+    if (professionalId.isEmpty) {
       EasyLoading.showInfo('请先选择专业');
       return;
     }
@@ -782,17 +796,18 @@ class _QuestionBankPageState extends ConsumerState<QuestionBankPage> {
     final state = ref.read(questionBankProvider);
     final chapterExercise = state.chapterExercise;
 
+    // ✅ 无数据时提示但不跳转
     if (chapterExercise == null) {
-      EasyLoading.showInfo('暂无章节练习数据');
+      EasyLoading.showToast('暂无章节数据');
       return;
     }
 
     // 获取当前专业ID
-    final authState = ref.read(authProvider);
-    final currentMajor = authState.currentMajor;
-    final professionalId = currentMajor?.majorId;
+    // ✅ 直接从本地存储读取（同步），避免 authProvider 异步恢复导致读到旧值
+    final storage = ref.read(storageServiceProvider);
+    final professionalId = storage.getString(StorageKeys.currentMajorId) ?? '';
 
-    if (professionalId == null || professionalId.isEmpty) {
+    if (professionalId.isEmpty) {
       EasyLoading.showInfo('请先选择专业');
       return;
     }

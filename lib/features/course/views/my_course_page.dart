@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/style/app_style_provider.dart';
 import '../providers/my_course_provider.dart';
 import '../../main/main_tab_page.dart';
+import '../../main/main_tab_provider.dart';
 import '../../../../app/config/api_config.dart';
 import '../../../core/widgets/common_state_widget.dart';
 import '../widgets/course_item_card.dart';
@@ -167,12 +168,10 @@ class _MyCoursePageState extends ConsumerState<MyCoursePage> {
     return CommonStateWidget.noCourse(
       message: '未找到符合的学习内容',
       onAction: () {
-        // ✅ 修复：返回MainTabBar并切换到“课程”Tab（index=2）
-        // MainTabPage的Tab索引：0=首页, 1=题库, 2=课程, 3=我的
+        // ✅ 修复：返回MainTabBar并切换到"上课"Tab（通过名称自动查找对应下标）
         context.go('/main-tab');
-        // 切换到课程Tab
-        ref.read(mainTabIndexProvider.notifier).state =
-        tabIndexForPage(kPageIndexCourse, ref.read(appStyleTokensProvider).images.tabBarOrder);
+        // 切换到上课Tab
+        switchToTabByName(ref, '上课');
       },
     );
   }

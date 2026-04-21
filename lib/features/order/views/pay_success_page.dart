@@ -8,6 +8,7 @@ import '../../../core/utils/login_refresh_helper.dart';
 import '../../../app/constants/storage_keys.dart';
 import '../../../core/utils/safe_type_converter.dart';
 import '../../main/main_tab_page.dart';
+import '../../main/main_tab_provider.dart';
 import '../../goods/services/goods_service.dart';
 
 /// 支付成功页面
@@ -301,11 +302,11 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
 
   /// 去学习
   /// 对应小程序 Line 89-91: goLearn()
-  /// ✅ 优化：返回主页面并切换到课程Tab（索引2）
+  /// ✅ 优化：返回主页面并切换到上课Tab
   void _onGoLearn() {
     if (mounted) {
-      // 1. 设置Tab索引为课程页（索引2）
-      ref.read(mainTabIndexProvider.notifier).state = 2;
+      // 1. 设置Tab索引为上课页（通过名称自动查找对应下标）
+      switchToTabByName(ref, '上课');
       // 2. 返回主Tab页面
       context.go(AppRoutes.mainTab);
     }
@@ -316,7 +317,7 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
   /// 根据商品 type / data_type / details_type 跳转到对应测验页，与小程序一致
   Future<void> _onGoTest() async {
     if (widget.goodsId == null || widget.goodsId!.isEmpty) {
-      _goToHomePageWithTab(tabIndex: 1);
+      _goToHomePageWithTab(tabName: '刷题');
       return;
     }
 
@@ -345,7 +346,7 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
       // type == 2 或 3 (课程) → 返回主页面并选中课程Tab（对应小程序 push pages/study/index）
       if (type == '2' || type == '3') {
         print('📋 [开始测验] 跳转类型: 课程 | 路由: 回主页选课程Tab (tabIndex=2)');
-        _goToHomePageWithTab(tabIndex: 2);
+        _goToHomePageWithTab(tabName: '上课');
         return;
       }
 
@@ -428,11 +429,11 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
 
       // 未知类型 → 返回主页面选题库Tab
       print('📋 [开始测验] 跳转类型: 未知类型 | 路由: 回主页选题库Tab (tabIndex=1)');
-      _goToHomePageWithTab(tabIndex: 1);
+      _goToHomePageWithTab(tabName: '刷题');
     } catch (e) {
       print('❌ [支付成功页] 获取商品详情失败: $e');
       if (mounted) {
-        _goToHomePageWithTab(tabIndex: 1);
+        _goToHomePageWithTab(tabName: '刷题');
       }
     }
   }
@@ -441,10 +442,11 @@ class _PaySuccessPageState extends ConsumerState<PaySuccessPage> {
   /// 
   /// - tabIndex: Tab索引（0=首页, 1=题库, 2=课程, 3=我的）
   /// ⚠️ 用户反馈：应该返回到主页面并选中对应的Tab，而不是跳转到新的详情页
-  void _goToHomePageWithTab({required int tabIndex}) {
+  /// ✅ 使用 Tab 名称自动查找对应下标
+  void _goToHomePageWithTab({required String tabName}) {
     if (mounted) {
-      // 1. 设置Tab索引
-      ref.read(mainTabIndexProvider.notifier).state = tabIndex;
+      // 1. 设置Tab索引（通过名称自动查找）
+      switchToTabByName(ref, tabName);
       // 2. 返回主Tab页面（显示TabBar）
       context.go(AppRoutes.mainTab);
     }

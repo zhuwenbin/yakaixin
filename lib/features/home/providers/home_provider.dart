@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../app/config/api_config.dart';
+import '../../../app/constants/storage_keys.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/storage/storage_service.dart';
 import '../../../core/utils/safe_type_converter.dart';
-import '../../auth/providers/auth_provider.dart';
 import '../models/goods_model.dart';
 import '../services/goods_service.dart';
 
@@ -43,8 +44,12 @@ class HomeNotifier extends StateNotifier<HomeState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      // 优先使用传入的 majorId，否则从 Provider 读取
-      majorId = majorId ?? _ref.read(currentMajorProvider)?.majorId;
+      // ✅ 优先使用传入的 majorId
+      // 如果未传入，从本地存储读取（同步），避免 Provider 异步恢复导致时序问题
+      if (majorId == null || majorId.isEmpty) {
+        final storage = _ref.read(storageServiceProvider);
+        majorId = storage.getString(StorageKeys.currentMajorId);
+      }
 
       print('🔍 [首页数据加载] 开始加载...');
       print('📍 [专业ID] majorId: $majorId');

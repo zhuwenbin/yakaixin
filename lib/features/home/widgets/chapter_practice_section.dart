@@ -37,7 +37,7 @@ class ChapterPracticeSection extends StatelessWidget {
           if (isLoading)
             const Center(child: CircularProgressIndicator())
           else if (chapterExercise == null)
-            _buildEmptyState()
+            _ChapterExercisePlaceholder(onTap: onTap, styleTokens: styleTokens)
           else
             _ChapterExerciseCard(
               chapterExercise: chapterExercise!,
@@ -48,14 +48,170 @@ class ChapterPracticeSection extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildEmptyState() {
+/// 章节练习占位卡片（无数据时显示）
+class _ChapterExercisePlaceholder extends StatelessWidget {
+  final VoidCallback onTap;
+  final AppStyleTokens? styleTokens;
+
+  const _ChapterExercisePlaceholder({
+    required this.onTap,
+    this.styleTokens,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isGreen = styleTokens?.config.template == AppStyleTemplate.green;
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16.r),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // 渐变背景
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: isGreen
+                        ? const [Color(0xFFCFFAE8), Color(0xFFFFFFFF)]
+                        : const [Color(0xFFEBF8FF), Colors.white],
+                    stops: const [0.0, 1.0],
+                  ),
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+              ),
+            ),
+            // 绿色模版：右侧装饰背景图
+            if (isGreen)
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: 160.w,
+                child: Image.asset(
+                  'assets/images/Template/tiku/mokao_back.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+            // 前景内容
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '暂无章节数据',
+                    style: TextStyle(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF161f30),
+                      height: 1.0,
+                    ),
+                  ),
+                  SizedBox(height: 7.h),
+                  Row(
+                    children: [
+                      _buildTag(
+                        '共0道题目',
+                        backgroundColor: styleTokens?.colors.tagBg ?? const Color(0xFFE0F0FF),
+                        textColor: styleTokens?.colors.tagText ?? const Color(0xFF4783DC),
+                      ),
+                      SizedBox(width: 6.w),
+                      _buildTag(
+                        '有效期:--',
+                        backgroundColor: const Color(0xFFEDF1F2),
+                        textColor: const Color(0xFF777777),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Flexible(
+                              flex: 4,
+                              child: Container(
+                                height: 8.h,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFDDF3FD).withValues(alpha: 0.6),
+                                  borderRadius: BorderRadius.circular(8.r),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            Text(
+                              '0/0',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w400,
+                                color: const Color(0xFF03203D).withValues(alpha: 0.85),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Container(
+                        width: 99.w,
+                        height: 35.h,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              styleTokens?.colors.actionGradientStart ?? const Color(0xFFFF860E),
+                              styleTokens?.colors.actionGradientEnd ?? const Color(0xFFFF6912),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(18.r),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '立即刷题',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTag(String text, {
+    required Color backgroundColor,
+    required Color textColor,
+  }) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 40.h),
-      alignment: Alignment.center,
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(4.r),
+      ),
       child: Text(
-        '暂无章节练习',
-        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+        text,
+        style: TextStyle(
+          fontSize: 10.sp,
+          color: textColor,
+          fontWeight: FontWeight.w400,
+        ),
       ),
     );
   }

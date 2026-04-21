@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/routes/app_routes.dart';
+import '../../../app/constants/storage_keys.dart';
 import '../../../core/utils/login_refresh_helper.dart';
 import '../../../core/style/app_style_provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -11,6 +12,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/utils/safe_type_converter.dart';
+import '../../../core/storage/storage_service.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/home_provider.dart';
 import '../models/goods_model.dart';
@@ -49,8 +51,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     // 页面加载时获取数据
+    // ✅ 直接从本地存储读取专业ID（同步），避免 authProvider 异步恢复导致读到旧值
     Future.microtask(() {
-      ref.read(homeProvider.notifier).loadHomeData();
+      final storage = ref.read(storageServiceProvider);
+      final majorId = storage.getString(StorageKeys.currentMajorId);
+      ref.read(homeProvider.notifier).loadHomeData(majorId: majorId);
     });
   }
 

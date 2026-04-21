@@ -2,8 +2,8 @@
 
 ## 📦 应用基本信息
 
-- **Bundle ID**：`com.yakaixin.yakaixin`
-- **应用名称**：牙开心学堂
+- **Bundle ID**：`com.jinyisheng.jinyisheng`
+- **应用名称**：金医圣学堂
 - **开发团队ID**：`6LPT9NQFKF`
 
 ---
@@ -183,7 +183,7 @@ BD596160AC48B342419E66B0CA96168174275D64
 
 #### iOS平台Bundle ID
 ```
-com.yakaixin.yakaixin
+com.jinyisheng.jinyisheng
 ```
 
 #### 公钥（开发证书）
@@ -340,7 +340,7 @@ security find-certificate -c "$CERT_NAME" -p 2>/dev/null | openssl x509 -subject
 
 5. **Bundle ID匹配**
    - 确保证书关联的App ID与Bundle ID匹配
-   - 当前Bundle ID：`com.yakaixin.yakaixin`
+   - 当前Bundle ID：`com.jinyisheng.jinyisheng`
 
 ---
 
@@ -359,7 +359,7 @@ security find-certificate -c "证书名称" -p | openssl x509 -checkend 0 -noout
 ## 📝 更新记录
 
 - **创建日期**：2025-01-25
-- **Bundle ID**：com.yakaixin.yakaixin
+- **Bundle ID**：com.jinyisheng.jinyisheng
 - **开发团队ID**：6LPT9NQFKF
 - **当前状态**：只有开发证书，需要创建Distribution证书用于正式发布
 

@@ -184,9 +184,9 @@ class MockDataRouter {
         "merchant": [
           {
             "merchant_id": "408559575579495187",
-            "merchant_name": "牙开心",
+            "merchant_name": "金医圣",
             "brand_id": "408559632588540691",
-            "brand_name": "牙开心",
+            "brand_name": "金医圣",
           },
         ],
         "major_id": "524033912737962623",
@@ -388,12 +388,7 @@ class MockDataRouter {
           "lesson_attendance_num": 60,
           "address": "",
           "teacher": [
-            {
-              "id": "5",
-              "name": "钱老师",
-              "title": "教授",
-              "avatar": "avatar5.png",
-            },
+            {"id": "5", "name": "钱老师", "title": "教授", "avatar": "avatar5.png"},
           ],
         },
       },

@@ -9,7 +9,7 @@ import '../../core/storage/storage_service.dart';
 import '../constants/storage_keys.dart';
 import '../../core/utils/login_return_path_provider.dart';
 import '../../features/auth/views/h5_login_page.dart';
-import '../../features/auth/views/select_major_page.dart';
+import '../../features/major/views/select_major_page.dart';
 import '../../features/auth/views/forget_password_page.dart';
 import '../../features/auth/views/change_password_page.dart';
 import '../../features/home/views/home_page.dart';

@@ -7,10 +7,10 @@ import '../../../app/routes/app_routes.dart';
 import '../../../core/utils/toast_util.dart';
 import '../../../core/widgets/loading_hud.dart';
 import '../providers/major_provider.dart';
-import '../../../../app/config/api_config.dart';
 
 /// 选择专业页面
 /// 对应小程序: src/modules/jintiku/pages/major/index.vue
+/// 左右分栏布局：左侧分类 + 右侧平铺专业
 class SelectMajorPage extends ConsumerStatefulWidget {
   final bool? canGoBack; // 是否可以返回（从我的页面进入时为true）
 
@@ -24,18 +24,67 @@ class SelectMajorPage extends ConsumerStatefulWidget {
 }
 
 class _SelectMajorPageState extends ConsumerState<SelectMajorPage> {
-  String? _selectedParentId; // 已选择的一级分类ID
-  String? _selectedParentName; // 已选择的一级分类名称
-  String? _selectedMajorId; // 已选择的专业ID
-  String? _selectedMajorName; // 已选择的专业名称
+  // 当前选中的左侧分类索引
+  int _selectedLeftIndex = 0;
+
+  // 当前选中的专业ID和名称（第三层）
+  String? _selectedMajorId;
+  String? _selectedMajorName;
 
   @override
   void initState() {
     super.initState();
-    // 加载专业列表
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(majorProvider.notifier).loadMajors();
     });
+  }
+
+  /// 检查某个第一级分类下是否有第三层专业（叶子节点）
+  bool _hasLeafMajors(dynamic parent) {
+    final subs = parent['subs'] as List<dynamic>? ?? [];
+    for (final sub in subs) {
+      final subSubs = sub['subs'] as List<dynamic>? ?? [];
+      if (subSubs.isNotEmpty) return true;
+    }
+    return false;
+  }
+
+  /// 获取某个第一级分类下的所有第三层专业（扁平化）
+  List<Map<String, String>> _getAllLeafMajors(dynamic parent) {
+    final result = <Map<String, String>>[];
+    final subs = parent['subs'] as List<dynamic>? ?? [];
+    for (final sub in subs) {
+      final subName = sub['data_name']?.toString() ?? '';
+      final subSubs = sub['subs'] as List<dynamic>? ?? [];
+      for (final major in subSubs) {
+        result.add({
+          'id': major['id']?.toString() ?? '',
+          'name': major['data_name']?.toString() ?? '',
+          'parentName': subName,
+        });
+      }
+    }
+    return result;
+  }
+
+  /// 获取第一个有子专业的分类索引
+  int _getFirstValidIndex(List<dynamic> majorList) {
+    for (int i = 0; i < majorList.length; i++) {
+      if (_hasLeafMajors(majorList[i])) return i;
+    }
+    return 0;
+  }
+
+  /// 返回时自动选择第一个专业
+  void _autoSelectFirstMajor(List<dynamic> majorList) {
+    for (final parent in majorList) {
+      final majors = _getAllLeafMajors(parent);
+      if (majors.isNotEmpty) {
+        final first = majors.first;
+        _submitSelection(first['id']!, first['name']!);
+        return;
+      }
+    }
   }
 
   @override
@@ -43,197 +92,235 @@ class _SelectMajorPageState extends ConsumerState<SelectMajorPage> {
     final majorState = ref.watch(majorProvider);
     final isLoading = majorState.isLoading;
     final majorList = majorState.majors;
+    final error = majorState.error;
 
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: NetworkImage(
-              ApiConfig.completeImageUrl('public/16696400618188716166964006181894592_backThree.png'),
+    // 如果有数据，确保选中第一个有效分类
+    if (majorList.isNotEmpty) {
+      final firstValidIndex = _getFirstValidIndex(majorList);
+      if (_selectedLeftIndex >= majorList.length || !_hasLeafMajors(majorList[_selectedLeftIndex])) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _selectedLeftIndex = firstValidIndex;
+            });
+          }
+        });
+      }
+    }
+
+    final theme = Theme.of(context);
+    final primaryColor = theme.primaryColor;
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_selectedMajorId == null && majorList.isNotEmpty) {
+          _autoSelectFirstMajor(majorList);
+        } else if (_selectedMajorId != null) {
+          context.pop();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false, // 隐藏返回按钮
+          title: Text(
+            '选择专业',
+            style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.w600),
+          ),
+          centerTitle: true,
+          elevation: 0,
+        ),
+        body: isLoading
+            ? Center(child: CircularProgressIndicator(color: primaryColor))
+            : error != null
+                ? _buildErrorState(error, primaryColor)
+                : majorList.isEmpty
+                    ? _buildEmptyState(primaryColor)
+                    : _buildContent(majorList, primaryColor),
+        bottomNavigationBar: _selectedMajorId != null
+            ? Container(
+                padding: EdgeInsets.only(
+                  left: 40.w,
+                  right: 40.w,
+                  top: 12.h,
+                  bottom: 12.h + MediaQuery.of(context).padding.bottom,
+                ),
+                child: _buildSubmitButton(primaryColor),
+              )
+            : null,
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String error, Color primaryColor) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 48.w, color: Colors.grey),
+          SizedBox(height: 16.h),
+          Text(
+            '加载失败',
+            style: TextStyle(fontSize: 16.sp, color: Colors.grey),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            error,
+            style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 24.h),
+          ElevatedButton(
+            onPressed: () => ref.read(majorProvider.notifier).loadMajors(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
             ),
-            fit: BoxFit.cover,
+            child: Text('重新加载'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(Color primaryColor) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.folder_open, size: 48.w, color: Colors.grey),
+          SizedBox(height: 16.h),
+          Text(
+            '暂无专业数据',
+            style: TextStyle(fontSize: 16.sp, color: Colors.grey),
+          ),
+          SizedBox(height: 24.h),
+          ElevatedButton(
+            onPressed: () => ref.read(majorProvider.notifier).loadMajors(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            child: Text('重新加载'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(List<dynamic> majorList, Color primaryColor) {
+    final selectedParent = majorList[_selectedLeftIndex.clamp(0, majorList.length - 1)];
+    final leafMajors = _getAllLeafMajors(selectedParent);
+
+    return Row(
+      children: [
+        // 左侧分类列表
+        Container(
+          width: 100.w,
+          color: const Color(0xFFF5F5F5),
+          child: ListView.builder(
+            itemCount: majorList.length,
+            itemBuilder: (context, index) {
+              final parent = majorList[index];
+              final parentName = parent['data_name']?.toString() ?? '';
+              final hasChildren = _hasLeafMajors(parent);
+              final isSelected = _selectedLeftIndex == index;
+
+              return GestureDetector(
+                onTap: hasChildren
+                    ? () {
+                        setState(() {
+                          _selectedLeftIndex = index;
+                        });
+                      }
+                    : null,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.white : Colors.transparent,
+                    border: Border(
+                      left: BorderSide(
+                        color: isSelected ? primaryColor : Colors.transparent,
+                        width: 3.w,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    parentName,
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      color: !hasChildren
+                          ? Colors.grey // 无子专业：置灰
+                          : isSelected
+                              ? primaryColor // 选中：主题色
+                              : const Color(0xFF333333),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              );
+            },
           ),
         ),
-        child: SafeArea(
-          child: isLoading
-              ? Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-                  child: Column(
+        // 右侧专业列表
+        Expanded(
+          child: Container(
+            color: Colors.white,
+            child: leafMajors.isEmpty
+                ? Center(
+                    child: Text(
+                      '该分类下暂无专业',
+                      style: TextStyle(fontSize: 14.sp, color: Colors.grey),
+                    ),
+                  )
+                : ListView(
+                    padding: EdgeInsets.all(16.w),
                     children: [
-                      SizedBox(height: 100.h),
-                      // 标题
-                      Text(
-                        '你的专业是？',
-                        style: TextStyle(
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF03203D),
-                        ),
-                      ),
-                      SizedBox(height: 2.h),
-                      // 提示
-                      Text(
-                        '填写后定制你的个性化课程中心',
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFF03203D).withOpacity(0.45),
-                        ),
-                      ),
-                      SizedBox(height: 32.h),
-                      // 内容区域
-                      if (_selectedParentId == null)
-                        _buildParentList(majorList)
-                      else
-                        _buildMajorList(majorList),
-                      SizedBox(height: 100.h),
+                      // 分组显示专业
+                      _buildMajorGroups(selectedParent, primaryColor),
                     ],
                   ),
-                ),
+          ),
         ),
-      ),
-      // 底部提交按钮 - 使用 bottomNavigationBar 避免被系统UI覆盖（小米真机适配）
-      bottomNavigationBar: _selectedMajorId != null
-          ? Container(
-              padding: EdgeInsets.only(
-                left: 64.w,
-                right: 64.w,
-                top: 16.h,
-                bottom: 16.h,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-              ),
-              child: SafeArea(
-                child: Center(
-                  child: _buildSubmitButton(),
-                ),
-              ),
-            )
-          : null,
+      ],
     );
   }
 
-  /// 一级分类列表
-  Widget _buildParentList(List<dynamic> majorList) {
-    return Wrap(
-      spacing: 12.w,
-      runSpacing: 16.h,
-      children: majorList.map((parent) {
-        final parentId = parent['id']?.toString() ?? '';
-        final parentName = parent['data_name']?.toString() ?? '';
-        
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedParentId = parentId;
-              _selectedParentName = parentName;
-            });
-          },
-          child: Container(
-            constraints: BoxConstraints(minWidth: 107.w),
-            padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 17.h),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xFFE4F2FF).withOpacity(0.5),
-                  blurRadius: 12.r,
-                  offset: Offset(0, 2.h),
-                ),
-              ],
-            ),
-            child: Text(
-              parentName,
-              style: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF03203D),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
+  /// 按第二级分组显示第三级专业
+  Widget _buildMajorGroups(dynamic parent, Color primaryColor) {
+    final subs = parent['subs'] as List<dynamic>? ?? [];
+    final List<Widget> groups = [];
 
-  /// 专业列表（二级）
-  Widget _buildMajorList(List<dynamic> majorList) {
-    final selectedParent = majorList.firstWhere(
-      (p) => p['id']?.toString() == _selectedParentId,
-      orElse: () => {},
-    );
-    
-    final subs = selectedParent['subs'] as List<dynamic>? ?? [];
+    for (final sub in subs) {
+      final subName = sub['data_name']?.toString() ?? '';
+      final subSubs = sub['subs'] as List<dynamic>? ?? [];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // 返回按钮
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedParentId = null;
-              _selectedParentName = null;
-              _selectedMajorId = null;
-              _selectedMajorName = null;
-            });
-          },
-          child: Container(
-            constraints: BoxConstraints(minWidth: 107.w),
-            padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 17.h),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xFFE4F2FF).withOpacity(0.5),
-                  blurRadius: 12.r,
-                  offset: Offset(0, 2.h),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.network(
-                  ApiConfig.completeImageUrl('public/1669641564098755c166964156409840548_left.png'),
-                  width: 16.w,
-                  height: 16.w,
-                ),
-                SizedBox(width: 4.w),
-                Text(
-                  _selectedParentName ?? '',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF2E68FF),
-                  ),
-                ),
-              ],
+      if (subSubs.isEmpty) continue;
+
+      // 分组标题（第二级）
+      groups.add(
+        Padding(
+          padding: EdgeInsets.only(top: 16.h, bottom: 12.h),
+          child: Text(
+            subName,
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF333333),
             ),
           ),
         ),
-        SizedBox(height: 32.h),
-        // 专业分类标题
-        Text(
-          _selectedParentName ?? '',
-          style: TextStyle(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF03203D).withOpacity(0.45),
-          ),
-        ),
-        SizedBox(height: 16.h),
-        // 专业列表
+      );
+
+      // 第三级专业平铺
+      groups.add(
         Wrap(
           spacing: 12.w,
-          runSpacing: 16.h,
-          children: subs.map((major) {
+          runSpacing: 12.h,
+          children: subSubs.map((major) {
             final majorId = major['id']?.toString() ?? '';
             final majorName = major['data_name']?.toString() ?? '';
             final isSelected = _selectedMajorId == majorId;
@@ -246,125 +333,96 @@ class _SelectMajorPageState extends ConsumerState<SelectMajorPage> {
                 });
               },
               child: Container(
-                constraints: BoxConstraints(minWidth: 107.w),
-                padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 17.h),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0xFFE4F2FF).withOpacity(0.5),
-                      blurRadius: 12.r,
-                      offset: Offset(0, 2.h),
-                    ),
-                  ],
+                  color: isSelected ? primaryColor.withOpacity(0.1) : const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(
+                    color: isSelected ? primaryColor : Colors.transparent,
+                    width: 1,
+                  ),
                 ),
                 child: Text(
                   majorName,
                   style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w400,
-                    color: isSelected ? Color(0xFF2E68FF) : Color(0xFF03203D),
+                    fontSize: 13.sp,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected ? primaryColor : const Color(0xFF333333),
                   ),
                 ),
               ),
             );
           }).toList(),
         ),
-        SizedBox(height: 32.h),
-        // 提示
-        Center(
-          child: Text(
-            '该信息可随时在首页更改',
-            style: TextStyle(
-              fontSize: 11.sp,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF03203D).withOpacity(0.45),
-            ),
-          ),
-        ),
-      ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: groups,
     );
   }
 
   /// 提交按钮
-  Widget _buildSubmitButton() {
-    return Container(
-      width: 248.w,
+  Widget _buildSubmitButton(Color primaryColor) {
+    return SizedBox(
+      width: double.infinity,
       height: 44.h,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF2E68FF), Color(0xFF2E68FF)],
+      child: ElevatedButton(
+        onPressed: _handleSubmit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22.r),
+          ),
+          elevation: 0,
         ),
-        borderRadius: BorderRadius.circular(22.r),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0xFF2E68FF).withOpacity(0.25),
-            blurRadius: 16.r,
-            offset: Offset(0, 4.h),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _handleSubmit,
-          borderRadius: BorderRadius.circular(22.r),
-          child: Center(
-            child: Text(
-              '提交',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
-              ),
-            ),
-          ),
+        child: Text(
+          '提交',
+          style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
         ),
       ),
     );
   }
 
   /// 提交专业选择
-  /// 对应小程序: major/index.vue:107-141
   Future<void> _handleSubmit() async {
     if (_selectedMajorId == null || _selectedMajorName == null) {
       ToastUtil.error('请先选择专业');
       return;
     }
 
+    await _submitSelection(_selectedMajorId!, _selectedMajorName!);
+  }
+
+  /// 提交选择（支持自动选择时调用）
+  Future<void> _submitSelection(String majorId, String majorName) async {
     try {
       LoadingHUD.show('提交中...');
 
-      // 调用API保存专业
       await ref.read(majorProvider.notifier).saveMajor(
-        majorId: _selectedMajorId!,
-        majorName: _selectedMajorName!,
+        majorId: majorId,
+        majorName: majorName,
       );
 
       LoadingHUD.dismiss();
       ToastUtil.success('保存成功');
 
-      // 延迟一下再跳转，让用户看到成功提示
-      await Future.delayed(Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 500));
 
       if (!mounted) return;
 
-      // 根据canGoBack决定跳转逻辑
       if (widget.canGoBack == true) {
-        // 从我的页面进入，返回上一页
         context.pop();
       } else {
-        // 从登录进入，跳转到首页
         context.go(AppRoutes.home);
       }
     } on DioException catch (e) {
-      // ✅ 使用拦截器已处理好的用户友好错误信息
       LoadingHUD.dismiss();
       final errorMsg = e.error?.toString() ?? '保存失败，请稍后重试';
       ToastUtil.error(errorMsg);
     } catch (e) {
-      // ✅ 兜底：未预期的错误
       LoadingHUD.dismiss();
       ToastUtil.error('保存失败，请稍后重试');
     }

@@ -6,20 +6,13 @@ import '../home/views/home_page.dart';
 import '../home/views/question_bank_page.dart';
 import '../course/views/course_page.dart';
 import '../profile/views/profile_page.dart';
+import 'main_tab_provider.dart';
 
-/// Tab索引Provider - 存的是底部 Tab 下标（0～3），顺序可能因模版为 题库/课程/首页/我的
-final mainTabIndexProvider = StateProvider<int>((ref) => 0);
-
-/// 页面下标：0首页 1题库 2课程 3我的。跳转时用 tabIndexForPage(pageIndex, tokens.images.tabBarOrder)
-const int kPageIndexHome = 0;
-const int kPageIndexQuestion = 1;
-const int kPageIndexCourse = 2;
-const int kPageIndexProfile = 3;
-
-const List<String> _kTabLabelsByPageIndex = ['首页', '题库', '课程', '我的'];
+/// 页面标签（与新顺序对应：购课、刷题、上课、我的）
+const List<String> _kTabLabelsByPageIndex = ['购课', '刷题', '上课', '我的'];
 
 /// 主页面 - TabBar导航
-/// 默认模版：首页、题库、课程、我的；非默认模版：题库、课程、首页、我的 + Template/main_tabbar 图标
+/// 新顺序：购课、刷题、上课、我的
 class MainTabPage extends ConsumerWidget {
   const MainTabPage({super.key});
 
@@ -28,26 +21,25 @@ class MainTabPage extends ConsumerWidget {
     final currentTabIndex = ref.watch(mainTabIndexProvider);
     final tokens = ref.watch(appStyleTokensProvider);
     final primaryColor = tokens.colors.primary;
-    final tabOrder = tokens.images.tabBarOrder ?? [0, 1, 2, 3];
+    
+    // ✅ 固定顺序：购课(0)、刷题(1)、上课(2)、我的(3)
+    // 不再使用模板配置的 tabBarOrder，避免模板旧数据导致顺序错乱
+    const tabOrder = [0, 1, 2, 3];
 
     final List<Widget> pages = const [
-      HomePage(),
-      QuestionBankPage(),
-      CoursePage(),
-      ProfilePage(),
+      HomePage(),      // 购课
+      QuestionBankPage(), // 刷题
+      CoursePage(),    // 上课
+      ProfilePage(),   // 我的
     ];
 
-    final pageIndex = tabOrder.length == 4
-        ? tabOrder[currentTabIndex.clamp(0, 3)]
-        : currentTabIndex;
+    final pageIndex = currentTabIndex.clamp(0, 3);
 
-    final labels = tokens.images.tabBarLabels;
     final items = tokens.images.tabBarUseMaterialIcons
-        ? _buildMaterialIconItems(primaryColor, tabOrder, labels)
+        ? _buildMaterialIconItems(primaryColor, tabOrder)
         : _buildAssetIconItems(
             tokens.images.tabBarIconPaths!,
             tabOrder,
-            labels,
           );
 
     return Scaffold(
@@ -73,22 +65,18 @@ class MainTabPage extends ConsumerWidget {
   static List<BottomNavigationBarItem> _buildMaterialIconItems(
     Color primary,
     List<int> tabOrder,
-    List<String>? tabBarLabels,
   ) {
+    // 图标对应页面下标：购课(0)、刷题(1)、上课(2)、我的(3)
     final icons = [
-      (Icon(Icons.home_outlined), Icon(Icons.home)),
-      (Icon(Icons.menu_book_outlined), Icon(Icons.menu_book)),
-      (Icon(Icons.school_outlined), Icon(Icons.school)),
-      (Icon(Icons.person_outline), Icon(Icons.person)),
+      (Icon(Icons.shopping_bag_outlined), Icon(Icons.shopping_bag)), // 购课
+      (Icon(Icons.menu_book_outlined), Icon(Icons.menu_book)),       // 刷题
+      (Icon(Icons.school_outlined), Icon(Icons.school)),             // 上课
+      (Icon(Icons.person_outline), Icon(Icons.person)),              // 我的
     ];
     return List.generate(4, (i) {
-      final pageIdx = tabOrder.length == 4 ? tabOrder[i] : i;
-      final label = (tabBarLabels != null && tabBarLabels.length == 4)
-          ? tabBarLabels[i]
-          : (pageIdx >= 0 && pageIdx < _kTabLabelsByPageIndex.length
-              ? _kTabLabelsByPageIndex[pageIdx]
-              : '');
-      final pair = icons[pageIdx.clamp(0, 3)];
+      final pageIdx = tabOrder[i];
+      final label = _kTabLabelsByPageIndex[pageIdx];
+      final pair = icons[pageIdx];
       return BottomNavigationBarItem(
         icon: pair.$1,
         activeIcon: pair.$2,
@@ -100,17 +88,12 @@ class MainTabPage extends ConsumerWidget {
   static List<BottomNavigationBarItem> _buildAssetIconItems(
     List<String> paths,
     List<int> tabOrder,
-    List<String>? tabBarLabels,
   ) {
     const size = 24.0;
     return List.generate(4, (i) {
-      final pageIdx = tabOrder.length == 4 ? tabOrder[i] : i;
-      final label = (tabBarLabels != null && tabBarLabels.length == 4)
-          ? tabBarLabels[i]
-          : (pageIdx >= 0 && pageIdx < _kTabLabelsByPageIndex.length
-              ? _kTabLabelsByPageIndex[pageIdx]
-              : '');
-      final base = i * 2;
+      final pageIdx = tabOrder[i];
+      final label = _kTabLabelsByPageIndex[pageIdx];
+      final base = pageIdx * 2;
       return BottomNavigationBarItem(
         icon: Image.asset(
           paths[base],

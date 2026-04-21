@@ -4,13 +4,13 @@ class AppConstants {
   // ==================== 应用信息 ====================
 
   /// 应用名称
-  static const String appName = '金医圣题库';
+  static const String appName = '金医圣';
 
   /// 应用版本号
   static const String appVersion = '1.4.14';
 
   /// 应用包名 (iOS Bundle ID / Android Package Name)
-  static const String appPackageName = 'com.yakaixin.yakaixin.android';
+  static const String appPackageName = 'com.jinyisheng.jinyisheng.android';
 
   // ==================== 微信配置 ====================
 

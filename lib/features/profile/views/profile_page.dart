@@ -9,6 +9,7 @@ import '../../../core/style/app_style_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/models/user_model.dart';
 import '../../main/main_tab_page.dart';
+import '../../main/main_tab_provider.dart';
 import '../constants/profile_template_assets.dart';
 
 /// 我的页面
@@ -210,9 +211,8 @@ class _ProfilePageBlueLayout extends ConsumerWidget {
         'icon': ApiConfig.completeImageUrl('order.png'),
         'text': '我的课程',
         'onTap': () {
-          // 切换到课程 Tab
-          ref.read(mainTabIndexProvider.notifier).state =
-            tabIndexForPage(kPageIndexCourse, ref.read(appStyleTokensProvider).images.tabBarOrder);
+          // 切换到上课 Tab（通过名称自动查找对应下标）
+          switchToTabByName(ref, '上课');
         },
       },
       {
@@ -303,9 +303,8 @@ class _ProfilePageBlueLayout extends ConsumerWidget {
         'icon': ApiConfig.completeImageUrl('pen.png'),
         'title': '我的练习',
         'onTap': () {
-          // 切换到首页 Tab
-          ref.read(mainTabIndexProvider.notifier).state =
-            tabIndexForPage(kPageIndexHome, ref.read(appStyleTokensProvider).images.tabBarOrder);
+          // 切换到购课 Tab（通过名称自动查找对应下标）
+          switchToTabByName(ref, '购课');
         },
       },
       {
@@ -569,14 +568,12 @@ class _ProfilePageAlternativeLayout extends ConsumerWidget {
       (ProfileTemplateAssets.menuSettings, '设置'),
     ];
     final taps = [
-      () => ref.read(mainTabIndexProvider.notifier).state =
-          tabIndexForPage(kPageIndexCourse, ref.read(appStyleTokensProvider).images.tabBarOrder),
+      () => switchToTabByName(ref, '上课'),
       () => context.push(AppRoutes.reportCenter),
       () => context.push(AppRoutes.wrongBookIndex),
       () => context.push(AppRoutes.collectIndex),
       () => context.push(AppRoutes.myOrder),
-      () => ref.read(mainTabIndexProvider.notifier).state =
-          tabIndexForPage(kPageIndexHome, ref.read(appStyleTokensProvider).images.tabBarOrder),
+      () => switchToTabByName(ref, '购课'),
       () => context.push(AppRoutes.settings),
     ];
     return Column(

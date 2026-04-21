@@ -37,19 +37,14 @@ class _PrivacyAgreementPageState extends ConsumerState<PrivacyAgreementPage> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('提示'),
-        content: const Text(
-          '不同意将无法使用我们的产品和服务，并会退出APP',
-        ),
+        content: const Text('不同意将无法使用我们的产品和服务，并会退出APP'),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               exit(0);
             },
-            child: Text(
-              '不同意并退出',
-              style: TextStyle(color: _primaryColor),
-            ),
+            child: Text('不同意并退出', style: TextStyle(color: _primaryColor)),
           ),
           FilledButton(
             onPressed: () {
@@ -71,7 +66,7 @@ class _PrivacyAgreementPageState extends ConsumerState<PrivacyAgreementPage> {
   @override
   Widget build(BuildContext context) {
     const String privacyText =
-        '欢迎使用牙开心APP！为给您提供优质的服务、控制业务风险、保障信息和资金安全，本应用使用过程中，需要联网，需要在必要范围内收集、使用您的个人信息。请您在使用前仔细阅读《隐私协议》条款，同意后开启我们的服务。\n\n本应用在使用期间，我们需要申请获取您的系统权限，我们将在首次调用时逐项询问您是否允许使用该权限，也可以在您的设备系统"设置"里管理相关权限。';
+        '欢迎使用金医圣APP！为给您提供优质的服务、控制业务风险、保障信息和资金安全，本应用使用过程中，需要联网，需要在必要范围内收集、使用您的个人信息。请您在使用前仔细阅读《隐私协议》条款，同意后开启我们的服务。\n\n本应用在使用期间，我们需要申请获取您的系统权限，我们将在首次调用时逐项询问您是否允许使用该权限，也可以在您的设备系统"设置"里管理相关权限。';
 
     return Scaffold(
       body: Stack(
@@ -80,14 +75,11 @@ class _PrivacyAgreementPageState extends ConsumerState<PrivacyAgreementPage> {
             child: Image.asset(
               'assets/images/splash.png',
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: Colors.white,
-              ),
+              errorBuilder: (context, error, stackTrace) =>
+                  Container(color: Colors.white),
             ),
           ),
-          Container(
-            color: Colors.black.withValues(alpha: 0.4),
-          ),
+          Container(color: Colors.black.withValues(alpha: 0.4)),
           Center(
             child: Container(
               margin: EdgeInsets.symmetric(horizontal: 30.w),
@@ -175,17 +167,14 @@ class _PrivacyAgreementPageState extends ConsumerState<PrivacyAgreementPage> {
     int lastEnd = 0;
 
     final List<({int start, int end, void Function() onTap})> links = [
-      if (start >= 0)
-        (start: start, end: end, onTap: _onOpenPrivacyPolicy),
+      if (start >= 0) (start: start, end: end, onTap: _onOpenPrivacyPolicy),
     ];
     links.sort((a, b) => a.start.compareTo(b.start));
 
     for (final link in links) {
       if (link.start < 0) continue;
       if (link.start > lastEnd) {
-        spans.add(
-          TextSpan(text: text.substring(lastEnd, link.start)),
-        );
+        spans.add(TextSpan(text: text.substring(lastEnd, link.start)));
       }
       spans.add(
         TextSpan(
@@ -194,8 +183,7 @@ class _PrivacyAgreementPageState extends ConsumerState<PrivacyAgreementPage> {
             color: _primaryColor,
             decoration: TextDecoration.underline,
           ),
-          recognizer: TapGestureRecognizer()
-            ..onTap = link.onTap,
+          recognizer: TapGestureRecognizer()..onTap = link.onTap,
         ),
       );
       lastEnd = link.end;

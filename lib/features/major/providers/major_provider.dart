@@ -18,15 +18,17 @@ class MajorState {
     this.error,
   });
 
+  static const Object _sentinel = Object();
+
   MajorState copyWith({
     List<dynamic>? majors,
     bool? isLoading,
-    String? error,
+    Object? error = _sentinel,
   }) {
     return MajorState(
       majors: majors ?? this.majors,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: error == _sentinel ? this.error : error as String?,
     );
   }
 }
@@ -66,6 +68,7 @@ class MajorNotifier extends StateNotifier<MajorState> {
       state = state.copyWith(
         majors: data,
         isLoading: false,
+        error: null,
       );
     } on DioException catch (e) {
       // ✅ 使用拦截器已处理好的用户友好错误信息

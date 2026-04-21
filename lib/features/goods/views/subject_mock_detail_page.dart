@@ -271,13 +271,20 @@ class _SubjectMockDetailPageState extends ConsumerState<SubjectMockDetailPage> {
 
   /// 底部栏价格文案，对应小程序 subjectMockDetail.vue Line 440-441、368-377
   /// 有 prices 用 prices[0].sale_price；无则用顶层 sale_price，空则 '0.00'（与小程序注入一致）
+  /// ✅ 始终保留2位小数
   String _getDisplayPriceText(GoodsDetailModel detail, dynamic currentPrice) {
+    String priceStr = '';
     if (currentPrice != null) {
       final s = SafeTypeConverter.toSafeString(currentPrice.salePrice, defaultValue: '');
-      if (s.isNotEmpty) return s;
+      priceStr = s.isNotEmpty ? s : '';
     }
-    final topSale = SafeTypeConverter.toSafeString(detail.salePrice, defaultValue: '');
-    return topSale.isNotEmpty ? topSale : '0.00';
+    if (priceStr.isEmpty) {
+      final topSale = SafeTypeConverter.toSafeString(detail.salePrice, defaultValue: '');
+      priceStr = topSale.isNotEmpty ? topSale : '0.00';
+    }
+    // ✅ 确保保留2位小数
+    final price = double.tryParse(priceStr) ?? 0.0;
+    return price.toStringAsFixed(2);
   }
 
   /// 处理购买（使用统一支付管理器）
